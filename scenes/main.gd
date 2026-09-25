@@ -1359,6 +1359,10 @@ func _on_story_ended(ending_id: StringName) -> void:
 	# 后面那条「把控制权还给玩家」的调试口子就废了（人钉在床上走不动）。
 	if player != null:
 		player.pinned = false
+		# **藏起来那一步也一样。** 「把玩家藏起来」是某一幕的安排
+		#（场景图上画着人那种），剧情一完就该露回来 —— 不然后面
+		# 自由走动的时候人看不见（和上面那句 `pinned` 同一个道理）。
+		player.visible = true
 
 	if ending_id != &"":
 		# 走到结局**就回主界面**，不把控制权还回去。

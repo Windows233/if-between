@@ -234,10 +234,27 @@ func _initialize() -> void:
 				main.hover_point_override = at
 
 			"ifpanel":
-				# IF 条件框：**标准状态**（条件填空处空着、四个块都是常态）。
-				# 要看剧情里那种（固定句子 + 四块禁用），等接进剧本之后再说。
+				# IF 条件框。**默认摆成教学那一步的样子** —— 这样截出来的就是
+				# 玩家会看到的东西（块的位置、名字在不在方块里、确定按钮歪不歪）。
+				#   参数 3 传 `empty`    → 空白的标准状态
+				#   参数 3 传 `readonly` → 老人那一步（两块固定的纯展示框）
 				main.if_panel.setup()
-				main.if_panel.open()
+				var mode := str(args[3]) if args.size() > 3 else ""
+				if mode == "empty":
+					main.if_panel.open()
+				elif mode == "readonly":
+					main.if_panel.open("", "来找主角帮忙", "猫不见了")
+					for i: int in 4:
+						main.if_panel.set_slot_block(i, "")
+					main.if_panel.set_read_only(true)
+					main.if_panel.remember_layout()
+				else:
+					main.if_panel.open("", "观察", "发现异常")
+					main.if_panel.set_slot_block(0, "")
+					main.if_panel.set_slot_block(1, "立即离开")
+					main.if_panel.set_slot_block(2, "")
+					main.if_panel.set_slot_block(3, "")
+					main.if_panel.remember_layout()
 			"line":
 				# 触发交互，然后把对话推到指定行，用来截某一句的画面。
 				# 行号用参数 3（从 0 起算），朝向用参数 4（up/down/left/right，默认 down）。
@@ -416,7 +433,7 @@ func _stage_wake(main: Node2D) -> void:
 	main.player.global_position = Vector2(224, 130)
 	main.player.facing = Vector2.DOWN
 	main.player.play_animation(false)
-	main.show_location("xx月x日　傍晚　委托屋")
+	main.show_location("3036年9月24日　16:40　委托屋")
 	main.update_cover()
 	main.update_camera()
 
@@ -430,33 +447,25 @@ func _focus_scene(main: Node2D) -> void:
 	main.update_camera()
 
 
-## 夜里那场梦：切到夜间卧室，人仰面躺在床上。
+## 夜里那场梦：切到「床上躺着人」那张图、**把玩家藏起来**、镜头推到床上。
 ##
-## 和剧本 `declined` 最后那一幕一模一样 —— 坐标是**扫出来的**：
-## 在 `art/map/bedroom.png` 上按亮度找枕头的范围（y 84..105、x 324..357），
-## 取它的中心 `(336, 94)`。按头定位，头心落在枕头正中。
-## 要改就两边一起改。
+## **2026-09-25 策划改的**：不再往床上摆小人 —— 场景图直接换成
+## `bedroom_night_sleep`（图上本来就画着躺的人），人藏起来，镜头推过去。
 ##
-## **别拿缩略图目测这个数。** 第一次是看着放大的裁图读的，读出来偏了 38 个
-## 单位（人站到床头板上去了）—— 图在界面上显示时被缩放过，肉眼在它上面量的
-## 像素不是原图像素。
+## **别再退回「摆小人」那套。** 那套要按头定位、要 `pinned` 按住不让物理
+## 把他推出来，还得让 `update_player_control()` 过一遍 —— 一堆讲究；
+## 换图之后这些都不需要。要改两边一起改：剧本 `declined` / `ch1_bed` 的 `bed`。
 func _stage_night(main: Node2D, restage: bool = true) -> void:
 	if restage:
 		# 这次是在 `_initialize` 里跑的，摆完可能被第一个物理步顶掉 ——
 		# 让 `_process` 等节点就绪后再摆一次（详见 `_process` 开头那段）。
 		_night_restage = true
-		main.enter_map(&"bedroom_night", &"from_desk")
+		main.enter_map(&"bedroom_night_sleep", &"from_desk")
 		main.stage_curtain.snap_up()
 	# 重摆的时候**不要再 `enter_map`** —— 那会重建整个场景，
 	# 顺带把幕布重新动一遍，截出来整张图是暗的（踩过）。
-	main.player.place_head_at(Vector2(336, 94))
-	main.player.facing = Vector2.DOWN
-	main.player.pinned = true
-	main.player.play_animation(false)
-	# 摆完必须让控制权那一步过一遍：`pinned` 只是变量，
-	# 真正关掉物理的是 `update_player_control()`。少了它，人会被推下床。
-	main.update_player_control()
-	main.update_cover()
+	main.player.visible = false
+	main.camera_focus = Vector2(336, 100)
 	main.update_camera()
 
 

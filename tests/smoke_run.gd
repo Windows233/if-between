@@ -151,7 +151,11 @@ func _report(main: Node2D) -> bool:
 	_expect("黑过屏", _seen.has("black"), true)
 	_expect("章标题上过屏", _seen.get("banner", ""), "第一章　猫")
 	_expect("黑屏正中的字浮过", _seen.has("caption"), true)
-	_expect("左上角注过日期地点", _seen.get("location", ""), "xx月x日　傍晚　委托屋")
+	# **别把整句写死。** 时间戳 2026-09-25 从「xx月x日」换成了具体日期
+	#（「3036年9月24日　16:40　委托屋」），写死的话剧本一动这儿就红。
+	# 查「注上了、而且是委托屋那条」就够。
+	var where := str(_seen.get("location", ""))
+	_expect("左上角注过日期地点", where != "" and where.contains("委托屋"), true)
 	_expect("大图亮过", _seen.has("photo"), true)
 	_expect("拿到东西报了喜", _seen.has("toast_获得 猫的照片"), true)
 	_expect("选项前提示过存档", _seen.has("toast_此处建议存档"), true)

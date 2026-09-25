@@ -309,6 +309,8 @@ func _apply(step: StageStep) -> void:
 			await _focus(step)
 		&"place_player":
 			await _place_player(step)
+		&"hide_player":
+			_hide_player(step)
 		&"goto":
 			_goto(step)
 		&"eye_open":
@@ -458,32 +460,119 @@ func _flash(step: StageStep) -> void:
 
 ## 画面正中弹出 IF 条件框。
 ##
-## 剧情里它多半是**纯展示**：`disabled: true` 让四个块都禁用，玩家看完点一下继续
-## （策划那段就是这样 —— 「这个阶段还不能修改条件内容」）。
+## 数据：
 ##
-## `hold` 不写就是等玩家点一下；写了就停那么久自己收。
-## **即时模式下不等** —— 测试里没人点，等下去整段就卡住了。
+##     { "do": "if_panel", "condition": "猫不见了",
+##       "if_block": "猫不见了", "then": "来找主角帮忙",
+##       "blocks": ["", "立即离开", "", ""],
+##       "solve": "立即离开", "wrong": "tutorial_death" }
+##
+## - `if_block` / `then`：两个块位里**先放着**的块。
+##   `if_block` 优先于 `condition`（后者是「if 后面还没摆块」时的固定文字兜底）
+## - `blocks`：下面四格（空串 = 空位）
+## - `solve`：拖到 `then` 的**得是这块**才算过。不写就是纯展示
+## - `wrong`：**什么都没改就按确定**时跳到哪个节点（教学那段的「又一遍」）
+##
+## **按确定时有三种结果：**
+##
+## 1. `then` 已经是 `solve` → 过，往下演
+## 2. `then` 还是开局那个值 → 跳到 `wrong`（没改，等于没听懂）
+## 3. 别的组合 → **把块丢回开局的位置**，让玩家重排（2026-09-25 策划要的）
+##
+## **即时模式下不等** —— 测试里没人拖、也没人点确定，等下去整段就卡住了。
 func _if_panel(step: StageStep) -> void:
 	if main == null or main.if_panel == null:
 		return
-	# **类型要显式标。** `main` 在这是 `Node2D`，`main.if_panel` 取出来是 `Variant`，
+	# **类型要显式标。** `main` 在这是 `Node2D`，取出来的都是 `Variant`，
 	# 用 `:=` 会报「Cannot infer the type」。
 	var panel: IfPanel = main.if_panel
 	var disabled: bool = step.data.get("disabled", false) == true
-	panel.open(step.text("condition"), step.text("result"))
+	var solve := step.text("solve")
+	var wrong := step.text("wrong")
+	## 「玩家改没改对」记到哪个状态位。剧本用 `next_when` 读它分下游。
+	var flag := step.text("flag")
+	# **老字段 `result` 也认。** 2026-09-25 之前 `then` 那个位置叫 `result`，
+	# 改名之后漏改的剧本会静默变成空块（老人那段就是这么坏的）——
+	# 空块不报错，只是画面上少一块。
+	var then_block := step.text("then")
+	if then_block == "":
+		then_block = step.text("result")
+
+	panel.open(step.text("condition"), then_block, step.text("if_block"))
+	var blocks: Array = step.data.get("blocks", [])
 	for i: int in panel.slot_count():
+		panel.set_slot_block(i, str(blocks[i]) if i < blocks.size() else "")
 		panel.set_slot_state(i, IfPanel.SlotState.DISABLED if disabled \
 			else IfPanel.SlotState.NORMAL)
+	# **只读**：`disabled: true` 的框是纯展示，两个块位里的块也不许拽走。
+	panel.set_read_only(disabled)
+	panel.remember_layout()
 
-	var hold := step.number("hold", 0.0)
 	if instant:
+		# 测试里没人拖、也没人点确定。**直接摆成答案**，让后面的剧情接得上 ——
+		# 不然这段在无头里永远等不到 `confirmed`。
+		if solve != "":
+			for i: int in panel.slot_count():
+				if panel.slot_block(i) == solve:
+					panel.move_to_then(i)
+					break
 		panel.close()
 		return
+
+	if solve != "":
+		while panel.is_open():
+			await panel.confirmed
+			# 收尾条件：面板被关掉（剧情取消、回标题）时不能再等下去，
+			# 否则协程永远挂在这儿。
+			if not panel.is_open():
+				break
+			# **判定交给 `IfPanel.judge()`** —— 它是纯函数，测试够得着。
+			# 夹在协程里的话，「什么都不做按确定就能往下演」那种毛病测不出来
+			#（2026-09-25 就是这么被报上来的）。
+			var verdict := panel.judge(solve)
+			if verdict == IfPanel.Verdict.SOLVED:
+				_write_verdict(flag, true)
+				break
+			if verdict == IfPanel.Verdict.UNTOUCHED:
+				# **什么都没改。** 记下来，然后往下走 ——
+				# 两条出口**走同一段对话**（策划要的「重演一遍」），
+				# 分岔交给下游节点的 `next_when` 读这个 flag。
+				#
+				# 配了 `wrong` 的话就不走那条路，直接跳过去（以前只有这一种写法）。
+				_write_verdict(flag, false)
+				if wrong != "":
+					panel.close()
+					var story: StoryDirector = main.story
+					story.jump_to(wrong)
+					return
+				break
+			# 排了别的组合（或者没配 `wrong`）：块丢回原处，让他重排
+			panel.reset_blocks()
+		if not panel.is_open():
+			return
+		# 对了停半拍再收 —— 让玩家看清那一块真的换进去了
+		await _sleep(0.6)
+		panel.close()
+		return
+
+	var hold := step.number("hold", 0.0)
 	if hold > 0.0:
 		await _sleep(hold)
 	else:
-		await _wait_click()
+		# **纯展示也等「确定」**（2026-09-25 起）。
+		# 面板要收鼠标才能拖，收进来之后原来那套「点一下继续」就够不着
+		# 面板背后的东西了 —— 「观察老人那一步关不掉窗口」的卡关就是这么来的。
+		await panel.confirmed
 	panel.close()
+
+
+## 把「玩家改没改对」写进状态。剧本用 `next_when` 读它分下游。
+##
+## 不写 `flag` 字段就跳过 —— 不需要分下游的那种框（纯展示）不关心这个。
+func _write_verdict(flag: String, solved: bool) -> void:
+	if flag == "" or main == null or main.flags == null:
+		return
+	main.flags.set_value(StringName(flag), solved)
 
 
 ## 放一段音效。
@@ -556,6 +645,24 @@ func _image(step: StageStep) -> void:
 		await _wait_click()
 	if step.flag("hide", true):
 		await overlay.hide_image(fade)
+
+
+## 把玩家角色**藏起来 / 显示回来**。
+##
+## 用在「场景图上已经画着人了」那几幕 —— 比如「床上躺着主角」那张图，
+## 上面本来就画着躺的人，再叠一个小人上去就是两个主角。
+##
+##     { "do": "hide_player", "visible": false }   ← 藏
+##     { "do": "hide_player" }                     ← 显示回来（默认）
+##
+## **和「把镜头挪开」不是一回事。** 镜头挪开只是碰巧看不见他 ——
+## 人还在场上，位置、碰撞、脚下的东西都照旧。要真不在，用这条。
+##
+## 补演（读档）时会跟着跑：藏着这个状态本身是要还原的画面。
+func _hide_player(step: StageStep) -> void:
+	if main == null or main.player == null:
+		return
+	main.player.visible = step.flag("visible", true)
 
 
 ## 在地图上放一个临时角色（老人这种）。

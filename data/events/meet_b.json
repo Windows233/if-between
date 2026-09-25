@@ -157,10 +157,15 @@
           "slide": "out"
         },
         {
+          "do": "music",
+          "path": "res://audio/bgm/end3.wav"
+        },
+        {
           "do": "image",
           "path": "res://art/cg/end3碌碌无为.png",
           "fade": 0.5,
           "fill": true,
+          "wait_click": true,
           "hide": false
         },
         {
@@ -172,13 +177,13 @@
           ]
         },
         {
-          "do": "image_hide",
-          "fade": 0.6
-        },
-        {
           "do": "fade",
           "to": "black",
           "time": 0.7
+        },
+        {
+          "do": "image_hide",
+          "fade": 0.6
         },
         {
           "do": "caption",
@@ -324,7 +329,7 @@
         },
         {
           "do": "location",
-          "text": "xx月x日　傍晚　委托屋"
+          "text": "3036年9月25日　22:40　委托屋"
         },
         {
           "do": "fade",

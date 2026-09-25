@@ -32,6 +32,21 @@ var ending: StringName = &""
 ## 写法一致（键是变量名，值是要设成什么），所以条件那套照旧能用。
 var effects: Dictionary = {}
 
+## 按状态挑下一步。**在 `next_id` 之前判** —— 条件满足就走它，否则才用 `next`。
+##
+## 写法：
+##
+##     "next_when": { "if": { "var": "gate/saved_a", "op": "==", "value": false },
+##                    "next": "market_dusk" }
+##
+## 条件那套和 `Actor` / `Portal` 的 `if` 一模一样（`Condition.from_dictionary`）。
+##
+## **为什么需要它**：同一个节点演完之后可能该去两个地方，取决于玩家之前干了什么。
+## 2026-09-25 的教学就是这样 —— 两条出口都走 `again_day`（**对话一模一样**），
+## 之后「改过条件」的去新剧情、「没改」的**回溯**到前面那一幕。
+## 复刻一份对话也能做，但那就成了两份数据要同步 —— 策划明确说不要那种。
+var next_when: Dictionary = {}
+
 
 static func from_dictionary(raw: Variant) -> StoryNode:
 	var node := StoryNode.new()
@@ -42,6 +57,7 @@ static func from_dictionary(raw: Variant) -> StoryNode:
 	node.id = StringName(str(data.get("id", "")))
 	node.next_id = StringName(str(data.get("next", "")))
 	node.ending = StringName(str(data.get("ending", "")))
+	node.next_when = _next_when_from(data.get("next_when"))
 	node.dialogue = Dialogue.from_array(data.get("talk"))
 
 	var raw_stage: Variant = data.get("stage", [])
@@ -69,6 +85,30 @@ func has_choices() -> bool:
 ## 这个节点只演过场、没有说话吗。推进器靠它决定「演完直接往下走」。
 func is_silent() -> bool:
 	return dialogue.is_empty()
+
+
+## `next_when` 那块的解析。**写不全（缺条件或缺目标）就当没写** ——
+## 别让它半生不熟地留着，那种东西要到运行时才炸。
+static func _next_when_from(raw: Variant) -> Dictionary:
+	if not (raw is Dictionary):
+		return {}
+	var data := raw as Dictionary
+	var condition := Condition.from_dictionary(data.get("if"))
+	var target := StringName(str(data.get("next", "")))
+	if condition == null or target == &"":
+		return {}
+	return {"condition": condition, "next": target}
+
+
+## 这个节点现在该往哪儿走。
+##
+## `next_when` 的条件满足就用它，否则用 `next_id`。空字符串表示这段剧情到此结束。
+func resolved_next(flags: WorldState) -> StringName:
+	if not next_when.is_empty():
+		var condition: Condition = next_when["condition"]
+		if condition != null and condition.eval(flags):
+			return StringName(next_when["next"])
+	return next_id
 
 
 ## 这是个结局节点吗。

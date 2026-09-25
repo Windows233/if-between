@@ -118,7 +118,7 @@ def _exists(rel: str) -> bool:
 ## 写错一个词不会报错、也不会崩 —— 它就是**静静地不生效**。
 ## 2026-09-24 就在这儿栽过一次：写了 `"effects"`，于是「睡过了」那个标记
 ## 一直没立起来，卧室门到第二次还开着第一个口，得靠测试才查出来。
-NODE_KEYS = {"id", "next", "ending", "talk", "stage", "set", "choices"}
+NODE_KEYS = {"id", "next", "next_when", "ending", "talk", "stage", "set", "choices"}
 
 
 def check_node_keys(where: str, node: dict, problems: list) -> None:

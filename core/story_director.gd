@@ -145,6 +145,17 @@ func choose(id: StringName) -> bool:
 	return true
 
 
+## 直接跳到某个节点。**演出指令自己决定下一步时用**（目前只有 IF 框）。
+##
+## 转发给 `runtime.jump_to()` —— 外面不该自己去摸 `runtime`。
+##
+## **跳完这里不调 `_run()`。** 调用方是演出里的协程（`cutscene._if_panel`），
+## 它那条 `await` 还没返回；等它返回，`_run()` 的循环会把当前节点重新取一次，
+## 自然就走到新的那个上了。在这儿再 `_run()` 一次会把同一段演两遍。
+func jump_to(node_id: StringName) -> bool:
+	return runtime.jump_to(node_id)
+
+
 # ---------------------------------------------------------------- 内部
 
 ## 把当前节点走完：先演 stage，再播 talk，没有说话就自己往下走。

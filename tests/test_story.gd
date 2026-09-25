@@ -206,15 +206,14 @@ static func test_decline_reaches_end1(h: TestHarness) -> void:
 	h.pick(main, &"decline")
 	# 老人沿着原路走回去、被收走
 	h.check("老人走了", main.cutscene.actor_ids().has("elder"), false)
-	# **换场景了**：新稿子的分支②接着演夜里那场梦 —— 切到夜间卧室，
-	# 人仰面躺在床上（按头定位，头心落在枕头正中）。
-	h.check("切到夜间卧室", main.current_map.id, &"bedroom_night")
-	h.check("人躺在床上",
-		main.player.global_position.round(), Vector2(336, 128))
-	h.check("面朝屏幕下方", main.player.facing, Vector2.DOWN)
-	# 那一幕的脚本里写着 `pin: true`（躺着不能抖），但**剧情一结束就松手了** ——
-	# 数据里那条由 `test_cutscene_script` 守着，这里验的是终态。
-	h.check("剧情结束后松手了", main.player.pinned, false)
+	# **换场景了**：新稿子的分支②接着演夜里那场梦 —— 切到「睡着」那张图
+	#（图上本来就画着躺的人），玩家角色在那一步被藏起来。
+	h.check("切到「睡着」那张图", main.current_map.id, &"bedroom_night_sleep")
+	# 「藏起来」那一步由 `test_cutscene_script` 守着，这里验的是终态：
+	# **剧情一结束就露回来**（`_on_story_ended`）——「藏着」是那一幕的安排，
+	# 不该跟到剧情之外，不然自由走动时人看不见。
+	h.check("剧情结束后人露回来了", main.player.visible, true)
+	h.check("也没被按着", main.player.pinned, false)
 	main.update_player_control()
 	# 演出是在黑屏上收尾的：碎屏那一下把黑幕压下来，结局文字写在黑底上。
 	# 回主界面时黑幕**不揭** —— 标题底下露着一个亮着的房间就像没跳干净。

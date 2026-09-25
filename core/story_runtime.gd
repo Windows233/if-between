@@ -118,7 +118,9 @@ func on_dialogue_finished() -> bool:
 
 	if node.has_choices():
 		return true
-	_goto(node.next_id)
+	# **走 `resolved_next` 而不是直接 `next_id`** —— 节点可以用 `next_when`
+	# 按状态挑两个下游（见 `StoryNode.next_when`）。
+	_goto(node.resolved_next(flags))
 	return false
 
 
@@ -140,6 +142,23 @@ func choose(choice_id: StringName) -> bool:
 		return true
 
 	return false
+
+
+## 直接跳到某个节点，**跳过 `next` / 选项那条正常的路**。
+##
+## 给「演出指令自己决定下一步」用 —— 目前只有 IF 框：玩家在里面摆出来的结果
+## 决定往哪走（摆对了继续、没改就再转一圈，见 `cutscene.gd` 的 `_if_panel`）。
+##
+## 普通的推进**不要**用它：该走 `on_dialogue_finished()` / `choose()`，
+## 那是剧本数据说了算的。返回 false 表示节点不存在、没跳成。
+func jump_to(node_id: StringName) -> bool:
+	if node_id == &"" or event == null:
+		return false
+	if event.node(node_id) == null:
+		push_error("[剧情] 跳转到不存在的节点：%s" % node_id)
+		return false
+	_goto(node_id)
+	return true
 
 
 ## 取走本次达成的结局并清空。外面靠它决定「要不要演结局演出」。

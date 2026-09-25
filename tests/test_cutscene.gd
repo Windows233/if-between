@@ -34,6 +34,10 @@ static func run(h: TestHarness) -> void:
 	test_bag_hidden_on_cg(h)
 	test_actor_poses(h)
 	test_ch2_scene_data(h)
+	test_blackout_before_hiding_cg(h)
+	test_if_panel_drag(h)
+	test_cg_stays_long_enough(h)
+	test_ending_cg_and_music(h)
 	test_transient_talks(h)
 	test_walk_is_awaited(h)
 	test_replay_keeps_picture_drops_words(h)
@@ -292,18 +296,30 @@ static func test_opening_data(h: TestHarness) -> void:
 	h.check("切到夜间卧室", goto_at >= 0, true)
 	if goto_at >= 0:
 		var onto: StageStep = declined.stage[goto_at]
-		h.check("去的是夜版卧室", onto.text("map"), "bedroom_night")
+		# **用的是「床上躺着人」那张图**（2026-09-25 策划改的）：
+		# 不再把小人摆到床上，图上本来就画着躺着的人。
+		h.check("去的是「睡着」那张图", onto.text("map"), "bedroom_night_sleep")
 		h.check("用的出生点是门口内侧", onto.text("spawn"), "from_desk")
 
-	# 切过去就摆到床上：按**头**定位（头进枕头），而且要按住 ——
-	# 那个点落在床的碰撞箱里，不按住物理每帧把人推出来
-	var lie_at := decline_kinds.find(&"place_player")
-	h.check("切过去就摆到床上", lie_at > goto_at, true)
-	if lie_at > goto_at:
-		var lie: StageStep = declined.stage[lie_at]
-		h.check("按头的正中央定位", lie.text("anchor"), "head")
-		h.check("仰面（正面帧）", lie.text("facing"), "down")
-		h.check("按住不放", lie.flag("pin", false), true)
+	# **接下来不是摆小人，是把他藏起来、再把镜头推到床上。**
+	# 图上画着躺的人，再叠一个小人上去就是两个主角。
+	var hid_at := decline_kinds.find(&"hide_player")
+	h.check("切过去把玩家藏起来", hid_at > goto_at, true)
+	if hid_at > goto_at:
+		h.check("藏起来（不是显示）",
+			declined.stage[hid_at].flag("visible", true), false)
+	# **从 `goto` 往后找** —— 这一节里 `focus` 有两处：
+	# 前面那处是老人说话时镜头跟着他，后面那处才是切完场景推上床。
+	var look_at := -1
+	for i: int in range(goto_at + 1, decline_kinds.size()):
+		if decline_kinds[i] == &"focus":
+			look_at = i
+			break
+	h.check("切完场景把镜头推到床上", look_at > goto_at, true)
+	if look_at > goto_at:
+		h.check("推到床那儿", declined.stage[look_at].point("at").x, 336.0)
+	h.check("不再有「把小人摆到床上」那一步",
+		decline_kinds.has(&"place_player"), false)
 
 	h.check("旧那套切屏飞散不用了", decline_kinds.has(&"shatter"), false)
 	h.check("猫叫接碎屏", decline_kinds.has(&"play_sound")
@@ -338,7 +354,8 @@ static func test_cutscene_history(h: TestHarness) -> void:
 	# 结局：夜里那场梦切到卧室、人摆到床上，碎玻璃之后才是那两行字
 	h.check("整段只换过一次场景", seen.count("goto"), 1)
 	var g: int = seen.find("goto")
-	h.check("换场景之后紧接着摆到床上", seen[g + 1], "place_player")
+	# **换场景之后紧接着是「把玩家藏起来」**（2026-09-25 起不再往床上摆小人）
+	h.check("换场景之后紧接着把玩家藏起来", seen[g + 1], "hide_player")
 	h.check("换场景在碎玻璃之前", g < seen.find("glass"), true)
 	h.check("碎玻璃在结局文字之前",
 		seen.find("glass") < seen.rfind("caption"), true)
@@ -438,13 +455,12 @@ static func test_ending_goes_back_to_title(h: TestHarness) -> void:
 	main.free_roam_after_ending = false
 	h.play_to_end1(main)
 
-	# 新稿子的分支②：最后一幕已经切到夜间卧室、人仰面躺在床上
-	h.check("落在夜间卧室", main.current_map.id, &"bedroom_night")
-	h.check("人躺在床上（头在枕头正中，脚在下面一截）",
-		main.player.global_position.round(), Vector2(336, 128))
-	# 床上那一幕本来按着（不让物理把人推出来），剧情一结束就松手了 ——
-	# 「按住」是那一幕的安排，不该跟到剧情之外
-	h.check("这会儿已经松手了", main.player.pinned, false)
+	# 新稿子的分支②：最后一幕切到「睡着」那张图，**玩家角色藏起来了**
+	h.check("落在「睡着」那张图", main.current_map.id, &"bedroom_night_sleep")
+	# **剧情演完要把人露回来**（`_on_story_ended`）—— 那一幕把他藏了，
+	# 「藏着」是那一幕的安排，不该跟到剧情之外。
+	h.check("人已经露回来了", main.player.visible, true)
+	h.check("也没被按着", main.player.pinned, false)
 
 	# 结局那两行是 `caption` 演出来的，所以这时候**不该有对话框**：
 	# 底下再冒一块面板写「结局达成 · 平静即死亡」是把同一件事说两遍。
@@ -472,7 +488,8 @@ static func test_free_roam_after_ending(h: TestHarness) -> void:
 	h.play_to_end1(main)
 
 	h.check("没被顶回主界面", main.title_screen.is_open(), false)
-	h.check("还在夜间卧室里", main.current_map.id, &"bedroom_night")
+	h.check("还在「睡着」那张图里", main.current_map.id, &"bedroom_night_sleep")
+	h.check("调试口子上人是露着的", main.player.visible, true)
 	# 剧本把最后一幕的人按在床上，剧情一结束就松手了（`_on_story_ended`）——
 	# 不松的话人钉在床上走不动，这个调试口子等于没有
 	h.check("从床上松开手了", main.player.pinned, false)
@@ -999,15 +1016,24 @@ static func test_death_text(h: TestHarness) -> void:
 	var kinds: Array[StringName] = []
 	for step: StageStep in death.stage:
 		kinds.append(step.kind)
-	# 大图 → 对话框两行（压在 CG 上说）→ 等玩家点 → 收图 → 中央的字
-	var want: Array[StringName] = [&"image", &"say", &"wait_click", &"image_hide", &"caption"]
-	h.check("五步：大图 / 对话 / 等点击 / 收图 / 中央的字", kinds, want)
+	# 大图 → 对话框两行（压在 CG 上说）→ 等玩家点 → **黑屏** → 收图 → 中央的字
+	#
+	# **「黑屏」那一步是 2026-09-25 加的**（策划 bug 单第 13 条：
+	# 「播放 cg 后闪烁回原来场景」）。收掉 CG 的那半秒，露出来的本来就是
+	# 背后的场景；前面先下黑幕，收的时候透出来的就是黑。
+	var want: Array[StringName] = [&"image", &"say", &"wait_click", &"fade",
+		&"image_hide", &"caption"]
+	h.check("六步：大图 / 对话 / 等点击 / 黑屏 / 收图 / 中央的字", kinds, want)
 
 	var cg: StageStep = death.stage[0]
 	h.check("大图铺满", cg.flag("fill", false), true)
 	h.check("大图留在屏上（两句压在它上面说）", cg.flag("hide", true), false)
-	# 「时间太长」那条：停一下可以，别按着人看好几秒
-	h.check("停得不超过 2.5 秒", cg.number("hold", 0.0) <= 2.5, true)
+	# 停一下可以，别按着人看好几秒。**上限 2026-09-25 放到 3.5** ——
+	# 策划说 CG 留得太短（bug 单第 14 条），「适当延长」。
+	h.check("停得不超过 3.5 秒", cg.number("hold", 0.0) <= 3.5, true)
+	# 下限也钉一条：`hold` 不写是 0、`hide` 不写是 true —— 合起来就是
+	# 「淡入完立刻淡出」，一闪而过。**CG 得停够时间。**
+	h.check("也别短到一闪而过", cg.number("hold", 0.0) >= 1.5, true)
 
 	# 两句走对话框，而且压在 CG 上说的前提是**大图不能盖住对话框**
 	var lines: StageStep = death.stage[1]
@@ -1174,6 +1200,250 @@ static func test_accepted_and_sleep(h: TestHarness) -> void:
 	main.queue_free()
 
 
+## **黑幕要排在收 CG 之前。**
+##
+## `StageCurtain` 是**第 5 层**、演出层（CG 待的）是**第 14 层** ——
+## CG 盖在黑幕**上面**。所以「先收 CG、再黑屏」的写法，会让那 0.6 秒淡出
+## 透出**背后的场景**：2026-09-25 策划报的「出现 cg 后不应该再出现角色在
+## 委托屋站着」，根子就是这个。反过来写才对 —— 先下黑幕，CG 淡出时透出的是黑。
+##
+## 这条**扫全部剧本**，谁写反了都会红（写的时候 `end2_cg` 和 `meet_b` 的
+## `distrust` 都是反的）。
+static func test_blackout_before_hiding_cg(h: TestHarness) -> void:
+	var dir := DirAccess.open("res://data/events")
+	if dir == null:
+		h.check("读得到剧情目录", false, true)
+		return
+
+	var bad: Array[String] = []
+	var scanned := 0
+	for raw: String in dir.get_files():
+		var base := raw
+		if base.ends_with(".import"):
+			base = base.substr(0, base.length() - ".import".length())
+		if not base.ends_with(".json"):
+			continue
+		var event := DataLoader.load_event(StringName(base.trim_suffix(".json")))
+		if event == null:
+			continue
+		scanned += 1
+		for node: StoryNode in event.nodes:
+			var black_at := -1
+			var hide_at := -1
+			for i: int in node.stage.size():
+				var s: StageStep = node.stage[i]
+				if s.kind == &"fade" and s.text("to") == "black":
+					black_at = i
+				if s.kind == &"image_hide":
+					hide_at = i
+			if black_at >= 0 and hide_at >= 0 and hide_at < black_at:
+				bad.append("%s/%s" % [event.id, node.id])
+	h.check("扫到了剧本（%d 份）" % scanned, scanned > 0, true)
+	h.check("没有「先收 CG 再黑屏」的节点", bad, [] as Array[String])
+
+
+## IF 框的**拖动**：把下面某一块搬到 `then` 上，**两块换位置**。
+##
+## 2026-09-25 加的教学关卡就靠它 —— 策划要的是「拖动「立即离开」顶替
+## `then` 里原本那个「观察」，**被顶掉的自动回到原本位置**」。
+##
+## 走的是 `move_to_then()`，它里面就是拖动松手时那条路（`_swap_with_then`）——
+## 不另写一套，免得两边分叉。
+static func test_if_panel_drag(h: TestHarness) -> void:
+	var main := h.new_main()
+	var panel: IfPanel = main.if_panel
+	panel.setup()
+	panel.open("", "观察", "发现异常")
+	panel.set_slot_block(0, "")
+	panel.set_slot_block(1, "立即离开")
+	panel.set_slot_block(2, "")
+	panel.set_slot_block(3, "")
+	panel.remember_layout()
+
+	# 开局的样子：`if` 后面是「发现异常」、`then` 里是「观察」，
+	# 第一格和第三格都空着（它们的内容摆上去了）
+	h.check("if 后面摆着「发现异常」", panel.if_block(), "发现异常")
+	h.check("then 里是「观察」", panel.then_block(), "观察")
+	h.check("第一格空着", panel.slot_block(0), "")
+	h.check("第三格空着", panel.slot_block(2), "")
+
+	h.check("搬得动", panel.move_to_then(1), true)
+	h.check("then 换成「立即离开」", panel.then_block(), "立即离开")
+	h.check("被顶掉的「观察」回到第二格", panel.slot_block(1), "观察")
+	h.check("原来空着的第一格还是空的", panel.slot_block(0), "")
+
+	# **排乱了就丢回开局那套**（2026-09-25 策划要的：玩家排出预设之外的组合、
+	# 按了确定之后，让他重新排）
+	panel.reset_blocks()
+	h.check("回位：then 又是「观察」", panel.then_block(), "观察")
+	h.check("回位：第二格又是「立即离开」", panel.slot_block(1), "立即离开")
+	h.check("回位：if 后面还是「发现异常」", panel.if_block(), "发现异常")
+
+	# 空位搬不动；禁用的也搬不动
+	h.check("空位搬不动", panel.move_to_then(0), false)
+	panel.set_slot_block(3, "别动我")
+	panel.set_slot_state(3, IfPanel.SlotState.DISABLED)
+	h.check("禁用的搬不动", panel.move_to_then(3), false)
+	h.check("搬不动就没改数据", panel.slot_block(3), "别动我")
+
+	# **两个块位都得有锚点。** 2026-09-25 截图里的毛病：`_blank_at` 里塞了
+	# 固定段的占位，索引一错，两个块全被当成「没位置」藏起来 ——
+	# 框里只剩两个虚线洞，块一个都看不见。
+	var blanks := panel.blank_positions()
+	h.check("两个块位都有位置", blanks.size(), 2)
+	if blanks.size() == 2:
+		h.check("两个位置不一样", blanks[0] != blanks[1], true)
+		h.check("if 那个在 then 那个左边", blanks[0].x < blanks[1].x, true)
+
+	# ---- 按「确定」算哪种结果 ----
+	# 这一组是 2026-09-25 策划报的毛病：「什么都不做按确定就能往下演」。
+	# 判定本来夹在 `cutscene._if_panel` 的协程里、测不到，所以抽成了
+	# `IfPanel.judge()` 这个纯函数。
+	panel.reset_blocks()
+	h.check("什么都没改 → 算「没动过」",
+		panel.judge("立即离开"), IfPanel.Verdict.UNTOUCHED)
+	h.check("没动过就不该算过",
+		panel.judge("立即离开") == IfPanel.Verdict.SOLVED, false)
+	var moved := panel.move_to_then(1)
+	h.check("搬对了 → 算「过」", panel.judge("立即离开"), IfPanel.Verdict.SOLVED)
+	panel.set_then_block("别的什么")
+	h.check("排成第三种组合 → 算「排错」",
+		panel.judge("立即离开"), IfPanel.Verdict.WRONG)
+	panel.reset_blocks()
+
+	# **`if` 位被动过也算排错。** 2026-09-25 策划试出来的：光判 `then` 的话，
+	# 把「立即离开」拖到 `if` 上、`then` 没动，照样蒙混过关。
+	h.check("把答案拖到 if 上也过不了",
+		panel.move_to_slot(1, IfPanel.FROM_IF), true)
+	h.check("if 位现在不是「发现异常」了", panel.if_block(), "立即离开")
+	h.check("于是判成排错", panel.judge("立即离开"), IfPanel.Verdict.WRONG)
+	panel.reset_blocks()
+	h.check("回位之后 if 上又是「发现异常」", panel.if_block(), "发现异常")
+	h.check("回位之后就是「没动过」",
+		panel.judge("立即离开"), IfPanel.Verdict.UNTOUCHED)
+
+	# ---- 四种图各用在哪（2026-09-25 策划专门重新明确的）----
+	# 显示逻辑抽成了 `block_state()`，就是为了能这样断言。
+	h.check("空位 = 禁用图", panel.block_state(0), IfPanel.SlotState.DISABLED)
+	h.check("有内容的格子 = 常态图", panel.block_state(1), IfPanel.SlotState.NORMAL)
+	h.check("if 那块 = 选中图", panel.block_state(IfPanel.FROM_IF),
+		IfPanel.SlotState.ACTIVE)
+	h.check("then 那块 = 选中图", panel.block_state(IfPanel.FROM_THEN),
+		IfPanel.SlotState.ACTIVE)
+
+	# ---- 只读的框：**两块也拖不动**（老人那一步就是纯展示）----
+	# 2026-09-25 策划报的：「两个选项块左右调换依然能接着往下演」。
+	panel.set_read_only(true)
+	h.check("只读时确实标上了", panel.is_read_only(), true)
+	panel.set_slot_block(0, "试试")
+	h.check("只读时空位也拖不动", panel.move_to_slot(0, IfPanel.FROM_THEN), false)
+	panel.set_slot_block(0, "")
+	panel.set_read_only(false)
+
+	# **「确定」按钮**：在框里、压在四个选项栏右边，而且**和四格在同一条线上**
+	#（原来 y 贴的是框底，歪在格子下面一截）
+	var confirm := panel.confirm_rect()
+	h.check("确定按钮在框内", panel.box_rect().encloses(confirm), true)
+	h.check("确定按钮在四格右边",
+		confirm.position.x >= panel.slot_position(3).x + IfPanel.SLOT_SIZE, true)
+	h.check("确定按钮和四格一条线",
+		absf(confirm.get_center().y
+			- (panel.slot_position(0).y + IfPanel.SLOT_SIZE * 0.5)) < 0.5, true)
+	h.check("而且没贴着右边框",
+		panel.box_rect().end.x - confirm.end.x > IfPanel.PAD.x, true)
+
+	panel.close()
+	main.queue_free()
+
+
+## **每一张铺满的 CG 都得停够时间。**
+##
+## `_image` 那两条默认值凑在一起是个坑：`hold` 不写是 **0**、`hide` 不写是 **true**
+## —— 合起来就是「淡入完立刻淡出」，一闪而过。2026-09-25 策划的 bug 单
+## 第 14 条报的就是这个（「cg 的留存时间太短了」）。
+##
+## 扫全部剧本，每张**铺满的** CG 满足下面任意一条就算过：
+##
+##   - 写了够长的 `hold`（≥1.5 秒）
+##   - `wait_click: true` —— 等玩家点，不算短
+##   - `hide: false` —— 图留着不收，靠后面的台词撑
+##
+## **道具小图不算**（没写 `fill`）：它们不铺满，背后本来就是场景。
+static func test_cg_stays_long_enough(h: TestHarness) -> void:
+	var bad: Array[String] = []
+	var scanned := 0
+	for eid: StringName in [&"ch1_opening", &"ch1_bed", &"ch2_meet_a", &"meet_b"]:
+		var event := DataLoader.load_event(eid)
+		if event == null:
+			continue
+		for node: StoryNode in event.nodes:
+			for step: StageStep in node.stage:
+				if step.kind != &"image":
+					continue
+				scanned += 1
+				if not step.flag("fill", false):
+					continue                      # 道具小图，不算
+				if not step.flag("hide", true):
+					continue                      # 留着不收，靠台词撑
+				if step.flag("wait_click", false):
+					continue                      # 等玩家点
+				if step.number("hold", 0.0) >= 1.5:
+					continue
+				bad.append("%s/%s 的 %s" % [eid, node.id,
+					step.text("path").get_file()])
+	h.check("扫到了 CG（%d 张里含道具图）" % scanned, scanned > 0, true)
+	h.check("铺满的 CG 都停够了（或等玩家点 / 留着不收）", bad, [] as Array[String])
+
+
+## **结局那三张 CG：配乐 + 等玩家点。**
+##
+## 2026-09-25 策划要的：end CG 图和对应的音乐**一起放**，而且**不自动往下走** ——
+## 玩家点一下才进后面的内容（黑屏写 end 名称那一段）。
+##
+## 四条一起钉：CG 在、是那张、**等玩家点**、音乐配上了。
+static func test_ending_cg_and_music(h: TestHarness) -> void:
+	var cases := [
+		# **`declined` 这个名字不达意** —— 它演的是「拒绝委托之后睡着、
+		# 梦里死掉」那一段，end1 的 CG 在它末尾。`calm_death` 是它下游那个
+		# 空的终点节点（只写着 `ending`）。
+		{"event": &"ch1_opening", "node": &"declined", "cg": "end1平静即死亡.png",
+			"music": "res://audio/bgm/end1.wav"},
+		{"event": &"ch2_meet_a", "node": &"end2_cg", "cg": "end2甜蜜咬痕.png",
+			"music": "res://audio/bgm/end2.wav"},
+		{"event": &"meet_b", "node": &"distrust", "cg": "end3碌碌无为.png",
+			"music": "res://audio/bgm/end3.wav"},
+	]
+	for item: Dictionary in cases:
+		var eid: StringName = item["event"]
+		var event := DataLoader.load_event(eid)
+		if event == null:
+			h.check("读得到 %s" % eid, false, true)
+			continue
+		var node: StoryNode = event.node(StringName(str(item["node"])))
+		h.check("%s 里有 %s" % [eid, item["node"]], node != null, true)
+		if node == null:
+			continue
+		var cg_step: StageStep = null
+		var music_step: StageStep = null
+		for step: StageStep in node.stage:
+			if step.kind == &"image":
+				cg_step = step
+			if step.kind == &"music":
+				music_step = step
+		h.check("%s 摆了 end CG" % eid, cg_step != null, true)
+		if cg_step != null:
+			h.check("%s 的 CG 是那张" % eid,
+				cg_step.text("path").get_file(), str(item["cg"]))
+			h.check("%s 的 CG 铺满" % eid, cg_step.flag("fill", false), true)
+			h.check("%s 的 CG 等玩家点才往下走" % eid,
+				cg_step.flag("wait_click", false), true)
+			h.check("%s 的 CG 留着不收" % eid, cg_step.flag("hide", true), false)
+		h.check("%s 配了 end 音乐" % eid, music_step != null, true)
+		if music_step != null:
+			h.check("%s 的音乐是那首" % eid,
+				music_step.text("path"), str(item["music"]))
+
+
 ## 过场里临时角色的**姿势和翻面**，以及「一边平移一边淡出」。
 ##
 ## A（2026-09-24 加的角色）只有两张图：侧站、蹲着，**没有走路动画** ——
@@ -1244,20 +1514,30 @@ static func test_ch2_scene_data(h: TestHarness) -> void:
 		h.check("ch1_bed 有节点 %s" % want, ids.has(want), true)
 	h.check("这一夜到 again 就完了（没有 bed_again）", ids.has(&"bed_again"), false)
 
-	# 第二遍：老人那句原样再说一遍，**后面那一段也补上了**
+	# 第二遍（`again`）：老人又来。
+	#
+	# **重复的是那句问话，不是「缺耳角」。** 2026-09-25 策划先报了一次、
+	# 我改反了，他再指出来的：`back` 里老人刚问过「……你这里，接找猫的活吗？」，
+	# `again` 开头又问一遍 —— 删的是**这句**。
+	# 「它左耳缺一角。尾巴尖是白的。」只在 `again` 出现（`back` 里没说过），
+	# 得留着。
 	var again := event.node(&"again")
-	h.check("第二遍还是那句「接找猫的活吗」",
-		(again.stage[0].data["lines"] as Array)[0]["text"], "……你这里，接找猫的活吗？")
-	# 策划 2026-09-24 报的「中间那几句没复刻」：缺耳角 / 然后没有然后 / 我尽快给消息
 	var copied: Array[String] = []
 	for step: StageStep in again.stage:
 		for raw: Variant in step.data.get("lines", []):
 			if raw is Dictionary:
 				copied.append(str((raw as Dictionary).get("text", "")))
+	h.check("第二遍不再重复那句问话",
+		copied.has("……你这里，接找猫的活吗？"), false)
 	for want: String in ["它左耳缺一角。尾巴尖是白的。", "然后……没有然后了。",
-			"好，我会尽快给您消息。", "这老人今天怎么这么奇怪。",
-			"这么晚了，明天再出去找吧。先休息吧。"]:
+			"好，我会尽快给您消息。"]:
 		h.check("复刻了「%s」" % want.left(6), copied.has(want), true)
+
+	# 收场那两句换了（2026-09-25 策划给的新词）
+	h.check("改成「这老人真奇怪」", copied.has("这老人真奇怪......"), true)
+	h.check("改成「不行，我得赶紧出去找」", copied.has("不行，我得赶紧出去找"), true)
+	h.check("老的「明天再出去找吧」没了",
+		copied.has("这么晚了，明天再出去找吧。先休息吧。"), false)
 	# 老人走出去那三下
 	var again_kinds: Array[StringName] = []
 	for step: StageStep in again.stage:
@@ -1276,10 +1556,27 @@ static func test_ch2_scene_data(h: TestHarness) -> void:
 		back_kinds.append(step.kind)
 	h.check("回去那一幕有睁眼", back_kinds.has(&"eye_open"), true)
 	var eye_at := back_kinds.find(&"eye_open")
+	# **往前找最近的那一条 `fade`** —— 2026-09-25 在 `eye_open` 前面插了一条
+	# 回溯音效（`play_sound`），不能再看 `eye_at - 1` 了。
+	var clear_at := -1
+	for i: int in range(eye_at - 1, -1, -1):
+		if back.stage[i].kind == &"fade":
+			clear_at = i
+			break
 	h.check("睁眼之前先把幕瞬揭",
-		back.stage[eye_at - 1].text("to") if eye_at > 0 else "", "clear")
+		back.stage[clear_at].text("to") if clear_at >= 0 else "", "clear")
 	h.check("幕那一下是瞬揭（时间 0）",
-		back.stage[eye_at - 1].number("time", 1.0) if eye_at > 0 else 1.0, 0.0)
+		back.stage[clear_at].number("time", 1.0) if clear_at >= 0 else 1.0, 0.0)
+
+	# **回溯音在睁眼那一下**（策划要的：梦醒睁眼的时机放「时间回溯」）
+	var back_sound := -1
+	for i: int in back_kinds.size():
+		if back_kinds[i] == &"play_sound" \
+				and back.stage[i].text("path").get_file() == "时间回溯.wav":
+			back_sound = i
+	h.check("这儿放了回溯音", back_sound >= 0, true)
+	if back_sound >= 0:
+		h.check("而且排在睁眼之前", back_sound < eye_at, true)
 
 	# **「观察」整篇只该出现一次。**
 	# 2026-09-24 策划报的「观察选项重复出现两次、要点两次才接上」，
@@ -1308,6 +1605,14 @@ static func test_ch2_scene_data(h: TestHarness) -> void:
 		kinds_peek.find(&"hint") < kinds_peek.find(&"if_panel"), true)
 	h.check("提示写的就是那句话",
 		peek.stage[kinds_peek.find(&"hint")].text("text"), "（你看到了老人脑海中的if）")
+
+	# **老人那个框里的块要真的摆上去。** 2026-09-25 坏过一次：`then` 那个位置
+	# 那时候还叫 `result`，改名之后漏改，静默变成空块 —— 不报错，画面上只是少一块。
+	var peek_panel: StageStep = peek.stage[kinds_peek.find(&"if_panel")]
+	h.check("if 后面摆着「猫不见了」", peek_panel.text("if_block"), "猫不见了")
+	h.check("then 里是「来找主角帮忙」", peek_panel.text("then"), "来找主角帮忙")
+	h.check("而且这一框是纯展示（拖不动）",
+		peek_panel.data.get("disabled", false), true)
 
 	# ---- 下面这一串现在在 `ch2_market` 里（上床睡觉 → 第二天集市）----
 	var second := DataLoader.load_event(&"ch2_market")
@@ -1350,10 +1655,11 @@ static func test_ch2_scene_data(h: TestHarness) -> void:
 	h.check("和 A 齐（同一条 y）", walk_step.point("at").y, 172.0)
 	h.check("走过去之后朝右", walk_step.text("facing"), "right")
 
-	# 白天集市：A 蹲在店门口修留声机，**玩家自己走进来**
+	# 进集市：A 蹲在店门口修留声机，**玩家自己走进来**。
+	# 时间 2026-09-25 改成傍晚了（策划要的：出门到集市就是傍晚）。
 	var day := second.node(&"market_day")
-	h.check("白天这一幕是 goto 过去的", day.stage[0].kind, &"goto")
-	h.check("去的是白天集市", day.stage[0].text("map"), "market")
+	h.check("这一幕是 goto 过去的", day.stage[0].kind, &"goto")
+	h.check("去的是夜晚集市", day.stage[0].text("map"), "market_night")
 	var npc_step: StageStep = null
 	var auto_walked := false
 	for step: StageStep in day.stage:
@@ -1367,6 +1673,13 @@ static func test_ch2_scene_data(h: TestHarness) -> void:
 		h.check("A 出场是蹲着的", npc_step.text("pose"), "crouch")
 		h.check("A 身上挂着那段", npc_step.text("talk"), "ch2_meet_a")
 	h.check("演完交还控制权（不带 next）", day.next_id, &"")
+
+	# **赴约那一幕改成白天了**（2026-09-25）：约定从「傍晚碰头」改成了
+	# 「明早碰头」，所以再来的时候是白天。节点名还叫 `market_dusk` ——
+	# 改名会动一堆引用，就没改，记一笔以免以后被名字骗了。
+	var dusk_meet := meet.node(&"market_dusk")
+	h.check("赴约那一幕的 goto 在第二条", dusk_meet.stage[1].kind, &"goto")
+	h.check("赴约用的是白天集市", dusk_meet.stage[1].text("map"), "market")
 
 	# 邀请那一步：A 转过去 + 边走边淡出
 	var invite := meet.node(&"market_invite")
@@ -1424,15 +1737,83 @@ static func test_ch2_scene_data(h: TestHarness) -> void:
 	# 现在两边都钉住：`ending` 必须空、`next` 必须指向后面那一幕。
 	var tutorial := meet.node(&"tutorial")
 	h.check("教程那一步不是终点", tutorial.ending, &"")
-	h.check("点完教程就往下演", tutorial.next_id, &"again_day")
-	h.check("教程先占着位（就是那句话）",
-		(tutorial.stage[0].data["lines"] as Array)[0]["text"], "此处应有if - then新手教程动画")
+	h.check("教学先演对话、再进 IF 框", tutorial.next_id, &"tutorial_choose")
+	# **教学那一段现在是真内容了**（2026-09-25 补的）：回溯到集市、和 A 说话、
+	# 弹 IF 框让玩家拖块改掉 A 的想法。原来是句占位台词「此处应有…动画」。
+	h.check("教学第一步是回集市", tutorial.stage[0].kind, &"goto")
+	# **教学那一幕是夜里**（2026-09-25 策划要的：「改变 A 的想法那个场景
+	# 环境也应该是黑夜」—— 它回溯的就是第一次见他那一刻，那时是傍晚）。
+	h.check("去的是夜晚集市", tutorial.stage[0].text("map"), "market_night")
+	# **地图一出现就播回溯音**（策划要的：这一幕就是「又回到见 A 那一刻」）
+	var recall_sound := false
+	for step: StageStep in tutorial.stage:
+		if step.kind == &"play_sound" \
+				and step.text("path").get_file() == "时间回溯.wav":
+			recall_sound = true
+	h.check("回到集市的那一刻报了回溯音", recall_sound, true)
+
+	var choose := meet.node(&"tutorial_choose")
+	h.check("有拖块那一步", choose != null, true)
+	if choose != null:
+		var panel: StageStep = null
+		for step: StageStep in choose.stage:
+			if step.kind == &"if_panel":
+				panel = step
+		h.check("那一步里有 IF 框", panel != null, true)
+		if panel != null:
+			h.check("if 后面摆着「发现异常」", panel.text("if_block"), "发现异常")
+			h.check("then 里先放着「观察」", panel.text("then"), "观察")
+			h.check("要玩家拖的是「立即离开」", panel.text("solve"), "立即离开")
+			# **不再靠 `wrong` 硬跳分岔**（2026-09-25 策划纠正的）：
+			# 两条出口**走同一段对话**（`again_day`），分岔交给
+			# `again_day` 的 `next_when` 读这个 flag。
+			h.check("把结果记进 flag", panel.text("flag"), "gate/saved_a")
+			h.check("不再用 wrong 硬跳", panel.text("wrong"), "")
+			var blocks: Array = panel.data.get("blocks", [])
+			h.check("下面摆了四格", blocks.size(), 4)
+			if blocks.size() == 4:
+				# 两块都摆上去了，原位就空着 —— 策划说的「选项A一开始就是空着的」
+				# 和「发现异常原本位置为选项C」都是这个意思。
+				h.check("第一格空着（「观察」的原位）", str(blocks[0]), "")
+				h.check("第二格是「立即离开」", str(blocks[1]), "立即离开")
+				h.check("第三格空着（「发现异常」的原位）", str(blocks[2]), "")
+		h.check("拖对了接着往下演", choose.next_id, &"again_day")
+		# **拖对之后不另加台词**（2026-09-25 策划说的：那两句自己加的删掉，
+		# 直接接原文案的「（猛吸气）」）。所以这儿只剩「起身」那个动作。
+		var choose_says := 0
+		for step: StageStep in choose.stage:
+			if step.kind == &"say":
+				choose_says += 1
+		h.check("拖完不另加台词", choose_says, 0)
+
+	# **「没改」不是复刻一段对话，是回溯到前面那个节点。**
+	#
+	# 两条出口都走 `again_day`（**对话一模一样**），出来之后靠 `next_when`
+	# 读 IF 框记下的 flag 分岔：
+	#   - 改过了 → `again_dusk`（新剧情）
+	#   - 没改   → `market_dusk`（回溯到「白天等不到 A」那一幕）
+	#
+	# 2026-09-25 策划纠正的：「这个与老人两次委托不同，是单纯的回溯到前面的
+	# 剧情节点」。我上一版自己编了一段「碰头找不到 A」，删掉了。
+	var day2_node := meet.node(&"again_day")
+	h.check("again_day 有 next_when 分岔", day2_node.next_when.is_empty(), false)
+	if not day2_node.next_when.is_empty():
+		var condition: Condition = day2_node.next_when["condition"]
+		h.check("条件读得出来", condition != null, true)
+		if condition != null:
+			var probe := WorldState.new()
+			probe.set_value(&"gate/saved_a", false)
+			h.check("没改 → 回溯到「等不到 A」那一幕",
+				day2_node.resolved_next(probe), &"market_dusk")
+			probe.set_value(&"gate/saved_a", true)
+			h.check("改过 → 走新剧情", day2_node.resolved_next(probe), &"again_dusk")
+	h.check("没有多余的复刻节点", meet.node(&"tutorial_miss"), null)
 	h.check("而且在这儿记下 end2 达成",
 		tutorial.effects.get(&"ending/end2_sweet", false), true)
 
-	# 通关之后那一幕：白天集市、A 在对面
+	# 通关之后那一幕：**仍在夜里**（2026-09-25 策划要的：改完想法不该切回白天）
 	var day2 := meet.node(&"again_day")
-	h.check("回到白天集市", day2.stage[0].text("map"), "market")
+	h.check("仍在夜晚集市", day2.stage[0].text("map"), "market_night")
 	h.check("A 又站在对面", day2.stage[2].point("at"), Vector2(368, 172))
 	h.check("A 身上挂着「再说话」那段", day2.stage[2].text("talk"), "ch2_talk_a")
 	h.check("接着是傍晚那一幕", day2.next_id, &"again_dusk")
@@ -1452,12 +1833,33 @@ static func test_ch2_scene_data(h: TestHarness) -> void:
 		(meet.node(&"end2_cg").stage[meet.node(&"end2_cg").stage.size() - 1]
 			.data["lines"] as Array).size(), 2)
 
-	# **end2 就停在这一步。** 2026-09-25 策划要的：「出现 cg 后不应该再出现
-	# 角色在委托屋站着，应该渐渐黑屏并出现 end2 的字样」。
-	# 原来它后面接着 `tutorial` → `again_day`，结局那两行点完又把人送回委托屋站着。
-	# `ending` 一写就是终点（`next` 会被忽略，所以两条一起查）。
-	h.check("end2_cg 就是终点", meet.node(&"end2_cg").ending, &"end2_sweet")
-	h.check("而且不再往下接", meet.node(&"end2_cg").next_id, &"")
+	# **end2 之后接的是教学，不是直接回委托屋。**
+	#
+	# 2026-09-25 策划报过「出现 cg 后不应该再出现角色在委托屋站着」——
+	# 那一条的真根在「先收 CG 再黑屏」（见下面那条顺序断言，已经在 `end2_cg` 里）。
+	# 后来策划要补 IF 框的教学，链路就接回 `tutorial` 了：
+	# 结局 → 教学（回溯集市、改掉 A 的想法）→ 重来。
+	h.check("end2_cg 之后接教学", meet.node(&"end2_cg").next_id, &"tutorial")
+	h.check("end2_cg 不是终点", meet.node(&"end2_cg").ending, &"")
+
+	# **黑幕要排在收 CG 前面。**
+	#
+	# 2026-09-25 策划报的「出现 cg 后不应该再出现角色在委托屋站着」——
+	# 根子在这儿：`StageCurtain` 是**第 5 层**、演出层（CG 待的）是**第 14 层**，
+	# CG 盖在黑幕**上面**。所以先收 CG 的话，那 0.6 秒淡出透出来的是
+	# **背后的委托屋和站着的人**；先下黑幕再收，透出来的就是黑幕。
+	var cg_stage := meet.node(&"end2_cg").stage
+	var black_at := -1
+	var hide_at := -1
+	for i: int in cg_stage.size():
+		var s: StageStep = cg_stage[i]
+		if s.kind == &"fade" and s.text("to") == "black":
+			black_at = i
+		if s.kind == &"image_hide":
+			hide_at = i
+	h.check("有黑屏那一步", black_at >= 0, true)
+	h.check("有收 CG 那一步", hide_at >= 0, true)
+	h.check("黑幕排在收 CG 之前", black_at >= 0 and hide_at > black_at, true)
 
 
 ## 自由活动那一阶段的两位：A 和神秘人 B。

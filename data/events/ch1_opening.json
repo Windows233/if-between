@@ -62,7 +62,7 @@
         },
         {
           "do": "location",
-          "text": "xx月x日　傍晚　委托屋"
+          "text": "3036年9月24日　16:40　委托屋"
         },
         {
           "do": "say",
@@ -400,18 +400,20 @@
         },
         {
           "do": "goto",
-          "map": "bedroom_night",
+          "map": "bedroom_night_sleep",
           "spawn": "from_desk"
         },
         {
-          "do": "place_player",
+          "do": "hide_player",
+          "visible": false
+        },
+        {
+          "do": "focus",
           "at": [
             336,
-            94
+            100
           ],
-          "anchor": "head",
-          "facing": "down",
-          "pin": true
+          "time": 0.6
         },
         {
           "do": "fade",
@@ -446,9 +448,25 @@
           "side": "none"
         },
         {
+          "do": "music",
+          "path": "res://audio/bgm/end1.wav"
+        },
+        {
+          "do": "image",
+          "path": "res://art/cg/end1平静即死亡.png",
+          "fade": 0.5,
+          "fill": true,
+          "wait_click": true,
+          "hide": false
+        },
+        {
           "do": "fade",
           "to": "black",
           "time": 0.6
+        },
+        {
+          "do": "image_hide",
+          "fade": 0.5
         },
         {
           "do": "caption",

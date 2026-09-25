@@ -114,7 +114,7 @@
           "lines": [
             {
               "speaker": "我",
-              "text": "傍晚在这碰头啊",
+              "text": "明早在这碰头啊",
               "side": "left",
               "portrait": "protagonist/smile"
             }
@@ -156,12 +156,12 @@
         },
         {
           "do": "goto",
-          "map": "market_night",
+          "map": "market",
           "spawn": "from_overworld"
         },
         {
           "do": "location",
-          "text": "xx月x+1日　集市　傍晚"
+          "text": "3036年9月26日　09:00　集市"
         },
         {
           "do": "place_player",
@@ -235,7 +235,7 @@
         },
         {
           "do": "location",
-          "text": "xx月x+4日　集市　上午"
+          "text": "3036年9月29日　10:20　集市"
         },
         {
           "do": "fade",
@@ -299,7 +299,7 @@
         },
         {
           "do": "location",
-          "text": "xx月x日　傍晚　委托屋"
+          "text": "3036年9月29日　19:30　委托屋"
         },
         {
           "do": "fade",
@@ -351,10 +351,15 @@
           "slide": "out"
         },
         {
+          "do": "music",
+          "path": "res://audio/bgm/end2.wav"
+        },
+        {
           "do": "image",
           "path": "res://art/cg/end2甜蜜咬痕.png",
           "fade": 0.5,
           "fill": true,
+          "wait_click": true,
           "hide": false
         },
         {
@@ -369,13 +374,13 @@
           ]
         },
         {
-          "do": "image_hide",
-          "fade": 0.6
-        },
-        {
           "do": "fade",
           "to": "black",
           "time": 0.7
+        },
+        {
+          "do": "image_hide",
+          "fade": 0.6
         },
         {
           "do": "caption",
@@ -393,24 +398,126 @@
           ]
         }
       ],
-      "ending": "end2_sweet"
+      "next": "tutorial"
     },
     {
       "id": "tutorial",
       "stage": [
         {
+          "do": "goto",
+          "map": "market_night",
+          "spawn": "from_overworld"
+        },
+        {
+          "do": "play_sound",
+          "path": "res://audio/sfx/时间回溯.wav"
+        },
+        {
+          "do": "location",
+          "text": "3036年9月25日　18:40　集市"
+        },
+        {
+          "do": "npc",
+          "id": "a",
+          "sprite": "res://art/npc/a",
+          "at": [
+            368,
+            172
+          ],
+          "height": 45,
+          "z": 9,
+          "pose": "crouch"
+        },
+        {
+          "do": "fade",
+          "to": "clear",
+          "time": 0.9
+        },
+        {
+          "do": "wait",
+          "time": 0.5
+        },
+        {
           "do": "say",
-          "slide": "in",
           "lines": [
             {
-              "text": "此处应有if - then新手教程动画"
+              "text": "又是这里。"
+            },
+            {
+              "speaker": "我",
+              "text": "……每一遍，都停在这一天。",
+              "side": "left",
+              "portrait": "protagonist/resolve"
             }
           ]
+        },
+        {
+          "do": "place_player",
+          "at": [
+            336,
+            172
+          ],
+          "time": 0.9,
+          "facing": "right"
+        },
+        {
+          "do": "wait",
+          "time": 0.3
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "A",
+              "portrait": "a",
+              "side": "right",
+              "text": "……你盯着我干嘛？"
+            },
+            {
+              "speaker": "我",
+              "text": "（集中精神。这一次，我要看清你脑子里在想什么。）",
+              "side": "left",
+              "portrait": "protagonist/thinking"
+            }
+          ]
+        },
+        {
+          "do": "hint",
+          "text": "（拖动下面的选项块，改掉 A 的想法，然后按「确定」）"
         }
       ],
       "set": {
         "ending/end2_sweet": true
       },
+      "next": "tutorial_choose"
+    },
+    {
+      "id": "tutorial_choose",
+      "stage": [
+        {
+          "do": "fade",
+          "to": "clear",
+          "time": 0.6
+        },
+        {
+          "do": "if_panel",
+          "if_block": "发现异常",
+          "then": "观察",
+          "blocks": [
+            "",
+            "立即离开",
+            "",
+            ""
+          ],
+          "solve": "立即离开",
+          "flag": "gate/saved_a"
+        },
+        {
+          "do": "npc_pose",
+          "id": "a",
+          "pose": "idle"
+        }
+      ],
       "next": "again_day"
     },
     {
@@ -418,7 +525,7 @@
       "stage": [
         {
           "do": "goto",
-          "map": "market",
+          "map": "market_night",
           "spawn": "from_overworld"
         },
         {
@@ -504,7 +611,15 @@
           ]
         }
       ],
-      "next": "again_dusk"
+      "next": "again_dusk",
+      "next_when": {
+        "if": {
+          "var": "gate/saved_a",
+          "op": "==",
+          "value": false
+        },
+        "next": "market_dusk"
+      }
     },
     {
       "id": "again_dusk",
@@ -525,7 +640,7 @@
         },
         {
           "do": "location",
-          "text": "xx月x+1日　集市　傍晚"
+          "text": "3036年9月25日　19:30　集市"
         },
         {
           "do": "place_player",

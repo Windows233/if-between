@@ -49,7 +49,7 @@
           "path": "res://art/cg/黑猫闪过cg.png",
           "fade": 0.2,
           "fill": true,
-          "hold": 3.0
+          "hold": 3.5
         },
         {
           "do": "flash",
@@ -64,7 +64,7 @@
           "path": "res://art/cg/梦境破碎.png",
           "fade": 0.3,
           "fill": true,
-          "hold": 1.4,
+          "hold": 2.0,
           "hide": false
         },
         {
@@ -104,7 +104,7 @@
           "path": "res://art/cg/梦中死亡.png",
           "fade": 0.5,
           "fill": true,
-          "hold": 2.5,
+          "hold": 3.5,
           "hide": false
         },
         {
@@ -120,6 +120,11 @@
         },
         {
           "do": "wait_click"
+        },
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.6
         },
         {
           "do": "image_hide",
@@ -161,12 +166,16 @@
         },
         {
           "do": "location",
-          "text": "xx月x日　傍晚　委托屋"
+          "text": "3036年9月24日　23:50　委托屋"
         },
         {
           "do": "fade",
           "to": "clear",
           "time": 0.0
+        },
+        {
+          "do": "play_sound",
+          "path": "res://audio/sfx/时间回溯.wav"
         },
         {
           "do": "eye_open",
@@ -266,8 +275,14 @@
         },
         {
           "do": "if_panel",
-          "condition": "猫不见了",
-          "result": "来找主角帮忙",
+          "if_block": "猫不见了",
+          "then": "来找主角帮忙",
+          "blocks": [
+            "",
+            "",
+            "",
+            ""
+          ],
           "disabled": true
         }
       ],
@@ -276,17 +291,6 @@
     {
       "id": "again",
       "stage": [
-        {
-          "do": "say",
-          "lines": [
-            {
-              "speaker": "老人",
-              "text": "……你这里，接找猫的活吗？",
-              "side": "right",
-              "portrait": "elder"
-            }
-          ]
-        },
         {
           "do": "say",
           "lines": [
@@ -344,15 +348,15 @@
           "lines": [
             {
               "speaker": "我",
-              "text": "这老人今天怎么这么奇怪。",
+              "text": "这老人真奇怪......",
               "side": "left",
               "portrait": "protagonist/puzzled"
             },
             {
               "speaker": "我",
-              "text": "这么晚了，明天再出去找吧。先休息吧。",
+              "text": "不行，我得赶紧出去找",
               "side": "left",
-              "portrait": "protagonist/tired"
+              "portrait": "protagonist/resolve"
             }
           ]
         }

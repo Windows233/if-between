@@ -7,12 +7,12 @@
       "stage": [
         {
           "do": "goto",
-          "map": "market",
+          "map": "market_night",
           "spawn": "from_overworld"
         },
         {
           "do": "location",
-          "text": "xx月x+1日　集市　上午"
+          "text": "3036年9月25日　18:40　集市"
         },
         {
           "do": "npc",
