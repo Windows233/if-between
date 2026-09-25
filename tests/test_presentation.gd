@@ -33,8 +33,14 @@ static func test_box_layout(h: TestHarness) -> void:
 		float(ProjectSettings.get_setting("display/window/size/viewport_width", 320.0)),
 		float(ProjectSettings.get_setting("display/window/size/viewport_height", 180.0))
 	)
-	h.check("面板是屏幕高度的三分之一",
-		DialogueBox.BOX_MIN_HEIGHT * 3.0, view.y)
+	# 「对话框只占屏幕的 1/3」这条老规格 **2026-09-26 放宽了**：换成真美术框
+	# 之后 60 高的面板装不下立绘（整条腿探到框外），下限抬到了 72。
+	# 现在守两条：面板本身不小于屏幕的 1/3；连上凸在面板外的名字标签和花饰，
+	# 最高也不超过屏幕的 3/5 —— 免得日后谁一路加高把场景压没。
+	h.check("面板不小于屏幕的三分之一",
+		DialogueBox.BOX_MIN_HEIGHT * 3.0 >= view.y, true)
+	h.check("最高的面板连上标签花饰也不超过屏幕的五分之三",
+		DialogueBox.BOX_MAX_HEIGHT * 5.0 <= view.y * 3.0, true)
 
 	box.play(Dialogue.from_array([{"speaker": "我", "text": "一句话。"}]))
 	h.check("短句就是那三分之一", box.box_height(), DialogueBox.BOX_MIN_HEIGHT)
