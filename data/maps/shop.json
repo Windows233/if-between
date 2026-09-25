@@ -1,0 +1,79 @@
+{
+  "id": "shop",
+  "name": "商店（神秘人的铺子）",
+  "size": [
+    320,
+    180
+  ],
+  "background": "res://art/map/shop.png",
+  "spawns": {
+    "from_market": [
+      40,
+      140
+    ]
+  },
+  "walls": [
+    [
+      0,
+      0,
+      320,
+      8
+    ],
+    [
+      0,
+      172,
+      320,
+      8
+    ],
+    [
+      0,
+      0,
+      8,
+      180
+    ],
+    [
+      312,
+      0,
+      8,
+      180
+    ]
+  ],
+  "portals": [
+    {
+      "rect": [
+        16,
+        150,
+        40,
+        16
+      ],
+      "label": "回集市",
+      "to": "market",
+      "spawn": "from_overworld"
+    }
+  ],
+  "actors": [
+    {
+      "id": "b",
+      "rect": [
+        180,
+        92,
+        20,
+        34
+      ],
+      "label": "神秘人B",
+      "if": {
+        "var": "quest_cat",
+        "op": "==",
+        "value": true
+      },
+      "actions": [
+        {
+          "id": "talk",
+          "label": "搭话",
+          "event": "meet_b"
+        }
+      ],
+      "person": true
+    }
+  ]
+}

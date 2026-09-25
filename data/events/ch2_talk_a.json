@@ -1,0 +1,79 @@
+{
+  "id": "ch2_talk_a",
+  "entry": "start",
+  "nodes": [
+    {
+      "id": "start",
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "A",
+              "portrait": "a",
+              "side": "right",
+              "text": "又有什么事情吗"
+            }
+          ]
+        },
+        {
+          "do": "hold",
+          "left": {
+            "speaker": "我",
+            "portrait": "protagonist/quiet",
+            "side": "left"
+          },
+          "right": {
+            "speaker": "A",
+            "portrait": "a",
+            "side": "right"
+          }
+        }
+      ],
+      "choices": [
+        {
+          "id": "invite",
+          "label": "邀请A",
+          "next": "invited"
+        },
+        {
+          "id": "leave",
+          "label": "离开",
+          "next": "left"
+        }
+      ]
+    },
+    {
+      "id": "invited",
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "A",
+              "portrait": "a",
+              "side": "right",
+              "text": "我可不去了，你加油吧"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "left",
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "portrait": "protagonist/smile",
+              "side": "left",
+              "text": "没事，骚扰一下你，我继续找猫去了"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

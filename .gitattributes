@@ -1,0 +1,28 @@
+# Normalize EOL for all files that Git considers text files.
+#
+# 仓库里一律存 LF。Windows 上编辑出来的 CRLF 入库时转成 LF，比较也按归一化后的
+# 内容比。不加这一条，同一行的改动会被报告成整个文件改动，diff 看不清、冲突没法解。
+#
+# 工作区里现在还有 22 个 CRLF 文件（scenes/main.gd 等），那是历史遗留，
+# git 不比它，不用手动改。
+* text=auto eol=lf
+
+# 二进制资源，禁止换行转换
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.webp  binary
+*.gif   binary
+*.ico   binary
+*.wav   binary
+*.ogg   binary
+*.mp3   binary
+*.ttf   binary
+*.otf   binary
+*.pck   binary
+*.zip   binary
+
+# 这两个文件一旦自动合并错了会静默坏掉（新增的 autoload 丢失、导出预设被覆盖），
+# 所以不让 git 自动合并，冲突时停下来人工处理。
+project.godot      -merge
+export_presets.cfg -merge

@@ -1,0 +1,19 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+
+# gdmcp CLI (agent tool cache, not source)
+.gdmcp/
+
+# 导出产物。正常落在 ../if-demo-build/（见 tools/export_demo.py），
+# 这几条是兜底，防止谁手滑把包导进项目里。
+/build/
+/export/
+*.pck
+
+# 系统与编辑器垃圾
+Thumbs.db
+Desktop.ini
+.DS_Store
+*.swp
+*~

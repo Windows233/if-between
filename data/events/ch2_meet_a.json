@@ -1,0 +1,676 @@
+{
+  "id": "ch2_meet_a",
+  "entry": "aside",
+  "nodes": [
+    {
+      "id": "aside",
+      "stage": [
+        {
+          "do": "place_player",
+          "at": [
+            336,
+            172
+          ],
+          "time": 0.9,
+          "facing": "right"
+        },
+        {
+          "do": "wait",
+          "time": 0.3
+        }
+      ],
+      "next": "market_talk"
+    },
+    {
+      "id": "market_talk",
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "还在修这台留声机啊",
+              "side": "left",
+              "portrait": "protagonist/smile"
+            }
+          ]
+        },
+        {
+          "do": "npc_pose",
+          "id": "a",
+          "pose": "side"
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "A",
+              "text": "是啊，怎么，你脸上写着[接了个麻烦活]",
+              "side": "right",
+              "portrait": "a"
+            }
+          ]
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "哎，找猫，唯一信息还是一张模糊的照片",
+              "side": "left",
+              "portrait": "protagonist/tired"
+            }
+          ]
+        },
+        {
+          "do": "hold",
+          "left": {
+            "speaker": "我",
+            "portrait": "protagonist/quiet",
+            "side": "left"
+          },
+          "right": {
+            "speaker": "A",
+            "portrait": "a",
+            "side": "right"
+          }
+        }
+      ],
+      "choices": [
+        {
+          "id": "invite",
+          "label": "邀请A",
+          "next": "market_invite"
+        }
+      ]
+    },
+    {
+      "id": "market_invite",
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "要不你和我一起来找猫吧，反正你也没事",
+              "side": "left",
+              "portrait": "protagonist/smile"
+            }
+          ]
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "A",
+              "text": "行，我去公园找，我要找到了请我瓶汽水",
+              "side": "right",
+              "portrait": "a"
+            }
+          ]
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "傍晚在这碰头啊",
+              "side": "left",
+              "portrait": "protagonist/smile"
+            }
+          ]
+        },
+        {
+          "do": "say",
+          "slide": "out"
+        },
+        {
+          "do": "npc_pose",
+          "id": "a",
+          "flip": true
+        },
+        {
+          "do": "npc_move",
+          "id": "a",
+          "to": [
+            413,
+            172
+          ],
+          "time": 1.2,
+          "fade": true
+        },
+        {
+          "do": "wait",
+          "time": 0.4
+        }
+      ],
+      "next": "market_dusk"
+    },
+    {
+      "id": "market_dusk",
+      "stage": [
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.8
+        },
+        {
+          "do": "goto",
+          "map": "market_night",
+          "spawn": "from_overworld"
+        },
+        {
+          "do": "location",
+          "text": "xx月x+1日　集市　傍晚"
+        },
+        {
+          "do": "place_player",
+          "at": [
+            336,
+            172
+          ],
+          "facing": "right"
+        },
+        {
+          "do": "fade",
+          "to": "clear",
+          "time": 1.2
+        },
+        {
+          "do": "wait",
+          "time": 0.8
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "这个人又跑哪去了",
+              "side": "left",
+              "portrait": "protagonist/puzzled"
+            }
+          ]
+        },
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.9
+        },
+        {
+          "do": "caption",
+          "fade": 0.8,
+          "hold": 2.0,
+          "out": 0.6,
+          "lines": [
+            {
+              "text": "你一个人找了三天猫，其间再也没有看见过A"
+            },
+            {
+              "text": "再见面....."
+            },
+            {
+              "text": "却",
+              "gap": 1.0
+            }
+          ]
+        }
+      ],
+      "next": "market_after_days"
+    },
+    {
+      "id": "market_after_days",
+      "stage": [
+        {
+          "do": "goto",
+          "map": "market",
+          "spawn": "from_overworld"
+        },
+        {
+          "do": "place_player",
+          "at": [
+            336,
+            172
+          ],
+          "facing": "right"
+        },
+        {
+          "do": "location",
+          "text": "xx月x+4日　集市　上午"
+        },
+        {
+          "do": "fade",
+          "to": "clear",
+          "time": 1.0
+        },
+        {
+          "do": "wait",
+          "time": 0.5
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "路人",
+              "portrait": "passerby",
+              "text": "好恐怖，听说有动物撕咬的痕迹",
+              "side": "right",
+              "portrait": "passerby"
+            }
+          ]
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "！！怎么会.....",
+              "side": "left",
+              "portrait": "protagonist/shocked"
+            }
+          ]
+        }
+      ],
+      "next": "home_after_days"
+    },
+    {
+      "id": "home_after_days",
+      "stage": [
+        {
+          "do": "say",
+          "slide": "out"
+        },
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.5
+        },
+        {
+          "do": "goto",
+          "map": "desk_shop",
+          "spawn": "start"
+        },
+        {
+          "do": "place_player",
+          "at": [
+            224,
+            130
+          ],
+          "facing": "down"
+        },
+        {
+          "do": "location",
+          "text": "xx月x日　傍晚　委托屋"
+        },
+        {
+          "do": "fade",
+          "to": "clear",
+          "time": 0.9
+        },
+        {
+          "do": "wait",
+          "time": 0.5
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "text": "日子一天天过去，似乎什么也没发生"
+            },
+            {
+              "speaker": "我",
+              "text": "真的是那个猫吗",
+              "side": "left",
+              "portrait": "protagonist/thinking"
+            },
+            {
+              "speaker": "我",
+              "text": "真的是 因为我吗？？？？！",
+              "side": "left",
+              "portrait": "protagonist/shocked",
+              "size_delta": 2,
+              "shake": 2.0
+            }
+          ]
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "text": "直到.....猫亲自告诉了你答案"
+            }
+          ]
+        }
+      ],
+      "next": "end2_cg"
+    },
+    {
+      "id": "end2_cg",
+      "stage": [
+        {
+          "do": "say",
+          "slide": "out"
+        },
+        {
+          "do": "image",
+          "path": "res://art/cg/end2甜蜜咬痕.png",
+          "fade": 0.5,
+          "fill": true,
+          "hide": false
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "这是......！！",
+              "side": "left",
+              "portrait": "protagonist/shocked"
+            }
+          ]
+        },
+        {
+          "do": "image_hide",
+          "fade": 0.6
+        },
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.7
+        },
+        {
+          "do": "caption",
+          "fade": 0.9,
+          "wait_click": true,
+          "lines": [
+            {
+              "text": "end 2 甜蜜的咬痕",
+              "size": 16
+            },
+            {
+              "text": "你也不是故意的，只是太巧了",
+              "size": 12
+            }
+          ]
+        }
+      ],
+      "ending": "end2_sweet"
+    },
+    {
+      "id": "tutorial",
+      "stage": [
+        {
+          "do": "say",
+          "slide": "in",
+          "lines": [
+            {
+              "text": "此处应有if - then新手教程动画"
+            }
+          ]
+        }
+      ],
+      "set": {
+        "ending/end2_sweet": true
+      },
+      "next": "again_day"
+    },
+    {
+      "id": "again_day",
+      "stage": [
+        {
+          "do": "goto",
+          "map": "market",
+          "spawn": "from_overworld"
+        },
+        {
+          "do": "place_player",
+          "at": [
+            336,
+            172
+          ],
+          "facing": "right"
+        },
+        {
+          "do": "npc",
+          "id": "a",
+          "sprite": "res://art/npc/a",
+          "at": [
+            368,
+            172
+          ],
+          "height": 45,
+          "z": 9,
+          "pose": "side",
+          "talk": "ch2_talk_a"
+        },
+        {
+          "do": "fade",
+          "to": "clear",
+          "time": 0.9
+        },
+        {
+          "do": "wait",
+          "time": 0.5
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "（猛吸气）",
+              "side": "left",
+              "portrait": "protagonist/nervous"
+            }
+          ]
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "A",
+              "portrait": "a",
+              "side": "right",
+              "text": "你怎么了？"
+            }
+          ]
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "text": "....这次会有变化吗"
+            }
+          ]
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "portrait": "protagonist/quiet",
+              "side": "left",
+              "text": "没事"
+            }
+          ]
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "A",
+              "portrait": "a",
+              "side": "right",
+              "text": "行，我去公园找，我要找到了请我瓶汽水"
+            }
+          ]
+        }
+      ],
+      "next": "again_dusk"
+    },
+    {
+      "id": "again_dusk",
+      "stage": [
+        {
+          "do": "say",
+          "slide": "out"
+        },
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.8
+        },
+        {
+          "do": "goto",
+          "map": "market_night",
+          "spawn": "from_overworld"
+        },
+        {
+          "do": "location",
+          "text": "xx月x+1日　集市　傍晚"
+        },
+        {
+          "do": "place_player",
+          "at": [
+            336,
+            172
+          ],
+          "facing": "right"
+        },
+        {
+          "do": "npc",
+          "id": "a",
+          "sprite": "res://art/npc/a",
+          "at": [
+            500,
+            178
+          ],
+          "height": 45,
+          "z": 9,
+          "pose": "side",
+          "fade": 0.5,
+          "talk": "ch2_talk_a"
+        },
+        {
+          "do": "fade",
+          "to": "clear",
+          "time": 1.0
+        },
+        {
+          "do": "wait",
+          "time": 0.3
+        },
+        {
+          "do": "npc_move",
+          "id": "a",
+          "to": [
+            368,
+            172
+          ],
+          "time": 1.5
+        },
+        {
+          "do": "wait",
+          "time": 0.3
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "A",
+              "portrait": "a",
+              "side": "right",
+              "text": "你信这世上有鬼吗"
+            }
+          ]
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "portrait": "protagonist/quiet",
+              "side": "left",
+              "text": "......"
+            }
+          ]
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "A",
+              "portrait": "a",
+              "side": "right",
+              "text": "我今天下午在公园看到一个巨大的黑影！！一看到我就朝我过来，我直接跑掉了"
+            }
+          ]
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "A",
+              "portrait": "a",
+              "side": "right",
+              "text": "幸好— 跑出公园就它不追了"
+            }
+          ]
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "portrait": "protagonist/puzzled",
+              "side": "left",
+              "text": "以你的性格竟然没有一探究竟吗...."
+            }
+          ]
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "A",
+              "portrait": "a",
+              "side": "right",
+              "text": "不道啊，突然就觉得应该转头就跑。你别说，还挺像一只猫的"
+            }
+          ]
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "portrait": "protagonist/quiet",
+              "side": "left",
+              "text": "......"
+            }
+          ]
+        },
+        {
+          "do": "npc_pose",
+          "id": "a",
+          "pose": "crouch"
+        },
+        {
+          "do": "npc",
+          "id": "b",
+          "sprite": "res://art/npc/b",
+          "at": [
+            150,
+            215
+          ],
+          "height": 45,
+          "z": 9,
+          "fade": 0.6,
+          "talk": "meet_b"
+        },
+        {
+          "do": "wait",
+          "time": 0.4
+        }
+      ]
+    }
+  ]
+}

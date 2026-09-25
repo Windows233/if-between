@@ -1,0 +1,42 @@
+{
+  "id": "ch2_market",
+  "entry": "market_day",
+  "nodes": [
+    {
+      "id": "market_day",
+      "stage": [
+        {
+          "do": "goto",
+          "map": "market",
+          "spawn": "from_overworld"
+        },
+        {
+          "do": "location",
+          "text": "xx月x+1日　集市　上午"
+        },
+        {
+          "do": "npc",
+          "id": "a",
+          "sprite": "res://art/npc/a",
+          "at": [
+            368,
+            172
+          ],
+          "height": 45,
+          "z": 9,
+          "pose": "crouch",
+          "talk": "ch2_meet_a"
+        },
+        {
+          "do": "fade",
+          "to": "clear",
+          "time": 0.9
+        },
+        {
+          "do": "wait",
+          "time": 0.5
+        }
+      ]
+    }
+  ]
+}

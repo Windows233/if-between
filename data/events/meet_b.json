@@ -1,0 +1,337 @@
+{
+  "id": "meet_b",
+  "entry": "start",
+  "nodes": [
+    {
+      "id": "start",
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "portrait": "protagonist/quiet",
+              "side": "left",
+              "text": "请问有看到这只猫吗"
+            },
+            {
+              "speaker": "B",
+              "portrait": "mysterious",
+              "side": "right",
+              "text": "黑猫，左耳缺一角，尾巴尖是白的"
+            },
+            {
+              "speaker": "我",
+              "portrait": "protagonist/startled",
+              "side": "left",
+              "text": "你见过？"
+            },
+            {
+              "speaker": "B",
+              "portrait": "mysterious",
+              "side": "right",
+              "text": "嗯。猫不是走丢了，是被‘卷进去了’"
+            },
+            {
+              "speaker": "我",
+              "portrait": "protagonist/puzzled",
+              "side": "left",
+              "text": "说人话...."
+            },
+            {
+              "speaker": "B",
+              "portrait": "mysterious",
+              "side": "right",
+              "text": "它进到门内了，你翻遍城邦也找不到"
+            },
+            {
+              "speaker": "B",
+              "portrait": "mysterious",
+              "side": "right",
+              "text": "我可以开门，而你只用帮我带一样东西出来"
+            },
+            {
+              "speaker": "B",
+              "portrait": "mysterious",
+              "side": "right",
+              "text": "很公平的交易不是吗，我没有理由坑你"
+            },
+            {
+              "speaker": "我",
+              "portrait": "protagonist/puzzled",
+              "side": "left",
+              "text": "....... 什么东西"
+            },
+            {
+              "speaker": "B",
+              "portrait": "mysterious",
+              "side": "right",
+              "text": "夜幕之泪，就是一颗像眼泪的黑曜石"
+            },
+            {
+              "speaker": "B",
+              "portrait": "mysterious",
+              "side": "right",
+              "text": "放心，它和你的猫在同一个地方"
+            },
+            {
+              "speaker": "我",
+              "portrait": "protagonist/quiet",
+              "side": "left",
+              "text": "......"
+            },
+            {
+              "speaker": "我",
+              "portrait": "protagonist/wary",
+              "side": "left",
+              "text": "我凭什么信你？"
+            },
+            {
+              "speaker": "B",
+              "portrait": "mysterious",
+              "side": "right",
+              "text": "你不用信我。你只需要信，那只猫现在快没了"
+            },
+            {
+              "speaker": "B",
+              "portrait": "mysterious",
+              "side": "right",
+              "text": "你每拖一天，那只猫就少一分。等它彻底没了，委托人也会忘掉自己委托过什么"
+            }
+          ]
+        },
+        {
+          "do": "hint",
+          "text": "此处建议存档",
+          "at": "center"
+        },
+        {
+          "do": "hold",
+          "left": {
+            "speaker": "我",
+            "portrait": "protagonist/thinking",
+            "side": "left"
+          },
+          "right": {
+            "speaker": "B",
+            "portrait": "mysterious",
+            "side": "right"
+          }
+        }
+      ],
+      "choices": [
+        {
+          "id": "doubt",
+          "label": "不相信",
+          "next": "distrust"
+        },
+        {
+          "id": "go",
+          "label": "去就去",
+          "next": "deal"
+        }
+      ]
+    },
+    {
+      "id": "distrust",
+      "stage": [
+        {
+          "do": "say",
+          "slide": "out"
+        },
+        {
+          "do": "npc_remove",
+          "id": "b",
+          "fade": 0.5
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "text": "你找了七天。半个月。一个月。某天你翻开登记簿，发现找猫那一页变成了白纸"
+            }
+          ]
+        },
+        {
+          "do": "say",
+          "slide": "out"
+        },
+        {
+          "do": "image",
+          "path": "res://art/cg/end3碌碌无为.png",
+          "fade": 0.5,
+          "fill": true,
+          "hide": false
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "text": "那户人家，也空空如也"
+            }
+          ]
+        },
+        {
+          "do": "image_hide",
+          "fade": 0.6
+        },
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.7
+        },
+        {
+          "do": "caption",
+          "fade": 0.9,
+          "wait_click": true,
+          "lines": [
+            {
+              "text": "end 3 碌碌而无为",
+              "size": 16
+            },
+            {
+              "text": "城邦只是忘记了一些东西",
+              "size": 12
+            }
+          ]
+        }
+      ],
+      "ending": "end3_nothing"
+    },
+    {
+      "id": "deal",
+      "stage": [
+        {
+          "do": "say",
+          "slide": "out"
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "什么意思！",
+              "side": "left",
+              "portrait": "protagonist/shocked"
+            },
+            {
+              "speaker": "我",
+              "text": "（回想老人情况）",
+              "side": "left",
+              "portrait": "protagonist/reading"
+            },
+            {
+              "speaker": "我",
+              "text": ".....好，我答应你，你最好不要坑我。",
+              "side": "left",
+              "portrait": "protagonist/guarded"
+            }
+          ]
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "B",
+              "text": "你碰到那个石头，你就会知道了。拿着。",
+              "side": "right",
+              "portrait": "mysterious"
+            }
+          ]
+        }
+      ],
+      "next": "pendant"
+    },
+    {
+      "id": "pendant",
+      "set": {
+        "item/pendant": 1
+      },
+      "stage": [
+        {
+          "do": "say",
+          "slide": "out"
+        },
+        {
+          "do": "image",
+          "path": "res://art/item/pendant.png",
+          "fade": 0.45,
+          "wait_click": true,
+          "hide": true
+        },
+        {
+          "do": "say",
+          "slide": "in",
+          "lines": [
+            {
+              "speaker": "B",
+              "text": "它既是钥匙，也是路。还有一件事——没有绝对的如果",
+              "side": "right",
+              "portrait": "mysterious"
+            }
+          ]
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "什么意思？",
+              "side": "left",
+              "portrait": "protagonist/puzzled"
+            }
+          ]
+        },
+        {
+          "do": "music",
+          "path": ""
+        },
+        {
+          "do": "npc_remove",
+          "id": "b"
+        },
+        {
+          "do": "bg_blink",
+          "times": 6,
+          "hold": 1.0
+        },
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.4
+        },
+        {
+          "do": "wait_click"
+        },
+        {
+          "do": "banner",
+          "text": "第二章",
+          "hold": 1.6,
+          "fade": 0.5
+        },
+        {
+          "do": "goto",
+          "map": "desk_shop",
+          "spawn": "start"
+        },
+        {
+          "do": "place_player",
+          "at": [
+            224,
+            130
+          ],
+          "facing": "down"
+        },
+        {
+          "do": "location",
+          "text": "xx月x日　傍晚　委托屋"
+        },
+        {
+          "do": "fade",
+          "to": "clear",
+          "time": 0.9
+        }
+      ]
+    }
+  ]
+}

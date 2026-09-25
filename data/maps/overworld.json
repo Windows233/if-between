@@ -1,0 +1,109 @@
+{
+  "id": "overworld",
+  "kind": "overworld",
+  "name": "迷雾城 · 旧港区",
+  "size": [
+    640,
+    360
+  ],
+  "background": "res://art/map/overworld.png",
+  "indoor": false,
+  "music": "res://audio/bgm/大地图背景音乐.mp3",
+  "portals": [
+    {
+      "id": "harbor",
+      "rect": [
+        18.33,
+        176.67,
+        20,
+        20
+      ],
+      "label": "码头",
+      "detail": "出海的船只与往来的商人。",
+      "side": "right",
+      "locked": true
+    },
+    {
+      "id": "shop",
+      "rect": [
+        236.67,
+        208.33,
+        20,
+        20
+      ],
+      "label": "委托店",
+      "detail": "小小的店铺，却连接着整个世界的「如果」。",
+      "side": "left",
+      "to": "desk_shop",
+      "spawn": "from_overworld"
+    },
+    {
+      "id": "tower",
+      "rect": [
+        318.33,
+        70.0,
+        20,
+        20
+      ],
+      "label": "白塔分部",
+      "detail": "表面是「治安局」，实为特殊事件的处理机构。",
+      "side": "left",
+      "locked": true
+    },
+    {
+      "id": "market",
+      "rect": [
+        345.0,
+        223.33,
+        20,
+        20
+      ],
+      "label": "集市",
+      "detail": "居民们交易、闲聊的地方，也是消息的来源。",
+      "side": "top",
+      "event": "ch2_market",
+      "to": "market",
+      "spawn": "from_overworld"
+    },
+    {
+      "id": "church",
+      "rect": [
+        458.33,
+        186.67,
+        20,
+        20
+      ],
+      "label": "教堂",
+      "detail": "人们祈祷的地方，也是某些「异常」的发生地。",
+      "side": "left",
+      "locked": true
+    },
+    {
+      "id": "living",
+      "rect": [
+        303.33,
+        280.0,
+        20,
+        20
+      ],
+      "label": "居民区",
+      "detail": "普通人生活的地方，藏着许多不为人知的故事。",
+      "side": "left",
+      "locked": true
+    },
+    {
+      "id": "rift",
+      "rect": [
+        556.67,
+        280.0,
+        20,
+        20
+      ],
+      "label": "异界裂缝",
+      "detail": "蚀界被触发形成的扭曲空间，充满未知与危险。",
+      "side": "left",
+      "accent": true,
+      "locked": true
+    }
+  ]
+}

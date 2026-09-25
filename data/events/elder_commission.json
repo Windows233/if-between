@@ -1,0 +1,96 @@
+{
+  "id": "elder_commission",
+  "entry": "start",
+  "nodes": [
+    {
+      "id": "start",
+      "talk": [
+        { "speaker": "我", "text": "老人家，你又来了。这次猫是什么时候丢的？", "side": "right",
+          "portrait": "protagonist/quiet" },
+        { "speaker": "老人", "text": "我不记得了……但我一定有只猫。", "side": "left",
+          "portrait": "elder" },
+        { "text": "（老人把一张照片推过来。照片上的猫糊成一团，看不清是猫，还是别的什么。）" },
+        { "text": "【获得 猫的照片 ×1】" }
+      ],
+      "set": { "item/cat_photo": 1 },
+      "choices": [
+        { "id": "accept", "label": "接受委托", "set": { "quest_cat": true }, "next": "accepted" },
+        { "id": "decline", "label": "不接受委托", "set": { "quest_cat": false }, "next": "declined" },
+        { "id": "observe", "label": "观察", "next": "observe",
+          "if": { "var": "can_observe", "op": ">=", "value": 1 } }
+      ]
+    },
+    {
+      "id": "observe",
+      "talk": [
+        { "text": "（你盯着老人看了一会儿。他脑子里那句话浮出来了：）" },
+        { "text": "IF 猫不见了 THEN 来找主角帮忙" },
+        { "speaker": "我", "text": "……这句话，我是不是能动它。", "side": "right",
+          "portrait": "protagonist/thinking" },
+        { "text": "（改写别人条件的能力还没做进来。这一轮只能看，不能改。）" }
+      ]
+    },
+    {
+      "id": "accepted",
+      "talk": [
+        { "speaker": "老人", "text": "它左耳缺一角。尾巴尖是白的。", "side": "left",
+          "portrait": "elder" },
+        { "speaker": "老人", "text": "然后……没有然后了。", "side": "left", "portrait": "elder" },
+        { "speaker": "我", "text": "好，我会尽快给您消息。", "side": "right",
+          "portrait": "protagonist/quiet" },
+        { "text": "（老人抱着空猫窝走了。）" },
+        { "speaker": "我", "text": "这老人今天怎么这么奇怪……", "side": "right",
+          "portrait": "protagonist/puzzled" },
+        { "speaker": "我", "text": "这么晚了，明天再出去找吧，先休息吧。", "side": "right",
+          "portrait": "protagonist/tired" }
+      ],
+      "next": "night"
+    },
+    {
+      "id": "night",
+      "talk": [
+        { "text": "（黑屏。你趴回桌上，睡着了。）" },
+        { "text": "Z Z Z Z Z Z Z Z Z Z Z Z Z Z Z" },
+        { "text": "（一只猫的身影在梦中闪过，然后梦境碎了。）" },
+        { "text": "（冰冷的气息溢满房间。不知何时，鲜血染满了床铺。你逐渐失去意识。）" },
+        { "text": "屏幕上浮起一行字：「别放弃，这个世界需要你来拯救」" }
+      ],
+      "next": "again"
+    },
+    {
+      "id": "again",
+      "talk": [
+        { "text": "（你睁开眼。还是傍晚，还是这张桌子。老人又站在门口，像什么都没发生过。）" },
+        { "speaker": "我", "text": "……我又回来了？", "side": "right",
+          "portrait": "protagonist/shocked" },
+        { "text": "（跟他搭话时，你会多出一个选项：观察。）" }
+      ],
+      "set": { "loop": 1, "can_observe": true }
+    },
+    {
+      "id": "declined",
+      "talk": [
+        { "speaker": "我", "text": "老人家，你信息太少了，这活我接不了。", "side": "right",
+          "portrait": "protagonist/guarded" },
+        { "speaker": "老人", "text": "......", "side": "left", "portrait": "elder" },
+        { "text": "（老人离开。）" },
+        { "text": "日子一天天平淡过去，但那个梦又反复出现。" },
+        { "speaker": "我", "text": "好烦....到底是为什么", "side": "right",
+          "portrait": "protagonist/puzzled" },
+        { "text": "直到一天，晚上被一声接一声的猫叫惊醒。" },
+        { "text": "（环境破碎）" },
+        { "speaker": "我", "text": "这是......！！", "side": "right",
+          "portrait": "protagonist/shocked" }
+      ],
+      "next": "calm_death"
+    },
+    {
+      "id": "calm_death",
+      "ending": "end1_calm",
+      "talk": [
+        { "text": "—— end1 平静即死亡" },
+        { "text": "你没有做错什么。你只是没有去。" }
+      ]
+    }
+  ]
+}

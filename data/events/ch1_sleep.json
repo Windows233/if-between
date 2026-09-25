@@ -1,0 +1,34 @@
+{
+  "id": "ch1_sleep",
+  "entry": "walk_in",
+  "nodes": [
+    {
+      "id": "walk_in",
+      "stage": [
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.5
+        },
+        {
+          "do": "goto",
+          "map": "bedroom_night",
+          "spawn": "from_desk"
+        },
+        {
+          "do": "location",
+          "text": "xx月x日　夜晚　卧室"
+        },
+        {
+          "do": "fade",
+          "to": "clear",
+          "time": 0.9
+        },
+        {
+          "do": "wait",
+          "time": 0.4
+        }
+      ]
+    }
+  ]
+}

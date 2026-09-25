@@ -1,0 +1,366 @@
+{
+  "id": "ch1_bed",
+  "entry": "bed",
+  "nodes": [
+    {
+      "id": "bed",
+      "stage": [
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.9
+        },
+        {
+          "do": "goto",
+          "map": "bedroom_night_sleep",
+          "spawn": "from_desk"
+        },
+        {
+          "do": "wait",
+          "time": 0.6
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "zzzZ　zzzzZZZ",
+              "side": "left",
+              "portrait": "protagonist/quiet"
+            }
+          ]
+        }
+      ],
+      "next": "cat"
+    },
+    {
+      "id": "cat",
+      "stage": [
+        {
+          "do": "wait",
+          "time": 2.0
+        },
+        {
+          "do": "play_sound",
+          "path": "res://audio/sfx/cat_meow.wav"
+        },
+        {
+          "do": "image",
+          "path": "res://art/cg/黑猫闪过cg.png",
+          "fade": 0.2,
+          "fill": true,
+          "hold": 3.0
+        },
+        {
+          "do": "flash",
+          "color": "white",
+          "mono": true,
+          "times": 3,
+          "time": 0.3,
+          "hold": 0.12
+        },
+        {
+          "do": "image",
+          "path": "res://art/cg/梦境破碎.png",
+          "fade": 0.3,
+          "fill": true,
+          "hold": 1.4,
+          "hide": false
+        },
+        {
+          "do": "play_sound",
+          "path": "res://audio/sfx/glass_break.wav"
+        },
+        {
+          "do": "glass",
+          "hold": 0.7,
+          "fade": 0.6
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "……猫？",
+              "side": "left",
+              "portrait": "protagonist/startled"
+            },
+            {
+              "speaker": "我",
+              "text": "……猫！！",
+              "side": "left",
+              "portrait": "protagonist/shocked"
+            }
+          ]
+        }
+      ],
+      "next": "death"
+    },
+    {
+      "id": "death",
+      "stage": [
+        {
+          "do": "image",
+          "path": "res://art/cg/梦中死亡.png",
+          "fade": 0.5,
+          "fill": true,
+          "hold": 2.5,
+          "hide": false
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "text": "冰冷的气息溢满了房间。"
+            },
+            {
+              "text": "而你　坠落　坠落……"
+            }
+          ]
+        },
+        {
+          "do": "wait_click"
+        },
+        {
+          "do": "image_hide",
+          "fade": 0.5
+        },
+        {
+          "do": "caption",
+          "fade": 0.6,
+          "wait_click": true,
+          "lines": [
+            {
+              "text": "这样就结束了吗，不甘心吧……"
+            }
+          ]
+        }
+      ],
+      "next": "back"
+    },
+    {
+      "id": "back",
+      "stage": [
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.8
+        },
+        {
+          "do": "goto",
+          "map": "desk_shop",
+          "spawn": "start"
+        },
+        {
+          "do": "place_player",
+          "at": [
+            224,
+            130
+          ],
+          "facing": "down"
+        },
+        {
+          "do": "location",
+          "text": "xx月x日　傍晚　委托屋"
+        },
+        {
+          "do": "fade",
+          "to": "clear",
+          "time": 0.0
+        },
+        {
+          "do": "eye_open",
+          "blinks": 2
+        },
+        {
+          "do": "wait",
+          "time": 0.6
+        },
+        {
+          "do": "play_sound",
+          "path": "res://audio/sfx/door_close.wav"
+        },
+        {
+          "do": "npc",
+          "id": "elder",
+          "sprite": "res://art/npc/elder",
+          "at": [
+            224,
+            330
+          ],
+          "height": 45,
+          "z": 12,
+          "fade": 0.5
+        },
+        {
+          "do": "npc_move",
+          "id": "elder",
+          "to": [
+            224,
+            215
+          ],
+          "time": 1.2
+        },
+        {
+          "do": "focus",
+          "at": [
+            224,
+            141
+          ],
+          "time": 0.6
+        },
+        {
+          "do": "npc_move",
+          "id": "elder",
+          "to": [
+            224,
+            160
+          ],
+          "time": 0.8
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "老人",
+              "text": "……你这里，接找猫的活吗？",
+              "side": "right",
+              "portrait": "elder"
+            }
+          ]
+        }
+      ],
+      "next": "observe"
+    },
+    {
+      "id": "observe",
+      "stage": [
+        {
+          "do": "hold",
+          "left": {
+            "speaker": "我",
+            "portrait": "protagonist/quiet",
+            "side": "left"
+          },
+          "right": {
+            "speaker": "老人",
+            "portrait": "elder",
+            "side": "right"
+          }
+        }
+      ],
+      "choices": [
+        {
+          "id": "look",
+          "label": "观察",
+          "next": "peek"
+        }
+      ]
+    },
+    {
+      "id": "peek",
+      "stage": [
+        {
+          "do": "hint",
+          "text": "（你看到了老人脑海中的if）"
+        },
+        {
+          "do": "if_panel",
+          "condition": "猫不见了",
+          "result": "来找主角帮忙",
+          "disabled": true
+        }
+      ],
+      "next": "again"
+    },
+    {
+      "id": "again",
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "老人",
+              "text": "……你这里，接找猫的活吗？",
+              "side": "right",
+              "portrait": "elder"
+            }
+          ]
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "老人",
+              "text": "它左耳缺一角。尾巴尖是白的。",
+              "side": "right",
+              "portrait": "elder"
+            },
+            {
+              "speaker": "老人",
+              "text": "然后……没有然后了。",
+              "side": "right",
+              "portrait": "elder"
+            },
+            {
+              "speaker": "我",
+              "text": "好，我会尽快给您消息。",
+              "side": "left",
+              "portrait": "protagonist/quiet"
+            }
+          ]
+        },
+        {
+          "do": "say",
+          "slide": "out"
+        },
+        {
+          "do": "focus",
+          "at": [
+            222,
+            250
+          ],
+          "time": 0.5
+        },
+        {
+          "do": "npc_move",
+          "id": "elder",
+          "to": [
+            222,
+            318
+          ],
+          "time": 1.8
+        },
+        {
+          "do": "npc_remove",
+          "id": "elder",
+          "fade": 0.4
+        },
+        {
+          "do": "focus"
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "这老人今天怎么这么奇怪。",
+              "side": "left",
+              "portrait": "protagonist/puzzled"
+            },
+            {
+              "speaker": "我",
+              "text": "这么晚了，明天再出去找吧。先休息吧。",
+              "side": "left",
+              "portrait": "protagonist/tired"
+            }
+          ]
+        }
+      ],
+      "set": {
+        "gate/slept_once": true,
+        "gate/late": false
+      }
+    }
+  ]
+}

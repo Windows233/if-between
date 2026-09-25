@@ -1,0 +1,26 @@
+[
+  {
+    "id": "end1_calm",
+    "title": "平静即死亡",
+    "summary": "你没有做错什么。你只是没有去。",
+    "kind": "bad"
+  },
+  {
+    "id": "end2_sweet",
+    "title": "甜蜜的咬痕",
+    "summary": "你也不是故意的，只是太巧了。",
+    "kind": "bad"
+  },
+  {
+    "id": "end3_nothing",
+    "title": "碌碌而无为",
+    "summary": "城邦只是开始忘记了一些东西。",
+    "kind": "bad"
+  },
+  {
+    "id": "end4_iron",
+    "title": "不可违的铁律",
+    "summary": "死亡可是人生的必修课，你只是超前学习了而已。",
+    "kind": "bad"
+  }
+]
