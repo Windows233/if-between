@@ -99,12 +99,9 @@ const TEXT_MIN_WIDTH := 121.0
 const BOX_MIN_HEIGHT := 72.0
 const BOX_MAX_HEIGHT := 92.0
 
-## 宽度按文字长短收放，这两个是上下限。
-##
-## 下限比原来小得多，是因为正文现在**只在一侧让立绘**（另一侧直接顶到内沿）：
-## 要装的只有一条 76 宽的带子，而不是两条。这样宽度能收放的区间从 24 像素
-## 扩到了 100 像素，「按文字长短收放」才真看得出来。
-const BOX_MIN_WIDTH := 204.0
+## 框宽。**固定铺满屏幕**（320 减左右边距），不跟着文字长短缩 ——
+## 人类 2026-09-26 明确说了：要的是「**文字的排版自动对齐对话框**」，
+## 不是「把对话框缩短去凑文字」。我先前把「长度自适应文字」读成了后者，撤掉。
 const BOX_MAX_WIDTH := 320.0 - MARGIN * 2.0
 
 ## 名字那一号字。比正文（10）小一号 —— 名字标签只有 9 上下高，再大就冒出去了。
@@ -158,7 +155,7 @@ var _open := false
 ## 当前面板高度。按这一行的行数算，见 `_update_box()`。
 var _box_height := BOX_MIN_HEIGHT
 ## 当前面板宽度。按这段对话里最长的一句算，见 `_update_box()`。
-var _box_width := BOX_MIN_WIDTH
+var _box_width := BOX_MAX_WIDTH
 ## 这一句是谁说的 —— 决定用哪张框（left/right）、框贴屏幕哪一边。
 ## 数据里 `DialogueLine.side` 已经把主角标成 LEFT、其他人标成 RIGHT。
 var _box_side := DialogueLine.Side.LEFT
@@ -404,7 +401,7 @@ func hold_open(cast: Dictionary, animate: bool = true) -> void:
 	_box_height = CHOICE_BOX_HEIGHT
 	# 等选择时正文清空了，框按最小宽度摆着当背景 —— 留着上一句的宽度
 	# 会是一块空荡荡的大板子，后面选项框压上来更挤。
-	_box_width = BOX_MIN_WIDTH
+	_box_width = BOX_MAX_WIDTH
 
 	for slot: DialoguePortrait in _slots:
 		var key := "left" if slot.side == DialogueLine.Side.LEFT else "right"
@@ -628,54 +625,16 @@ func _show_line(line: DialogueLine, log_first: bool) -> void:
 		shook.emit(line.shake)
 
 
-## 框的宽和高都按内容算。**先宽后高** —— 宽度定了一行能放几个字，
-## 高度才是按那个宽度折行折出来的。
+## 框宽固定，高度按这一行的折行数走。
+##
+## **先定宽、再按这个宽度量行数** —— 顺序反了的话，量出来的是上一帧的宽度
+## 折的行，面板高度会慢一拍。
 func _update_box() -> void:
-	_box_width = _wanted_box_width()
+	_box_width = BOX_MAX_WIDTH
 	# 高度按这一行实际占几行算。三行的台词用两行的面板会溢出。
 	var lines := _line_count(_label.text, _text_width(), _line_size)
 	var wanted := BOX_EXTRA + float(lines) * LINE_HEIGHT
 	_box_height = clampf(wanted, BOX_MIN_HEIGHT, BOX_MAX_HEIGHT)
-
-
-## 框线内沿占掉的宽度（逻辑像素）。
-##
-## 内沿是按缩放推出来的，缩放又跟框宽有关 —— 有点循环。但宽度只在
-## 280..304 之间动，这点差别不到 0.3 像素，按最小宽度算就够用了。
-func _inner_inset_x() -> float:
-	return (INNER_LEFT_TEX - BODY_TEX.position.x) * (BOX_MIN_WIDTH / BODY_TEX.size.x)
-
-
-## 文字和框之间留的一点余量（逻辑像素）。
-##
-## 量字宽用的是 `get_char_size()`，和 Label 自己的折行算法差几个像素 ——
-## 不补这一点，正好填满一行的台词会莫名其妙折出第二个字来（「吗？」单独一行）。
-const TEXT_SLACK := 8.0
-
-## 这一段对话需要多宽的框。
-##
-## **按整段里最长的那句算，不是按当前这一句。** 逐句变宽变窄的话，
-## 每翻一页框就左右抖一下 —— 高度那段的注释里踩过同一类坑
-## （「换一个说话人抖一下」），宽度同理。
-func _wanted_box_width() -> float:
-	var fixed := _inner_inset_x() * 2.0 + PORTRAIT_WIDTH + PORTRAIT_GAP + TEXT_SLACK
-	var longest := 0.0
-	if _dialogue != null:
-		for line: DialogueLine in _dialogue.lines:
-			longest = maxf(longest, _text_span(line.text, FONT_SIZE + line.size_delta))
-	return clampf(longest + fixed, BOX_MIN_WIDTH, BOX_MAX_WIDTH)
-
-
-## 一行文字在给定字号下有多宽。量不出来就退回「全角一个字号、半角半个」，
-## 和 `_char_width()` 一套。
-func _text_span(text: String, size: int) -> float:
-	if text == "":
-		return 0.0
-	var font := _measure.get_theme_default_font()
-	var total := 0.0
-	for i: int in text.length():
-		total += _char_width(text.unicode_at(i), font, size)
-	return total
 
 
 ## 这段文本在给定宽度下会占几行。
@@ -757,7 +716,7 @@ func _begin_hold() -> void:
 	_box_height = CHOICE_BOX_HEIGHT
 	# 等选择时正文清空了，框按最小宽度摆着当背景 —— 留着上一句的宽度
 	# 会是一块空荡荡的大板子，后面选项框压上来更挤。
-	_box_width = BOX_MIN_WIDTH
+	_box_width = BOX_MAX_WIDTH
 	_root.visible = true
 	_layout()
 

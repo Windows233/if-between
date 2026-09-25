@@ -54,8 +54,11 @@ static func test_box_layout(h: TestHarness) -> void:
 	var text := box.text_rect()
 	h.check("正文左边让开立绘",
 		text.position.x >= DialogueBox.PORTRAIT_WIDTH, true)
-	h.check("正文右边也让开立绘",
-		text.position.x + text.size.x <= view.x - DialogueBox.PORTRAIT_WIDTH, true)
+	# 正文那一列：**只让开说话人那一侧**的立绘带子。另一侧不再白留 ——
+	# 那边通常根本没有立绘，空着 76 像素会把正文挤成一条窄缝
+	# （人类 2026-09-26 改的版式）。这一句是主角说的，立绘在左。
+	h.check("正文右边顶到框内沿（不再白留右侧带子）",
+		text.position.x + text.size.x > view.x - DialogueBox.PORTRAIT_WIDTH, true)
 	# 窄到两三个字就换行的话，长台词会把面板撑爆 —— 这条守着那个下限
 	h.check("正文不窄于 120", text.size.x >= 120.0, true)
 
