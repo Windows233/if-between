@@ -5,6 +5,9 @@
 # gdmcp CLI (agent tool cache, not source)
 .gdmcp/
 
+# WorkBuddy 会话的本地记忆目录，不进版本控制
+.workbuddy/
+
 # 导出产物。正常落在 ../if-demo-build/（见 tools/export_demo.py），
 # 这几条是兜底，防止谁手滑把包导进项目里。
 /build/
