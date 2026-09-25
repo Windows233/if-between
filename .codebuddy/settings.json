@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CODEBUDDY_PROJECT_DIR/.codebuddy/hooks/session_status.sh\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
