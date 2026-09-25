@@ -99,13 +99,20 @@ const TEXT_MIN_WIDTH := 121.0
 const BOX_MIN_HEIGHT := 72.0
 const BOX_MAX_HEIGHT := 92.0
 
-## 宽度按文字长短收放，这两个是上下限。下限是从版式反推的：两条 70 宽的
-## 立绘带子 + `TEXT_MIN_WIDTH` + 框线内沿的留白。上限是屏幕宽减左右边距。
-const BOX_MIN_WIDTH := 280.0
+## 宽度按文字长短收放，这两个是上下限。
+##
+## 下限比原来小得多，是因为正文现在**只在一侧让立绘**（另一侧直接顶到内沿）：
+## 要装的只有一条 76 宽的带子，而不是两条。这样宽度能收放的区间从 24 像素
+## 扩到了 100 像素，「按文字长短收放」才真看得出来。
+const BOX_MIN_WIDTH := 204.0
 const BOX_MAX_WIDTH := 320.0 - MARGIN * 2.0
 
 ## 名字那一号字。比正文（10）小一号 —— 名字标签只有 9 上下高，再大就冒出去了。
 const NAME_FONT_SIZE := 8
+## 名字在标签里再往上抬一点（逻辑像素）。标签的形状上宽下尖，正中偏下看着偏低。
+const NAME_LIFT := 2.0
+## 按钮条离框内沿再往里收一点（逻辑像素），别贴着框线。
+const BUTTONS_INSET := 4.0
 
 ## 主角的名字在框上显示成什么。
 ##
@@ -639,13 +646,19 @@ func _inner_inset_x() -> float:
 	return (INNER_LEFT_TEX - BODY_TEX.position.x) * (BOX_MIN_WIDTH / BODY_TEX.size.x)
 
 
+## 文字和框之间留的一点余量（逻辑像素）。
+##
+## 量字宽用的是 `get_char_size()`，和 Label 自己的折行算法差几个像素 ——
+## 不补这一点，正好填满一行的台词会莫名其妙折出第二个字来（「吗？」单独一行）。
+const TEXT_SLACK := 8.0
+
 ## 这一段对话需要多宽的框。
 ##
 ## **按整段里最长的那句算，不是按当前这一句。** 逐句变宽变窄的话，
 ## 每翻一页框就左右抖一下 —— 高度那段的注释里踩过同一类坑
 ## （「换一个说话人抖一下」），宽度同理。
 func _wanted_box_width() -> float:
-	var fixed := 2.0 * (_inner_inset_x() + PORTRAIT_WIDTH + PORTRAIT_GAP)
+	var fixed := _inner_inset_x() * 2.0 + PORTRAIT_WIDTH + PORTRAIT_GAP + TEXT_SLACK
 	var longest := 0.0
 	if _dialogue != null:
 		for line: DialogueLine in _dialogue.lines:
@@ -854,14 +867,23 @@ func _inner_right() -> float:
 	return _box_left() + (INNER_RIGHT_TEX - BODY_TEX.position.x) * _scale().x
 
 
-## 正文区的左沿：框内沿再让开立绘那条带子。
+## 正文区的左沿。
+##
+## **只在说话人那一侧让开立绘带子**，另一侧不留 —— 另一边通常根本没立绘，
+## 空着 76 像素等于把正文挤成一条窄缝（人类 2026-09-26 的要求：
+## 「文本部分从文字框最左边开始」）。让位宽度仍然**按侧固定**，
+## 不按「这一刻有没有立绘」算，否则同一个说话人的几句之间宽度会跳、行数跟着跳。
 func _text_left() -> float:
-	return _inner_left() + PORTRAIT_WIDTH + PORTRAIT_GAP
+	if _box_side == DialogueLine.Side.LEFT:
+		return _inner_left() + PORTRAIT_WIDTH + PORTRAIT_GAP
+	return _inner_left()
 
 
-## 正文区的右沿。
+## 正文区的右沿。同上，只让开说话人那一侧。
 func _text_right() -> float:
-	return _inner_right() - PORTRAIT_WIDTH - PORTRAIT_GAP
+	if _box_side == DialogueLine.Side.RIGHT:
+		return _inner_right() - PORTRAIT_WIDTH - PORTRAIT_GAP
+	return _inner_right()
 
 
 ## 正文区的宽度。**就是两条立绘带子中间那一列。**
@@ -914,7 +936,7 @@ func _layout() -> void:
 	_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_name.position = Vector2(left + (tab.position.x - BODY_TEX.position.x) * s.x,
-		top + (tab.position.y - BODY_TEX.position.y) * s.y)
+		top + (tab.position.y - BODY_TEX.position.y) * s.y - NAME_LIFT)
 	_name.size = Vector2(tab.size.x * s.x, tab.size.y * s.y)
 
 	# 正文要从按钮条那一行**下面**开始，不然第一行字被按钮压住
@@ -926,10 +948,10 @@ func _layout() -> void:
 	# 同侧会叠在一起（标签宽约 85、按钮条宽 101，正文那一列装不下两个）。
 	if _box_side == DialogueLine.Side.RIGHT:
 		# 右款：标签在右上，按钮条从内容区左边起往右排 —— 见 `_buttons_left_edge()`。
-		_buttons.layout(_buttons_left_edge() + DialogueButtons.reserved_width()
-			- DialogueButtons.MARGIN_RIGHT, inner_top)
+		_buttons.layout(_buttons_left_edge() + BUTTONS_INSET
+			+ DialogueButtons.reserved_width() - DialogueButtons.MARGIN_RIGHT, inner_top)
 	else:
-		_buttons.layout(_inner_right(), inner_top)
+		_buttons.layout(_inner_right() - BUTTONS_INSET, inner_top)
 
 
 ## 按钮条那一行占多高。正文要从它下面开始。
