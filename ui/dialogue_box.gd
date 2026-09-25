@@ -826,6 +826,14 @@ func _inner_right() -> float:
 	return _box_left() + (INNER_RIGHT_TEX - BODY_TEX.position.x) * _scale().x
 
 
+## 正文和按钮离框线内沿的那点余量（逻辑像素）。
+##
+## **一点都不能省。** 不留的话正文会直接顶在框线上 —— 右款（立绘在右、
+## 左侧没有东西挡着）尤其明显，字贴着线甚至压着线，看着像「凸出去」了
+## （人类 2026-09-26 报的）。左款因为本来就隔着一条立绘带子，看不出来。
+const TEXT_PAD := 6.0
+
+
 ## 正文区的左沿。
 ##
 ## **只在说话人那一侧让开立绘带子**，另一侧不留 —— 另一边通常根本没立绘，
@@ -835,14 +843,14 @@ func _inner_right() -> float:
 func _text_left() -> float:
 	if _box_side == DialogueLine.Side.LEFT:
 		return _inner_left() + PORTRAIT_WIDTH + PORTRAIT_GAP
-	return _inner_left()
+	return _inner_left() + TEXT_PAD
 
 
 ## 正文区的右沿。同上，只让开说话人那一侧。
 func _text_right() -> float:
 	if _box_side == DialogueLine.Side.RIGHT:
 		return _inner_right() - PORTRAIT_WIDTH - PORTRAIT_GAP
-	return _inner_right()
+	return _inner_right() - TEXT_PAD
 
 
 ## 正文区的宽度。**就是两条立绘带子中间那一列。**
@@ -922,7 +930,7 @@ func _buttons_row_height() -> float:
 ## `DialogueButtons.layout()` 只认右边沿，所以这里把左沿换算成等价的右边沿：
 ## 它从 right 往左排三个按钮、最左那个的左边正好落在 right - (reserved - MARGIN_RIGHT)。
 func _buttons_left_edge() -> float:
-	return _inner_left()
+	return _inner_left() + TEXT_PAD
 
 
 ## 正文那一列占的地方。测试与调试用 —— 版式一改，靠它守
