@@ -155,21 +155,19 @@
       "cover": true,
       "talk": [
         {
-          "who": "",
-          "text": "桌面上有一本登记册。最后一页写着："
+          "text": "（桌面上有一本登记册。最后一页写着：）"
         },
         {
-          "who": "",
           "text": "来访者登记"
         },
         {
-          "who": "",
           "text": "xxxx  xxxx  xxxx  主角"
         },
         {
-          "who": "",
-          "text": "怎么其他名字都涂黑了，不知道的还以为是死亡笔记（汗）",
-          "portrait": "protagonist/reading"
+          "speaker": "我",
+          "side": "right",
+          "portrait": "protagonist/reading",
+          "text": "怎么其他名字都涂黑了，不知道的还以为是死亡笔记（汗）"
         }
       ]
     },
