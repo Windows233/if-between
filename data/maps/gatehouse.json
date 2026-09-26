@@ -11,6 +11,10 @@
     "start": [
       269,
       252
+    ],
+    "from_overworld": [
+      269,
+      252
     ]
   },
   "walls": [
