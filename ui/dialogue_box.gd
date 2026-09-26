@@ -32,13 +32,8 @@ signal shook(strength: float)
 
 const MARGIN := 8.0
 
-## 面板高度**随正文行数浮动**，在这两个数之间。
-##
-## 下限取屏幕高度的**三分之一**（180 / 3 = 60）—— 这是版式规格：
-## 「对话框只占屏幕的 1/3，一个深色方框」。上限 82 是给长台词留的余地，
-## 再高就要把场景压没了。
-const BOX_MIN_HEIGHT := 60.0
-const BOX_MAX_HEIGHT := 82.0
+## 面板高度**随正文行数浮动**，上下限在下面「框贴图」那一节里 ——
+## 那两个数现在是跟着**面板贴图**推出来的，不再写死在这儿。
 ## 一行的高度。字号 10，行距按这个算。
 const LINE_HEIGHT := 13.0
 ## 正文区之外的固定开销：名字行 + 上下留白
@@ -50,7 +45,80 @@ const BOX_EXTRA := 30.0
 ## 常量里引用别的类的常量，解析器不认（试过，报的是找不到标识符）。
 const PORTRAIT_WIDTH := 70.0
 const PORTRAIT_GAP := 6.0
-const PANEL_PAD := 2.0
+
+## ---- 框贴图（2026-09-25 换的真美术）----
+##
+## 两张都是 1584x435，由 `tools/make_dialog_frames.gd` 从「对话框/」里那两张
+## **没有透明通道**的原图抠出来的。left 给主角用（名字标签在左上），
+## right 给其他角色用（标签在右上）。
+const FRAME_LEFT := "res://art/ui/dialog_frame_left.png"
+const FRAME_RIGHT := "res://art/ui/dialog_frame_right.png"
+const FRAME_TEX_W := 1584.0
+const FRAME_TEX_H := 435.0
+
+## **贴图里实体面板那一块**（贴图像素，x/y/宽/高）。
+##
+## 名字标签挂在面板**上面**、花饰挂在**下面**，两个都是伸出面板外的装饰。
+## 所以布局必须围着**实体面板**算 —— 早先把整张贴图的高度当成面板高度，
+## 面板就被压扁了：立绘探出框外、正文和名字都对不上，三个毛病同一个原因。
+const BODY_TEX := Rect2(7.0, 22.0, 1554.0, 389.0)
+
+## 面板内容区的四条内沿（绝对贴图像素）。框线往里让开这么多才是能放东西的地方。
+const INNER_LEFT_TEX := 22.0
+const INNER_TOP_TEX := 45.0
+const INNER_RIGHT_TEX := 1545.0
+const INNER_BOTTOM_TEX := 395.0
+
+## 九宫格的四条切边（贴图像素）。**名字标签必须整个落在不拉伸的那块角里**，
+## 花饰同理；否则横向拉伸时标签会被压扁、花饰会走形。
+## 左右两张是镜像的，所以两边的左右切边数值互换了。
+const PATCH_LEFT_LEFT := 690.0
+const PATCH_LEFT_RIGHT := 215.0
+const PATCH_RIGHT_LEFT := 215.0
+const PATCH_RIGHT_RIGHT := 690.0
+const PATCH_TOP := 52.0
+const PATCH_BOTTOM := 45.0
+
+## 名字标签在贴图里的位置（贴图像素，左上为原点）。名字要摆进这块里 ——
+## 它是**跨在面板上沿**上的一个凸起，比内容区还高，所以单独给一块矩形。
+const TAB_LEFT := Rect2(238.0, 6.0, 444.0, 46.0)
+const TAB_RIGHT := Rect2(902.0, 6.0, 408.0, 46.0)
+
+## 正文那一列最少要多宽。窄到两三个字就换行的话，长台词会把面板撑爆 ——
+## `test_presentation` 里那条「正文不窄于 120」守的就是它。
+## 多写 1 像素是给浮点留余量（下面那个式子是乘加出来的，正好等于 120 时
+## 可能算出 119.999…，那条断言就假红）。
+const TEXT_MIN_WIDTH := 121.0
+
+## 框的高和宽（逻辑像素）。**高度指的是实体面板的高度**，
+## 不含上面凸出来的名字标签、也不含下面挂着的花饰。
+##
+## 下限从 60 抬到 72 是这次修的重点：60 的时候面板内容区只剩 48 高，
+## 立绘整条腿都在框外面。72 起内容区有 65 上下，立绘装得进；
+## 名字标签也跟着涨到 8.5 高，8 号字的名字正好待在里面。
+const BOX_MIN_HEIGHT := 72.0
+const BOX_MAX_HEIGHT := 92.0
+
+## 框宽。**固定铺满屏幕**（320 减左右边距），不跟着文字长短缩 ——
+## 人类 2026-09-26 明确说了：要的是「**文字的排版自动对齐对话框**」，
+## 不是「把对话框缩短去凑文字」。我先前把「长度自适应文字」读成了后者，撤掉。
+const BOX_MAX_WIDTH := 320.0 - MARGIN * 2.0
+
+## 名字那一号字。比正文（10）小一号 —— 名字标签只有 9 上下高，再大就冒出去了。
+const NAME_FONT_SIZE := 8
+## 名字在标签里再往上抬一点（逻辑像素）。标签的形状上宽下尖，正中偏下看着偏低。
+const NAME_LIFT := 2.0
+## 按钮条离框内沿再往里收一点（逻辑像素），别贴着框线。
+const BUTTONS_INSET := 4.0
+
+## 主角的名字在框上显示成什么。
+##
+## 数据里主角的 `speaker` 写的是「我」，但框上要显示「主角」——
+## 这是**显示层的映射，不动 `data/`**（改数据等于改剧情内容，还会连带
+## 影响对话记录面板）。判定见 `_is_protagonist()`。
+const PROTAGONIST_LABEL := "主角"
+const PROTAGONIST_SPEAKERS: Array[String] = ["我", "主角"]
+const PROTAGONIST_PORTRAIT_PREFIX := "protagonist"
 
 ## 自动模式下，一句显示完之后停多久
 const AUTO_DELAY := 1.6
@@ -65,15 +133,12 @@ const FONT_SIZE := 10
 ## 所以这里就取最小高度 —— 两个人站在框里，留个空面板当背景。
 const CHOICE_BOX_HEIGHT := BOX_MIN_HEIGHT
 
-const BG_COLOR := Color(0.05, 0.06, 0.09, 0.92)
-const EDGE_COLOR := Color(0.34, 0.46, 0.38, 1.0)
 const TEXT_COLOR := Color("#eaeaea")
 const NAME_COLOR := Color("#e8c07a")
 const HINT_COLOR := Color("#8a9a8e")
 
 var _root: Control
-var _edge: ColorRect
-var _panel: ColorRect
+var _frame: NinePatchRect
 var _name: Label
 var _label: Label
 ## 只用来量「这段文本会占几行」的隐藏标签，不显示。
@@ -87,8 +152,13 @@ var _log: DialogueLog
 var _dialogue: Dialogue = null
 var _index := -1
 var _open := false
-## 当前面板高度。按这一行的行数算，见 `_update_box_height()`。
+## 当前面板高度。按这一行的行数算，见 `_update_box()`。
 var _box_height := BOX_MIN_HEIGHT
+## 当前面板宽度。按这段对话里最长的一句算，见 `_update_box()`。
+var _box_width := BOX_MAX_WIDTH
+## 这一句是谁说的 —— 决定用哪张框（left/right）、框贴屏幕哪一边。
+## 数据里 `DialogueLine.side` 已经把主角标成 LEFT、其他人标成 RIGHT。
+var _box_side := DialogueLine.Side.LEFT
 
 ## 这一段播完**不收起面板**，留在场上等玩家选选项。
 ## 由 `play()` 的第二个参数决定 —— 对话框自己不认识选项，
@@ -134,8 +204,14 @@ func setup() -> void:
 	_root.gui_input.connect(_on_root_gui_input)
 	add_child(_root)
 
-	_edge = _make_rect("Edge", EDGE_COLOR)
-	_panel = _make_rect("Panel", BG_COLOR)
+	_frame = NinePatchRect.new()
+	_frame.name = "Frame"
+	_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# 中间那块拉伸，四角保持原尺寸 —— 名字标签和花饰都在角里，所以不走形。
+	_frame.axis_stretch_horizontal = NinePatchRect.AXIS_STRETCH_MODE_STRETCH
+	_frame.axis_stretch_vertical = NinePatchRect.AXIS_STRETCH_MODE_STRETCH
+	_set_frame_side(DialogueLine.Side.LEFT)
+	_root.add_child(_frame)
 
 	# 立绘站在面板**里面**，所以**必须建在面板之后** ——
 	# 同层节点按加入顺序画，先加的被后加的盖住。早先立绘画在面板上方，
@@ -145,7 +221,7 @@ func setup() -> void:
 
 	_name = Label.new()
 	_name.name = "Name"
-	_name.add_theme_font_size_override("font_size", 9)
+	_name.add_theme_font_size_override("font_size", NAME_FONT_SIZE)
 	_name.add_theme_color_override("font_color", NAME_COLOR)
 	_root.add_child(_name)
 
@@ -175,13 +251,31 @@ func setup() -> void:
 	_buttons.set_auto(false)
 
 
-func _make_rect(node_name: String, color: Color) -> ColorRect:
-	var rect := ColorRect.new()
-	rect.name = node_name
-	rect.color = color
-	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_root.add_child(rect)
-	return rect
+## 换成左款或右款框：贴图、九宫格切边、名字标签位置都要跟着换。
+func _set_frame_side(side: DialogueLine.Side) -> void:
+	_frame.texture = load(FRAME_RIGHT if side == DialogueLine.Side.RIGHT else FRAME_LEFT)
+	if side == DialogueLine.Side.RIGHT:
+		_frame.patch_margin_left = int(PATCH_RIGHT_LEFT)
+		_frame.patch_margin_right = int(PATCH_RIGHT_RIGHT)
+	else:
+		_frame.patch_margin_left = int(PATCH_LEFT_LEFT)
+		_frame.patch_margin_right = int(PATCH_LEFT_RIGHT)
+	_frame.patch_margin_top = int(PATCH_TOP)
+	_frame.patch_margin_bottom = int(PATCH_BOTTOM)
+	# 缩放和位置都在 `_layout()` 里按当前框尺寸算（横向纵向比例是分开推的）。
+
+
+## 当前这一侧名字标签在贴图里的位置。
+func _tab_rect() -> Rect2:
+	return TAB_RIGHT if _box_side == DialogueLine.Side.RIGHT else TAB_LEFT
+
+
+## 这一句是不是主角说的。speaker 对得上（数据里写「我」）算，
+## 立绘路径以 `protagonist` 开头也算 —— 两条都指向同一个人，多一条兜底。
+func _is_protagonist(line: DialogueLine) -> bool:
+	if PROTAGONIST_SPEAKERS.has(line.speaker):
+		return true
+	return line.portrait.begins_with(PROTAGONIST_PORTRAIT_PREFIX)
 
 
 # ---------------------------------------------------------------- 播放
@@ -305,6 +399,9 @@ func hold_open(cast: Dictionary, animate: bool = true) -> void:
 	_name.visible = false
 	_buttons.set_visible(false)
 	_box_height = CHOICE_BOX_HEIGHT
+	# 等选择时正文清空了，框按最小宽度摆着当背景 —— 留着上一句的宽度
+	# 会是一块空荡荡的大板子，后面选项框压上来更挤。
+	_box_width = BOX_MAX_WIDTH
 
 	for slot: DialoguePortrait in _slots:
 		var key := "left" if slot.side == DialogueLine.Side.LEFT else "right"
@@ -506,8 +603,13 @@ func _show_line(line: DialogueLine, log_first: bool) -> void:
 		_record(line)
 	_apply_portraits(line)
 
-	_name.text = line.speaker
-	_name.visible = line.speaker != ""
+	# 这一句谁说的，决定用哪张框、框贴屏幕哪一边，以及名字标签摆在哪头
+	_box_side = line.side
+	_set_frame_side(_box_side)
+
+	# 主角在框上显示「主角」，不是数据里的「我」—— 只改显示，不动 `data/`
+	_name.text = PROTAGONIST_LABEL if _is_protagonist(line) else line.speaker
+	_name.visible = _name.text != ""
 	# 字号**每行都要重设**：上一行是加大号的话，不重设这一行会跟着变大。
 	#（主题覆盖是留在 Label 上的。）
 	_line_size = FONT_SIZE + line.size_delta
@@ -517,14 +619,19 @@ func _show_line(line: DialogueLine, log_first: bool) -> void:
 	_reveal = 0.0
 	_revealing = true
 	_auto_timer = 0.0
-	_update_box_height()
+	_update_box()
 	_layout()
 	if line.shake > 0.0:
 		shook.emit(line.shake)
 
 
-## 面板高度按这一行实际占几行算。三行的台词用两行的面板会溢出。
-func _update_box_height() -> void:
+## 框宽固定，高度按这一行的折行数走。
+##
+## **先定宽、再按这个宽度量行数** —— 顺序反了的话，量出来的是上一帧的宽度
+## 折的行，面板高度会慢一拍。
+func _update_box() -> void:
+	_box_width = BOX_MAX_WIDTH
+	# 高度按这一行实际占几行算。三行的台词用两行的面板会溢出。
 	var lines := _line_count(_label.text, _text_width(), _line_size)
 	var wanted := BOX_EXTRA + float(lines) * LINE_HEIGHT
 	_box_height = clampf(wanted, BOX_MIN_HEIGHT, BOX_MAX_HEIGHT)
@@ -607,6 +714,9 @@ func _begin_hold() -> void:
 	_label.visible = false
 	_buttons.set_visible(false)
 	_box_height = CHOICE_BOX_HEIGHT
+	# 等选择时正文清空了，框按最小宽度摆着当背景 —— 留着上一句的宽度
+	# 会是一块空荡荡的大板子，后面选项框压上来更挤。
+	_box_width = BOX_MAX_WIDTH
 	_root.visible = true
 	_layout()
 
@@ -689,14 +799,58 @@ func _box_top() -> float:
 	return _view_size().y - _box_height - MARGIN
 
 
-## 正文区的左沿：面板左边往内一格，再让开立绘那条带子。
+## 面板左沿的 x。**主角那句贴屏幕左边、往右长；其他角色的贴右边、往左长** ——
+## 框往哪边长得看是谁在说话，贴图上的名字标签本来就是照这个方向画的。
+func _box_left() -> float:
+	if _box_side == DialogueLine.Side.RIGHT:
+		return _view_size().x - MARGIN - _box_width
+	return MARGIN
+
+
+## 框内沿的左右两条。立绘和正文都排在这两条之间，不压到框线上。
+## 贴图 -> 逻辑像素的缩放。**横竖分开推**：横向把面板贴图的宽度映射到框宽，
+## 纵向把面板贴图的高度映射到框高。
+##
+## 不能用一个统一比例 —— 面板贴图是 1554x389（比例 4:1），而框的宽高是各自
+## 按内容算的，两者对不上。分开推的好处是面板**永远不变形**，
+## 名字标签和花饰因为挂在面板外，按各自的贴图尺寸跟着缩。
+func _scale() -> Vector2:
+	return Vector2(_box_width / BODY_TEX.size.x, _box_height / BODY_TEX.size.y)
+
+
+func _inner_left() -> float:
+	return _box_left() + (INNER_LEFT_TEX - BODY_TEX.position.x) * _scale().x
+
+
+func _inner_right() -> float:
+	return _box_left() + (INNER_RIGHT_TEX - BODY_TEX.position.x) * _scale().x
+
+
+## 正文和按钮离框线内沿的那点余量（逻辑像素）。
+##
+## **一点都不能省。** 不留的话正文会直接顶在框线上 —— 右款（立绘在右、
+## 左侧没有东西挡着）尤其明显，字贴着线甚至压着线，看着像「凸出去」了
+## （人类 2026-09-26 报的）。左款因为本来就隔着一条立绘带子，看不出来。
+const TEXT_PAD := 6.0
+
+
+## 正文区的左沿。
+##
+## **只在说话人那一侧让开立绘带子**，另一侧不留 —— 另一边通常根本没立绘，
+## 空着 76 像素等于把正文挤成一条窄缝（人类 2026-09-26 的要求：
+## 「文本部分从文字框最左边开始」）。让位宽度仍然**按侧固定**，
+## 不按「这一刻有没有立绘」算，否则同一个说话人的几句之间宽度会跳、行数跟着跳。
 func _text_left() -> float:
-	return MARGIN + PANEL_PAD + PORTRAIT_WIDTH + PORTRAIT_GAP
+	if _box_side == DialogueLine.Side.LEFT:
+		return _inner_left() + PORTRAIT_WIDTH + PORTRAIT_GAP
+	return _inner_left() + TEXT_PAD
 
 
-## 正文区的右沿。
+## 正文区的右沿。同上，只让开说话人那一侧。
 func _text_right() -> float:
-	return _view_size().x - MARGIN - PANEL_PAD - PORTRAIT_WIDTH - PORTRAIT_GAP
+	if _box_side == DialogueLine.Side.RIGHT:
+		return _inner_right() - PORTRAIT_WIDTH - PORTRAIT_GAP
+	return _inner_right() - TEXT_PAD
 
 
 ## 正文区的宽度。**就是两条立绘带子中间那一列。**
@@ -716,42 +870,77 @@ func _layout() -> void:
 	_root.position = Vector2.ZERO
 	_root.size = view
 
-	var width := view.x - MARGIN * 2.0
+	var left := _box_left()
 	var top := _box_top()
+	var s := _scale()
 
-	_edge.position = Vector2(MARGIN, top)
-	_edge.size = Vector2(width, _box_height)
-	_panel.position = Vector2(MARGIN + 1.0, top + 1.0)
-	_panel.size = Vector2(width - 2.0, _box_height - 2.0)
+	# 九宫格节点的 size 写**贴图像素**（它和贴图 1:1），缩放挂在该死的 scale 上；
+	# 位置要**倒着**减去面板左上角在贴图里的偏移，面板那一块才对得上 (left, top)，
+	# 名字标签也就正好凸在面板上沿外面。
+	_frame.size = Vector2(FRAME_TEX_W, FRAME_TEX_H)
+	_frame.scale = s
+	_frame.position = Vector2(left - BODY_TEX.position.x * s.x,
+		top - BODY_TEX.position.y * s.y)
 
-	# 立绘站在面板**里面**：主角那侧贴面板左沿，其他人贴右沿，各占一条带子。
+	# 内容区：正文、立绘、按钮都在这一块里活动
+	var inner_top := top + (INNER_TOP_TEX - BODY_TEX.position.y) * s.y
+	var inner_bottom := top + (INNER_BOTTOM_TEX - BODY_TEX.position.y) * s.y
+	var inner_h := inner_bottom - inner_top
+
+	# 立绘站在面板**里面**：主角那侧贴内沿左边，其他人贴内沿右边，各占一条带子。
+	# **高度给的是内容区，不是整张贴图** —— 按整张给的话人会探出框外。
 	for slot: DialoguePortrait in _slots:
-		slot.rest_x = MARGIN + PANEL_PAD if slot.side == DialogueLine.Side.LEFT \
-			else view.x - MARGIN - PANEL_PAD - PORTRAIT_WIDTH
-		slot.place(top, _box_height)
+		slot.rest_x = _inner_left() if slot.side == DialogueLine.Side.LEFT \
+			else _inner_right() - PORTRAIT_WIDTH
+		slot.place(inner_top, inner_h)
 
 	var text_left := _text_left()
 	var text_right := _text_right()
 
-	# 名字那一行的右边要让给按钮条（自动 / 记录 / 跳过），
-	# 名字再长也不该压到它们上面。
-	_name.position = Vector2(text_left, top + 5.0)
-	_name.size = Vector2(
-		maxf(24.0, text_right - text_left - DialogueButtons.reserved_width()), 12.0
-	)
+	# 名字摆进那个小标签里、居中。标签凸在面板上沿**外面**，矩形单独算，
+	# 不能拿内容区去推。
+	var tab := _tab_rect()
+	_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_name.position = Vector2(left + (tab.position.x - BODY_TEX.position.x) * s.x,
+		top + (tab.position.y - BODY_TEX.position.y) * s.y - NAME_LIFT)
+	_name.size = Vector2(tab.size.x * s.x, tab.size.y * s.y)
 
-	_label.position = Vector2(text_left, top + 17.0)
-	_label.size = Vector2(text_right - text_left, _box_height - 30.0)
+	# 正文要从按钮条那一行**下面**开始，不然第一行字被按钮压住
+	var text_top := inner_top + _buttons_row_height()
+	_label.position = Vector2(text_left, text_top)
+	_label.size = Vector2(text_right - text_left, inner_bottom - text_top - 2.0)
 
-	_buttons.layout(text_right, top)
+	# 按钮条贴**名字标签的另一边**：标签占了上沿的一头，按钮只能去另一头。
+	# 同侧会叠在一起（标签宽约 85、按钮条宽 101，正文那一列装不下两个）。
+	if _box_side == DialogueLine.Side.RIGHT:
+		# 右款：标签在右上，按钮条从内容区左边起往右排 —— 见 `_buttons_left_edge()`。
+		_buttons.layout(_buttons_left_edge() + BUTTONS_INSET
+			+ DialogueButtons.reserved_width() - DialogueButtons.MARGIN_RIGHT, inner_top)
+	else:
+		_buttons.layout(_inner_right() - BUTTONS_INSET, inner_top)
+
+
+## 按钮条那一行占多高。正文要从它下面开始。
+func _buttons_row_height() -> float:
+	return DialogueButtons.MARGIN_TOP + DialogueButtons.HEIGHT + 2.0
+
+
+## 右款框（标签在右上）时，按钮条要贴框内沿的**左**边。
+## `DialogueButtons.layout()` 只认右边沿，所以这里把左沿换算成等价的右边沿：
+## 它从 right 往左排三个按钮、最左那个的左边正好落在 right - (reserved - MARGIN_RIGHT)。
+func _buttons_left_edge() -> float:
+	return _inner_left() + TEXT_PAD
 
 
 ## 正文那一列占的地方。测试与调试用 —— 版式一改，靠它守
 ## 「正文没有窄到两三个字就换行」。
+##
+## 直接报 `_label` 摆完的位置，不再自己重算一遍：版式一改就是两处要跟着改，
+## 迟早对不上（这个文件已经栽过好几次）。
 func text_rect() -> Rect2:
 	setup()
-	return Rect2(_text_left(), _box_top() + 17.0,
-		_text_width(), _box_height - 30.0)
+	return Rect2(_label.position, _label.size)
 
 
 ## 点到了哪个按钮。没点到返回 -1。
