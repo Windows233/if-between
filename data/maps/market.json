@@ -14,6 +14,20 @@
       279
     ]
   },
+  "actors": [
+    { "id": "market_side_left", "rect": [0, 91, 262, 223],
+      "sprite": "res://art/props/market_day_side_left.png", "label": "街边楼房" },
+    { "id": "market_side_right", "rect": [299, 106, 258, 208],
+      "sprite": "res://art/props/market_day_side_right.png", "label": "街边楼房" },
+    { "id": "stall_white", "rect": [65, 65, 103, 77],
+      "sprite": "res://art/props/market_day_stall_white.png", "label": "白棚摊位", "cover": true },
+    { "id": "stall_red", "rect": [322, 71, 87, 72],
+      "sprite": "res://art/props/market_day_stall_red.png", "label": "红棚摊位", "cover": true },
+    { "id": "stall_purple", "rect": [418, 69, 96, 78],
+      "sprite": "res://art/props/market_day_stall_purple.png", "label": "紫棚摊位", "cover": true },
+    { "id": "fountain", "rect": [236, 151, 85, 74],
+      "sprite": "res://art/props/market_day_fountain.png", "label": "喷泉", "cover": true }
+  ],
   "walls": [
     [
       81,
