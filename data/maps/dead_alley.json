@@ -7,7 +7,7 @@
   ],
   "background": "res://art/background/chapter2_dead_alley.png",
   "indoor": false,
-  "music": "res://audio/bgm/大地图背景音乐.mp3",
+  "music": "res://audio/bgm/reclamation.mp3",
   "spawns": {
     "from_overworld": [
       192,
@@ -22,22 +22,34 @@
       256
     ],
     [
-      226,
+      228,
       0,
-      158,
+      156,
       256
     ],
     [
       155,
+      16,
+      73,
+      30
+    ],
+    [
       0,
-      71,
+      233,
+      384,
       4
     ],
     [
       0,
-      245,
+      253,
       384,
-      11
+      3
+    ],
+    [
+      0,
+      0,
+      384,
+      3
     ]
   ],
   "portals": [],
@@ -52,9 +64,9 @@
       ],
       "reach": [
         155,
-        16,
+        46,
         73,
-        42
+        14
       ],
       "label": "锈蚀铁门",
       "auto_menu": true,
