@@ -13,7 +13,7 @@ extends RefCounted
 
 const MAP_DIR := "res://data/maps"
 
-enum Kind { WALL, PORTAL, ACTOR }
+enum Kind { WALL, PORTAL, ACTOR, SPAWN }
 
 var map_id: String = ""
 var path: String = ""
@@ -90,17 +90,81 @@ func count(kind: int) -> int:
 			return walls().size()
 		Kind.PORTAL:
 			return portals().size()
-		_:
+		Kind.ACTOR:
 			return actors().size()
+		_:
+			return spawns().size()
 
 
-## 取第 i 项的矩形。墙是数组 `[x,y,w,h]`，传送区和物件是 `{"rect":[...]}`。
+# ---------------------------------------------------------------- 出生点
+#
+# 出生点不是矩形，是一个点（`"start": [x, y]`）。为了复用画布那套
+# 「选中 / 拖动」的机制，这里把它**包装成一个 6×6 的小矩形**：
+# 读出来是「以点为中心」的小方块，写回去取方块的中心。
+# 位置语义始终是那个点，别被这 6 像素迷惑。
+
+const SPAWN_HIT_SIZE := 6.0
+
+
+func spawn_names() -> Array[String]:
+	var out: Array[String] = []
+	for key: Variant in spawns():
+		out.append(str(key))
+	return out
+
+
+func spawn_point(index: int) -> Vector2:
+	var names := spawn_names()
+	if index < 0 or index >= names.size():
+		return Vector2.ZERO
+	var raw: Variant = spawns()[names[index]]
+	if raw is Array and (raw as Array).size() >= 2:
+		return Vector2(float(raw[0]), float(raw[1]))
+	return Vector2.ZERO
+
+
+func set_spawn_point(index: int, point: Vector2) -> void:
+	var names := spawn_names()
+	if index < 0 or index >= names.size():
+		return
+	spawns()[names[index]] = [int(round(point.x)), int(round(point.y))]
+	dirty = true
+
+
+## 加一个出生点。名字重了就不加（返回 -1）—— 出生点是按名字取的，
+## 重名会让传送点指向哪个变得说不清。
+func add_spawn(name: String) -> int:
+	if name.strip_edges() == "":
+		return -1
+	var box := spawns()
+	if box.has(name):
+		return -1
+	var center := map_size() * 0.5
+	box[name] = [int(round(center.x)), int(round(center.y))]
+	data["spawns"] = box
+	dirty = true
+	return spawn_names().size() - 1
+
+
+func _remove_spawn(index: int) -> void:
+	var names := spawn_names()
+	if index < 0 or index >= names.size():
+		return
+	spawns().erase(names[index])
+	dirty = true
+
+
+## 取第 i 项的矩形。墙是数组 `[x,y,w,h]`，传送区和物件是 `{"rect":[...]}`，
+## 出生点是**以点为中心的 6×6 小方块**（见上面的说明）。
 func rect_of(kind: int, index: int) -> Rect2:
 	if kind == Kind.WALL:
 		var list := walls()
 		if index < 0 or index >= list.size():
 			return Rect2()
 		return _to_rect(list[index])
+	if kind == Kind.SPAWN:
+		var p := spawn_point(index)
+		return Rect2(p - Vector2.ONE * (SPAWN_HIT_SIZE * 0.5), Vector2.ONE * SPAWN_HIT_SIZE)
 	var list: Array = portals() if kind == Kind.PORTAL else actors()
 	if index < 0 or index >= list.size():
 		return Rect2()
@@ -111,6 +175,9 @@ func rect_of(kind: int, index: int) -> Rect2:
 
 
 func set_rect(kind: int, index: int, rect: Rect2) -> void:
+	if kind == Kind.SPAWN:
+		set_spawn_point(index, rect.position + rect.size * 0.5)
+		return
 	var box := _rect_to_array(rect)
 	if kind == Kind.WALL:
 		var list := walls()
@@ -154,6 +221,9 @@ func add_rect(kind: int, rect: Rect2) -> int:
 
 
 func remove_at(kind: int, index: int) -> void:
+	if kind == Kind.SPAWN:
+		_remove_spawn(index)
+		return
 	if kind == Kind.WALL:
 		var list := walls()
 		if index < 0 or index >= list.size():
@@ -209,6 +279,9 @@ func copy_layout_to(target_id: String, with_spawns := false) -> String:
 func label_of(kind: int, index: int) -> String:
 	if kind == Kind.WALL:
 		return "墙"
+	if kind == Kind.SPAWN:
+		var names := spawn_names()
+		return names[index] if index >= 0 and index < names.size() else ""
 	var list: Array = portals() if kind == Kind.PORTAL else actors()
 	if index < 0 or index >= list.size():
 		return ""

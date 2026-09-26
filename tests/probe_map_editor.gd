@@ -83,5 +83,17 @@ func _initialize() -> void:
 			covers, "有" if dock.model.overlay_path() != "" else "无"])
 		print("   前景层实际范围（贴图像素）：%s" % dock.canvas._overlay_used)
 
+	# 出生点：列出来 + 选中一个（验画布那套拖动/数值框对它也管用）
+	if dock.model.count(Model.Kind.SPAWN) > 0:
+		dock.canvas.sel_kind = Model.Kind.SPAWN
+		dock.canvas.sel_index = 0
+		dock._refresh_selection()
+		print("⑧ 出生点 %d 个：%s；选中「%s」在 %s（宽高框可编辑=%s）" % [
+			dock.model.count(Model.Kind.SPAWN),
+			", ".join(dock.model.spawn_names()),
+			dock.model.label_of(Model.Kind.SPAWN, 0),
+			dock.model.spawn_point(0),
+			str(dock._spins[2].editable)])
+
 	print("=== 地图编辑器探针通过 ===")
 	quit(0)

@@ -94,7 +94,8 @@ func _row_layers() -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.add_child(_text("显示："))
 	for item in [["背景", "show_bg"], ["前景层", "show_overlay"], ["墙", "show_walls"],
-			["传送区", "show_portals"], ["物件", "show_actors"], ["可走格", "show_walk"]]:
+			["传送区", "show_portals"], ["物件", "show_actors"], ["出生点", "show_spawns"],
+			["可走格", "show_walk"]]:
 		var cb := CheckBox.new()
 		cb.text = str(item[0])
 		cb.button_pressed = true
@@ -159,9 +160,16 @@ func _row_selection() -> HBoxContainer:
 
 	var remove := Button.new()
 	remove.text = "删除选中"
-	remove.tooltip_text = "删掉当前选中的墙或传送区（Delete 键同样管用）"
+	remove.tooltip_text = "删掉当前选中的墙 / 传送区 / 出生点（Delete 键同样管用）"
 	remove.pressed.connect(_on_delete)
 	row.add_child(remove)
+
+	var add_spawn := Button.new()
+	add_spawn.text = "加出生点"
+	add_spawn.tooltip_text = "加一个出生点（会问你名字，加在地图正中，之后拖到位置）。"
+	add_spawn.tooltip_text += "\n注意：至少得留一个 start —— 新游戏和多数传送点都找它。"
+	add_spawn.pressed.connect(_open_spawn_dialog)
+	row.add_child(add_spawn)
 	return row
 
 
@@ -238,15 +246,55 @@ func _on_layer(on: bool, prop: String) -> void:
 func _on_delete() -> void:
 	if canvas.sel_kind < 0:
 		return
-	var names := ["墙", "传送区", "物件"]
+	var names := ["墙", "传送区", "物件", "出生点"]
 	var what: String = names[canvas.sel_kind]
+	var was: String = model.label_of(canvas.sel_kind, canvas.sel_index)
 	model.remove_at(canvas.sel_kind, canvas.sel_index)
 	canvas.sel_kind = -1
 	canvas.sel_index = -1
 	_on_edited()
 	_refresh_selection()
 	canvas.queue_redraw()
-	_status.text = "删了一个%s（还没保存，点「重新载入」就能全部撤回来）" % what
+	_status.text = "删了一个%s%s（还没保存，点「重新载入」就能全部撤回来）" % [
+		what, "（%s）" % was if was != "" else ""]
+
+
+## 加一个出生点：问名字、加在地图正中，之后拖到位置。
+func _open_spawn_dialog() -> void:
+	if model.map_id == "":
+		return
+	var dialog := ConfirmationDialog.new()
+	dialog.title = "加一个出生点"
+	dialog.ok_button_text = "加"
+	var box := VBoxContainer.new()
+	var head := _text("名字（传送点就是这样引用它的，别和现有的重名）：")
+	head.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(head)
+	var field := LineEdit.new()
+	field.custom_minimum_size = Vector2(200, 0)
+	field.text = "from_"
+	box.add_child(field)
+	var tip := _text("加进来在地图正中，选中之后拖到位置上；x/y 也能敲数字。")
+	tip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(tip)
+	dialog.add_child(box)
+	dialog.confirmed.connect(func() -> void:
+		var index := model.add_spawn(field.text.strip_edges())
+		if index < 0:
+			_status.text = "这个名字不能用：空的，或者已经有同名的出生点了"
+		else:
+			model.set_spawn_point(index, model.map_size() * 0.5)
+			canvas.sel_kind = Kind.SPAWN
+			canvas.sel_index = index
+			_on_edited()
+			_refresh_selection()
+			canvas.queue_redraw()
+			_status.text = "加好了出生点「%s」，现在把它拖到位置上" % field.text.strip_edges()
+		dialog.queue_free())
+	dialog.canceled.connect(func() -> void: dialog.queue_free())
+	add_child(dialog)
+	dialog.popup_centered(Vector2i(420, 190))
+	field.grab_focus()
 
 
 func _open_copy_dialog() -> void:
@@ -285,6 +333,12 @@ func _open_copy_dialog() -> void:
 
 func _on_spin_changed(_v: float) -> void:
 	if _syncing or canvas.sel_kind < 0:
+		return
+	if canvas.sel_kind == Kind.SPAWN:
+		# 出生点是坐标，不是矩形 —— 只认 x / y 两个框
+		canvas.model.set_spawn_point(canvas.sel_index, Vector2(_spins[0].value, _spins[1].value))
+		_on_edited()
+		canvas.queue_redraw()
 		return
 	var r: Rect2 = canvas.model.rect_of(canvas.sel_kind, canvas.sel_index)
 	var next := Rect2(
@@ -326,15 +380,24 @@ func _refresh_selection() -> void:
 			spin.editable = false
 		_base_row.visible = false
 	else:
-		var names := ["墙", "传送区", "物件"]
+		var names := ["墙", "传送区", "物件", "出生点"]
 		var r: Rect2 = model.rect_of(kind, index)
 		_sel_label.text = "%s #%d %s" % [names[kind], index, model.label_of(kind, index)]
 		_spins[0].value = r.position.x
 		_spins[1].value = r.position.y
 		_spins[2].value = r.size.x
 		_spins[3].value = r.size.y
-		for spin in _spins:
-			spin.editable = true
+		var is_spawn: bool = kind == Kind.SPAWN
+		# 出生点没有宽高可改（它就是个坐标），x/y 照旧能敲
+		_spins[0].editable = true
+		_spins[1].editable = true
+		_spins[2].editable = not is_spawn
+		_spins[3].editable = not is_spawn
+		if is_spawn:
+			# 出生点显示的是「点本身」，别把包装用的 6×6 露出来
+			var p: Vector2 = model.spawn_point(index)
+			_spins[0].value = p.x
+			_spins[1].value = p.y
 		var is_cover: bool = kind == Kind.ACTOR and model.is_cover_actor(index)
 		_base_row.visible = is_cover
 		if is_cover:

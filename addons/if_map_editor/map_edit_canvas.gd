@@ -47,6 +47,9 @@ var show_walls := true
 var show_portals := true
 var show_actors := true
 var show_walk := false
+## 出生点（小小一颗紫点）。**它不是矩形，是个坐标**，但一样能选中、拖动、
+## 用数值框改 —— 数据层把它包成以点为中心的 6×6 方块（见 model）。
+var show_spawns := true
 ## 前景层（`MapDef.overlay`）的不透明度。**它恒在角色之上**，
 ## 编辑它底下那些墙/传送区时把它调淡，才看得见底下。
 var overlay_alpha := 1.0
@@ -214,13 +217,12 @@ func _draw() -> void:
 			if model.is_cover_actor(i):
 				_draw_baseline(i)
 
-	# 出生点
-	for key: Variant in model.spawns():
-		var raw: Variant = model.spawns()[key]
-		if raw is Array and (raw as Array).size() >= 2:
-			var p := to_screen(Vector2(float(raw[0]), float(raw[1])))
+	# 出生点（紫点 + 名字）
+	if show_spawns:
+		for i in model.count(Kind.SPAWN):
+			var p := to_screen(model.spawn_point(i))
 			draw_circle(p, 4.0, SPAWN_COLOR)
-			draw_string(ThemeDB.fallback_font, p + Vector2(7, 4), str(key),
+			draw_string(ThemeDB.fallback_font, p + Vector2(7, 4), model.label_of(Kind.SPAWN, i),
 				HORIZONTAL_ALIGNMENT_LEFT, -1, 12, SPAWN_COLOR)
 
 	if _drag_mode == 3:
@@ -229,7 +231,8 @@ func _draw() -> void:
 	if sel_kind >= 0 and is_kind_visible(sel_kind):
 		var r: Rect2 = model.rect_of(sel_kind, sel_index)
 		_draw_rect_game(r, Color(0, 0, 0, 0), SELECT_COLOR, 2.0)
-		if tool == Tool.SELECT:
+		# 出生点是个点，没有「改尺寸」这回事 —— 不给手柄
+		if tool == Tool.SELECT and sel_kind != Kind.SPAWN:
 			for h in _handle_points(r):
 				draw_rect(Rect2(h - Vector2(HANDLE_SIZE, HANDLE_SIZE) * 0.5,
 					Vector2(HANDLE_SIZE, HANDLE_SIZE)), SELECT_COLOR, true)
@@ -434,7 +437,8 @@ func is_kind_visible(kind: int) -> bool:
 			return show_portals
 		Kind.ACTOR:
 			return show_actors
-	return false
+		_:
+			return show_spawns
 
 
 func set_layer_visible(prop: String, on: bool) -> void:
@@ -453,6 +457,11 @@ func set_layer_visible(prop: String, on: bool) -> void:
 func _hit_item(pos: Vector2) -> Vector2i:
 	# 后画的压在上面 —— 和渲染顺序相反着找。
 	# 隐藏的那几类直接跳过（见 `is_kind_visible`）。
+	# **出生点排在最前**：它只有 6×6，压在墙或物件上时不该被盖住选不中。
+	if show_spawns:
+		for i in range(model.count(Kind.SPAWN) - 1, -1, -1):
+			if _rect_hit(model.rect_of(Kind.SPAWN, i), pos, 2.0):
+				return Vector2i(Kind.SPAWN, i)
 	if show_actors:
 		for i in range(model.count(Kind.ACTOR) - 1, -1, -1):
 			if _rect_hit(model.rect_of(Kind.ACTOR, i), pos):
@@ -487,6 +496,8 @@ func _rect_hit(r: Rect2, pos: Vector2, slop := 0.0) -> bool:
 func _hit_handle(pos: Vector2) -> int:
 	if sel_kind < 0 or tool != Tool.SELECT:
 		return -1
+	if sel_kind == Kind.SPAWN:
+		return -1          # 出生点没有尺寸可改
 	var r: Rect2 = model.rect_of(sel_kind, sel_index)
 	var points := _handle_points(r)
 	for i in points.size():

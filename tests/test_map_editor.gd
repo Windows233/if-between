@@ -18,9 +18,11 @@ static func run(h: TestHarness) -> void:
 	test_wall_ops(h)
 	test_portal_ops(h)
 	test_cover_y_in_model(h)
+	test_spawns_in_model(h)
 	test_save_round_trip(h)
 	test_copy_layout(h)
 	test_visibility_gates_picking(h)
+	test_spawn_picking(h)
 	test_map_view_honors_cover_y(h)
 
 
@@ -207,6 +209,66 @@ static func test_visibility_gates_picking(h: TestHarness) -> void:
 
 	canvas.set_layer_visible("show_walls", true)
 	h.check("再打开墙：又能点中了", canvas._hit_item(probe).x, Kind.WALL)
+	canvas.free()
+
+
+## 出生点（`spawns`）：它不是矩形，是个坐标。
+##
+## 数据层把它包成「以点为中心的 6×6 方块」，好让画布那套选中/拖动照用；
+## 但位置语义永远是那个点 —— 这个用例专门把这个包装盯住。
+## **出生点只管位置，不管朝向**（朝向由剧情 `place_player` 或上一张地图带过来）。
+static func test_spawns_in_model(h: TestHarness) -> void:
+	var m = Model.new()
+	m.data = {
+		"size": [100, 80],
+		"walls": [], "portals": [], "actors": [],
+		"spawns": {"start": [10, 20]},
+	}
+
+	h.check("出生点数", m.count(Kind.SPAWN), 1)
+	h.check("出生点名字", m.spawn_names()[0], "start")
+	h.check("出生点坐标", m.spawn_point(0), Vector2(10, 20))
+	h.check("读到的是以点为中心的 6×6 方块", m.rect_of(Kind.SPAWN, 0), Rect2(7, 17, 6, 6))
+
+	m.set_spawn_point(0, Vector2(30, 40))
+	h.check("改坐标生效", m.spawn_point(0), Vector2(30, 40))
+	h.check("存进去的是整数", (m.spawns()["start"] as Array)[0], 30)
+
+	var index := m.add_spawn("from_overworld")
+	h.check("加了一个出生点", m.count(Kind.SPAWN), 2)
+	h.check("新出生点默认在地图正中", m.spawn_point(index), Vector2(50, 40))
+	h.check("重名不给加", m.add_spawn("start"), -1)
+	h.check("空名字不给加", m.add_spawn("   "), -1)
+
+	m.set_rect(Kind.SPAWN, index, Rect2(60, 70, 6, 6))
+	h.check("按矩形拖（取中心）也对", m.spawn_point(index), Vector2(63, 73))
+
+	m.remove_at(Kind.SPAWN, index)
+	h.check("删出生点", m.count(Kind.SPAWN), 1)
+	h.check("删的是对的那个", m.spawn_names()[0], "start")
+
+
+## 出生点压在墙/物件上时也得选得中（它只有 6×6），关掉那层就落到下面的东西上。
+static func test_spawn_picking(h: TestHarness) -> void:
+	var m = Model.new()
+	m.data = {
+		"size": [200, 200],
+		"walls": [[50, 50, 60, 10]],
+		"portals": [], "actors": [],
+		"spawns": {"start": [60, 55]},
+	}
+	var canvas: Control = CanvasScript.new()
+	canvas.size = Vector2(400, 400)
+	canvas.load_map(m, "", "", m.map_size())
+	canvas.zoom = 1.0
+	canvas.pan = Vector2.ZERO
+
+	h.check("出生点压在墙上：先选中出生点",
+		canvas._hit_item(Vector2(60, 55)), Vector2i(Kind.SPAWN, 0))
+	canvas.set_layer_visible("show_spawns", false)
+	h.check("关掉出生点层：落到下面的墙", canvas._hit_item(Vector2(60, 55)).x, Kind.WALL)
+	canvas.set_layer_visible("show_spawns", true)
+	h.check("再打开：又能选中出生点", canvas._hit_item(Vector2(60, 55)).x, Kind.SPAWN)
 	canvas.free()
 
 
