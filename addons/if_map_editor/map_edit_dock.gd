@@ -82,6 +82,11 @@ func _row_title() -> HBoxContainer:
 	_save_button.text = "保存到 JSON"
 	_save_button.pressed.connect(_on_save)
 	row.add_child(_save_button)
+	var copy := Button.new()
+	copy.text = "复制布局到…"
+	copy.tooltip_text = "把这张图的碰撞箱/传送区/物件覆盖到另一张图上（白天版↔夜间版）"
+	copy.pressed.connect(_open_copy_dialog)
+	row.add_child(copy)
 	return row
 
 
@@ -93,6 +98,7 @@ func _row_layers() -> HBoxContainer:
 		var cb := CheckBox.new()
 		cb.text = str(item[0])
 		cb.button_pressed = true
+		cb.tooltip_text = "取消勾选：这一类既不显示，也点不中（底下压着的东西就能选中了）"
 		cb.toggled.connect(_on_layer.bind(str(item[1])))
 		row.add_child(cb)
 	var refresh := Button.new()
@@ -136,6 +142,12 @@ func _row_selection() -> HBoxContainer:
 	_base_row.add_child(auto_button)
 	_base_row.visible = false
 	row.add_child(_base_row)
+
+	var remove := Button.new()
+	remove.text = "删除选中"
+	remove.tooltip_text = "删掉当前选中的墙或传送区（Delete 键同样管用）"
+	remove.pressed.connect(_on_delete)
+	row.add_child(remove)
 	return row
 
 
@@ -201,13 +213,60 @@ func _on_tool(which: int) -> void:
 
 
 func _on_layer(on: bool, prop: String) -> void:
-	canvas.set(prop, on)
+	canvas.set_layer_visible(prop, on)
 	if prop == "show_walk":
 		if on:
 			_status.text = "正在算可走格……（用的是游戏同一份 WalkGrid）"
-		canvas.set_walk_visible(on)
 	else:
-		canvas.queue_redraw()
+		_status.text = "「%s」%s —— 显示开关同时管能不能点中" % [prop, "开着" if on else "关掉了"]
+
+
+func _on_delete() -> void:
+	if canvas.sel_kind < 0:
+		return
+	var names := ["墙", "传送区", "物件"]
+	var what: String = names[canvas.sel_kind]
+	model.remove_at(canvas.sel_kind, canvas.sel_index)
+	canvas.sel_kind = -1
+	canvas.sel_index = -1
+	_on_edited()
+	_refresh_selection()
+	canvas.queue_redraw()
+	_status.text = "删了一个%s（还没保存，点「重新载入」就能全部撤回来）" % what
+
+
+func _open_copy_dialog() -> void:
+	if model.map_id == "":
+		return
+	var dialog := ConfirmationDialog.new()
+	dialog.title = "复制布局到另一张地图"
+	dialog.ok_button_text = "覆盖过去"
+	var box := VBoxContainer.new()
+	var head := _text("把 %s 的碰撞箱、传送区、物件，覆盖到：" % model.map_id)
+	head.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(head)
+	var picker := OptionButton.new()
+	for id in Model.list_maps():
+		if id != model.map_id:
+			picker.add_item(id)
+	box.add_child(picker)
+	var with_spawns := CheckBox.new()
+	with_spawns.text = "连出生点一起复制"
+	box.add_child(with_spawns)
+	var warn := _text("目标图里这三项会被整个换掉；尺寸、背景、前景层、音乐不动。")
+	warn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(warn)
+	dialog.add_child(box)
+	dialog.confirmed.connect(func() -> void:
+		var target := picker.get_item_text(picker.selected)
+		var counts := "%d 墙 / %d 传送区 / %d 物件" % [
+			model.count(Kind.WALL), model.count(Kind.PORTAL), model.count(Kind.ACTOR)]
+		var err := model.copy_layout_to(target, with_spawns.button_pressed)
+		_status.text = ("已把 %s 覆盖到 %s" % [counts, target]) if err == "" else err
+		dialog.queue_free())
+	dialog.canceled.connect(func() -> void: dialog.queue_free())
+	add_child(dialog)
+	dialog.popup_centered(Vector2i(430, 210))
 
 
 func _on_spin_changed(_v: float) -> void:

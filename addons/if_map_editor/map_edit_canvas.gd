@@ -194,7 +194,7 @@ func _draw() -> void:
 	if _drag_mode == 3:
 		_draw_rect_game(_drag_new_rect, Color(1, 1, 1, 0.15), SELECT_COLOR)
 
-	if sel_kind >= 0:
+	if sel_kind >= 0 and is_kind_visible(sel_kind):
 		var r: Rect2 = model.rect_of(sel_kind, sel_index)
 		_draw_rect_game(r, Color(0, 0, 0, 0), SELECT_COLOR, 2.0)
 		if tool == Tool.SELECT:
@@ -389,21 +389,56 @@ func _resize_to(pos: Vector2) -> void:
 	model.set_rect(sel_kind, sel_index, r)
 
 
+## 这一类现在露不露。
+##
+## **显示开关同时管「能不能点中」** —— 物件压在碰撞块上时（委托屋那张书桌），
+## 只关显示不改选中，底下那块墙一辈子点不到。关掉那一类，就等于把它
+## 从「可点」里摘出去。
+func is_kind_visible(kind: int) -> bool:
+	match kind:
+		Kind.WALL:
+			return show_walls
+		Kind.PORTAL:
+			return show_portals
+		Kind.ACTOR:
+			return show_actors
+	return false
+
+
+func set_layer_visible(prop: String, on: bool) -> void:
+	set(prop, on)
+	if prop == "show_walk":
+		set_walk_visible(on)
+	elif sel_kind >= 0 and not is_kind_visible(sel_kind):
+		# 把选中项所在的那一类关掉了，选中也跟着收起来 ——
+		# 不然会出现「看不见的白框还挂着八个手柄」
+		sel_kind = -1
+		sel_index = -1
+		selection_changed.emit()
+	queue_redraw()
+
+
 func _hit_item(pos: Vector2) -> Vector2i:
-	# 后画的压在上面 —— 和渲染顺序相反着找
-	for i in range(model.count(Kind.ACTOR) - 1, -1, -1):
-		if _rect_hit(model.rect_of(Kind.ACTOR, i), pos):
-			return Vector2i(Kind.ACTOR, i)
-	for i in range(model.count(Kind.PORTAL) - 1, -1, -1):
-		if _rect_hit(model.rect_of(Kind.PORTAL, i), pos):
-			return Vector2i(Kind.PORTAL, i)
-	for i in range(model.count(Kind.WALL) - 1, -1, -1):
-		if _rect_hit(model.rect_of(Kind.WALL, i), pos):
-			return Vector2i(Kind.WALL, i)
+	# 后画的压在上面 —— 和渲染顺序相反着找。
+	# 隐藏的那几类直接跳过（见 `is_kind_visible`）。
+	if show_actors:
+		for i in range(model.count(Kind.ACTOR) - 1, -1, -1):
+			if _rect_hit(model.rect_of(Kind.ACTOR, i), pos):
+				return Vector2i(Kind.ACTOR, i)
+	if show_portals:
+		for i in range(model.count(Kind.PORTAL) - 1, -1, -1):
+			if _rect_hit(model.rect_of(Kind.PORTAL, i), pos):
+				return Vector2i(Kind.PORTAL, i)
+	if show_walls:
+		for i in range(model.count(Kind.WALL) - 1, -1, -1):
+			if _rect_hit(model.rect_of(Kind.WALL, i), pos):
+				return Vector2i(Kind.WALL, i)
 	return Vector2i(-1, -1)
 
 
 func _hit_cover_actor(pos: Vector2) -> int:
+	if not show_actors:
+		return -1
 	for i in range(model.count(Kind.ACTOR) - 1, -1, -1):
 		if not model.is_cover_actor(i):
 			continue

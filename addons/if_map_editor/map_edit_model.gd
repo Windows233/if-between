@@ -172,6 +172,40 @@ func remove_at(kind: int, index: int) -> void:
 	dirty = true
 
 
+## 把布局（`walls` / `portals` / `actors`）**覆盖**到另一份地图数据上。
+##
+## 用在「白天版 / 夜间版」这种同布置、不同配色的图上：摆一遍，复制过去。
+## **尺寸、背景、前景层、音乐、脚步都不动** —— 那些是每张图自己的。
+## `with_spawns` 为真才连出生点一起复制（默认不动：出生点是按入口给的）。
+##
+## 拷的是**深拷贝**：之后改源不会连带改目标。
+static func copy_layout(source: Dictionary, target: Dictionary, with_spawns := false) -> void:
+	for key in ["walls", "portals", "actors"]:
+		if source.has(key):
+			target[key] = _normalize(source[key])
+		else:
+			target.erase(key)
+	if with_spawns and source.has("spawns"):
+		target["spawns"] = _normalize(source["spawns"])
+
+
+## 把当前这份布局写到 `target_id` 那张图上（读进来、覆盖、存回去）。
+##
+## 返回空串表示成功，否则是要显示给人看的一句话。
+func copy_layout_to(target_id: String, with_spawns := false) -> String:
+	if target_id == "" or target_id == map_id:
+		return "目标地图没选对"
+	var other = (get_script() as GDScript).new()
+	if not other.load_map(target_id):
+		return "找不到目标地图 %s" % target_id
+	copy_layout(data, other.data, with_spawns)
+	other.dirty = true
+	var err: Error = other.save_to()
+	if err != OK:
+		return "写 %s 失败，错误码 %d" % [target_id, err]
+	return ""
+
+
 func label_of(kind: int, index: int) -> String:
 	if kind == Kind.WALL:
 		return "墙"
