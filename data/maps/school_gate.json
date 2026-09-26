@@ -1,0 +1,205 @@
+{
+  "id": "school_gate",
+  "name": "学校大门",
+  "size": [
+    421,
+    281
+  ],
+  "background": "res://art/map/school_gate.png",
+  "indoor": false,
+  "music": "res://audio/bgm/reclamation.mp3",
+  "spawns": {
+    "from_alley": [
+      207,
+      255
+    ],
+    "near_classroom": [
+      62,
+      105
+    ],
+    "near_yard": [
+      207,
+      40
+    ]
+  },
+  "walls": [
+    [
+      0,
+      0,
+      141,
+      106
+    ],
+    [
+      280,
+      15,
+      114,
+      103
+    ],
+    [
+      141,
+      0,
+      42,
+      36
+    ],
+    [
+      237,
+      0,
+      43,
+      36
+    ],
+    [
+      168,
+      76,
+      85,
+      69
+    ],
+    [
+      172,
+      201,
+      18,
+      41
+    ],
+    [
+      225,
+      203,
+      44,
+      45
+    ],
+    [
+      0,
+      0,
+      421,
+      3
+    ],
+    [
+      0,
+      0,
+      3,
+      281
+    ],
+    [
+      418,
+      0,
+      3,
+      281
+    ],
+    [
+      0,
+      278,
+      421,
+      3
+    ]
+  ],
+  "portals": [
+    {
+      "id": "to_yard",
+      "rect": [
+        177,
+        0,
+        61,
+        35
+      ],
+      "label": "操场",
+      "to": "school_yard",
+      "spawn": "from_gate"
+    },
+    {
+      "id": "to_classroom",
+      "rect": [
+        45,
+        68,
+        35,
+        37
+      ],
+      "label": "教学楼",
+      "to": "classroom",
+      "spawn": "from_gate"
+    },
+    {
+      "id": "to_library",
+      "rect": [
+        341,
+        76,
+        24,
+        39
+      ],
+      "label": "图书馆",
+      "event": "ch2_library_locked"
+    },
+    {
+      "id": "to_gatehouse",
+      "rect": [
+        330,
+        226,
+        21,
+        18
+      ],
+      "label": "门卫室",
+      "to": "gatehouse",
+      "spawn": "start"
+    }
+  ],
+  "actors": [
+    {
+      "id": "sg_fountain",
+      "rect": [
+        164,
+        57,
+        89,
+        95
+      ],
+      "sprite": "res://art/props/school_gate_fountain.png",
+      "cover": true,
+      "label": "喷泉"
+    },
+    {
+      "id": "can",
+      "rect": [
+        215,
+        234,
+        12,
+        14
+      ],
+      "reach": [
+        214,
+        232,
+        15,
+        18
+      ],
+      "label": "易拉罐",
+      "auto_menu": true,
+      "actions": [
+        {
+          "id": "check",
+          "label": "易拉罐",
+          "event": "ch2_can"
+        }
+      ]
+    },
+    {
+      "id": "sg_occlude_1",
+      "rect": [
+        225,
+        186,
+        172,
+        39
+      ],
+      "sprite": "res://art/props/school_gate_occlude_1.png",
+      "cover": true,
+      "label": "围墙遮挡"
+    },
+    {
+      "id": "sg_occlude_2",
+      "rect": [
+        15,
+        183,
+        215,
+        40
+      ],
+      "sprite": "res://art/props/school_gate_occlude_2.png",
+      "cover": true,
+      "label": "围墙遮挡"
+    }
+  ],
+  "player_scale": 0.5
+}

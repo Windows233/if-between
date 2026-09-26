@@ -1,0 +1,58 @@
+{
+  "id": "classroom",
+  "name": "教室",
+  "size": [
+    384,
+    307
+  ],
+  "background": "res://art/map/classroom.png",
+  "indoor": true,
+  "music": "res://audio/bgm/reclamation.mp3",
+  "spawns": {
+    "from_gate": [
+      192,
+      277
+    ]
+  },
+  "walls": [
+    [
+      0,
+      0,
+      384,
+      26
+    ],
+    [
+      0,
+      0,
+      24,
+      307
+    ],
+    [
+      360,
+      0,
+      24,
+      307
+    ],
+    [
+      0,
+      285,
+      384,
+      22
+    ]
+  ],
+  "portals": [
+    {
+      "id": "back_gate",
+      "rect": [
+        172,
+        285,
+        40,
+        22
+      ],
+      "label": "学校大门",
+      "to": "school_gate",
+      "spawn": "near_classroom"
+    }
+  ],
+  "player_scale": 0.5
+}

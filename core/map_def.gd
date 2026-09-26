@@ -204,6 +204,12 @@ class Actor:
 	## `rect_distance` 算出来是 0，每次按交互都被它截胡，人反而说不上话。
 	## 标了 `decor` 就不进这个兜底，`actor_near` 也会跳过它。
 	var decor: bool = false
+	## 走进这件物件的 `reach` 时，**自动弹出它的动作菜单**（不用按交互键）。
+	##
+	## 为死巷铁门做的：人类定的交互方式是「走到蓝色框，右上角浮出
+	## 『推开铁门』，点一下进门」。菜单复用 `choice_menu`（本来就是
+	## 右上角的独立面板），每帧在 `_check_auto_menu()` 里查。
+	var auto_menu: bool = false
 	## 能做的动作。只有一个时直接执行，多个时先弹菜单让玩家挑。
 	var interactions: Array[Interaction] = []
 	## 满足这个条件才出现在场景里。为 null 表示一直在。
@@ -263,6 +269,12 @@ var footstep: String = ""
 ##
 ## 2026-09-24 策划定的：露天场景不该有进门音效。
 var indoor := true
+## 这张地图里玩家的缩放。默认 1（45 像素高的老比例）。
+##
+## 学校那套美术密度比集市细得多（门卫室的门才 23 像素高），
+## 45 像素的主角站进去比门还高一头半 —— 按图给个缩放，
+## 进图时 `main.enter_map` 挂到玩家节点上，整只（含碰撞）一起缩。
+var player_scale: float = 1.0
 
 ## 挡路的矩形。可行走区域 = size 减去这些墙。
 var walls: Array[Rect2] = []
@@ -286,6 +298,7 @@ static func from_dictionary(data: Dictionary) -> MapDef:
 	def.footstep = str(data.get("footstep", ""))
 	# 不写就是室内。**只有露天场景需要显式写 false**（集市）。
 	def.indoor = bool(data.get("indoor", true))
+	def.player_scale = float(data.get("player_scale", 1.0))
 
 	var raw_walls: Variant = data.get("walls", [])
 	if raw_walls is Array:
@@ -532,6 +545,7 @@ static func _actor_from(raw: Variant) -> Actor:
 	actor.over = bool(raw.get("over", false))
 	actor.person = bool(raw.get("person", false))
 	actor.decor = bool(raw.get("decor", false))
+	actor.auto_menu = bool(raw.get("auto_menu", false))
 	actor.condition = Condition.from_dictionary(raw.get("if"))
 
 	# 纯装饰物件：只画不交互。**直接返回**，别落到下面那三个兜底 ——

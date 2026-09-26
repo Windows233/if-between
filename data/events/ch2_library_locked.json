@@ -1,0 +1,22 @@
+{
+  "id": "ch2_library_locked",
+  "entry": "start",
+  "nodes": [
+    {
+      "id": "start",
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "portrait": "protagonist/quiet",
+              "side": "left",
+              "text": "图书馆的门锁着，进不去。"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

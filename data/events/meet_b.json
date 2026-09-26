@@ -316,20 +316,20 @@
         },
         {
           "do": "goto",
-          "map": "desk_shop",
-          "spawn": "start"
+          "map": "dead_alley",
+          "spawn": "from_overworld"
         },
         {
           "do": "place_player",
           "at": [
-            224,
-            130
+            192,
+            222
           ],
-          "facing": "down"
+          "facing": "up"
         },
         {
           "do": "location",
-          "text": "3036年9月25日　22:40　委托屋"
+          "text": "3036年9月25日　22:40　学校后巷"
         },
         {
           "do": "fade",

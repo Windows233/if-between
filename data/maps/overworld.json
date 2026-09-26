@@ -103,7 +103,9 @@
       "detail": "蚀界被触发形成的扭曲空间，充满未知与危险。",
       "side": "left",
       "accent": true,
-      "locked": true
+      "locked": false,
+      "to": "dead_alley",
+      "spawn": "from_overworld"
     }
   ]
 }
