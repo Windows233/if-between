@@ -462,6 +462,8 @@ func enter_map(map_id: StringName, spawn_name: StringName,
 	current_spawn = spawn_name
 	map_view.build(def, flags)
 	player.global_position = def.spawn_point(spawn_name)
+	# 每张图自己的主角比例（学校那套美术密度细，老比例站进去是巨人）。
+	player.scale = Vector2(def.player_scale, def.player_scale)
 	player.velocity = Vector2.ZERO
 	# 脚步的锚点跟着落地重置：不重置的话，从上一个场景攒下来的那一段距离
 	# 会在进门的头一帧就凑够一次脚步（人刚站定就踩了一脚）。

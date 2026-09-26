@@ -259,6 +259,12 @@ var footstep: String = ""
 ##
 ## 2026-09-24 策划定的：露天场景不该有进门音效。
 var indoor := true
+## 这张地图里玩家的缩放。默认 1（45 像素高的老比例）。
+##
+## 学校那套美术密度比集市细得多（门卫室的门才 23 像素高），
+## 45 像素的主角站进去比门还高一头半 —— 按图给个缩放，
+## 进图时 `main.enter_map` 挂到玩家节点上，整只（含碰撞）一起缩。
+var player_scale: float = 1.0
 
 ## 挡路的矩形。可行走区域 = size 减去这些墙。
 var walls: Array[Rect2] = []
@@ -282,6 +288,7 @@ static func from_dictionary(data: Dictionary) -> MapDef:
 	def.footstep = str(data.get("footstep", ""))
 	# 不写就是室内。**只有露天场景需要显式写 false**（集市）。
 	def.indoor = bool(data.get("indoor", true))
+	def.player_scale = float(data.get("player_scale", 1.0))
 
 	var raw_walls: Variant = data.get("walls", [])
 	if raw_walls is Array:

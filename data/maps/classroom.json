@@ -53,5 +53,6 @@
       "to": "school_gate",
       "spawn": "near_classroom"
     }
-  ]
+  ],
+  "player_scale": 0.5
 }
