@@ -41,6 +41,9 @@ func new_main() -> Node2D:
 	root.add_child(main)
 	# --script 模式下 _ready 不会同步触发，显式拉起来
 	main.boot()
+	# 调试开关在这里统一关掉，测试跑的是正常流程（见 main.gd 各开关的说明）。
+	# 不关的话「新游戏直接落进门卫室」会让开场守卫红一片。
+	main.debug_start_map = ""
 	return main
 
 

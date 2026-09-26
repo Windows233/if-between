@@ -75,6 +75,10 @@ func _initialize() -> void:
 	# 截图不要标题挡着 —— 真窗口模式下 `_ready` 会同步触发并打开标题。
 	# 想截标题的模式自己调 `main.show_title()`。
 	main.start_at_title = false
+	# 截图拍的都是**正常流程**的画面，把「新游戏直接落进测试图」的调试开关关掉
+	# （它现在是开着的，见 `scenes/main.gd` 的 `debug_start_map`；门卫室有
+	# 自己的探针 `probe_gatehouse.gd`）。
+	main.debug_start_map = ""
 	# 截图拍的都是**正常流程**的画面，所以关掉「结局之后交还控制权」那个调试开关
 	# （它现在是开着的，给布洛文走去卧室试碰撞箱用，见 `scenes/main.gd`）。
 	main.free_roam_after_ending = false
