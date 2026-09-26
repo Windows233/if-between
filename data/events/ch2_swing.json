@@ -1,0 +1,37 @@
+{
+  "id": "ch2_swing",
+  "entry": "cutscene",
+  "nodes": [
+    {
+      "id": "cutscene",
+      "stage": [
+        { "do": "save" },
+        {
+          "do": "npc",
+          "id": "c",
+          "sprite": "res://art/npc/c",
+          "at": [220, 85],
+          "height": 42,
+          "z": 9,
+          "pose": "down"
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "C",
+              "text": "别碰线。碰了会——",
+              "side": "right"
+            },
+            {
+              "speaker": "我",
+              "text": "嗯？",
+              "side": "left",
+              "portrait": "protagonist/puzzled"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

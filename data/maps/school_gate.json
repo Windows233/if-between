@@ -20,6 +20,10 @@
     "near_yard": [
       207,
       40
+    ],
+    "from_gatehouse": [
+      343,
+      238
     ]
   },
   "walls": [
@@ -173,6 +177,52 @@
           "id": "check",
           "label": "易拉罐",
           "event": "ch2_can"
+        }
+      ]
+    },
+    {
+      "id": "notice_board",
+      "rect": [
+        75,
+        142,
+        43,
+        48
+      ],
+      "reach": [
+        68,
+        136,
+        58,
+        60
+      ],
+      "label": "通知栏",
+      "actions": [
+        {
+          "id": "read",
+          "label": "查看通知栏",
+          "event": "ch2_notice"
+        }
+      ]
+    },
+    {
+      "id": "sculpture",
+      "rect": [
+        166,
+        55,
+        84,
+        100
+      ],
+      "reach": [
+        158,
+        54,
+        101,
+        107
+      ],
+      "label": "中心雕塑",
+      "actions": [
+        {
+          "id": "read",
+          "label": "查看雕塑",
+          "event": "ch2_sculpture"
         }
       ]
     },

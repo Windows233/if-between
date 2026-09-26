@@ -1,0 +1,17 @@
+{
+  "id": "ch2_flagpole",
+  "entry": "read",
+  "nodes": [
+    {
+      "id": "read",
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            { "text": "旗杆上挂着的不是旗，是一个小孩的外套，袖口有猫毛" }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -251,6 +251,7 @@ func _perform(step: StageStep) -> void:
 ## - `wait` / `wait_click`：补演是瞬时的，等时间、等点击都说不通
 const REPLAY_SKIP: Array[StringName] = [
 	&"say", &"goto", &"place_player", &"play_sound", &"wait", &"wait_click",
+	&"save",
 ]
 
 
@@ -291,6 +292,8 @@ func _apply(step: StageStep) -> void:
 			await _sleep(step.number("time", 0.5))
 		&"wait_click":
 			await _wait_click()
+		&"save":
+			_save_game()
 		&"image":
 			await _image(step)
 		&"image_hide":
@@ -411,6 +414,8 @@ func _caption(step: StageStep) -> void:
 		return
 	if step.flag("wait_click", false):
 		await _wait_click()
+		if step.has("out"):
+			await overlay.hide_caption(step.number("out", 0.5))
 	elif step.has("hold"):
 		await _sleep(_time(step.number("hold", 0.0)))
 		await overlay.hide_caption(step.number("out", 0.5))
@@ -420,6 +425,11 @@ func _caption(step: StageStep) -> void:
 func _location(step: StageStep) -> void:
 	if main != null:
 		main.show_location(step.text("text"))
+
+
+func _save_game() -> void:
+	if main != null:
+		main.save_game()
 
 
 ## 一条提示。`at` 不写就是右上角（稿子②），写 `center` 是画面中线上方。

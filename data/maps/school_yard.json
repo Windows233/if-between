@@ -109,6 +109,78 @@
       "action": "overworld"
     }
   ],
+  "actors": [
+    {
+      "id": "flagpole",
+      "rect": [
+        108,
+        28,
+        28,
+        62
+      ],
+      "reach": [
+        98,
+        32,
+        48,
+        72
+      ],
+      "label": "旗杆",
+      "actions": [
+        {
+          "id": "check",
+          "label": "查看旗杆",
+          "event": "ch2_flagpole"
+        }
+      ]
+    },
+    {
+      "id": "sandbox",
+      "rect": [
+        180,
+        96,
+        52,
+        42
+      ],
+      "reach": [
+        174,
+        91,
+        64,
+        53
+      ],
+      "label": "沙坑",
+      "actions": [
+        {
+          "id": "check",
+          "label": "查看沙坑",
+          "event": "ch2_sandbox"
+        }
+      ]
+    },
+    {
+      "id": "swing",
+      "rect": [
+        190,
+        38,
+        58,
+        42
+      ],
+      "reach": [
+        184,
+        35,
+        70,
+        52
+      ],
+      "label": "秋千",
+      "actions": [
+        {
+          "id": "check",
+          "label": "查看秋千",
+          "event": "ch2_swing",
+          "once": true
+        }
+      ]
+    }
+  ],
   "cover": [
     [
       190,
