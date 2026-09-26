@@ -1,0 +1,19 @@
+{
+  "id": "gatehouse_door",
+  "entry": "hold",
+  "nodes": [
+    {
+      "id": "hold",
+      "stage": [
+        {
+          "do": "caption",
+          "lines": [
+            {
+              "text": "门外的风声正紧。现在还出不去。"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

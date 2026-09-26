@@ -45,6 +45,9 @@ func _initialize() -> void:
 	var main: Node2D = packed.instantiate()
 	# 烟测自己控制什么时候开标题，别让 `_ready` 抢先
 	main.start_at_title = false
+	# 烟测走的是正常流程（新游戏进第一章），把「新游戏直接落进测试图」的
+	# 调试开关关掉（它现在是开着的，见 `scenes/main.gd` 的 `debug_start_map`）。
+	main.debug_start_map = ""
 	# 这一路走到的是「选完 IF」，碰不到结局那条路；把结局之后的调试口子关掉，
 	# 免得哪天它开着把这一路的落点搅了（那条路见 `test_free_roam_after_ending`）。
 	main.free_roam_after_ending = false

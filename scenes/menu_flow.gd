@@ -160,9 +160,10 @@ func new_game() -> void:
 	# 打开着就别让人以为「剧情没触发」，所以吼一声。
 	# 类型得写死：`main` 声明成 `Node2D`，`skip_opening` 是它脚本上的变量，
 	# 静态看来是 Variant，`:=` 推不出来（会直接编译不过）。
-	var play_opening: bool = not main.skip_opening
+	var play_opening: bool = not main.skip_opening and main.debug_start_map == ""
 	if not play_opening:
-		print("[调试] main.skip_opening 开着，新游戏不演开场，直接落进场景")
+		print("[调试] 新游戏不演开场：skip_opening=%s debug_start_map=%s"
+			% [main.skip_opening, main.debug_start_map])
 	# 幕布跟着开场走，两种方向都要摆正：
 	#
 	# - 演开场：**先压黑**。开场头几步就是「黑屏 + 章标题」，
@@ -177,7 +178,10 @@ func new_game() -> void:
 		else:
 			main.stage_curtain.snap_up()
 	main.flags.clear()
-	main.enter_map(main.START_MAP, main.START_SPAWN)
+	# 测试开关：`debug_start_map` 非空就落进那张图（见 `main.gd` 的开关说明）。
+	# 类型写死的原因同上：`main` 静态是 `Node2D`，`:=` 推不出来。
+	var start_map: String = main.debug_start_map if main.debug_start_map != "" else main.START_MAP
+	main.enter_map(start_map, main.START_SPAWN)
 	if play_opening:
 		main.start_story(main.OPENING_EVENT)
 
