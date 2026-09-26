@@ -1,0 +1,196 @@
+{
+  "id": "library",
+  "name": "图书馆",
+  "size": [
+    467,
+    374
+  ],
+  "background": "res://art/map/library.png",
+  "overlay": "res://art/map/library_wall.png",
+  "indoor": true,
+  "spawns": {
+    "from_school_gate": [
+      233,
+      296
+    ],
+    "start": [
+      233,
+      296
+    ]
+  },
+  "walls": [
+    [
+      52,
+      81,
+      386,
+      19
+    ],
+    [
+      52,
+      100,
+      63,
+      16
+    ],
+    [
+      50,
+      118,
+      23,
+      187
+    ],
+    [
+      389,
+      34,
+      48,
+      270
+    ],
+    [
+      32,
+      304,
+      157,
+      46
+    ],
+    [
+      263,
+      304,
+      173,
+      46
+    ],
+    [
+      117,
+      173,
+      30,
+      14
+    ],
+    [
+      321,
+      171,
+      30,
+      15
+    ],
+    [
+      118,
+      261,
+      29,
+      14
+    ],
+    [
+      321,
+      261,
+      30,
+      16
+    ],
+    [
+      217,
+      100,
+      32,
+      7
+    ],
+    [
+      195,
+      304,
+      4,
+      4
+    ],
+    [
+      0,
+      0,
+      467,
+      34
+    ],
+    [
+      0,
+      0,
+      32,
+      374
+    ],
+    [
+      437,
+      0,
+      30,
+      374
+    ],
+    [
+      0,
+      350,
+      467,
+      24
+    ]
+  ],
+  "actors": [
+    {
+      "id": "shelf_a",
+      "label": "书柜",
+      "rect": [
+        115,
+        110,
+        35,
+        79
+      ],
+      "sprite": "res://art/props/library_shelf_a_cover.png",
+      "cover": true,
+      "line": "书柜。"
+    },
+    {
+      "id": "shelf_b",
+      "label": "书柜",
+      "rect": [
+        318,
+        111,
+        35,
+        78
+      ],
+      "sprite": "res://art/props/library_shelf_b_cover.png",
+      "cover": true,
+      "line": "书柜。"
+    },
+    {
+      "id": "shelf_c",
+      "label": "书柜",
+      "rect": [
+        115,
+        202,
+        35,
+        78
+      ],
+      "sprite": "res://art/props/library_shelf_c_cover.png",
+      "cover": true,
+      "line": "书柜。"
+    },
+    {
+      "id": "shelf_d",
+      "label": "书柜",
+      "rect": [
+        318,
+        202,
+        35,
+        77
+      ],
+      "sprite": "res://art/props/library_shelf_d_cover.png",
+      "cover": true,
+      "line": "书柜。"
+    },
+    {
+      "id": "cat_monster",
+      "label": "小猫怪兽",
+      "rect": [
+        112,
+        104,
+        240,
+        176
+      ],
+      "line": "……"
+    },
+    {
+      "id": "cat_cover",
+      "label": "猫遮挡",
+      "rect": [
+        112,
+        104,
+        240,
+        176
+      ],
+      "sprite": "res://art/props/library_cat_cover.png",
+      "cover": true
+    }
+  ]
+}
