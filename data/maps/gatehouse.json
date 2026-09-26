@@ -9,8 +9,8 @@
   "overlay": "res://art/map/gatehouse_wall.png",
   "spawns": {
     "start": [
-      230,
-      210
+      269,
+      252
     ]
   },
   "walls": [
@@ -153,7 +153,41 @@
       "label": "桌子",
       "sprite": "res://art/props/gatehouse_desk.png",
       "cover": true,
-      "line": "登记簿摊在灯下，最新一行墨迹未干。羽毛笔搁在砚台边上，笔尖还蘸着墨。"
+      "talk": [
+        {
+          "who": "",
+          "text": "桌面上有一本登记册。最后一页写着："
+        },
+        {
+          "who": "",
+          "text": "来访者登记"
+        },
+        {
+          "who": "",
+          "text": "xxxx  xxxx  xxxx  主角"
+        },
+        {
+          "who": "",
+          "text": "主角os：“怎么其他名字都涂黑了，不知道的还以为是死亡笔记（汗）”"
+        }
+      ]
+    },
+    {
+      "id": "window_broken",
+      "rect": [
+        112,
+        220,
+        46,
+        37
+      ],
+      "label": "破窗",
+      "reach": [
+        112,
+        190,
+        46,
+        67
+      ],
+      "line": "玻璃碎了。"
     }
   ]
 }

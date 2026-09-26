@@ -27,10 +27,13 @@ func _initialize() -> void:
 	await process_frame
 	await physics_frame
 
-	main.enter_map(&"gatehouse", &"start")
+	# 走**真实入口**：new_game → 调试分支进门卫室（含出生朝向），不绕行
+	main.new_game()
 	await process_frame
 	await physics_frame
 	main.player.pinned = true
+	print("出生点：", main.player.global_position, "  朝向：", main.player.facing)
+	_shot("gatehouse_spawn")
 
 	var count: int = main.map_view.cover_count()
 	print("cover 物件数：%d" % count)

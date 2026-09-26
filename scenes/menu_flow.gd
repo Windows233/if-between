@@ -182,6 +182,9 @@ func new_game() -> void:
 	# 类型写死的原因同上：`main` 静态是 `Node2D`，`:=` 推不出来。
 	var start_map: String = main.debug_start_map if main.debug_start_map != "" else main.START_MAP
 	main.enter_map(start_map, main.START_SPAWN)
+	# 测试图：出生在门口、面向屋内。正常流程的出生朝向归开场演出管，不动。
+	if main.debug_start_map != "":
+		main.player.facing = Vector2.UP
 	if play_opening:
 		main.start_story(main.OPENING_EVENT)
 
