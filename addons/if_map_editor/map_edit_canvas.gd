@@ -22,6 +22,8 @@ const ACTOR_EDGE := Color(0.35, 0.85, 0.45, 1.0)
 const BASE_AUTO := Color(1.00, 0.86, 0.20, 1.0)
 const BASE_MANUAL := Color(1.00, 0.50, 0.10, 1.0)
 const SPAWN_COLOR := Color(0.90, 0.45, 0.95, 1.0)
+## 前景层范围的标注色（和别的层都错开）
+const OVERLAY_MARK := Color(0.95, 0.60, 0.20, 1.0)
 const SELECT_COLOR := Color(1, 1, 1, 0.95)
 const HANDLE_SIZE := 7.0
 const HIT_SLOP := 4.0
@@ -45,6 +47,13 @@ var show_walls := true
 var show_portals := true
 var show_actors := true
 var show_walk := false
+## 前景层（`MapDef.overlay`）的不透明度。**它恒在角色之上**，
+## 编辑它底下那些墙/传送区时把它调淡，才看得见底下。
+var overlay_alpha := 1.0
+## 前景层真正有像素的范围（`Image.get_used_rect()`），加载时算一次。
+## 用它画一圈虚线 + 一句「恒在角色之上」，让「这块东西在挡人」看得见 ——
+## 不然它只是一张铺着的图，和普通背景没区别。
+var _overlay_used := Rect2()
 
 var sel_kind := -1
 var sel_index := -1
@@ -73,12 +82,23 @@ func load_map(model_ref, bg_path: String, overlay_path: String, size: Vector2) -
 	map_size = size
 	tex_bg = _load_tex(bg_path)
 	tex_overlay = _load_tex(overlay_path)
+	_overlay_used = _used_rect_of(tex_overlay)
 	sel_kind = -1
 	sel_index = -1
 	_walk_texture = null
 	fit_to_view()
 	queue_redraw()
 	selection_changed.emit()
+
+
+## 一张图里真正有像素的范围（全透明的不算）。算不出来就返回空矩形。
+func _used_rect_of(tex: Texture2D) -> Rect2:
+	if tex == null:
+		return Rect2()
+	var img := tex.get_image()
+	if img == null:
+		return Rect2()
+	return img.get_used_rect()
 
 
 func _load_tex(path: String) -> Texture2D:
@@ -155,7 +175,19 @@ func _draw() -> void:
 	else:
 		draw_rect(full, Color(0.12, 0.12, 0.16), true)
 	if show_overlay and tex_overlay != null:
-		draw_texture_rect(tex_overlay, full, false)
+		draw_texture_rect(tex_overlay, full, false, Color(1, 1, 1, overlay_alpha))
+		# 前景层不是物件，但它**恒在角色之上**（OVERLAY_Z 13）——
+		# 圈一下它的实际范围，标注一句，免得被当成普通背景。
+		if _overlay_used.size.x > 0.0:
+			var scale_to_game := map_size / (tex_overlay.get_size() as Vector2)
+			var band := Rect2(_overlay_used.position * scale_to_game,
+				_overlay_used.size * scale_to_game)
+			var band_screen := Rect2(to_screen(band.position), band.size * zoom)
+			draw_dashed_line(band_screen.position, band_screen.position + Vector2(band_screen.size.x, 0),
+				OVERLAY_MARK, 1.0, 5.0)
+			draw_dashed_line(band_screen.position + Vector2(band_screen.size.x, 0),
+				band_screen.position + band_screen.size, OVERLAY_MARK, 1.0, 5.0)
+			_label(band.position + Vector2(2, -3), "前景层：恒在角色之上", OVERLAY_MARK)
 	if show_walk and _walk_texture != null:
 		draw_texture_rect(_walk_texture, full, false)
 	if model == null:

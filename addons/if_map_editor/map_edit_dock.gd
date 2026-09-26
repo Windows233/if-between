@@ -108,6 +108,20 @@ func _row_layers() -> HBoxContainer:
 		_status.text = "正在算可走格……"
 		canvas.recompute_walk())
 	row.add_child(refresh)
+
+	# 前景层不透明度：它恒在角色之上，会挡住底下正在编辑的东西
+	row.add_child(_text("  前景层"))
+	var alpha := HSlider.new()
+	alpha.min_value = 0
+	alpha.max_value = 100
+	alpha.step = 5
+	alpha.value = 100
+	alpha.custom_minimum_size = Vector2(120, 0)
+	alpha.tooltip_text = "调淡前景层，看清它底下盖着的碰撞箱/传送区。只影响显示，不改数据。"
+	alpha.value_changed.connect(func(v: float) -> void:
+		canvas.overlay_alpha = v / 100.0
+		canvas.queue_redraw())
+	row.add_child(alpha)
 	return row
 
 

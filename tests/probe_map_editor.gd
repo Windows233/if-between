@@ -67,5 +67,21 @@ func _initialize() -> void:
 				a, dock.model.actor_cover_y(a), dock._base_row.visible])
 			break
 
+	# 前景层：卧室那种「下围墙挡住人但没有物件」的图 —— 验它算得出范围
+	var bed := ids.find("bedroom")
+	if bed >= 0:
+		dock._map_picker.select(bed)
+		dock._load_selected()
+		dock.canvas.size = Vector2(1280, 420)
+		dock.canvas.fit_to_view()
+		await process_frame
+		var covers: int = 0
+		for a in dock.model.count(Model.Kind.ACTOR):
+			if dock.model.is_cover_actor(a):
+				covers += 1
+		print("⑦ 卧室：遮挡物件 %d 个，前景层 %s" % [
+			covers, "有" if dock.model.overlay_path() != "" else "无"])
+		print("   前景层实际范围（贴图像素）：%s" % dock.canvas._overlay_used)
+
 	print("=== 地图编辑器探针通过 ===")
 	quit(0)
