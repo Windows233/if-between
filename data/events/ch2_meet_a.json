@@ -452,15 +452,6 @@
           ]
         },
         {
-          "do": "place_player",
-          "at": [
-            336,
-            172
-          ],
-          "time": 0.9,
-          "facing": "right"
-        },
-        {
           "do": "wait",
           "time": 0.3
         },

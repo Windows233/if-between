@@ -106,8 +106,6 @@ const BOX_MAX_WIDTH := 320.0 - MARGIN * 2.0
 
 ## 名字那一号字。比正文（10）小一号 —— 名字标签只有 9 上下高，再大就冒出去了。
 const NAME_FONT_SIZE := 8
-## 名字在标签里再往上抬一点（逻辑像素）。标签的形状上宽下尖，正中偏下看着偏低。
-const NAME_LIFT := 2.0
 ## 按钮条离框内沿再往里收一点（逻辑像素），别贴着框线。
 const BUTTONS_INSET := 4.0
 
@@ -903,7 +901,7 @@ func _layout() -> void:
 	_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_name.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_name.position = Vector2(left + (tab.position.x - BODY_TEX.position.x) * s.x,
-		top + (tab.position.y - BODY_TEX.position.y) * s.y - NAME_LIFT)
+		top + (tab.position.y - BODY_TEX.position.y) * s.y + _name_vertical_fix())
 	_name.size = Vector2(tab.size.x * s.x, tab.size.y * s.y)
 
 	# 正文要从按钮条那一行**下面**开始，不然第一行字被按钮压住
@@ -919,6 +917,23 @@ func _layout() -> void:
 			+ DialogueButtons.reserved_width() - DialogueButtons.MARGIN_RIGHT, inner_top)
 	else:
 		_buttons.layout(_inner_right() - BUTTONS_INSET, inner_top)
+
+
+## 名字在标签里要往下补多少（逻辑像素），好让**字面**而不是行盒落在小框正中。
+##
+## `VERTICAL_ALIGNMENT_CENTER` 居中的是**行盒**（ascent + descent + 行距），
+## 而行盒比字面高一截 —— 居中的结果是字看着**偏上**（人类连着提了两次）。
+## 这里按字体自己的 ascent / descent 把差的那半截算出来，不再手调数字：
+##
+##   字面中心在行盒里比行盒中心高出 (ascent − descent)/2 − 字号/2，
+##   所以把名字那个框整体往下挪同样多，字面就落到小框正中了。
+func _name_vertical_fix() -> float:
+	var font := _name.get_theme_default_font()
+	if font == null:
+		return 0.0
+	var asc := font.get_ascent(NAME_FONT_SIZE)
+	var desc := font.get_descent(NAME_FONT_SIZE)
+	return (desc - asc) * 0.5 + float(NAME_FONT_SIZE) * 0.5
 
 
 ## 按钮条那一行占多高。正文要从它下面开始。
