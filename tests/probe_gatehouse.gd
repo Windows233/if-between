@@ -10,8 +10,8 @@
 ## 无头模式用 dummy 渲染器，截出来是空的。
 extends SceneTree
 
-## 桌后：基线（y=207）之前、前腿碰撞带（y=192）之后的贴桌站位，腿被桌面挡住。
-const BEHIND := Vector2(130, 180)
+## 桌后：碰撞块（y=164 起）之前、贴着后沿的站位，脚部被桌面后沿挡住。
+const BEHIND := Vector2(130, 158)
 const FRONT := Vector2(130, 215)
 ## 门洞传送区里（portal [254,248,30,16]）。
 const DOOR := Vector2(269, 255)
