@@ -4,7 +4,25 @@
 # SessionStart hook 的 stdout 会被追加到 Agent 的上下文里，所以这里打印的每一条
 # Agent 都一定看得到。两个会话都装了这份 hook，因此双方一开口就知道对方在干什么。
 
-PROJ="${CODEBUDDY_PROJECT_DIR:-.}"
+# 这一份脚本有两种用法：
+#
+#   ① 当 hook 跑 —— 会话启动时宿主注入 CODEBUDDY_PROJECT_DIR，指到项目根。
+#      但宿主只在**会话的工作目录就是项目目录**时才加载项目级配置并触发 hook。
+#      工作目录不落在项目里（桌面客户端的会话常是自己那套 WorkBuddy/<时间戳>/ 目录），
+#      hook 一次都不会跑。
+#
+#   ② 手动跑 —— 上面那种情况下的正路。这时按脚本自身位置往上两级定位项目根，
+#      所以在哪个目录执行都一样。开工第一条固定跑它。
+#
+# ⚠ 不能只看 CODEBUDDY_PROJECT_DIR 有没有值。**桌面客户端会把它设成会话的工作目录**，
+#   那个目录存在、但根本不装这个项目 —— 照单全收就会 cd 到空目录，`git rev-parse`
+#   失败，然后安静地 exit 0，看着像「一切正常，没什么可报的」。
+#   判据是「这个值是不是真的是项目根」：拿它底下有没有 `.git` 认。
+PROJ="${CODEBUDDY_PROJECT_DIR:-}"
+if [ ! -d "$PROJ/.git" ]; then
+  _SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  PROJ="$(cd "$_SELF/../.." && pwd)"
+fi
 cd "$PROJ" 2>/dev/null || exit 0
 git rev-parse --git-dir >/dev/null 2>&1 || exit 0
 
@@ -24,7 +42,8 @@ if [ -n "$UPSTREAM" ]; then
     git log --oneline "HEAD..$UPSTREAM" 2>/dev/null | head -10
     echo ""
     echo "对方改动过的文件："
-    git diff --stat "HEAD..$UPSTREAM" 2>/dev/null | tail -25
+    # quotepath 关掉，否则中文路径被转成 \345\215\217 这样，等于没报
+    git -c core.quotepath=false diff --stat "HEAD..$UPSTREAM" 2>/dev/null | tail -25
   else
     echo "远端没有新提交，本地是最新的。"
   fi
@@ -42,7 +61,7 @@ echo ""
 DIRTY=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')
 if [ "${DIRTY:-0}" -gt 0 ] 2>/dev/null; then
   echo "工作区有 $DIRTY 处未提交改动："
-  git status --short 2>/dev/null | head -15
+  git -c core.quotepath=false status --short 2>/dev/null | head -15
 else
   echo "工作区干净。"
 fi
