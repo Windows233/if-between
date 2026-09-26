@@ -276,6 +276,149 @@ func copy_layout_to(target_id: String, with_spawns := false) -> String:
 	return ""
 
 
+# ---------------------------------------------------------------- 物件字段
+#
+# **就地改字段，不重建字典。** 这一条是硬的：对话行支持
+# `speaker / text / side / portrait / size_delta / shake` 六个键，
+# 编辑器认得的就编，认不得的（以后新加的、或者别人手写的）必须原样留着 ——
+# 重建字典会把它们静默抹掉。
+
+func actor_dict(index: int) -> Dictionary:
+	var list := actors()
+	if index < 0 or index >= list.size():
+		return {}
+	var item: Variant = list[index]
+	return item if item is Dictionary else {}
+
+
+func actor_field(index: int, key: String, fallback: Variant = "") -> Variant:
+	return actor_dict(index).get(key, fallback)
+
+
+func set_actor_field(index: int, key: String, value: Variant) -> void:
+	var d := actor_dict(index)
+	if d.is_empty():
+		return
+	d[key] = value
+	dirty = true
+
+
+func erase_actor_field(index: int, key: String) -> void:
+	var d := actor_dict(index)
+	if d.is_empty() or not d.has(key):
+		return
+	d.erase(key)
+	dirty = true
+
+
+## 这件物件的互动用的是哪种写法。**四种互斥**（见 `MapDef._actor_from`）：
+## `actions`（多动作菜单）/ `event`（挂一段剧情）/ `talk`（多句对话）/
+## `line`（一句旁白）/ `decor`（纯装饰，不交互）。
+func actor_form(index: int) -> String:
+	var d := actor_dict(index)
+	if d.has("actions"):
+		return "actions"
+	if d.has("event"):
+		return "event"
+	if d.has("talk"):
+		return "talk"
+	if d.has("line"):
+		return "line"
+	if bool(d.get("decor", false)):
+		return "decor"
+	return "none"
+
+
+## 这件物件的对话行数组（**是数据里那一份本身**，改它就是改地图数据；
+## 改完记得叫 `mark_dirty()`）。不是多句对话就返回空数组。
+func actor_talk(index: int) -> Array:
+	var raw: Variant = actor_field(index, "talk", [])
+	return raw if raw is Array else []
+
+
+## 新建一件物件，落在**地图正中**、40×40，id 自动避开重名。
+## 之后由编辑器把它拖到位置上、再填名字与互动。
+func add_actor() -> int:
+	var list := actors()
+	var used := {}
+	for item: Variant in list:
+		if item is Dictionary:
+			used[str((item as Dictionary).get("id", ""))] = true
+	var id := "new_actor"
+	var n := 2
+	while used.has(id):
+		id = "new_actor_%d" % n
+		n += 1
+	var center := map_size() * 0.5
+	list.append({
+		"id": id,
+		"label": "新物件",
+		"rect": [int(round(center.x)) - 20, int(round(center.y)) - 20, 40, 40],
+	})
+	data["actors"] = list
+	dirty = true
+	return list.size() - 1
+
+
+## 把「改过东西」标上（界面上直接改字典时用）。
+func mark_dirty() -> void:
+	dirty = true
+
+
+## `art/props/` 下的图，给「贴图」下拉用。返回 res:// 路径。
+func prop_files() -> Array[String]:
+	return _scan_pngs("res://art/props")
+
+
+## `art/portrait/` 下的立绘（含子目录，如 `protagonist/reading`）。
+## 返回值是**立绘名**（不带 res:// 前缀、不带 .png），和 `portrait` 字段一致。
+func portrait_names() -> Array[String]:
+	var out: Array[String] = []
+	_walk_portraits("res://art/portrait", out)
+	out.sort()
+	return out
+
+
+func _walk_portraits(dir_path: String, out: Array[String]) -> void:
+	var dir := DirAccess.open(dir_path)
+	if dir == null:
+		return
+	for name in dir.get_files():
+		if name.ends_with(".png"):
+			out.append(dir_path.trim_prefix("res://art/portrait/") + "/" + name.trim_suffix(".png"))
+	for sub in dir.get_directories():
+		_walk_portraits(dir_path + "/" + sub, out)
+
+
+func _scan_pngs(dir_path: String) -> Array[String]:
+	var out: Array[String] = []
+	var dir := DirAccess.open(dir_path)
+	if dir == null:
+		return out
+	for name in dir.get_files():
+		if name.ends_with(".png"):
+			out.append(dir_path + "/" + name)
+	out.sort()
+	return out
+
+
+## 剧情文件 id 列表，给「挂事件」下拉用。
+func event_ids() -> Array[String]:
+	return _scan_ids("res://data/events")
+
+
+func _scan_ids(dir_path: String) -> Array[String]:
+	var out: Array[String] = []
+	var dir := DirAccess.open(dir_path)
+	if dir == null:
+		return out
+	for name in dir.get_files():
+		if name.ends_with(".json"):
+			out.append(name.trim_suffix(".json"))
+	out.sort()
+	return out
+
+
 func label_of(kind: int, index: int) -> String:
 	if kind == Kind.WALL:
 		return "墙"

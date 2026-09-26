@@ -95,5 +95,18 @@ func _initialize() -> void:
 			dock.model.spawn_point(0),
 			str(dock._spins[2].editable)])
 
+	# 物件属性面板：选一件物件，看面板建起来没有、它的互动是哪种写法
+	if dock.model.count(Model.Kind.ACTOR) > 0:
+		dock.canvas.sel_kind = Model.Kind.ACTOR
+		dock.canvas.sel_index = 0
+		dock._refresh_selection()
+		await process_frame
+		print("⑨ 物件 #0「%s」：互动写法=%s，对话行 %d，属性面板子项 %d（可见 %s）" % [
+			dock.model.label_of(Model.Kind.ACTOR, 0),
+			dock.model.actor_form(0),
+			dock.model.actor_talk(0).size(),
+			dock._actor_panel.get_child_count(),
+			str(dock._actor_panel.visible)])
+
 	print("=== 地图编辑器探针通过 ===")
 	quit(0)

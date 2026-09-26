@@ -23,6 +23,11 @@ var _base_row: HBoxContainer
 var _base_spin: SpinBox
 var _status: Label
 var _syncing := false
+## 「物件属性」面板：只在选中物件时出现。**每次换选中项才重建** ——
+## 每敲一个字都重建会把光标弄丢。
+var _actor_panel: VBoxContainer
+var _panel_kind := -1
+var _panel_index := -1
 
 
 func _ready() -> void:
@@ -53,6 +58,10 @@ func _build() -> void:
 	add_child(_row_layers())
 
 	add_child(_row_selection())
+
+	_actor_panel = VBoxContainer.new()
+	_actor_panel.visible = false
+	add_child(_actor_panel)
 
 	_status = _text("选一张地图开始。滚轮缩放，中键/右键拖动平移。")
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -170,6 +179,12 @@ func _row_selection() -> HBoxContainer:
 	add_spawn.tooltip_text += "\n注意：至少得留一个 start —— 新游戏和多数传送点都找它。"
 	add_spawn.pressed.connect(_open_spawn_dialog)
 	row.add_child(add_spawn)
+
+	var add_actor := Button.new()
+	add_actor.text = "加物件"
+	add_actor.tooltip_text = "加一件家具/NPC，落在地图正中；下面的「物件属性」里填名字、贴图和互动内容。"
+	add_actor.pressed.connect(_on_add_actor)
+	row.add_child(add_actor)
 	return row
 
 
@@ -404,7 +419,273 @@ func _refresh_selection() -> void:
 			_base_spin.value = model.actor_cover_y(index)
 			_base_spin.tooltip_text = "黄线=自动（贴图底边）；橙线=手动覆盖"
 	_syncing = false
+	_sync_actor_panel()
 
 
 func _on_edited() -> void:
 	_refresh_dirty()
+
+
+# ---------------------------------------------------------------- 物件属性面板
+#
+# 这块只在**选中物件**时出现。能改：id / 名字 / 贴图 / 三个常用开关（装饰、
+# 遮挡、恒在上层）、以及互动内容（单句旁白 / 多句对话）。
+#
+# **不编剧情。** 挂了 `event`（剧情文件）或 `actions`（多动作菜单）的物件，
+# 这里只显示「在哪个文件里」，不动它 —— 剧情正文归 `data/events/`。
+#
+# **认不得的字段一律原样留着**：所有写入都是「就地改那个字典里的某一个键」
+# （`set_actor_field` / `_set_talk`），不重建字典。对话行支持的
+# `size_delta` / `shake` 编辑器不显示，但也不会被抹掉。
+
+func _on_add_actor() -> void:
+	var index := model.add_actor()
+	canvas.sel_kind = Kind.ACTOR
+	canvas.sel_index = index
+	_on_edited()
+	_refresh_selection()
+	canvas.queue_redraw()
+	_status.text = "加了一件物件（先落在地图正中）。拖到位置上，再填下面的名字、贴图、互动内容。"
+
+
+## 只在「换了一件物件」时重建面板 —— 每敲一个字都重建会把光标弄丢。
+func _sync_actor_panel() -> void:
+	if canvas.sel_kind != Kind.ACTOR:
+		_actor_panel.visible = false
+		_panel_kind = -1
+		_panel_index = -1
+		return
+	if _panel_kind == Kind.ACTOR and _panel_index == canvas.sel_index:
+		_actor_panel.visible = true
+		return
+	_build_actor_panel()
+
+
+func _build_actor_panel() -> void:
+	_panel_kind = Kind.ACTOR
+	_panel_index = canvas.sel_index
+	for child in _actor_panel.get_children():
+		child.queue_free()
+	_actor_panel.visible = true
+
+	_actor_panel.add_child(_text("物件属性（id 与名字改完，记得点上面的「保存到 JSON」）"))
+
+	var row1 := HBoxContainer.new()
+	row1.add_child(_text("id"))
+	row1.add_child(_field("id", 110.0))
+	row1.add_child(_text("  名字"))
+	row1.add_child(_field("label", 130.0))
+	_actor_panel.add_child(row1)
+
+	var row2 := HBoxContainer.new()
+	row2.add_child(_text("贴图"))
+	var sprite_line := _field("sprite", 320.0)
+	row2.add_child(sprite_line)
+	var picker := OptionButton.new()
+	picker.add_item("（从 art/props 选）")
+	var props := model.prop_files()
+	for path in props:
+		picker.add_item(path.get_file())
+	picker.item_selected.connect(func(i: int) -> void:
+		if i <= 0:
+			return
+		var path: String = props[i - 1]
+		model.set_actor_field(_panel_index, "sprite", path)
+		sprite_line.text = path
+		_on_edited()
+		canvas.queue_redraw())
+	row2.add_child(picker)
+	_actor_panel.add_child(row2)
+
+	var row3 := HBoxContainer.new()
+	row3.add_child(_text("属性："))
+	row3.add_child(_bool_field("decor", "只装饰（不参与交互）"))
+	row3.add_child(_bool_field("cover", "会挡人（按站位分前后）"))
+	row3.add_child(_bool_field("over", "永远画在角色之上"))
+	_actor_panel.add_child(row3)
+
+	_build_interaction_section()
+	_actor_panel.add_child(_switch_row())
+
+
+func _build_interaction_section() -> void:
+	var form: String = model.actor_form(_panel_index)
+	var names := {
+		"line": "单句旁白", "talk": "多句对话", "event": "挂了剧情事件",
+		"actions": "多动作菜单", "decor": "纯装饰（不交互）", "none": "还没写",
+	}
+	var head := HBoxContainer.new()
+	head.add_child(_text("互动内容："))
+	head.add_child(_text(str(names.get(form, form))))
+	_actor_panel.add_child(head)
+
+	match form:
+		"line":
+			var row := HBoxContainer.new()
+			row.add_child(_field("line", 520.0))
+			_actor_panel.add_child(row)
+		"talk":
+			_build_talk_list()
+		"event":
+			_actor_panel.add_child(_text("  → data/events/%s.json（正文在那个文件里，编辑器不编剧情）"
+				% str(model.actor_field(_panel_index, "event", ""))))
+		"actions":
+			_actor_panel.add_child(_text("  → 写在 data/maps 里的多动作菜单，编辑器暂不编辑"))
+		_:
+			_actor_panel.add_child(_text("  想让它能说话，就点右边的按钮换成旁白或对话。"))
+
+
+func _switch_row() -> HBoxContainer:
+	var row := HBoxContainer.new()
+	var to_line := Button.new()
+	to_line.text = "换成单句旁白"
+	to_line.pressed.connect(func() -> void: _switch_form("line"))
+	row.add_child(to_line)
+	var to_talk := Button.new()
+	to_talk.text = "换成多句对话"
+	to_talk.pressed.connect(func() -> void: _switch_form("talk"))
+	row.add_child(to_talk)
+	row.add_child(_text("（原来的内容会搬过去；挂了剧情事件的件不动）"))
+	return row
+
+
+func _switch_form(form: String) -> void:
+	var d := model.actor_dict(_panel_index)
+	if d.has("event") or d.has("actions"):
+		_status.text = "这件挂了剧情事件或动作菜单，编辑器不动它 —— 想改成对话，先去那个文件里把它摘掉"
+		return
+	if form == "line":
+		model.erase_actor_field(_panel_index, "talk")
+		model.set_actor_field(_panel_index, "line", str(d.get("line", "")))
+	else:
+		var old := str(d.get("line", ""))
+		model.erase_actor_field(_panel_index, "line")
+		model.set_actor_field(_panel_index, "talk",
+			[{"text": old}] if old != "" else [{"text": ""}])
+	_on_edited()
+	_build_actor_panel()
+	canvas.queue_redraw()
+	_status.text = "换成「%s」了（原本那种写法的内容已清掉）" % ("单句旁白" if form == "line" else "多句对话")
+
+
+func _build_talk_list() -> void:
+	var talk := model.actor_talk(_panel_index)
+	var portraits := model.portrait_names()
+	for i in talk.size():
+		var line: Dictionary = talk[i] if talk[i] is Dictionary else {}
+		var row := HBoxContainer.new()
+
+		var who := LineEdit.new()
+		who.text = str(line.get("speaker", ""))
+		who.placeholder_text = "说话人（空=旁白）"
+		who.custom_minimum_size = Vector2(96, 0)
+		who.text_changed.connect(func(t: String) -> void: _set_talk(i, "speaker", t))
+		row.add_child(who)
+
+		var side := OptionButton.new()
+		side.add_item("左")
+		side.add_item("右")
+		side.selected = 1 if str(line.get("side", "left")) == "right" else 0
+		side.item_selected.connect(func(k: int) -> void:
+			_set_talk(i, "side", "right" if k == 1 else "left"))
+		row.add_child(side)
+
+		var port := OptionButton.new()
+		port.add_item("（无立绘）")
+		for name in portraits:
+			port.add_item(name)
+		var cur := str(line.get("portrait", ""))
+		for k in portraits.size():
+			if portraits[k] == cur:
+				port.selected = k + 1
+		port.item_selected.connect(func(k: int) -> void:
+			_set_talk(i, "portrait", "" if k == 0 else portraits[k - 1]))
+		row.add_child(port)
+
+		var body := LineEdit.new()
+		body.text = str(line.get("text", ""))
+		body.custom_minimum_size = Vector2(300, 0)
+		body.text_changed.connect(func(t: String) -> void: _set_talk(i, "text", t))
+		row.add_child(body)
+
+		row.add_child(_line_button("↑", func() -> void: _move_talk(i, i - 1)))
+		row.add_child(_line_button("↓", func() -> void: _move_talk(i, i + 1)))
+		row.add_child(_line_button("✕", func() -> void: _remove_talk(i)))
+		_actor_panel.add_child(row)
+
+	var add := Button.new()
+	add.text = "加一句"
+	add.pressed.connect(func() -> void:
+		model.actor_talk(_panel_index).append({"text": ""})
+		model.mark_dirty()
+		_on_edited()
+		_build_actor_panel()
+		canvas.queue_redraw())
+	_actor_panel.add_child(add)
+
+
+func _line_button(text: String, action: Callable) -> Button:
+	var b := Button.new()
+	b.text = text
+	b.custom_minimum_size = Vector2(30, 0)
+	b.pressed.connect(action)
+	return b
+
+
+func _set_talk(index: int, key: String, value: Variant) -> void:
+	var talk := model.actor_talk(_panel_index)
+	if index < 0 or index >= talk.size():
+		return
+	if not (talk[index] is Dictionary):
+		talk[index] = {}
+	(talk[index] as Dictionary)[key] = value
+	model.mark_dirty()
+	_on_edited()
+	canvas.queue_redraw()
+
+
+func _remove_talk(index: int) -> void:
+	var talk := model.actor_talk(_panel_index)
+	if index < 0 or index >= talk.size():
+		return
+	talk.remove_at(index)
+	model.mark_dirty()
+	_on_edited()
+	_build_actor_panel()
+	canvas.queue_redraw()
+
+
+func _move_talk(from_index: int, to_index: int) -> void:
+	var talk := model.actor_talk(_panel_index)
+	if from_index < 0 or from_index >= talk.size():
+		return
+	if to_index < 0 or to_index >= talk.size():
+		return
+	var item: Variant = talk[from_index]
+	talk.remove_at(from_index)
+	talk.insert(to_index, item)
+	model.mark_dirty()
+	_on_edited()
+	_build_actor_panel()
+	canvas.queue_redraw()
+
+
+func _field(key: String, width: float) -> LineEdit:
+	var edit := LineEdit.new()
+	edit.text = str(model.actor_field(_panel_index, key, ""))
+	edit.custom_minimum_size = Vector2(width, 0)
+	edit.text_changed.connect(func(t: String) -> void:
+		model.set_actor_field(_panel_index, key, t)
+		_on_edited())
+	return edit
+
+
+func _bool_field(key: String, label: String) -> CheckBox:
+	var box := CheckBox.new()
+	box.text = label
+	box.button_pressed = bool(model.actor_field(_panel_index, key, false))
+	box.toggled.connect(func(on: bool) -> void:
+		model.set_actor_field(_panel_index, key, on)
+		_on_edited()
+		canvas.queue_redraw())
+	return box

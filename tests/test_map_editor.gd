@@ -19,6 +19,8 @@ static func run(h: TestHarness) -> void:
 	test_portal_ops(h)
 	test_cover_y_in_model(h)
 	test_spawns_in_model(h)
+	test_actor_fields_in_model(h)
+	test_asset_lists(h)
 	test_save_round_trip(h)
 	test_copy_layout(h)
 	test_visibility_gates_picking(h)
@@ -270,6 +272,79 @@ static func test_spawn_picking(h: TestHarness) -> void:
 	canvas.set_layer_visible("show_spawns", true)
 	h.check("再打开：又能选中出生点", canvas._hit_item(Vector2(60, 55)).x, Kind.SPAWN)
 	canvas.free()
+
+
+## 物件字段与互动内容（编辑器里「物件属性」那块的数据层）。
+##
+## 两条硬要求：
+## 1. **认不得的字段一个字都不能丢** —— 所有写入都是就地改某个键，不重建字典；
+## 2. 互动写法四种互斥（`line` / `talk` / `event` / `actions`），`actor_form()` 要判对。
+static func test_actor_fields_in_model(h: TestHarness) -> void:
+	var m = Model.new()
+	m.data = {
+		"size": [100, 100],
+		"walls": [], "portals": [],
+		"actors": [
+			{"id": "a", "label": "甲", "rect": [10, 10, 20, 20], "line": "一句话",
+				"future_key": 7},
+			{"id": "b", "rect": [40, 40, 20, 20], "talk": [
+				{"speaker": "我", "text": "喂", "side": "right",
+					"portrait": "protagonist/reading", "size_delta": 2, "shake": 0.5}]},
+			{"id": "c", "rect": [70, 70, 20, 20], "event": "ch1_sleep"},
+			{"id": "d", "rect": [80, 80, 20, 20], "decor": true},
+		],
+	}
+
+	h.check("读得到 id", m.actor_field(0, "id"), "a")
+	h.check("读得到名字", m.actor_field(0, "label"), "甲")
+	m.set_actor_field(0, "label", "乙")
+	h.check("改名字生效", m.actor_field(0, "label"), "乙")
+	h.check("改完标了脏", m.dirty, true)
+	h.check("**认不得的字段原样留着**", m.actor_field(0, "future_key"), 7)
+
+	h.check("写法判定：单句旁白", m.actor_form(0), "line")
+	h.check("写法判定：多句对话", m.actor_form(1), "talk")
+	h.check("写法判定：剧情事件", m.actor_form(2), "event")
+	h.check("写法判定：纯装饰", m.actor_form(3), "decor")
+
+	# 改对话行（面板就是这么改的：拿数组就地写）
+	var talk := m.actor_talk(1)
+	h.check("对话行数", talk.size(), 1)
+	(talk[0] as Dictionary)["text"] = "喂喂"
+	h.check("改对话文本生效", m.actor_talk(1)[0]["text"], "喂喂")
+	h.check("同行的 size_delta 没被碰", m.actor_talk(1)[0]["size_delta"], 2)
+	h.check("同行的 shake 没被碰", m.actor_talk(1)[0]["shake"], 0.5)
+
+	m.actor_talk(1).append({"text": "第二句"})
+	h.check("加一句", m.actor_talk(1).size(), 2)
+	m.actor_talk(1).remove_at(1)
+	h.check("删一句", m.actor_talk(1).size(), 1)
+
+	var before := m.count(Kind.ACTOR)
+	var index := m.add_actor()
+	h.check("加了一件物件", m.count(Kind.ACTOR), before + 1)
+	h.check("新物件默认落在地图正中（40×40）",
+		m.rect_of(Kind.ACTOR, index), Rect2(30, 30, 40, 40))
+	h.check("新物件有 id 和名字", m.actor_field(index, "id") != "", true)
+	var index2 := m.add_actor()
+	h.check("连加两件，id 不重名",
+		m.actor_field(index, "id") != m.actor_field(index2, "id"), true)
+	h.check("新物件还没写互动（判成 none）", m.actor_form(index), "none")
+
+
+## 「选贴图 / 选立绘」那两个下拉的候选来源。
+static func test_asset_lists(h: TestHarness) -> void:
+	var m = Model.new()
+	var props := m.prop_files()
+	h.check("art/props 里能找到图", props.size() > 0, true)
+	h.check("贴图路径是 res:// 开头", props[0].begins_with("res://art/props/"), true)
+
+	var portraits := m.portrait_names()
+	h.check("立绘列表里有主角表情（含子目录）",
+		portraits.has("protagonist/reading"), true)
+	h.check("立绘名不带 .png", portraits[0].ends_with(".png"), false)
+
+	h.check("剧情文件列表非空", m.event_ids().size() > 0, true)
 
 
 ## 游戏侧：`cover_y` 写进地图数据之后，`map_view` 得认它。
