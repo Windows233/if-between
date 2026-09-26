@@ -13,8 +13,8 @@ extends SceneTree
 ## 桌后：碰撞块（y=164 起）之前、贴着后沿的站位，脚部被桌面后沿挡住。
 const BEHIND := Vector2(130, 158)
 const FRONT := Vector2(130, 215)
-## 门洞下方的过道里（portal [250,265,42,42]，她画的蓝框位置）。
-const DOOR := Vector2(269, 278)
+## 门洞里（portal [254,246,30,11]）；脚底到 y256 为止，下面是 #010815 空气墙。
+const DOOR := Vector2(269, 252)
 
 
 func _initialize() -> void:
@@ -57,7 +57,11 @@ func _initialize() -> void:
 	main.player.global_position = DOOR
 	main.update_cover()
 	await physics_frame
+	var hit: bool = main.current_map.portal_at(DOOR, main.flags) != null
+	print("portal_at 命中：%s" % hit)
 	main.interact()
+	await process_frame
+	print("story 活跃：%s" % main.story.is_active())
 	await create_timer(0.8).timeout
 	await process_frame
 	_shot("gatehouse_door")
