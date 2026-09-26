@@ -13,8 +13,8 @@ extends SceneTree
 ## 桌后：碰撞块（y=164 起）之前、贴着后沿的站位，脚部被桌面后沿挡住。
 const BEHIND := Vector2(130, 158)
 const FRONT := Vector2(130, 215)
-## 门洞传送区里（portal [254,248,30,16]）。
-const DOOR := Vector2(269, 255)
+## 门洞下方的过道里（portal [250,265,42,42]，她画的蓝框位置）。
+const DOOR := Vector2(269, 278)
 
 
 func _initialize() -> void:
