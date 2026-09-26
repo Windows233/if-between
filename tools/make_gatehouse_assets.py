@@ -28,6 +28,22 @@ DESK_SCALE = 0.28
 # 阈值取 765-30=735 能把书页留下、把白底的柔和阴影（sum≈740+）挡在外面。
 WHITE_TOLERANCE = 30
 
+# 墙层的破窗：美术导出时「挖空」落成了**不透明纯白占位**（2026-09-26 她报的
+# 「窗户黑白块」）。背景同位置是正确的灰黑夜色，把这块的近白像素改成全透明
+# 就能透出正确的底。区域是量出来的破洞包围盒，别扩大到木框和石帽沿。
+BROKEN_WINDOW = (1490, 2740, 1670, 2970)   # x0, y0, x1, y1
+HOLE_WHITE_SUM = 640                        # RGB 和超过它算「白色占位」
+
+
+def fix_broken_window(wall: Image.Image) -> Image.Image:
+    a = np.asarray(wall).copy()
+    x0, y0, x1, y1 = BROKEN_WINDOW
+    reg = a[y0:y1, x0:x1]
+    s = reg[..., :3].astype(np.int16).sum(axis=2)
+    reg[..., 3] = np.where(s > HOLE_WHITE_SUM, 0, reg[..., 3])
+    a[y0:y1, x0:x1] = reg
+    return Image.fromarray(a, "RGBA")
+
 
 def desk_alpha(tab: Image.Image) -> np.ndarray:
     t = np.asarray(tab).astype(np.int16)
@@ -49,6 +65,8 @@ def main() -> int:
     full.save(os.path.join(ROOT, "art", "map", "gatehouse.png"))
 
     # 前景层：底部矮墙 + 门柱。与背景同尺寸，工具按 OVERLAY_Z 铺。
+    # 破洞处的白色占位先清掉（见 fix_broken_window 的说明）。
+    wall = fix_broken_window(wall)
     wall.save(os.path.join(ROOT, "art", "map", "gatehouse_wall.png"))
 
     # 桌子切图
