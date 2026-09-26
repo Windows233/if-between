@@ -180,6 +180,12 @@ func _row_selection() -> HBoxContainer:
 	add_spawn.pressed.connect(_open_spawn_dialog)
 	row.add_child(add_spawn)
 
+	var import_image := Button.new()
+	import_image.text = "导入图像…"
+	import_image.tooltip_text = "挑一张 PNG → 拷进 art/props/ → 新建一件遮挡物件（位置和基线之后在画布上调）"
+	import_image.pressed.connect(_open_import_dialog)
+	row.add_child(import_image)
+
 	var add_actor := Button.new()
 	add_actor.text = "加物件"
 	add_actor.tooltip_text = "加一件家具/NPC，落在地图正中；下面的「物件属性」里填名字、贴图和互动内容。"
@@ -258,12 +264,45 @@ func _on_layer(on: bool, prop: String) -> void:
 		_status.text = "「%s」%s —— 显示开关同时管能不能点中" % [prop, "开着" if on else "关掉了"]
 
 
+## 删东西。**有跨文件关联的先问一句** —— 删掉就断了那条入口，
+## 而且数据本身还是合法的，`check_data` 也不会报（它只查「引用存在不存在」，
+## 查不出「本来该有个人来触发」）。
 func _on_delete() -> void:
 	if canvas.sel_kind < 0:
 		return
 	var names := ["墙", "传送区", "物件", "出生点"]
 	var what: String = names[canvas.sel_kind]
 	var was: String = model.label_of(canvas.sel_kind, canvas.sel_index)
+	var refs: Array[String] = []
+	if canvas.sel_kind == Kind.ACTOR:
+		refs = model.actor_references(canvas.sel_index)
+	elif canvas.sel_kind == Kind.PORTAL:
+		refs = model.portal_references(canvas.sel_index)
+	if refs.is_empty():
+		_do_delete(what, was)
+		return
+
+	var dialog := ConfirmationDialog.new()
+	dialog.title = "删这件「%s」？它身上挂着东西" % was
+	dialog.ok_button_text = "照样删掉"
+	var box := VBoxContainer.new()
+	var head := _text("删掉之后，下面这些就再也触发不到了（文件还在，只是没了入口）：")
+	head.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(head)
+	for line in refs:
+		var item := _text("· " + line)
+		item.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		box.add_child(item)
+	dialog.add_child(box)
+	dialog.confirmed.connect(func() -> void:
+		_do_delete(what, was)
+		dialog.queue_free())
+	dialog.canceled.connect(func() -> void: dialog.queue_free())
+	add_child(dialog)
+	dialog.popup_centered(Vector2i(470, 220))
+
+
+func _do_delete(what: String, was: String) -> void:
 	model.remove_at(canvas.sel_kind, canvas.sel_index)
 	canvas.sel_kind = -1
 	canvas.sel_index = -1
@@ -521,9 +560,7 @@ func _build_interaction_section() -> void:
 
 	match form:
 		"line":
-			var row := HBoxContainer.new()
-			row.add_child(_field("line", 520.0))
-			_actor_panel.add_child(row)
+			_actor_panel.add_child(_text_area("line", 520.0, 44.0))
 		"talk":
 			_build_talk_list()
 		"event":
@@ -602,10 +639,11 @@ func _build_talk_list() -> void:
 			_set_talk(i, "portrait", "" if k == 0 else portraits[k - 1]))
 		row.add_child(port)
 
-		var body := LineEdit.new()
+		var body := TextEdit.new()
 		body.text = str(line.get("text", ""))
-		body.custom_minimum_size = Vector2(300, 0)
-		body.text_changed.connect(func(t: String) -> void: _set_talk(i, "text", t))
+		body.custom_minimum_size = Vector2(300, 38)
+		body.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+		body.text_changed.connect(func() -> void: _set_talk(i, "text", body.text))
 		row.add_child(body)
 
 		row.add_child(_line_button("↑", func() -> void: _move_talk(i, i - 1)))
@@ -685,7 +723,92 @@ func _bool_field(key: String, label: String) -> CheckBox:
 	box.text = label
 	box.button_pressed = bool(model.actor_field(_panel_index, key, false))
 	box.toggled.connect(func(on: bool) -> void:
+		# 勾「只装饰」= 不参与交互 → 挂着的剧情就再也触发不到。
+		# 这条**数据合法、check_data 查不出来**，所以在这儿拦一下。
+		if key == "decor" and on and model.actor_has_story(_panel_index):
+			box.set_pressed_no_signal(false)
+			_confirm_decor(_panel_index, box)
+			return
 		model.set_actor_field(_panel_index, key, on)
 		_on_edited()
 		canvas.queue_redraw())
 	return box
+
+
+## 勾「只装饰」会把剧情入口堵死 —— 先把挂着的东西列出来问一句。
+func _confirm_decor(index: int, box: CheckBox) -> void:
+	var dialog := ConfirmationDialog.new()
+	dialog.title = "勾「只装饰」？它就不参与交互了"
+	dialog.ok_button_text = "知道，勾上"
+	var text := "勾上之后玩家没法再跟它互动，下面这些也就触发不到了：\n\n"
+	for line in model.actor_references(index):
+		text += "· " + line + "\n"
+	var label := _text(text)
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	dialog.add_child(label)
+	dialog.confirmed.connect(func() -> void:
+		model.set_actor_field(index, "decor", true)
+		if is_instance_valid(box):
+			box.set_pressed_no_signal(true)
+		_on_edited()
+		canvas.queue_redraw()
+		dialog.queue_free())
+	dialog.canceled.connect(func() -> void: dialog.queue_free())
+	add_child(dialog)
+	dialog.popup_centered(Vector2i(470, 240))
+
+
+## 长文本用多行框 —— 对话一句话可能挺长，单行框看半句很难受。
+func _text_area(key: String, width: float, height: float) -> TextEdit:
+	var area := TextEdit.new()
+	area.text = str(model.actor_field(_panel_index, key, ""))
+	area.custom_minimum_size = Vector2(width, height)
+	area.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+	area.text_changed.connect(func() -> void:
+		model.set_actor_field(_panel_index, key, area.text)
+		_on_edited())
+	return area
+
+
+# ---------------------------------------------------------------- 导入图片做遮挡片
+
+## 从文件系统挑一张图 → 拷进 `art/props/` → 新建一件**遮挡物件**。
+##
+## 为什么默认勾 `cover`：这个入口就是给「从美术给的图里挑一块做遮挡片」用的
+## （集市、学校那批白框遮挡片就是这么做的）。位置和基线随后在画布上调。
+func _open_import_dialog() -> void:
+	if model.map_id == "":
+		return
+	var fd := FileDialog.new()
+	fd.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+	fd.access = FileDialog.ACCESS_FILESYSTEM
+	fd.use_native_dialog = true
+	fd.add_filter("*.png", "PNG 图片")
+	fd.title = "挑一张图（会拷进 art/props/，并新建一件遮挡物件）"
+	fd.file_selected.connect(func(path: String) -> void:
+		_import_and_create(path)
+		fd.queue_free())
+	fd.canceled.connect(func() -> void: fd.queue_free())
+	add_child(fd)
+	fd.popup_centered(Vector2i(760, 500))
+
+
+func _import_and_create(source_path: String) -> void:
+	var res_path := model.import_prop(source_path)
+	if res_path == "":
+		_status.text = "导入失败：得是能读的 .png。别的格式先在画图工具里另存成 png。"
+		return
+	var index := model.add_actor_with_sprite(res_path, true)
+	canvas.sel_kind = Kind.ACTOR
+	canvas.sel_index = index
+	canvas.clear_texture_cache()
+	if Engine.is_editor_hint():
+		EditorInterface.get_resource_filesystem().scan()
+	_on_edited()
+	_refresh_selection()
+	canvas.queue_redraw()
+	_status.text = "导入成 %s，并建了一件遮挡物件。拖到位置上、拉它的黄线；名字在下面改。" % res_path
+	# 新文件被 Godot 导成纹理要一两秒，等一下再清缓存重画一次，图才出得来
+	get_tree().create_timer(1.2).timeout.connect(func() -> void:
+		canvas.clear_texture_cache()
+		canvas.queue_redraw())

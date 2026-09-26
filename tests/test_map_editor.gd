@@ -21,6 +21,8 @@ static func run(h: TestHarness) -> void:
 	test_spawns_in_model(h)
 	test_actor_fields_in_model(h)
 	test_asset_lists(h)
+	test_reference_checks(h)
+	test_import_prop(h)
 	test_save_round_trip(h)
 	test_copy_layout(h)
 	test_visibility_gates_picking(h)
@@ -345,6 +347,92 @@ static func test_asset_lists(h: TestHarness) -> void:
 	h.check("立绘名不带 .png", portraits[0].ends_with(".png"), false)
 
 	h.check("剧情文件列表非空", m.event_ids().size() > 0, true)
+
+
+## 删东西之前的「关联检查」—— 删掉就断了入口，而这类错误 `check_data` 查不出来
+## （它只查「引用存在不存在」，查不出「本来该有个人来触发」）。
+static func test_reference_checks(h: TestHarness) -> void:
+	var m = Model.new()
+	m.data = {
+		"size": [100, 100], "walls": [],
+		"portals": [
+			{"rect": [1, 1, 2, 2], "to": "overworld", "label": "门"},
+			{"rect": [3, 3, 2, 2], "label": "锁着的", "locked": true},
+		],
+		"actors": [
+			{"id": "bed", "rect": [10, 10, 20, 20], "event": "ch1_sleep"},
+			{"id": "plain", "rect": [40, 40, 20, 20], "line": "一句话"},
+			{"id": "menu", "rect": [60, 60, 20, 20], "actions": [
+				{"id": "a", "label": "看看", "talk": [{"text": "看"}]},
+				{"id": "b", "label": "睡下", "event": "ch1_sleep", "once": true},
+			]},
+			{"id": "cond", "rect": [70, 70, 20, 20], "line": "x",
+				"if": {"var": "gate/slept_once", "op": "==", "value": true},
+				"set": {"item/key": 1}},
+		],
+	}
+
+	h.check("挂事件的物件：报出事件名", m.actor_references(0).size(), 1)
+	h.check("挂事件的物件：算「有剧情」", m.actor_has_story(0), true)
+	h.check("只有一句旁白的：没有关联", m.actor_references(1).size(), 0)
+	h.check("只有一句旁白的：不算「有剧情」", m.actor_has_story(1), false)
+
+	var menu_refs := m.actor_references(2)
+	h.check("动作菜单：只报挂了事件的那一项", menu_refs.size(), 1)
+	h.check("动作菜单：那一项还标出「只演一次」", str(menu_refs[0]).contains("只演一次"), true)
+	h.check("动作菜单：算「有剧情」", m.actor_has_story(2), true)
+
+	var cond_refs := m.actor_references(3)
+	h.check("有 if 条件要报出来", cond_refs.size(), 2)
+	h.check("有 set 状态要报出来", str(cond_refs[1]).contains("item/key"), true)
+
+	h.check("传送点连着别的地图要报出来", m.portal_references(0).size(), 1)
+	h.check("锁着的传送点也要说一声", m.portal_references(1).size(), 1)
+
+
+## 导入图片做遮挡片：拷进 props 目录 + 名字收拾干净 + 重名不覆盖。
+static func test_import_prop(h: TestHarness) -> void:
+	var m = Model.new()
+	var src := "user://__editor_import_test.png"
+	var img := Image.create(2, 2, false, Image.FORMAT_RGBA8)
+	img.fill(Color(1, 0, 0, 1))
+	img.save_png(src)
+	h.check("测试用的小图造出来了", FileAccess.file_exists(src), true)
+
+	var out_dir := "user://__editor_props"
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(out_dir))
+	var path := m.import_prop(src, out_dir)
+	h.check("导进了目标目录", path.begins_with(out_dir + "/"), true)
+	h.check("文件真的在", FileAccess.file_exists(path), true)
+
+	# 重名不覆盖，往后加 _2
+	var again := m.import_prop(src, out_dir)
+	h.check("重名不覆盖（换了个名字）", again != path, true)
+
+	# 名字收拾：大写变小写、空格变下划线
+	var odd := "user://__Editor Odd-Name!.png"
+	var img2 := Image.create(1, 1, false, Image.FORMAT_RGBA8)
+	img2.fill(Color(0, 1, 0, 1))
+	img2.save_png(odd)
+	var cleaned := m.import_prop(odd, out_dir)
+	h.check("名字收拾成小写下划线（去符号、去首尾下划线）",
+		cleaned.get_file(), "editor_odd_name.png")
+
+	h.check("不是 png 的不收", m.import_prop(src.get_basename() + ".txt", out_dir), "")
+	h.check("找不到的路径不收", m.import_prop("user://__nope.png", out_dir), "")
+
+	# 建遮挡物件：贴图 + 默认勾上「会挡人」
+	var index := m.add_actor_with_sprite(path, true)
+	h.check("物件贴图指向导入的那张图", m.actor_field(index, "sprite"), path)
+	h.check("导入建的物件默认会挡人", bool(m.actor_field(index, "cover", false)), true)
+
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(src))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(odd))
+	var dir := DirAccess.open(out_dir)
+	if dir != null:
+		for name in dir.get_files():
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(out_dir + "/" + name))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(out_dir))
 
 
 ## 游戏侧：`cover_y` 写进地图数据之后，`map_view` 得认它。

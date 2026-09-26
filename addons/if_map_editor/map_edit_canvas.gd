@@ -113,6 +113,14 @@ func _load_tex(path: String) -> Texture2D:
 	return tex if tex is Texture2D else null
 
 
+## 导入新图之后清一下贴图缓存。
+##
+## 不清的话，那个路径上还留着「刚导入时加载不到」的空结果，新图要等重新打开
+## 编辑器才出得来 —— 界面看着像导入失败了。
+func clear_texture_cache() -> void:
+	_tex_cache.clear()
+
+
 func fit_to_view() -> void:
 	if map_size == Vector2.ZERO or size.x <= 0.0 or size.y <= 0.0:
 		return

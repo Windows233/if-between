@@ -419,6 +419,133 @@ func _scan_ids(dir_path: String) -> Array[String]:
 	return out
 
 
+## 传送点挂了什么别处的东西 —— 删它之前提醒用（删掉就断了那条路）。
+func portal_references(index: int) -> Array[String]:
+	var out: Array[String] = []
+	var list := portals()
+	if index < 0 or index >= list.size():
+		return out
+	var item: Variant = list[index]
+	if not (item is Dictionary):
+		return out
+	var d := item as Dictionary
+	if d.has("to"):
+		out.append("它连着地图「%s」（从它走能过去）" % str(d["to"]))
+	if d.has("event"):
+		out.append("挂着剧情事件「%s」（走上去会演那段）" % str(d["event"]))
+	if d.has("action"):
+		out.append("动作是「%s」" % str(d["action"]))
+	if bool(d.get("locked", false)):
+		out.append("它现在是锁着的（摆着但还不通往任何地方）")
+	return out
+
+
+## 这件物件挂了什么「别处的东西」——删它、或者勾「只装饰」之前提醒用。
+##
+## 查的是**跨文件/跨系统的关联**，不是它自己的字段：
+## 挂的剧情事件、动作菜单里挂的事件、出现的条件、演完写什么状态、是不是一次性。
+## 返回人话，直接显示给操作的人看。
+func actor_references(index: int) -> Array[String]:
+	var out: Array[String] = []
+	var d := actor_dict(index)
+	if d.is_empty():
+		return out
+	if d.has("event"):
+		out.append("挂着剧情事件「%s」（正文在 data/events/%s.json）" % [str(d["event"]), str(d["event"])])
+	var actions: Variant = d.get("actions", [])
+	if actions is Array:
+		for item: Variant in actions:
+			if not (item is Dictionary):
+				continue
+			var act := item as Dictionary
+			var label := str(act.get("label", act.get("id", "?")))
+			var only_once := bool(act.get("once", false))
+			if act.has("event"):
+				out.append("动作「%s」挂着剧情事件「%s」%s" % [
+					label, str(act["event"]), "（只演一次）" if only_once else ""])
+			elif only_once:
+				out.append("动作「%s」是只演一次的" % label)
+	if d.has("if"):
+		out.append("有出现条件（if）—— 条件不满足时玩家根本看不到它")
+	var effects: Variant = d.get("set", {})
+	if effects is Dictionary and not (effects as Dictionary).is_empty():
+		out.append("演完会写状态：%s" % ", ".join((effects as Dictionary).keys()))
+	return out
+
+
+## 这件物件身上有没有「剧情」类的东西（挂事件，或动作菜单里挂事件）。
+## 给「勾只装饰」「删物件」这类会切断入口的操作做前置判断。
+func actor_has_story(index: int) -> bool:
+	var d := actor_dict(index)
+	if d.has("event"):
+		return true
+	var actions: Variant = d.get("actions", [])
+	if actions is Array:
+		for item: Variant in actions:
+			if item is Dictionary and (item as Dictionary).has("event"):
+				return true
+	return false
+
+
+## 新建一件物件并指定贴图。`cover` 为真就是「会挡人的遮挡片」——
+## 导入一张图做遮罩时走这条：位置和基线之后在画布上调。
+func add_actor_with_sprite(sprite_path: String, cover := false) -> int:
+	var index := add_actor()
+	set_actor_field(index, "sprite", sprite_path)
+	if cover:
+		set_actor_field(index, "cover", true)
+	return index
+
+
+## 把一张外部图片拷进项目的 props 目录，返回它落地的 res:// 路径（失败给空串）。
+##
+## 名字会被收拾成项目习惯的样子：小写、空格换下划线、去掉路径里那些碍事的符号。
+## 重名就往后加 _2、_3，不覆盖别人已经切好的图。
+## `target_dir` 可以在测试里指到别处，免得往仓库里写东西。
+func import_prop(source_path: String, target_dir := "res://art/props") -> String:
+	if not FileAccess.file_exists(source_path):
+		return ""
+	if not source_path.to_lower().ends_with(".png"):
+		return ""
+	var base := _clean_asset_name(source_path.get_file().get_basename())
+	if base == "":
+		return ""
+	var dir := DirAccess.open(target_dir)
+	if dir == null:
+		return ""
+	var name := base + ".png"
+	var n := 2
+	while FileAccess.file_exists(target_dir + "/" + name):
+		name = "%s_%d.png" % [base, n]
+		n += 1
+	var bytes := FileAccess.get_file_as_bytes(source_path)
+	if bytes.is_empty():
+		return ""
+	var out := FileAccess.open(target_dir + "/" + name, FileAccess.WRITE)
+	if out == null:
+		return ""
+	out.store_buffer(bytes)
+	out.close()
+	return target_dir + "/" + name
+
+
+## 图片名收拾：小写、碍事的符号换成下划线、去掉重复与首尾的下划线，
+## 只留字母数字下划线和汉字。`__Editor Odd-Name!.png` → `editor_odd_name.png`。
+static func _clean_asset_name(raw: String) -> String:
+	var out := ""
+	for ch in raw.to_lower():
+		var code := ch.unicode_at(0)
+		var is_word := (code >= 48 and code <= 57) or (code >= 97 and code <= 122)
+		var is_cjk := code >= 0x4E00 and code <= 0x9FFF
+		if is_word or is_cjk:
+			out += ch
+		else:
+			out += "_"
+	while out.contains("__"):
+		out = out.replace("__", "_")
+	return out.strip_edges().trim_prefix("_").trim_suffix("_")
+
+
 func label_of(kind: int, index: int) -> String:
 	if kind == Kind.WALL:
 		return "墙"
