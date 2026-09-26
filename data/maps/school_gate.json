@@ -135,7 +135,8 @@
         24,
         39
       ],
-      "label": "图书馆"
+      "label": "图书馆",
+      "event": "ch2_library_locked"
     },
     {
       "id": "to_gatehouse",
