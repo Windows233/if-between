@@ -36,6 +36,8 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
+import zipfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GODOT = r"C:/Games/Steam/steamapps/common/Godot Engine/godot.windows.opt.tools.64.exe"
@@ -47,14 +49,50 @@ def run(args: list) -> tuple:
     return p.returncode, (p.stdout or "").strip(), (p.stderr or "").strip()
 
 
+def _find_repo_inside(folder: str) -> str:
+    """在一个目录里找 git 源：它自己带 .git，或者往下找一层（zip 解开常多套一层）。"""
+    if os.path.isdir(os.path.join(folder, ".git")):
+        return folder
+    for name in sorted(os.listdir(folder)):
+        sub = os.path.join(folder, name)
+        if os.path.isdir(sub) and os.path.isdir(os.path.join(sub, ".git")):
+            return sub
+    return ""
+
+
 def resolve_source(path: str) -> str:
-    """把用户给的路径判成 git 认得的那种。返回空串表示认不出来。"""
+    """把用户给的路径判成 git 认得的那种。返回空串表示认不出来。
+
+    **zip 会解到临时目录**（对方多半是压成 zip 发的），解出来的东西用完不删 ——
+    留在系统临时目录里，下次再用同一个路径还能命中缓存。
+    """
+    if not os.path.exists(path):
+        return ""
     if path.endswith(".bundle"):
         return path if os.path.isfile(path) else ""
+    if path.endswith(".zip"):
+        if not zipfile.is_zipfile(path):
+            return ""
+        out = os.path.join(tempfile.gettempdir(),
+                           "if_sync_" + os.path.splitext(os.path.basename(path))[0])
+        if not os.path.isdir(out):
+            print("解开 %s → %s" % (os.path.basename(path), out))
+            with zipfile.ZipFile(path) as zf:
+                zf.extractall(out)
+        if os.path.isdir(os.path.join(out, ".git")):
+            return out
+        found = _find_repo_inside(out)
+        if found != "":
+            return found
+        # 解出来的是「单独一个 .git 目录」的情况
+        for name in sorted(os.listdir(out)):
+            sub = os.path.join(out, name)
+            if name == ".git" and os.path.isdir(sub):
+                return sub
+        return ""
     if os.path.basename(path.rstrip("/\\")) == ".git":
         return path if os.path.isdir(path) else ""
-    inner = os.path.join(path, ".git")
-    if os.path.isdir(inner):
+    if os.path.isdir(os.path.join(path, ".git")):
         return path
     return ""
 
