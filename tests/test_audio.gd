@@ -367,7 +367,7 @@ static func test_meet_b_stops_music(h: TestHarness) -> void:
 	h.pick(main, &"go")
 	# pendant 那步改道了：黑屏后进死巷（第二章开场），配大地图的曲子
 	h.check("落到死巷配上了它的曲子",
-		main.current_music(), "res://audio/bgm/大地图背景音乐.mp3")
+		main.current_music(), "res://audio/bgm/reclamation.mp3")
 
 	# 流水上的痕迹：那一次「停」确实排在「收人」前面
 	var seen: Array = main.cutscene.history()
