@@ -153,42 +153,6 @@
   ],
   "actors": [
     {
-      "id": "sg_fence_left",
-      "rect": [
-        0,
-        167,
-        183,
-        77
-      ],
-      "sprite": "res://art/props/school_gate_fence_left.png",
-      "cover": true,
-      "label": "遮挡物"
-    },
-    {
-      "id": "sg_arch",
-      "rect": [
-        183,
-        163,
-        60,
-        39
-      ],
-      "sprite": "res://art/props/school_gate_arch.png",
-      "cover": false,
-      "label": "遮挡物"
-    },
-    {
-      "id": "sg_fence_right",
-      "rect": [
-        244,
-        167,
-        178,
-        77
-      ],
-      "sprite": "res://art/props/school_gate_fence_right.png",
-      "cover": true,
-      "label": "遮挡物"
-    },
-    {
       "id": "sg_fountain",
       "rect": [
         164,
@@ -223,6 +187,30 @@
           "event": "ch2_can"
         }
       ]
+    },
+    {
+      "id": "sg_occlude_1",
+      "rect": [
+        225,
+        186,
+        172,
+        39
+      ],
+      "sprite": "res://art/props/school_gate_occlude_1.png",
+      "cover": true,
+      "label": "围墙遮挡"
+    },
+    {
+      "id": "sg_occlude_2",
+      "rect": [
+        15,
+        183,
+        215,
+        40
+      ],
+      "sprite": "res://art/props/school_gate_occlude_2.png",
+      "cover": true,
+      "label": "围墙遮挡"
     }
   ],
   "player_scale": 0.5
