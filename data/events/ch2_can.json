@@ -1,0 +1,63 @@
+{
+  "id": "ch2_can",
+  "entry": "start",
+  "nodes": [
+    {
+      "id": "start",
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "portrait": "protagonist/puzzled",
+              "side": "left",
+              "text": "怎么还有人乱丢垃圾的"
+            }
+          ]
+        }
+      ],
+      "choices": [
+        {
+          "id": "pick",
+          "label": "捡起",
+          "next": "pick"
+        },
+        {
+          "id": "leave",
+          "label": "不捡起",
+          "next": "leave"
+        }
+      ]
+    },
+    {
+      "id": "pick",
+      "set": {
+        "item/key": 1
+      },
+      "stage": [
+        {
+          "do": "image",
+          "path": "res://art/item/key.png",
+          "fade": 0.45,
+          "wait_click": true
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "portrait": "protagonist/puzzled",
+              "side": "left",
+              "text": "里面竟然有把钥匙吗...那很安全了"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "leave",
+      "stage": []
+    }
+  ]
+}
