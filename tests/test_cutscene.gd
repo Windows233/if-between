@@ -1932,8 +1932,10 @@ static func test_transient_talks(h: TestHarness) -> void:
 			pk[pk.find(&"bg_blink") + 1], &"fade")
 		h.check("等玩家点一下", pk.has(&"wait_click"), true)
 		h.check("点完出第二章标题", pk.has(&"banner"), true)
-		h.check("最后把人送回委托屋",
-			pendant.stage[pk.find(&"goto")].text("map"), "desk_shop")
+		# **去就去那条改道了**：第二章正文从死巷开始（人类定的），
+		# 第二章标题之后的黑屏直接把人传送到死巷+铁门。
+		h.check("最后把人送进死巷",
+			pendant.stage[pk.find(&"goto")].text("map"), "dead_alley")
 
 
 ## 夜晚版集市：**几何一个字都不许差**（两张插画是一模一样的），
