@@ -1,0 +1,16 @@
+{
+  "id": "ch2_enter_school",
+  "entry": "go",
+  "nodes": [
+    {
+      "id": "go",
+      "stage": [
+        {
+          "do": "goto",
+          "map": "school_gate",
+          "spawn": "from_alley"
+        }
+      ]
+    }
+  ]
+}

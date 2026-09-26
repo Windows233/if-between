@@ -194,6 +194,12 @@ class Actor:
 	## `rect_distance` 算出来是 0，每次按交互都被它截胡，人反而说不上话。
 	## 标了 `decor` 就不进这个兜底，`actor_near` 也会跳过它。
 	var decor: bool = false
+	## 走进这件物件的 `reach` 时，**自动弹出它的动作菜单**（不用按交互键）。
+	##
+	## 为死巷铁门做的：人类定的交互方式是「走到蓝色框，右上角浮出
+	## 『推开铁门』，点一下进门」。菜单复用 `choice_menu`（本来就是
+	## 右上角的独立面板），每帧在 `_check_auto_menu()` 里查。
+	var auto_menu: bool = false
 	## 能做的动作。只有一个时直接执行，多个时先弹菜单让玩家挑。
 	var interactions: Array[Interaction] = []
 	## 满足这个条件才出现在场景里。为 null 表示一直在。
@@ -521,6 +527,7 @@ static func _actor_from(raw: Variant) -> Actor:
 	actor.over = bool(raw.get("over", false))
 	actor.person = bool(raw.get("person", false))
 	actor.decor = bool(raw.get("decor", false))
+	actor.auto_menu = bool(raw.get("auto_menu", false))
 	actor.condition = Condition.from_dictionary(raw.get("if"))
 
 	# 纯装饰物件：只画不交互。**直接返回**，别落到下面那三个兜底 ——

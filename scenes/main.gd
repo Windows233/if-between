@@ -600,14 +600,50 @@ func travel_to(map_id: StringName, spawn_name: StringName) -> void:
 	)
 
 
+## 玩家当前停在哪个 `auto_menu` 物件的 reach 里（防止菜单关了又开）。
+var _auto_menu_actor := StringName(&"")
+
+
 func _process(_delta: float) -> void:
 	update_camera()
 	update_player_control()
 	update_overworld_hover()
 	update_cover()
+	_check_auto_menu()
 	_announce_items()
 	_check_walk_arrival()
 	_update_footsteps()
+
+
+## 玩家走进 `auto_menu` 物件的 `reach` 时，自动弹出它的动作菜单。
+##
+## 死巷铁门专用交互：走到蓝色框里，右上角浮出「推开铁门」，点一下进门。
+## 菜单复用 `choice_menu`（右上角独立面板），和 `begin_interaction`
+## 多动作那条路同一个规矩 —— 点了哪个就跑哪个。
+## **离开 `reach` 之后才允许再次弹出**，不然站在原地菜单关了又开。
+func _check_auto_menu() -> void:
+	if current_map == null or player == null or choice_menu == null:
+		return
+	if choice_menu.visible or story.is_active() or fade.is_busy():
+		return
+	var inside: MapDef.Actor = null
+	for actor: MapDef.Actor in current_map.actors:
+		if not actor.auto_menu or not actor.is_active(flags):
+			continue
+		if actor.reach.has_point(player.global_position):
+			inside = actor
+			break
+	if inside == null:
+		_auto_menu_actor = &""
+		return
+	if _auto_menu_actor == inside.id or inside.interactions.is_empty():
+		return
+	_auto_menu_actor = inside.id
+	var options: Array[ChoiceOption] = []
+	for inter: MapDef.Interaction in inside.interactions:
+		options.append(ChoiceOption.make(inter.id, inter.label))
+	pending_actor = inside
+	choice_menu.open("", options)
 
 
 ## 木地板上的脚步。**只在该场景指定了 `footstep` 时才响**（见地图 json）。

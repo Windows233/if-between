@@ -1,0 +1,44 @@
+{
+  "id": "school_gate",
+  "name": "学校大门",
+  "size": [
+    512,
+    341
+  ],
+  "background": "res://art/map/school_gate.png",
+  "indoor": false,
+  "music": "res://audio/bgm/大地图背景音乐.mp3",
+  "spawns": {
+    "from_alley": [
+      256,
+      300
+    ]
+  },
+  "walls": [
+    [
+      0,
+      0,
+      512,
+      30
+    ],
+    [
+      0,
+      0,
+      30,
+      341
+    ],
+    [
+      482,
+      0,
+      30,
+      341
+    ],
+    [
+      0,
+      311,
+      512,
+      30
+    ]
+  ],
+  "portals": []
+}
