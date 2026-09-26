@@ -6,6 +6,10 @@
       "id": "go",
       "stage": [
         {
+          "do": "play_sound",
+          "path": "res://audio/sfx/铁门.wav"
+        },
+        {
           "do": "goto",
           "map": "school_gate",
           "spawn": "from_alley"
