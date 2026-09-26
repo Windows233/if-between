@@ -42,6 +42,8 @@ func _initialize() -> void:
 	TestPresentation.run(h)
 	h.section("音频")
 	TestAudio.run(h)
+	h.section("地图编辑器")
+	TestMapEditor.run(h)
 
 	if h.report():
 		quit(0)

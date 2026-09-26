@@ -167,6 +167,16 @@ class Actor:
 	## 只给真会挡到人的家具开（书桌那种摆在房间当中的）。墙边那一排货架
 	## **别开** —— 开了之后人在它们旁边走过也会被盖一下，反而看不清自己。
 	var cover: bool = false
+	## 遮挡基线的**手动覆盖**（一个 Y 值）。不写就是 `-1`，表示自动取 `rect`
+	## 的下边界 —— 那是物件「落在地上」的那条边。
+	##
+	## 什么时候才写：贴图底下自带一圈阴影、或者切件时多切了几像素，
+	## 「贴图底边」就不再等于落地的位置了。这时用地图编辑器
+	## （`addons/if_map_editor`）把那条黄线拉到该在的地方，它写回来的就是这个。
+	##
+	## ⚠️ **写了它，`rect` 的底边就不再管遮挡了** —— 两个真相。
+	## 只在该手调的那几件上写，别养成每件都写的习惯。
+	var cover_y: float = -1.0
 	## **永远画在角色之上。**
 	##
 	## 和 `cover` 分开是因为判据不同：`cover` 是「按站位分前后」，
@@ -518,6 +528,7 @@ static func _actor_from(raw: Variant) -> Actor:
 	actor.sprite = str(raw.get("sprite", ""))
 	actor.solid = bool(raw.get("solid", false))
 	actor.cover = bool(raw.get("cover", false))
+	actor.cover_y = float(raw.get("cover_y", -1.0))
 	actor.over = bool(raw.get("over", false))
 	actor.person = bool(raw.get("person", false))
 	actor.decor = bool(raw.get("decor", false))
