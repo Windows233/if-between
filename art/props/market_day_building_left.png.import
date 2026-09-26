@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ccncocp708xmu"
-path="res://.godot/imported/market_night_side_left.png-8e4c7ecbf49cb8a83a575b7f64aa665e.ctex"
+uid="uid://daj5ucxynu3nx"
+path="res://.godot/imported/market_day_building_left.png-2743a14db1a7c79657e56596e0de8a49.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/props/market_night_side_left.png"
-dest_files=["res://.godot/imported/market_night_side_left.png-8e4c7ecbf49cb8a83a575b7f64aa665e.ctex"]
+source_file="res://art/props/market_day_building_left.png"
+dest_files=["res://.godot/imported/market_day_building_left.png-2743a14db1a7c79657e56596e0de8a49.ctex"]
 
 [params]
 

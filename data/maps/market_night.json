@@ -15,10 +15,12 @@
     ]
   },
   "actors": [
-    { "id": "market_side_left", "rect": [0, 91, 262, 223],
-      "sprite": "res://art/props/market_night_side_left.png", "label": "街边楼房" },
-    { "id": "market_side_right", "rect": [299, 106, 258, 208],
-      "sprite": "res://art/props/market_night_side_right.png", "label": "街边楼房" },
+    { "id": "building_left", "rect": [0, 91, 262, 142],
+      "sprite": "res://art/props/market_night_building_left.png", "label": "街边楼房" },
+    { "id": "building_right", "rect": [299, 106, 258, 127],
+      "sprite": "res://art/props/market_night_building_right.png", "label": "街边楼房" },
+    { "id": "bottom_wall", "rect": [0, 234, 557, 80],
+      "sprite": "res://art/props/market_night_bottom_wall.png", "label": "南侧围墙", "cover": true },
     { "id": "stall_white", "rect": [65, 65, 103, 77],
       "sprite": "res://art/props/market_night_stall_white.png", "label": "白棚摊位", "cover": true },
     { "id": "stall_red", "rect": [322, 71, 87, 72],
