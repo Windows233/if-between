@@ -186,6 +186,14 @@ class Actor:
 	## 从插画上切贴图了（背景上本来就画着，见开发纪要 36），那个判据就废了 ——
 	## 于是所有家具都被当成「人」，脚下各冒出一条实体，玩家走不到跟前。
 	var person: bool = false
+	## 纯装饰物件：只参与渲染（含 `cover` 的层级），**不参与交互**。
+	##
+	## 这个字段存在是因为解析器有个兜底（见 `_actor_from` 的写法三）——
+	## 没写 `line` / `event` 的物件也会自动得到一个「交谈」动作，内容是空的。
+	## 集市那批盖满场地的楼房就栽在这上面：玩家落在它的 `rect` 里、
+	## `rect_distance` 算出来是 0，每次按交互都被它截胡，人反而说不上话。
+	## 标了 `decor` 就不进这个兜底，`actor_near` 也会跳过它。
+	var decor: bool = false
 	## 能做的动作。只有一个时直接执行，多个时先弹菜单让玩家挑。
 	var interactions: Array[Interaction] = []
 	## 满足这个条件才出现在场景里。为 null 表示一直在。
@@ -332,6 +340,12 @@ func actor_near(point: Vector2, max_distance: float, flags: WorldState = null,
 	var best_distance := max_distance
 	for actor: Actor in actors:
 		if not actor.is_active(flags):
+			continue
+		# 没有动作的物件（纯装饰）不算交互对象 —— 它们贴图框大，
+		# 玩家常整个落在框里，`rect_distance` 算出来是 0，会把附近
+		# 真正能说话的人截胡（2026-09-26 集市：玩家对着 A 按交互，
+		# 被脚下的街边楼房抢走，A 永远说不上话）。
+		if actor.decor:
 			continue
 		if facing != Vector2.ZERO and not faces_target(point, actor.reach, facing):
 			continue
@@ -506,7 +520,13 @@ static func _actor_from(raw: Variant) -> Actor:
 	actor.cover = bool(raw.get("cover", false))
 	actor.over = bool(raw.get("over", false))
 	actor.person = bool(raw.get("person", false))
+	actor.decor = bool(raw.get("decor", false))
 	actor.condition = Condition.from_dictionary(raw.get("if"))
+
+	# 纯装饰物件：只画不交互。**直接返回**，别落到下面那三个兜底 ——
+	# 兜底会塞给它一个空对话，场面上就成了「对着楼按交互弹出空气」。
+	if actor.decor:
+		return actor
 
 	# 写法一：`actions` 是一组动作，靠近后弹菜单让玩家挑
 	var raw_actions: Variant = raw.get("actions", [])

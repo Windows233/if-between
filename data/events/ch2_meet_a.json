@@ -426,7 +426,7 @@
           ],
           "height": 45,
           "z": 9,
-          "pose": "crouch"
+          "pose": "side"
         },
         {
           "do": "fade",
@@ -450,6 +450,14 @@
               "portrait": "protagonist/resolve"
             }
           ]
+        },
+        {
+          "do": "place_player",
+          "at": [
+            340,
+            172
+          ],
+          "facing": "right"
         },
         {
           "do": "wait",
@@ -522,7 +530,7 @@
         {
           "do": "place_player",
           "at": [
-            336,
+            340,
             172
           ],
           "facing": "right"
@@ -757,7 +765,7 @@
         {
           "do": "npc_pose",
           "id": "a",
-          "pose": "crouch"
+          "pose": "side"
         },
         {
           "do": "npc",
