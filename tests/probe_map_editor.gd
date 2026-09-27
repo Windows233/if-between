@@ -108,5 +108,16 @@ func _initialize() -> void:
 			dock._actor_panel.get_child_count(),
 			str(dock._actor_panel.visible)])
 
+	# 前景层：能不能选中、面板是不是前景层那块、实际范围算得出来吗
+	if dock.model.count(Model.Kind.OVERLAY) > 0:
+		dock.canvas.sel_kind = Model.Kind.OVERLAY
+		dock.canvas.sel_index = 0
+		dock._refresh_selection()
+		await process_frame
+		var band: Rect2 = dock.canvas.overlay_game_rect()
+		print("⑩ 前景层：路径 %s" % dock.model.overlay_path())
+		print("   实际范围（游戏单位）%s；面板可见 %s；焦点在滚动区里 %s" % [
+			band, str(dock._panel_scroll.visible), str(dock._actor_panel.get_parent() is ScrollContainer)])
+
 	print("=== 地图编辑器探针通过 ===")
 	quit(0)

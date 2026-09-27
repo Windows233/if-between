@@ -13,7 +13,7 @@ extends RefCounted
 
 const MAP_DIR := "res://data/maps"
 
-enum Kind { WALL, PORTAL, ACTOR, SPAWN }
+enum Kind { WALL, PORTAL, ACTOR, SPAWN, OVERLAY }
 
 var map_id: String = ""
 var path: String = ""
@@ -92,8 +92,10 @@ func count(kind: int) -> int:
 			return portals().size()
 		Kind.ACTOR:
 			return actors().size()
-		_:
+		Kind.SPAWN:
 			return spawns().size()
+		_:
+			return 1 if overlay_path() != "" else 0
 
 
 # ---------------------------------------------------------------- 出生点
@@ -165,6 +167,11 @@ func rect_of(kind: int, index: int) -> Rect2:
 	if kind == Kind.SPAWN:
 		var p := spawn_point(index)
 		return Rect2(p - Vector2.ONE * (SPAWN_HIT_SIZE * 0.5), Vector2.ONE * SPAWN_HIT_SIZE)
+	if kind == Kind.OVERLAY:
+		# 前景层是**一整张拉伸到地图大小**的图，数据里只有路径、没有位置。
+		# 画布那边会拿它真正有像素的范围来画选框（见 `_overlay_game_rect`），
+		# 这里给个整图矩形兜底。
+		return Rect2(Vector2.ZERO, map_size())
 	var list: Array = portals() if kind == Kind.PORTAL else actors()
 	if index < 0 or index >= list.size():
 		return Rect2()
@@ -175,6 +182,8 @@ func rect_of(kind: int, index: int) -> Rect2:
 
 
 func set_rect(kind: int, index: int, rect: Rect2) -> void:
+	if kind == Kind.OVERLAY:
+		return          # 前景层没有位置数据（整张拉伸），拖它不改变什么
 	if kind == Kind.SPAWN:
 		set_spawn_point(index, rect.position + rect.size * 0.5)
 		return
@@ -221,6 +230,9 @@ func add_rect(kind: int, rect: Rect2) -> int:
 
 
 func remove_at(kind: int, index: int) -> void:
+	if kind == Kind.OVERLAY:
+		clear_overlay()
+		return
 	if kind == Kind.SPAWN:
 		_remove_spawn(index)
 		return
@@ -497,17 +509,33 @@ func add_actor_with_sprite(sprite_path: String, cover := false) -> int:
 	return index
 
 
-## 把一张外部图片拷进项目的 props 目录，返回它落地的 res:// 路径（失败给空串）。
+## 设/清前景层（`overlay`）。**一张图拉伸到整张地图**，所以不用管图的尺寸。
+## 习惯命名：`art/map/<地图名>_wall.png`。
+func set_overlay_path(path: String) -> void:
+	data["overlay"] = path
+	dirty = true
+
+
+func clear_overlay() -> void:
+	if data.has("overlay"):
+		data.erase("overlay")
+		dirty = true
+
+
+## 把一张外部图片拷进项目的目录，返回它落地的 res:// 路径（失败给空串）。
 ##
 ## 名字会被收拾成项目习惯的样子：小写、空格换下划线、去掉路径里那些碍事的符号。
 ## 重名就往后加 _2、_3，不覆盖别人已经切好的图。
-## `target_dir` 可以在测试里指到别处，免得往仓库里写东西。
-func import_prop(source_path: String, target_dir := "res://art/props") -> String:
+## `target_dir` 可以在测试里指到别处，免得往仓库里写东西；
+## `preferred_name`（不含扩展名）用来按项目习惯命名，比如前景层要叫 `<地图名>_wall`。
+func import_image(source_path: String, target_dir := "res://art/props",
+		preferred_name := "") -> String:
 	if not FileAccess.file_exists(source_path):
 		return ""
 	if not source_path.to_lower().ends_with(".png"):
 		return ""
-	var base := _clean_asset_name(source_path.get_file().get_basename())
+	var base := preferred_name if preferred_name != "" else source_path.get_file().get_basename()
+	base = _clean_asset_name(base)
 	if base == "":
 		return ""
 	var dir := DirAccess.open(target_dir)
@@ -552,6 +580,8 @@ func label_of(kind: int, index: int) -> String:
 	if kind == Kind.SPAWN:
 		var names := spawn_names()
 		return names[index] if index >= 0 and index < names.size() else ""
+	if kind == Kind.OVERLAY:
+		return "前景层"
 	var list: Array = portals() if kind == Kind.PORTAL else actors()
 	if index < 0 or index >= list.size():
 		return ""

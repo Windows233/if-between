@@ -23,6 +23,8 @@ static func run(h: TestHarness) -> void:
 	test_asset_lists(h)
 	test_reference_checks(h)
 	test_import_prop(h)
+	test_overlay_in_model(h)
+	test_overlay_picking(h)
 	test_save_round_trip(h)
 	test_copy_layout(h)
 	test_visibility_gates_picking(h)
@@ -401,12 +403,12 @@ static func test_import_prop(h: TestHarness) -> void:
 
 	var out_dir := "user://__editor_props"
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(out_dir))
-	var path := m.import_prop(src, out_dir)
+	var path := m.import_image(src, out_dir)
 	h.check("导进了目标目录", path.begins_with(out_dir + "/"), true)
 	h.check("文件真的在", FileAccess.file_exists(path), true)
 
 	# 重名不覆盖，往后加 _2
-	var again := m.import_prop(src, out_dir)
+	var again := m.import_image(src, out_dir)
 	h.check("重名不覆盖（换了个名字）", again != path, true)
 
 	# 名字收拾：大写变小写、空格变下划线
@@ -414,12 +416,12 @@ static func test_import_prop(h: TestHarness) -> void:
 	var img2 := Image.create(1, 1, false, Image.FORMAT_RGBA8)
 	img2.fill(Color(0, 1, 0, 1))
 	img2.save_png(odd)
-	var cleaned := m.import_prop(odd, out_dir)
+	var cleaned := m.import_image(odd, out_dir)
 	h.check("名字收拾成小写下划线（去符号、去首尾下划线）",
 		cleaned.get_file(), "editor_odd_name.png")
 
-	h.check("不是 png 的不收", m.import_prop(src.get_basename() + ".txt", out_dir), "")
-	h.check("找不到的路径不收", m.import_prop("user://__nope.png", out_dir), "")
+	h.check("不是 png 的不收", m.import_image(src.get_basename() + ".txt", out_dir), "")
+	h.check("找不到的路径不收", m.import_image("user://__nope.png", out_dir), "")
 
 	# 建遮挡物件：贴图 + 默认勾上「会挡人」
 	var index := m.add_actor_with_sprite(path, true)
@@ -433,6 +435,57 @@ static func test_import_prop(h: TestHarness) -> void:
 		for name in dir.get_files():
 			DirAccess.remove_absolute(ProjectSettings.globalize_path(out_dir + "/" + name))
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(out_dir))
+
+
+## 前景层（`overlay`）：一条路径、整张拉伸，所以**没有位置/尺寸**可改。
+## 但它要能选中、能换图、能清掉。
+static func test_overlay_in_model(h: TestHarness) -> void:
+	var m = Model.new()
+	m.data = {"size": [100, 80], "walls": [], "portals": [], "actors": [], "spawns": {}}
+	h.check("没设前景层时：不算有一件", m.count(Kind.OVERLAY), 0)
+
+	m.set_overlay_path("res://art/map/some_wall.png")
+	h.check("设了前景层：算一件", m.count(Kind.OVERLAY), 1)
+	h.check("读得到路径", m.overlay_path(), "res://art/map/some_wall.png")
+	h.check("名字是「前景层」", m.label_of(Kind.OVERLAY, 0), "前景层")
+	h.check("兜底矩形是整张地图", m.rect_of(Kind.OVERLAY, 0), Rect2(0, 0, 100, 80))
+
+	m.dirty = false
+	m.set_rect(Kind.OVERLAY, 0, Rect2(5, 5, 10, 10))
+	h.check("拖它不产生改动（没有位置可存）", m.dirty, false)
+	h.check("路径也没被改", m.overlay_path(), "res://art/map/some_wall.png")
+
+	m.remove_at(Kind.OVERLAY, 0)
+	h.check("删/清掉之后就不算了", m.count(Kind.OVERLAY), 0)
+	h.check("数据里那条也没了", m.data.has("overlay"), false)
+
+
+## 前景层要能像别的层一样点中；关掉那层就点不中。
+static func test_overlay_picking(h: TestHarness) -> void:
+	var overlay_path := "res://art/map/gatehouse_wall.png"
+	if not ResourceLoader.exists(overlay_path):
+		h.check("门卫室前景层图在（测试前提）", false, true)
+		return
+	var m = Model.new()
+	m.data = {
+		"size": [384, 307], "walls": [], "portals": [], "actors": [], "spawns": {},
+		"overlay": overlay_path,
+	}
+	var canvas: Control = CanvasScript.new()
+	canvas.size = Vector2(800, 600)
+	canvas.load_map(m, "", overlay_path, m.map_size())
+	canvas.zoom = 1.0
+	canvas.pan = Vector2.ZERO
+
+	var band: Rect2 = canvas.overlay_game_rect()
+	h.check("算得出前景层实际范围", band.size.x > 0.0 and band.size.y > 0.0, true)
+	h.check("那块范围在地图下半部（下围墙）", band.position.y > m.map_size().y * 0.5, true)
+
+	var middle: Vector2 = band.position + band.size * 0.5
+	h.check("点在前景层上：选中它", canvas._hit_item(middle), Vector2i(Kind.OVERLAY, 0))
+	canvas.set_layer_visible("show_overlay", false)
+	h.check("关掉前景层：点不中了", canvas._hit_item(middle), Vector2i(-1, -1))
+	canvas.free()
 
 
 ## 游戏侧：`cover_y` 写进地图数据之后，`map_view` 得认它。

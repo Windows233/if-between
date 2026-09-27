@@ -117,8 +117,31 @@ func _load_tex(path: String) -> Texture2D:
 ##
 ## 不清的话，那个路径上还留着「刚导入时加载不到」的空结果，新图要等重新打开
 ## 编辑器才出得来 —— 界面看着像导入失败了。
+## 换前景层的图（不整张重载，免得把选中和光标弄丢）。
+func set_overlay_texture(path: String) -> void:
+	_tex_cache.erase(path)
+	tex_overlay = _load_tex(path)
+	_overlay_used = _used_rect_of(tex_overlay)
+	queue_redraw()
+
+
 func clear_texture_cache() -> void:
 	_tex_cache.clear()
+
+
+## 前景层**真正有像素**的范围（游戏单位）。数据里前景层只有一条路径，
+## 它整张拉伸到地图大小 —— 但图里往往只有底下一条带子有内容，
+## 所以选框要照实际像素画，不能照整张地图（那样框住整个画面，等于没框）。
+func overlay_game_rect() -> Rect2:
+	if tex_overlay == null:
+		return Rect2()
+	var picture := tex_overlay.get_size()
+	if picture.x <= 0.0 or picture.y <= 0.0:
+		return Rect2()
+	if _overlay_used.size.x <= 0.0:
+		return Rect2(Vector2.ZERO, map_size)
+	var scale := map_size / picture
+	return Rect2(_overlay_used.position * scale, _overlay_used.size * scale)
 
 
 func fit_to_view() -> void:
@@ -190,9 +213,7 @@ func _draw() -> void:
 		# 前景层不是物件，但它**恒在角色之上**（OVERLAY_Z 13）——
 		# 圈一下它的实际范围，标注一句，免得被当成普通背景。
 		if _overlay_used.size.x > 0.0:
-			var scale_to_game := map_size / (tex_overlay.get_size() as Vector2)
-			var band := Rect2(_overlay_used.position * scale_to_game,
-				_overlay_used.size * scale_to_game)
+			var band := overlay_game_rect()
 			var band_screen := Rect2(to_screen(band.position), band.size * zoom)
 			draw_dashed_line(band_screen.position, band_screen.position + Vector2(band_screen.size.x, 0),
 				OVERLAY_MARK, 1.0, 5.0)
@@ -237,10 +258,11 @@ func _draw() -> void:
 		_draw_rect_game(_drag_new_rect, Color(1, 1, 1, 0.15), SELECT_COLOR)
 
 	if sel_kind >= 0 and is_kind_visible(sel_kind):
-		var r: Rect2 = model.rect_of(sel_kind, sel_index)
+		var r: Rect2 = overlay_game_rect() if sel_kind == Kind.OVERLAY \
+			else model.rect_of(sel_kind, sel_index)
 		_draw_rect_game(r, Color(0, 0, 0, 0), SELECT_COLOR, 2.0)
-		# 出生点是个点，没有「改尺寸」这回事 —— 不给手柄
-		if tool == Tool.SELECT and sel_kind != Kind.SPAWN:
+		# 出生点是个点、前景层整张拉伸 —— 都没有「改尺寸」这回事，不给手柄
+		if tool == Tool.SELECT and sel_kind != Kind.SPAWN and sel_kind != Kind.OVERLAY:
 			for h in _handle_points(r):
 				draw_rect(Rect2(h - Vector2(HANDLE_SIZE, HANDLE_SIZE) * 0.5,
 					Vector2(HANDLE_SIZE, HANDLE_SIZE)), SELECT_COLOR, true)
@@ -445,8 +467,10 @@ func is_kind_visible(kind: int) -> bool:
 			return show_portals
 		Kind.ACTOR:
 			return show_actors
-		_:
+		Kind.SPAWN:
 			return show_spawns
+		_:
+			return show_overlay
 
 
 func set_layer_visible(prop: String, on: bool) -> void:
@@ -482,6 +506,11 @@ func _hit_item(pos: Vector2) -> Vector2i:
 		for i in range(model.count(Kind.WALL) - 1, -1, -1):
 			if _rect_hit(model.rect_of(Kind.WALL, i), pos):
 				return Vector2i(Kind.WALL, i)
+	# 前景层排最后：它盖着大半张图，别的能点中就优先点别的。
+	# 想专门点它，把「墙 / 物件」那几层关掉就干净了（显示开关同时管能不能点中）。
+	if show_overlay and model.count(Kind.OVERLAY) > 0:
+		if _rect_hit(overlay_game_rect(), pos):
+			return Vector2i(Kind.OVERLAY, 0)
 	return Vector2i(-1, -1)
 
 
@@ -504,8 +533,8 @@ func _rect_hit(r: Rect2, pos: Vector2, slop := 0.0) -> bool:
 func _hit_handle(pos: Vector2) -> int:
 	if sel_kind < 0 or tool != Tool.SELECT:
 		return -1
-	if sel_kind == Kind.SPAWN:
-		return -1          # 出生点没有尺寸可改
+	if sel_kind == Kind.SPAWN or sel_kind == Kind.OVERLAY:
+		return -1          # 出生点没有尺寸；前景层整张拉伸，也改不了
 	var r: Rect2 = model.rect_of(sel_kind, sel_index)
 	var points := _handle_points(r)
 	for i in points.size():

@@ -26,6 +26,7 @@ var _syncing := false
 ## 「物件属性」面板：只在选中物件时出现。**每次换选中项才重建** ——
 ## 每敲一个字都重建会把光标弄丢。
 var _actor_panel: VBoxContainer
+var _panel_scroll: ScrollContainer
 var _panel_kind := -1
 var _panel_index := -1
 
@@ -59,9 +60,16 @@ func _build() -> void:
 
 	add_child(_row_selection())
 
+	# 属性面板放进**定高滚动区**：对话一行一句，行数一多面板会很长，
+	# 不挡住下面的画布（也不把下面的东西挤出屏幕）。
+	_panel_scroll = ScrollContainer.new()
+	_panel_scroll.custom_minimum_size = Vector2(0, 168)
+	_panel_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_panel_scroll.visible = false
+	add_child(_panel_scroll)
 	_actor_panel = VBoxContainer.new()
-	_actor_panel.visible = false
-	add_child(_actor_panel)
+	_actor_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_panel_scroll.add_child(_actor_panel)
 
 	_status = _text("选一张地图开始。滚轮缩放，中键/右键拖动平移。")
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -270,7 +278,7 @@ func _on_layer(on: bool, prop: String) -> void:
 func _on_delete() -> void:
 	if canvas.sel_kind < 0:
 		return
-	var names := ["墙", "传送区", "物件", "出生点"]
+	var names := ["墙", "传送区", "物件", "出生点", "前景层"]
 	var what: String = names[canvas.sel_kind]
 	var was: String = model.label_of(canvas.sel_kind, canvas.sel_index)
 	var refs: Array[String] = []
@@ -293,7 +301,7 @@ func _on_delete() -> void:
 		var item := _text("· " + line)
 		item.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		box.add_child(item)
-	dialog.add_child(box)
+	dialog.add_child(_scrolled(box, Vector2(420, 180)))
 	dialog.confirmed.connect(func() -> void:
 		_do_delete(what, was)
 		dialog.queue_free())
@@ -331,7 +339,7 @@ func _open_spawn_dialog() -> void:
 	var tip := _text("加进来在地图正中，选中之后拖到位置上；x/y 也能敲数字。")
 	tip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(tip)
-	dialog.add_child(box)
+	dialog.add_child(_scrolled(box, Vector2(380, 150)))
 	dialog.confirmed.connect(func() -> void:
 		var index := model.add_spawn(field.text.strip_edges())
 		if index < 0:
@@ -362,6 +370,7 @@ func _open_copy_dialog() -> void:
 	head.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(head)
 	var picker := OptionButton.new()
+	picker.fit_to_longest_item = false
 	for id in Model.list_maps():
 		if id != model.map_id:
 			picker.add_item(id)
@@ -372,7 +381,13 @@ func _open_copy_dialog() -> void:
 	var warn := _text("目标图里这三项会被整个换掉；尺寸、背景、前景层、音乐不动。")
 	warn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(warn)
-	dialog.add_child(box)
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(400, 210)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.add_child(box)
+	dialog.add_child(scroll)
 	dialog.confirmed.connect(func() -> void:
 		var target := picker.get_item_text(picker.selected)
 		var counts := "%d 墙 / %d 传送区 / %d 物件" % [
@@ -382,7 +397,7 @@ func _open_copy_dialog() -> void:
 		dialog.queue_free())
 	dialog.canceled.connect(func() -> void: dialog.queue_free())
 	add_child(dialog)
-	dialog.popup_centered(Vector2i(430, 210))
+	dialog.popup_centered()
 
 
 func _on_spin_changed(_v: float) -> void:
@@ -434,7 +449,7 @@ func _refresh_selection() -> void:
 			spin.editable = false
 		_base_row.visible = false
 	else:
-		var names := ["墙", "传送区", "物件", "出生点"]
+		var names := ["墙", "传送区", "物件", "出生点", "前景层"]
 		var r: Rect2 = model.rect_of(kind, index)
 		_sel_label.text = "%s #%d %s" % [names[kind], index, model.label_of(kind, index)]
 		_spins[0].value = r.position.x
@@ -442,11 +457,17 @@ func _refresh_selection() -> void:
 		_spins[2].value = r.size.x
 		_spins[3].value = r.size.y
 		var is_spawn: bool = kind == Kind.SPAWN
-		# 出生点没有宽高可改（它就是个坐标），x/y 照旧能敲
-		_spins[0].editable = true
-		_spins[1].editable = true
-		_spins[2].editable = not is_spawn
-		_spins[3].editable = not is_spawn
+		var is_overlay: bool = kind == Kind.OVERLAY
+		# 出生点没有宽高可改（它就是个坐标）；前景层整张拉伸，四个都不给改
+		_spins[0].editable = not is_overlay
+		_spins[1].editable = not is_overlay
+		_spins[2].editable = not is_spawn and not is_overlay
+		_spins[3].editable = not is_spawn and not is_overlay
+		if is_overlay:
+			_spins[0].value = 0
+			_spins[1].value = 0
+			_spins[2].value = 0
+			_spins[3].value = 0
 		if is_spawn:
 			# 出生点显示的是「点本身」，别把包装用的 6×6 露出来
 			var p: Vector2 = model.spawn_point(index)
@@ -487,17 +508,64 @@ func _on_add_actor() -> void:
 	_status.text = "加了一件物件（先落在地图正中）。拖到位置上，再填下面的名字、贴图、互动内容。"
 
 
-## 只在「换了一件物件」时重建面板 —— 每敲一个字都重建会把光标弄丢。
+## 只在「换了选中项」时重建面板 —— 每敲一个字都重建会把光标弄丢。
 func _sync_actor_panel() -> void:
-	if canvas.sel_kind != Kind.ACTOR:
-		_actor_panel.visible = false
+	var kind: int = canvas.sel_kind
+	if kind != Kind.ACTOR and kind != Kind.OVERLAY:
+		_panel_scroll.visible = false
 		_panel_kind = -1
 		_panel_index = -1
 		return
-	if _panel_kind == Kind.ACTOR and _panel_index == canvas.sel_index:
-		_actor_panel.visible = true
+	if _panel_kind == kind and _panel_index == canvas.sel_index:
+		_panel_scroll.visible = true
 		return
-	_build_actor_panel()
+	if kind == Kind.OVERLAY:
+		_build_overlay_panel()
+	else:
+		_build_actor_panel()
+
+
+## 前景层只有一条数据（路径），能做的就三件：看它是谁、换一张、清掉。
+## **它整张拉伸到地图大小**，所以没有位置/尺寸可调。
+func _build_overlay_panel() -> void:
+	_panel_kind = Kind.OVERLAY
+	_panel_index = 0
+	for child in _actor_panel.get_children():
+		child.queue_free()
+	_panel_scroll.visible = true
+
+	_actor_panel.add_child(_text("前景层（恒在角色之上，整张拉伸到地图大小）"))
+	var row := HBoxContainer.new()
+	row.add_child(_text("图片"))
+	var path_line := LineEdit.new()
+	path_line.text = model.overlay_path()
+	path_line.custom_minimum_size = Vector2(380, 0)
+	path_line.text_changed.connect(func(t: String) -> void:
+		model.set_overlay_path(t)
+		canvas.set_overlay_texture(t)
+		_on_edited())
+	row.add_child(path_line)
+	var swap := Button.new()
+	swap.text = "导入图像…"
+	swap.tooltip_text = "挑一张 PNG 当作这张图的前景层：拷进 art/map/，命名成 <地图名>_wall"
+	swap.pressed.connect(_open_overlay_import_dialog)
+	row.add_child(swap)
+	var clear := Button.new()
+	clear.text = "清除"
+	clear.tooltip_text = "把前景层去掉（这条数据清空，图还在 art/map 里）"
+	clear.pressed.connect(func() -> void:
+		model.clear_overlay()
+		canvas.set_overlay_texture("")
+		_on_edited()
+		canvas.sel_kind = -1
+		_refresh_selection()
+		_status.text = "前景层清掉了（那条数据没了，图还在 art/map 里）")
+	row.add_child(clear)
+	_actor_panel.add_child(row)
+	_actor_panel.add_child(_text("提示：想看它盖住了什么，把「前景层」不透明度滑条拉淡。"))
+
+	if model.overlay_path() == "":
+		_actor_panel.add_child(_text("这张图现在没有前景层。点「导入图像…」加一张。"))
 
 
 func _build_actor_panel() -> void:
@@ -505,7 +573,7 @@ func _build_actor_panel() -> void:
 	_panel_index = canvas.sel_index
 	for child in _actor_panel.get_children():
 		child.queue_free()
-	_actor_panel.visible = true
+	_panel_scroll.visible = true
 
 	_actor_panel.add_child(_text("物件属性（id 与名字改完，记得点上面的「保存到 JSON」）"))
 
@@ -662,6 +730,16 @@ func _build_talk_list() -> void:
 	_actor_panel.add_child(add)
 
 
+## 把内容塞进一个定高的滚动区 —— 弹窗内容再长也不会把按钮顶出屏幕。
+func _scrolled(content: Control, view: Vector2) -> ScrollContainer:
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = view
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(content)
+	return scroll
+
+
 func _line_button(text: String, action: Callable) -> Button:
 	var b := Button.new()
 	b.text = text
@@ -745,7 +823,7 @@ func _confirm_decor(index: int, box: CheckBox) -> void:
 		text += "· " + line + "\n"
 	var label := _text(text)
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	dialog.add_child(label)
+	dialog.add_child(_scrolled(label, Vector2(420, 180)))
 	dialog.confirmed.connect(func() -> void:
 		model.set_actor_field(index, "decor", true)
 		if is_instance_valid(box):
@@ -793,8 +871,49 @@ func _open_import_dialog() -> void:
 	fd.popup_centered(Vector2i(760, 500))
 
 
+## 前景层导入：拷进 `art/map/`，按项目习惯命名 `<地图名>_wall`。
+##
+## 不用管图的尺寸 —— 游戏里它会被**拉伸到整张地图**（`map_view._add_overlay`）。
+func _open_overlay_import_dialog() -> void:
+	if model.map_id == "":
+		return
+	var fd := FileDialog.new()
+	fd.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+	fd.access = FileDialog.ACCESS_FILESYSTEM
+	fd.use_native_dialog = true
+	fd.add_filter("*.png", "PNG 图片")
+	fd.title = "挑一张图当前景层（会拷进 art/map/）"
+	fd.file_selected.connect(func(path: String) -> void:
+		_import_overlay(path)
+		fd.queue_free())
+	fd.canceled.connect(func() -> void: fd.queue_free())
+	add_child(fd)
+	fd.popup_centered(Vector2i(760, 500))
+
+
+func _import_overlay(source_path: String) -> void:
+	var res_path := model.import_image(source_path, "res://art/map", model.map_id + "_wall")
+	if res_path == "":
+		_status.text = "导入失败：得是能读的 .png。"
+		return
+	model.set_overlay_path(res_path)
+	canvas.set_overlay_texture(res_path)
+	canvas.clear_texture_cache()
+	if Engine.is_editor_hint():
+		EditorInterface.get_resource_filesystem().scan()
+	canvas.sel_kind = Kind.OVERLAY
+	canvas.sel_index = 0
+	_on_edited()
+	_refresh_selection()
+	canvas.queue_redraw()
+	_status.text = "前景层换成 %s（整张拉伸到地图大小，图的尺寸不用管）" % res_path
+	get_tree().create_timer(1.2).timeout.connect(func() -> void:
+		canvas.clear_texture_cache()
+		canvas.set_overlay_texture(res_path))
+
+
 func _import_and_create(source_path: String) -> void:
-	var res_path := model.import_prop(source_path)
+	var res_path := model.import_image(source_path, "res://art/props")
 	if res_path == "":
 		_status.text = "导入失败：得是能读的 .png。别的格式先在画图工具里另存成 png。"
 		return
