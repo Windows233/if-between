@@ -119,7 +119,7 @@ func _row_layers() -> HBoxContainer:
 	row.add_child(_text("显示："))
 	for item in [["背景", "show_bg"], ["前景层", "show_overlay"], ["墙", "show_walls"],
 			["传送区", "show_portals"], ["物件", "show_actors"], ["出生点", "show_spawns"],
-			["可走格", "show_walk"]]:
+			["可走格", "show_walk"], ["脚底框（跟鼠标）", "show_foot"]]:
 		var cb := CheckBox.new()
 		cb.text = str(item[0])
 		cb.button_pressed = true
@@ -550,6 +550,7 @@ func _refresh_selection() -> void:
 
 
 func _on_edited() -> void:
+	canvas.invalidate_def()      # 数据改了，脚底框/可走格那边的 MapDef 要重建
 	_refresh_dirty()
 
 

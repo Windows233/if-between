@@ -50,6 +50,14 @@ var show_walk := false
 ## 出生点（小小一颗紫点）。**它不是矩形，是个坐标**，但一样能选中、拖动、
 ## 用数值框改 —— 数据层把它包成以点为中心的 6×6 方块（见 model）。
 var show_spawns := true
+
+## 测试工具：**在鼠标处画主角的碰撞箱**（脚底那个 16×16 方块），
+## 顺便实时告诉你那儿站不站得住。量「这条缝够不够人钻过去」用的。
+var show_foot := false
+var _mouse_game := Vector2.ZERO
+var _mouse_inside := false
+## 复用的 `MapDef`（跟着 `is_free` 用）。数据一改就作废，见 `invalidate_def()`。
+var _def: MapDef = null
 ## 前景层（`MapDef.overlay`）的不透明度。**它恒在角色之上**，
 ## 编辑它底下那些墙/传送区时把它调淡，才看得见底下。
 var overlay_alpha := 1.0
@@ -76,6 +84,12 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	# 像素画缩小时要脆，不要糊
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	mouse_entered.connect(func() -> void:
+		_mouse_inside = true
+		queue_redraw())
+	mouse_exited.connect(func() -> void:
+		_mouse_inside = false
+		queue_redraw())
 
 
 # ---------------------------------------------------------------- 载入
@@ -89,6 +103,7 @@ func load_map(model_ref, bg_path: String, overlay_path: String, size: Vector2) -
 	sel_kind = -1
 	sel_index = -1
 	_walk_texture = null
+	_def = null
 	fit_to_view()
 	queue_redraw()
 	selection_changed.emit()
@@ -142,6 +157,38 @@ func overlay_game_rect() -> Rect2:
 		return Rect2(Vector2.ZERO, map_size)
 	var scale := map_size / picture
 	return Rect2(_overlay_used.position * scale, _overlay_used.size * scale)
+
+
+## 数据改过之后作废；下次问 `is_free` 时重建。
+func invalidate_def() -> void:
+	_def = null
+
+
+func _map_def() -> MapDef:
+	if _def == null and model != null:
+		var MapDefLib := preload("res://core/map_def.gd")
+		_def = MapDefLib.from_dictionary(model.data)
+	return _def
+
+
+## 脚底方块：**以落点为底、往上伸**（脚下一线为 0）。
+## 和 `WalkGrid` 里那套判据同一份常量 —— 所以画出来的框就是真机判定用的框。
+func foot_rect_at(point: Vector2) -> Rect2:
+	var WalkGrid := preload("res://core/walk_grid.gd")
+	return Rect2(
+		point.x - WalkGrid.FOOT_HALF,
+		point.y - WalkGrid.FOOT_UP,
+		WalkGrid.FOOT_HALF * 2.0,
+		WalkGrid.FOOT_UP - WalkGrid.FOOT_DOWN)
+
+
+## 这个落点站不站得住（调的是游戏同一份 `WalkGrid.is_free`）。
+func foot_is_free(point: Vector2) -> bool:
+	var def := _map_def()
+	if def == null:
+		return false
+	var WalkGrid := preload("res://core/walk_grid.gd")
+	return WalkGrid.is_free(def, point)
 
 
 func fit_to_view() -> void:
@@ -257,6 +304,17 @@ func _draw() -> void:
 	if _drag_mode == 3:
 		_draw_rect_game(_drag_new_rect, Color(1, 1, 1, 0.15), SELECT_COLOR)
 
+	# 测试工具：鼠标处的脚底框（绿=站得住，红=站不住）
+	if show_foot and _mouse_inside and model != null:
+		var foot := foot_rect_at(_mouse_game)
+		var ok := foot_is_free(_mouse_game)
+		var color := Color(0.35, 0.95, 0.55, 1.0) if ok else Color(1.0, 0.4, 0.4, 1.0)
+		_draw_rect_game(foot, Color(color.r, color.g, color.b, 0.22), color, 2.0)
+		draw_line(to_screen(Vector2(foot.position.x, _mouse_game.y)),
+			to_screen(Vector2(foot.end.x, _mouse_game.y)), color, 1.0)
+		_label(Vector2(foot.position.x, foot.position.y - 3),
+			"%s  (%d, %d)" % ["站得住" if ok else "站不住", int(_mouse_game.x), int(_mouse_game.y)], color)
+
 	if sel_kind >= 0 and is_kind_visible(sel_kind):
 		var r: Rect2 = overlay_game_rect() if sel_kind == Kind.OVERLAY \
 			else model.rect_of(sel_kind, sel_index)
@@ -332,6 +390,9 @@ func _gui_input(event: InputEvent) -> void:
 			return
 	elif event is InputEventMouseMotion:
 		var mm := event as InputEventMouseMotion
+		_mouse_game = to_game(mm.position)
+		if show_foot:
+			queue_redraw()
 		match _drag_mode:
 			9:
 				pan = mm.position - _drag_start_game

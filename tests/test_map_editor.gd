@@ -26,6 +26,7 @@ static func run(h: TestHarness) -> void:
 	test_overlay_in_model(h)
 	test_overlay_picking(h)
 	test_draft_cache(h)
+	test_foot_box(h)
 	test_save_round_trip(h)
 	test_copy_layout(h)
 	test_visibility_gates_picking(h)
@@ -541,6 +542,38 @@ static func _clear_dir(path: String) -> void:
 		return
 	for name in dir.get_files():
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(path + "/" + name))
+
+
+## 测试工具：鼠标处的**主角碰撞箱**（脚底那个 16×16 方块）。
+##
+## 两件事必须跟真机一致：**几何**（以落点为底向上伸 16、左右各 8，和 `WalkGrid`
+## 同一份常量）和**判据**（直接调 `WalkGrid.is_free`，不另写一份）。
+static func test_foot_box(h: TestHarness) -> void:
+	var m = Model.new()
+	m.data = {
+		"size": [400, 400],
+		"walls": [[90, 180, 40, 40]],
+		"portals": [], "actors": [], "spawns": {},
+	}
+	var canvas: Control = CanvasScript.new()
+	canvas.size = Vector2(600, 600)
+	canvas.load_map(m, "", "", m.map_size())
+	canvas.zoom = 1.0
+	canvas.pan = Vector2.ZERO
+
+	h.check("脚底框的几何：底边就是落点、往上伸 16",
+		canvas.foot_rect_at(Vector2(100, 200)), Rect2(92, 184, 16, 16))
+	h.check("踩在墙里：站不住", canvas.foot_is_free(Vector2(100, 200)), false)
+	h.check("空地：站得住", canvas.foot_is_free(Vector2(300, 300)), true)
+	h.check("墙正上方（脚在墙顶之上）：站得住",
+		canvas.foot_is_free(Vector2(100, 170)), true)
+
+	# 改数据之后判据要跟着变（缓存的 MapDef 得作废）
+	m.walls().clear()
+	canvas.invalidate_def()
+	h.check("把墙删了之后：原来站不住的地方站得住了",
+		canvas.foot_is_free(Vector2(100, 200)), true)
+	canvas.free()
 
 
 ## 游戏侧：`cover_y` 写进地图数据之后，`map_view` 得认它。

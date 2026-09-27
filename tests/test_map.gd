@@ -131,7 +131,12 @@ static func test_main_scene_and_portal(h: TestHarness) -> void:
 
 	h.check("起始场景是 desk_shop", main.current_map.id, &"desk_shop")
 	h.check("玩家已创建", main.player != null, true)
-	h.check("起始出生点生效", main.player.global_position, Vector2(173, 293))
+	# 出生点位置由策划在编辑器里调，**测试不钉坐标** —— 只验「玩家落在了这张图的
+	# `start` 上」而且那儿站得住。钉死 173,293 的写法在 2026-09-27 把人拖走一次就红了。
+	h.check("起始出生点生效",
+		main.player.global_position, main.current_map.spawn_point(&"start"))
+	h.check("起始出生点站得住",
+		WalkGrid.is_free(main.current_map, main.player.global_position), true)
 
 	# 切场景，验证另一份地图数据也能读
 	main.enter_map(&"market", &"from_overworld")
@@ -428,12 +433,29 @@ static func test_furniture_cover(h: TestHarness) -> void:
 	var main := h.new_main()
 	h.check("场上有一件会挡人的家具", main.map_view.cover_count(), 1)
 
-	main.player.global_position = Vector2(224, 140)
+	# **基线跟着数据走**：写了 `cover_y` 就用手动值，没写就是贴图框的底边。
+	# 2026-09-27 书桌被手动调到 137（框底边是 156），钉死站位坐标的写法就红了 ——
+	# 位置和基线都是策划随时会调的，测试只该盯「南北两侧的判定对不对」。
+	var desk: MapDef.Actor = null
+	for actor: MapDef.Actor in main.current_map.actors:
+		if actor.cover:
+			desk = actor
+			break
+	h.check("找得到那件遮挡家具", desk != null, true)
+	if desk == null:
+		main.queue_free()
+		return
+	var baseline: float = desk.rect.position.y + desk.rect.size.y
+	if desk.cover_y >= 0.0:
+		baseline = desk.cover_y
+	var mid_x := desk.rect.position.x + desk.rect.size.x * 0.5
+
+	main.player.global_position = Vector2(mid_x, baseline - 20.0)
 	main.update_cover()
 	h.check("人在桌后：书桌盖住人",
 		main.map_view.cover_z(0) > main.player.z_index, true)
 
-	main.player.global_position = Vector2(224, 200)
+	main.player.global_position = Vector2(mid_x, baseline + 20.0)
 	main.update_cover()
 	h.check("人在桌前：人挡住书桌",
 		main.map_view.cover_z(0) < main.player.z_index, true)

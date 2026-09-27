@@ -571,7 +571,9 @@ static func test_v1_save_readable(h: TestHarness) -> void:
 
 	var main := h.new_main()
 	h.check("v1 能读档", main.load_game(TEST_SLOT), true)
-	h.check("落到出生点", main.player.global_position, Vector2(173, 293))
+	# 同 `test_map`：落点跟着地图数据走，不钉坐标
+	h.check("落到出生点", main.player.global_position,
+		main.current_map.spawn_point(&"start"))
 	h.check("标记回来了", main.flags.get_value(&"quest_opened"), true)
 	h.check("结局进度回来了", main.unlocked_endings().size(), 1)
 	h.check("回来的是 end1", EndingTable.is_unlocked(main.flags, &"end1_calm"), true)

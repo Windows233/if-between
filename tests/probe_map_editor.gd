@@ -119,5 +119,15 @@ func _initialize() -> void:
 		print("   实际范围（游戏单位）%s；面板可见 %s；焦点在滚动区里 %s" % [
 			band, str(dock._panel_scroll.visible), str(dock._actor_panel.get_parent() is ScrollContainer)])
 
+	# 测试工具：鼠标处的脚底框
+	dock.canvas.show_foot = true
+	dock.canvas._mouse_inside = true
+	dock.canvas._mouse_game = dock.canvas.map_size * 0.5
+	await process_frame
+	print("⑪ 脚底框：落点 %s → 框 %s，判据「%s」" % [
+		dock.canvas._mouse_game,
+		dock.canvas.foot_rect_at(dock.canvas._mouse_game),
+		"站得住" if dock.canvas.foot_is_free(dock.canvas._mouse_game) else "站不住"])
+
 	print("=== 地图编辑器探针通过 ===")
 	quit(0)
