@@ -16,6 +16,7 @@ var canvas: Control = null
 
 var _map_picker: OptionButton
 var _save_button: Button
+var _drop_draft_button: Button
 var _tool_buttons: Array[Button] = []
 var _sel_label: Label
 var _spins: Array[SpinBox] = []
@@ -33,7 +34,7 @@ var _panel_index := -1
 
 func _ready() -> void:
 	_build()
-	refresh_map_list()
+	refresh_map_list(true)
 
 
 # ---------------------------------------------------------------- 界面
@@ -89,12 +90,18 @@ func _row_title() -> HBoxContainer:
 	row.add_child(_text("地图："))
 	_map_picker = OptionButton.new()
 	_map_picker.custom_minimum_size = Vector2(200, 0)
-	_map_picker.item_selected.connect(func(_i: int) -> void: _load_selected())
+	_map_picker.item_selected.connect(_on_map_selected)
 	row.add_child(_map_picker)
 	var reload := Button.new()
 	reload.text = "重新载入（丢弃改动）"
-	reload.pressed.connect(func() -> void: _load_selected())
+	reload.tooltip_text = "从磁盘重读这张图，丢掉这次没保存的改动"
+	reload.pressed.connect(_on_reload)
 	row.add_child(reload)
+	_drop_draft_button = Button.new()
+	_drop_draft_button.text = "丢弃草稿"
+	_drop_draft_button.tooltip_text = "把这张图的未保存草稿删掉（改动就此消失）"
+	_drop_draft_button.pressed.connect(_on_drop_draft)
+	row.add_child(_drop_draft_button)
 	_save_button = Button.new()
 	_save_button.text = "保存到 JSON"
 	_save_button.pressed.connect(_on_save)
@@ -211,17 +218,70 @@ func _text(t: String) -> Label:
 
 # ---------------------------------------------------------------- 载入与保存
 
-func refresh_map_list() -> void:
-	var ids := Model.list_maps()
+## 重建地图下拉。带草稿的标一个 `*`（还没保存的改动）。
+## `load_first` 只在最开始那次用 —— 平时重建（比如刚保存完）不该顺手重载，
+## 那会把光标和选中弄丢。
+func refresh_map_list(load_first := false) -> void:
+	var keep := ""
+	if _map_picker.item_count > 0 and _map_picker.selected >= 0:
+		keep = str(_map_picker.get_item_metadata(_map_picker.selected))
+	var drafts := model.draft_ids()
 	_map_picker.clear()
-	for id in ids:
-		_map_picker.add_item(id)
-	if ids.size() > 0:
+	var ids := Model.list_maps()
+	for i in ids.size():
+		_map_picker.add_item(ids[i] + ("  *" if drafts.has(ids[i]) else ""), i)
+		_map_picker.set_item_metadata(i, ids[i])
+		if ids[i] == keep:
+			_map_picker.select(i)
+	if load_first and ids.size() > 0:
 		_load_selected()
 
 
+## 切到下拉里选的那张图。**切之前先把现在这张的改动存成草稿** ——
+## 这是这次要解决的问题：改到一半去看另一张图，回来接着改。
+func _on_map_selected(_index: int) -> void:
+	var target := str(_map_picker.get_item_metadata(_map_picker.selected))
+	if model.map_id != "" and target != model.map_id and model.dirty:
+		model.stash_draft()
+		_status.text = "%s 的改动先存成草稿了（没保存，回来还能接着改）" % model.map_id
+	_load_selected()
+	refresh_map_list()
+
+
+func _on_reload() -> void:
+	# 「重新载入」= 丢掉改动重读文件，所以连草稿一起丢掉
+	if model.map_id != "":
+		model.drop_draft(model.map_id)
+	_load_selected()
+	refresh_map_list()
+
+
+func _on_drop_draft() -> void:
+	if model.map_id == "" or not model.draft_exists(model.map_id):
+		_status.text = "这张图没有草稿。"
+		return
+	var dialog := ConfirmationDialog.new()
+	dialog.title = "丢掉 %s 的草稿？" % model.map_id
+	dialog.ok_button_text = "丢掉"
+	var box := VBoxContainer.new()
+	var text := _text("草稿里是 %s 存下的未保存改动。丢掉就没了，图会回到仓库里的版本。"
+		% model.draft_time(model.map_id))
+	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(text)
+	dialog.add_child(_scrolled(box, Vector2(420, 90)))
+	dialog.confirmed.connect(func() -> void:
+		model.drop_draft(model.map_id)
+		_load_selected()
+		refresh_map_list()
+		_status.text = "草稿丢掉了，这张图回到仓库里的版本。"
+		dialog.queue_free())
+	dialog.canceled.connect(func() -> void: dialog.queue_free())
+	add_child(dialog)
+	dialog.popup_centered()
+
+
 func _load_selected() -> void:
-	var id := _map_picker.get_item_text(_map_picker.selected)
+	var id := str(_map_picker.get_item_metadata(_map_picker.selected))
 	if id == "":
 		return
 	if not model.load_map(id):
@@ -229,21 +289,28 @@ func _load_selected() -> void:
 		return
 	canvas.load_map(model, model.background_path(), model.overlay_path(), model.map_size())
 	_refresh_dirty()
-	_status.text = "已载入 %s（%d×%d 游戏单位）。滚轮缩放，中键/右键拖动平移。" % [
-		id, int(model.map_size().x), int(model.map_size().y)]
+	if model.from_draft:
+		_status.text = "载入的是 %s 的**草稿**（%s 存下的，还没保存）。想丢掉就点「丢弃草稿」。" % [
+			id, model.draft_time(id)]
+	else:
+		_status.text = "已载入 %s（%d×%d 游戏单位）。滚轮缩放，中键/右键拖动平移。" % [
+			id, int(model.map_size().x), int(model.map_size().y)]
 
 
 func _on_save() -> void:
 	var err := model.save_to()
 	if err == OK:
 		_refresh_dirty()
-		_status.text = "已保存 %s（git 里能看 diff）" % model.path
+		refresh_map_list()
+		_status.text = "已保存 %s（git 里能看 diff，草稿已清掉）" % model.path
 	else:
 		_status.text = "保存失败，错误码 %d" % err
 
 
 func _refresh_dirty() -> void:
 	_save_button.text = "保存到 JSON *" if model.dirty else "保存到 JSON"
+	if _drop_draft_button != null:
+		_drop_draft_button.disabled = not model.draft_exists(model.map_id)
 
 
 # ---------------------------------------------------------------- 交互

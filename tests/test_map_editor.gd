@@ -25,6 +25,7 @@ static func run(h: TestHarness) -> void:
 	test_import_prop(h)
 	test_overlay_in_model(h)
 	test_overlay_picking(h)
+	test_draft_cache(h)
 	test_save_round_trip(h)
 	test_copy_layout(h)
 	test_visibility_gates_picking(h)
@@ -486,6 +487,60 @@ static func test_overlay_picking(h: TestHarness) -> void:
 	canvas.set_layer_visible("show_overlay", false)
 	h.check("关掉前景层：点不中了", canvas._hit_item(middle), Vector2i(-1, -1))
 	canvas.free()
+
+
+## 草稿缓存：**没保存就切地图不该丢进度**。
+##
+## 切走时把改动写进 `user://` 的草稿目录，切回来优先吃草稿；
+## 存进仓库、或者显式丢弃，草稿才消失。
+static func test_draft_cache(h: TestHarness) -> void:
+	var m = Model.new()
+	m.draft_dir = "user://__editor_draft_test"
+	_clear_dir(m.draft_dir)
+
+	m.load_map("gatehouse", false)
+	var base_walls: int = m.count(Kind.WALL)
+	m.add_rect(Kind.WALL, Rect2(1, 2, 3, 4))
+	h.check("改完是脏的", m.dirty, true)
+	m.stash_draft()
+	h.check("草稿写出来了", m.draft_exists("gatehouse"), true)
+	h.check("草稿带写盘时间", m.draft_time("gatehouse") != "", true)
+	h.check("草稿列表里有它", m.draft_ids().has("gatehouse"), true)
+
+	m.load_map("desk_shop", false)
+	h.check("切到别的图：读的是文件不是草稿", m.from_draft, false)
+	m.load_map("gatehouse")
+	h.check("切回来：吃的是草稿", m.from_draft, true)
+	h.check("草稿里那条墙还在", m.count(Kind.WALL), base_walls + 1)
+	h.check("吃草稿时算「有未保存改动」", m.dirty, true)
+
+	var out := "user://__editor_draft_test_out.json"
+	h.check("能保存到别处", m.save_to(out), OK)
+	h.check("存到别处不算「保存了这张图」，草稿留着", m.draft_exists("gatehouse"), true)
+	# 存回**它自己的路径**才算保存。把 path 指到临时文件，别真去动仓库里的图。
+	m.path = out
+	h.check("存回自己的路径", m.save_to(), OK)
+	h.check("保存之后草稿清掉（不然下次吃回旧的）", m.draft_exists("gatehouse"), false)
+
+	m.add_rect(Kind.WALL, Rect2(5, 5, 5, 5))
+	m.stash_draft()
+	h.check("又存了一次草稿", m.draft_exists("gatehouse"), true)
+	m.drop_draft("gatehouse")
+	h.check("显式丢弃：没了", m.draft_exists("gatehouse"), false)
+	m.load_map("gatehouse")
+	h.check("丢弃之后读的是文件版本", m.from_draft, false)
+	h.check("临时加的那条墙不在了", m.count(Kind.WALL), base_walls)
+
+	_clear_dir(m.draft_dir)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(out))
+
+
+static func _clear_dir(path: String) -> void:
+	var dir := DirAccess.open(path)
+	if dir == null:
+		return
+	for name in dir.get_files():
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(path + "/" + name))
 
 
 ## 游戏侧：`cover_y` 写进地图数据之后，`map_view` 得认它。

@@ -20,6 +20,16 @@ var path: String = ""
 var data: Dictionary = {}
 var dirty: bool = false
 
+## 草稿目录。**切地图时没保存的改动会写到这儿**（`user://`，在仓库外面）——
+## 这样「改到一半去看另一张图」不会白干。
+##
+## 放 `user://` 而不是仓库里：草稿不该跟着 git 走，也不该被 `check_data` 看见。
+## 测试可以把它指到别处，免得污染真正的草稿。
+var draft_dir := "user://map_editor_drafts"
+
+## 现在这份数据是不是从草稿来的（界面上要提示「这是没保存的草稿」）。
+var from_draft := false
+
 
 static func list_maps() -> Array[String]:
 	var out: Array[String] = []
@@ -33,9 +43,20 @@ static func list_maps() -> Array[String]:
 	return out
 
 
-func load_map(id: String) -> bool:
+## 载入一张图。`prefer_draft` 为真（默认）时**优先吃草稿** ——
+## 上次改到一半切走了，回来接着改，而不是把改动丢了。
+func load_map(id: String, prefer_draft := true) -> bool:
 	map_id = id
 	path = "%s/%s.json" % [MAP_DIR, id]
+	from_draft = false
+	if prefer_draft and draft_exists(id):
+		var draft_text := FileAccess.get_file_as_string(_draft_path(id))
+		var draft_data: Variant = JSON.parse_string(draft_text)
+		if draft_data is Dictionary:
+			data = draft_data
+			dirty = true
+			from_draft = true
+			return true
 	if not FileAccess.file_exists(path):
 		return false
 	var text := FileAccess.get_file_as_string(path)
@@ -45,6 +66,59 @@ func load_map(id: String) -> bool:
 	data = parsed
 	dirty = false
 	return true
+
+
+# ---------------------------------------------------------------- 草稿
+
+func _draft_path(id: String) -> String:
+	return "%s/%s.json" % [draft_dir, id]
+
+
+func draft_exists(id: String) -> bool:
+	return id != "" and FileAccess.file_exists(_draft_path(id))
+
+
+## 现在这份改动存成草稿（切地图之前叫它）。没改动就什么都不做。
+func stash_draft() -> void:
+	if not dirty or map_id == "":
+		return
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(draft_dir))
+	var f := FileAccess.open(_draft_path(map_id), FileAccess.WRITE)
+	if f == null:
+		return
+	f.store_string(stringify(data))
+	f.close()
+
+
+## 草稿的写盘时间（`2026-09-27 12:30:05`），给界面提示用。没有就返回空串。
+func draft_time(id: String) -> String:
+	if not draft_exists(id):
+		return ""
+	var stamp := FileAccess.get_modified_time(_draft_path(id))
+	return Time.get_datetime_string_from_unix_time(stamp, true)
+
+
+func draft_ids() -> Array[String]:
+	var out: Array[String] = []
+	var dir := DirAccess.open(draft_dir)
+	if dir == null:
+		return out
+	for name in dir.get_files():
+		if name.ends_with(".json"):
+			out.append(name.trim_suffix(".json"))
+	out.sort()
+	return out
+
+
+## 把草稿扔掉（**没保存的改动就此消失**，界面要问一句再叫这个）。
+func drop_draft(id := "") -> void:
+	var target := id if id != "" else map_id
+	if target == "":
+		return
+	if draft_exists(target):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(_draft_path(target)))
+	if target == map_id:
+		from_draft = false
 
 
 func map_size() -> Vector2:
@@ -661,6 +735,8 @@ func save_to(to_path: String = "") -> Error:
 	f.close()
 	if target == path:
 		dirty = false
+		from_draft = false
+		drop_draft(map_id)   # 已经写进仓库了，草稿留着只会下次吃回旧的
 	return OK
 
 
