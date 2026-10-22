@@ -14,6 +14,7 @@ const ObjectLibrary := preload("res://addons/if_map_editor/map_object_library.gd
 const ObjectPreview := preload("res://addons/if_map_editor/map_object_preview.gd")
 const AssetList := preload("res://addons/if_map_editor/map_asset_list.gd")
 const GeometryTransferDialog := preload("res://addons/if_map_editor/map_geometry_transfer_dialog.gd")
+const MapCreationDialog := preload("res://addons/if_map_editor/map_creation_dialog.gd")
 
 const EDITOR_STATE_PATH := "user://if_map_editor_scene_state.cfg"
 
@@ -70,6 +71,9 @@ var _body_split: HSplitContainer
 var _workspace_split: HSplitContainer
 var _transfer_button: Button
 var _transfer_dialog: GeometryTransferDialog
+var _map_management: HFlowContainer
+var _toolbar_drawers: Array[Control] = []
+var _drawer_buttons: Array[Button] = []
 
 
 func _ready() -> void:
@@ -84,11 +88,12 @@ func _ready() -> void:
 func _build() -> void:
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_map_management = HFlowContainer.new()
 	add_child(_row_title())
 
 	var tools := HFlowContainer.new()
 	tools.add_child(_text("工具："))
-	for item in [["选择 / 拖动 / 改尺寸", Canvas.Tool.SELECT],
+	for item in [["选择 / 移动", Canvas.Tool.SELECT],
 			["画墙", Canvas.Tool.WALL],
 			["画传送区", Canvas.Tool.PORTAL],
 			["拉遮挡基线", Canvas.Tool.BASELINE],
@@ -100,12 +105,21 @@ func _build() -> void:
 		tools.add_child(b)
 		_tool_buttons.append(b)
 	_tool_buttons[0].button_pressed = true
+	tools.add_child(VSeparator.new())
+	var drawer_controls: Array[Control] = [_map_management, _row_layers(), _row_selection(), _object_actions()]
+	var drawer_names := ["地图管理", "显示设置", "选择与尺寸", "排布与模板"]
+	for index in drawer_controls.size():
+		var button := Button.new()
+		button.text = drawer_names[index] + " ▾"
+		button.toggle_mode = true
+		button.toggled.connect(_toggle_toolbar_drawer.bind(index))
+		tools.add_child(button)
+		_drawer_buttons.append(button)
+		_toolbar_drawers.append(drawer_controls[index])
 	add_child(tools)
-
-	add_child(_row_layers())
-
-	add_child(_row_selection())
-	add_child(_object_actions())
+	for drawer in _toolbar_drawers:
+		drawer.visible = false
+		add_child(drawer)
 	_body_split = HSplitContainer.new()
 	_body_split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_body_split.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -225,7 +239,7 @@ func _set_initial_panel_layout() -> void:
 func _object_actions() -> HFlowContainer:
 	var row := HFlowContainer.new()
 	for action: Array in [["撤销", "undo"], ["重做", "redo"], ["复制物件", "copy"],
-			["粘贴", "paste"], ["复制并偏移", "duplicate"], ["存为物件模板…", "template"], ["当前布局试走", "preview"]]:
+			["粘贴", "paste"], ["复制并偏移", "duplicate"], ["存为物件模板…", "template"]]:
 		var button := Button.new()
 		button.text = str(action[0])
 		button.pressed.connect(_object_command.bind(str(action[1])))
@@ -780,18 +794,37 @@ func _rebuild_object_inspector() -> void:
 	_refresh_selection()
 
 
-func _row_title() -> HBoxContainer:
-	var row := HBoxContainer.new()
+func _toggle_toolbar_drawer(open: bool, index: int) -> void:
+	for drawer_index in _toolbar_drawers.size():
+		var visible := open and drawer_index == index
+		_toolbar_drawers[drawer_index].visible = visible
+		_drawer_buttons[drawer_index].set_pressed_no_signal(visible)
+
+
+func _row_title() -> HFlowContainer:
+	var row := HFlowContainer.new()
 	row.add_child(_text("地图："))
 	_map_picker = OptionButton.new()
 	_map_picker.custom_minimum_size = Vector2(200, 0)
 	_map_picker.item_selected.connect(_on_map_selected)
 	row.add_child(_map_picker)
+	var create := Button.new()
+	create.text = "新建地图…"
+	create.pressed.connect(_open_create_map)
+	row.add_child(create)
+	var add_actor := Button.new()
+	add_actor.text = "新建物件"
+	add_actor.pressed.connect(_on_add_actor)
+	row.add_child(add_actor)
+	var import_actor := Button.new()
+	import_actor.text = "导入物件…"
+	import_actor.pressed.connect(_open_import_dialog)
+	row.add_child(import_actor)
 	var reload := Button.new()
 	reload.text = "重新载入（丢弃改动）"
 	reload.tooltip_text = "从磁盘重读这张图，丢掉这次没保存的改动"
 	reload.pressed.connect(_on_reload)
-	row.add_child(reload)
+	_map_management.add_child(reload)
 	var fit := Button.new()
 	fit.text = "适应画布"
 	fit.tooltip_text = "把整张地图缩放并居中到当前画布区域"
@@ -801,26 +834,30 @@ func _row_title() -> HBoxContainer:
 	_drop_draft_button.text = "丢弃草稿"
 	_drop_draft_button.tooltip_text = "把这张图的未保存草稿删掉（改动就此消失）"
 	_drop_draft_button.pressed.connect(_on_drop_draft)
-	row.add_child(_drop_draft_button)
+	_map_management.add_child(_drop_draft_button)
 	_save_button = Button.new()
 	_save_button.text = "保存到 JSON"
 	_save_button.pressed.connect(_on_save)
 	row.add_child(_save_button)
+	var preview := Button.new()
+	preview.text = "当前布局试走"
+	preview.pressed.connect(_object_command.bind("preview"))
+	row.add_child(preview)
 	var backup_history := Button.new()
 	backup_history.text = "备份历史…"
 	backup_history.tooltip_text = "载入一份旧地图快照到编辑器；确认后仍需手动保存才会覆盖地图。"
 	backup_history.pressed.connect(_open_backup_dialog)
-	row.add_child(backup_history)
+	_map_management.add_child(backup_history)
 	var copy := Button.new()
 	copy.text = "复制布局到…"
 	copy.tooltip_text = "把这张图的碰撞箱/传送区/物件覆盖到另一张图上（白天版↔夜间版）"
 	copy.pressed.connect(_open_copy_dialog)
-	row.add_child(copy)
+	_map_management.add_child(copy)
 	return row
 
 
-func _row_layers() -> HBoxContainer:
-	var row := HBoxContainer.new()
+func _row_layers() -> HFlowContainer:
+	var row := HFlowContainer.new()
 	row.add_child(_text("显示："))
 	for item in [["背景", "show_bg"], ["前景层", "show_overlay"], ["墙", "show_walls"],
 			["传送区", "show_portals"], ["物件", "show_actors"], ["出生点", "show_spawns"],
@@ -855,27 +892,29 @@ func _row_layers() -> HBoxContainer:
 	return row
 
 
-func _row_selection() -> HBoxContainer:
-	var row := HBoxContainer.new()
+func _row_selection() -> HFlowContainer:
+	var row := HFlowContainer.new()
 	_sel_label = _text("未选中")
 	_sel_label.custom_minimum_size = Vector2(150, 0)
 	row.add_child(_sel_label)
 	for name in ["x", "y", "宽", "高"]:
-		row.add_child(_text(name))
+		var field := HBoxContainer.new()
+		field.add_child(_text(name))
 		var spin := SpinBox.new()
-		spin.min_value = -4096
-		spin.max_value = 4096
+		spin.min_value = -1000000
+		spin.max_value = 1000000
 		spin.step = 1
 		spin.custom_minimum_size = Vector2(78, 0)
 		spin.value_changed.connect(_on_spin_changed)
-		row.add_child(spin)
+		field.add_child(spin)
+		row.add_child(field)
 		_spins.append(spin)
 
 	_base_row = HBoxContainer.new()
 	_base_row.add_child(_text("遮挡基线 Y"))
 	_base_spin = SpinBox.new()
-	_base_spin.min_value = -4096
-	_base_spin.max_value = 4096
+	_base_spin.min_value = -1000000
+	_base_spin.max_value = 1000000
 	_base_spin.step = 1
 	_base_spin.custom_minimum_size = Vector2(78, 0)
 	_base_spin.value_changed.connect(_on_base_spin)
@@ -951,6 +990,38 @@ func _on_map_selected(_index: int) -> void:
 		_status.text = "%s 的改动先存成草稿了（没保存，回来还能接着改）" % model.map_id
 	_load_selected()
 	refresh_map_list()
+
+
+func _open_create_map() -> void:
+	var dialog := MapCreationDialog.new()
+	dialog.map_created.connect(func(result: Dictionary) -> void:
+		_on_map_created(result)
+		dialog.queue_free())
+	dialog.canceled.connect(dialog.queue_free)
+	add_child(dialog)
+	dialog.open_creation()
+
+
+func _on_map_created(result: Dictionary) -> void:
+	if not bool(result.get("ok", false)):
+		_status.text = str(result.get("error", "新建地图失败。"))
+		return
+	if model.map_id != "" and model.dirty:
+		model.stash_draft()
+	refresh_map_list()
+	var id := str((result["data"] as Dictionary).get("id", ""))
+	for index in _map_picker.item_count:
+		if str(_map_picker.get_item_metadata(index)) == id:
+			_map_picker.select(index)
+			_load_selected()
+			break
+	if Engine.is_editor_hint():
+		EditorInterface.get_resource_filesystem().scan()
+	_refresh_assets()
+	_status.text = "已创建 %s，背景原图 1:1。接下来放置物件、碰撞和传送区。" % id
+	get_tree().create_timer(1.2).timeout.connect(func() -> void:
+		if model.map_id == id:
+			canvas.load_map(model, model.background_path(), model.overlay_path(), model.map_size()))
 
 
 func _on_reload() -> void:
@@ -1079,7 +1150,7 @@ func _on_tool(which: int) -> void:
 		_tool_buttons[i].button_pressed = i == which
 	match which:
 		Canvas.Tool.SELECT:
-			_status.text = "选择：点中矩形拖走；八个白点改尺寸；Delete 删掉；数值框可精确改。"
+			_status.text = "选择：拖动物件；单选物件的碰撞框优先拾取，拖内部移动、八柄缩放；精确数值见「选择与尺寸」。"
 		Canvas.Tool.WALL:
 			_status.text = "画墙：在图上按住左键拖出一个框，松手就加进 walls。"
 		Canvas.Tool.PORTAL:
@@ -1087,7 +1158,7 @@ func _on_tool(which: int) -> void:
 		Canvas.Tool.BASELINE:
 			_status.text = "拉基线：点一件遮挡物（身上有黄线），上下拖，松手写进它的 cover_y。"
 		Canvas.Tool.COLLISION:
-			_status.text = "左侧先选物件，再拖出局部碰撞箱；自动排序取参考碰撞箱上边缘。旧地图墙不自动删除。"
+			_status.text = "先单选物件：空白处拖出碰撞，已有红框可移动和八柄缩放，Esc 取消；排序取参考碰撞上边缘。"
 
 
 func _on_layer(on: bool, prop: String) -> void:
@@ -1435,7 +1506,7 @@ func _on_edited() -> void:
 
 func _on_canvas_edited() -> void:
 	_on_edited()
-	if canvas.tool == Canvas.Tool.COLLISION and canvas.sel_kind == Kind.ACTOR:
+	if canvas.sel_kind == Kind.ACTOR and (canvas.tool == Canvas.Tool.COLLISION or canvas._has_collision_selection()):
 		_build_actor_panel()
 	_refresh_selection()
 
@@ -1543,7 +1614,7 @@ func _build_actor_panel() -> void:
 	row1.add_child(_field("label", 130.0))
 	_actor_panel.add_child(row1)
 
-	var row2 := HBoxContainer.new()
+	var row2 := HFlowContainer.new()
 	row2.add_child(_text("贴图"))
 	var sprite_line := _field("sprite", 320.0)
 	row2.add_child(sprite_line)
@@ -1556,11 +1627,18 @@ func _build_actor_panel() -> void:
 		if i <= 0:
 			return
 		var path: String = props[i - 1]
-		model.set_actor_field(_panel_index, "sprite", path)
-		sprite_line.text = path
-		_on_edited()
-		canvas.queue_redraw())
+		if _set_actor_texture(_panel_index, path):
+			sprite_line.text = path)
 	row2.add_child(picker)
+	var import_texture := Button.new()
+	import_texture.text = "导入贴图…"
+	import_texture.pressed.connect(_open_actor_texture_import)
+	row2.add_child(import_texture)
+	var native_size := Button.new()
+	native_size.text = "恢复原图尺寸"
+	native_size.pressed.connect(func() -> void:
+		_set_actor_texture(_panel_index, str(model.actor_field(_panel_index, "sprite", ""))))
+	row2.add_child(native_size)
 	_actor_panel.add_child(row2)
 
 	var row3 := HBoxContainer.new()
@@ -1775,6 +1853,13 @@ func _field(key: String, width: float) -> LineEdit:
 	var edit := LineEdit.new()
 	edit.text = str(model.actor_field(_panel_index, key, ""))
 	edit.custom_minimum_size = Vector2(width, 0)
+	if key == "sprite":
+		var apply_texture := func() -> void:
+			if edit.text != str(model.actor_field(_panel_index, "sprite", "")):
+				_set_actor_texture(_panel_index, edit.text.strip_edges())
+		edit.text_submitted.connect(func(_text: String) -> void: apply_texture.call())
+		edit.tooltip_text = "输入项目内贴图路径后按 Enter；自动采用原图像素尺寸。"
+		return edit
 	if key == "id" and canvas.actor_is_hidden(_panel_index):
 		edit.editable = false
 		edit.tooltip_text = "请先显示并解锁物件，再修改 ID；隐藏/锁定状态按地图与 ID 保存。"
@@ -1786,6 +1871,50 @@ func _field(key: String, width: float) -> LineEdit:
 		model.set_actor_field(_panel_index, key, t)
 		_on_edited())
 	return edit
+
+
+func _set_actor_texture(index: int, path: String) -> bool:
+	if not _allow_selection_edit():
+		return false
+	if not model.assign_actor_sprite(index, path):
+		_status.text = "贴图无法读取，请选择有效的 PNG 图片。"
+		return false
+	_on_edited()
+	_refresh_selection()
+	_status.text = "贴图已更新，物件尺寸恢复为原图像素 1:1。"
+	return true
+
+
+func _open_actor_texture_import() -> void:
+	if not _allow_selection_edit():
+		return
+	var target_model = model
+	var target_map: String = model.map_id
+	var target_index := _panel_index
+	var target_id := str(model.actor_field(target_index, "id", ""))
+	var dialog := FileDialog.new()
+	dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+	dialog.access = FileDialog.ACCESS_FILESYSTEM
+	dialog.use_native_dialog = true
+	dialog.add_filter("*.png", "PNG 图片")
+	dialog.title = "为当前物件导入贴图（原图 1:1）"
+	dialog.file_selected.connect(func(source: String) -> void:
+		if model == target_model and model.map_id == target_map and _panel_index == target_index and str(model.actor_field(target_index, "id", "")) == target_id and _allow_selection_edit():
+			var image := Image.load_from_file(source)
+			if image != null and not image.is_empty():
+				var imported: String = model.import_image(source)
+				if imported != "" and _set_actor_texture(target_index, imported):
+					if Engine.is_editor_hint():
+						EditorInterface.get_resource_filesystem().scan()
+					canvas.clear_texture_cache()
+					get_tree().create_timer(1.2).timeout.connect(func() -> void:
+						canvas.clear_texture_cache()
+						canvas.queue_redraw()
+						_refresh_assets())
+		dialog.queue_free())
+	dialog.canceled.connect(dialog.queue_free)
+	add_child(dialog)
+	dialog.popup_centered(Vector2i(760, 500))
 
 
 func _bool_field(key: String, label: String) -> CheckBox:
@@ -1905,13 +2034,17 @@ func _import_overlay(source_path: String) -> void:
 
 
 func _import_and_create(source_path: String) -> void:
+	var image := Image.load_from_file(source_path)
+	if image == null or image.is_empty():
+		_status.text = "导入失败：图片无法解码，请选择完整的 PNG 文件。"
+		return
 	var res_path := model.import_image(source_path, "res://art/props")
 	if res_path == "":
 		_status.text = "导入失败：得是能读的 .png。别的格式先在画图工具里另存成 png。"
 		return
 	var index := model.add_actor_with_sprite(res_path, true)
-	canvas.sel_kind = Kind.ACTOR
-	canvas.sel_index = index
+	var selection: Array[int] = [index]
+	canvas.select_actors(selection)
 	canvas.clear_texture_cache()
 	if Engine.is_editor_hint():
 		EditorInterface.get_resource_filesystem().scan()

@@ -1026,10 +1026,31 @@ func actor_has_story(index: int) -> bool:
 ## 导入一张图做遮罩时走这条：位置和基线之后在画布上调。
 func add_actor_with_sprite(sprite_path: String, cover := false) -> int:
 	var index := add_actor()
-	set_actor_field(index, "sprite", sprite_path)
+	assign_actor_sprite(index, sprite_path)
+	var rect := rect_of(Kind.ACTOR, index)
+	rect.position = (map_size() - rect.size) * 0.5
+	set_rect(Kind.ACTOR, index, rect)
 	if cover:
 		set_actor_field(index, "cover", true)
 	return index
+
+
+func assign_actor_sprite(index: int, sprite_path: String) -> bool:
+	if index < 0 or index >= count(Kind.ACTOR):
+		return false
+	if sprite_path == "":
+		set_actor_field(index, "sprite", "")
+		return true
+	if not FileAccess.file_exists(sprite_path):
+		return false
+	var image := Image.load_from_file(sprite_path)
+	if image == null or image.is_empty():
+		return false
+	set_actor_field(index, "sprite", sprite_path)
+	var rect := rect_of(Kind.ACTOR, index)
+	rect.size = Vector2(image.get_size())
+	set_rect(Kind.ACTOR, index, rect)
+	return true
 
 
 ## 设/清前景层（`overlay`）。**一张图拉伸到整张地图**，所以不用管图的尺寸。

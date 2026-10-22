@@ -87,11 +87,7 @@ func _initialize() -> void:
 	assert(dock.model.count(Model.Kind.ACTOR) == before_drop + 1)
 	assert(str(dock.model.actor_field(before_drop, "sprite")) == asset_path)
 	assert(dock.canvas.selected_actors().has(before_drop))
-	var matching_size := Vector2.ZERO
-	for actor_index in before_drop:
-		if str(dock.model.actor_field(actor_index, "sprite", "")) == asset_path:
-			matching_size = dock.model.rect_of(Model.Kind.ACTOR, actor_index).size
-			break
+	var matching_size: Vector2 = (load(asset_path) as Texture2D).get_size()
 	var before_capture: String = Model.stringify(dock.model.data)
 	var map_file_hash := FileAccess.get_sha256(dock.model.path)
 	var capture_group_members: Array[int] = [0, 1]
@@ -129,7 +125,7 @@ func _initialize() -> void:
 	assert(dock.model.count(Model.Kind.ACTOR) == before_drop + 1)
 	assert(str(dock.model.actor_field(before_drop, "sprite")) == fallback_asset_path)
 	var fallback_rect: Rect2 = dock.model.rect_of(Model.Kind.ACTOR, before_drop)
-	var fallback_size: Vector2 = (load(fallback_asset_path) as Texture2D).get_size() / 12.0
+	var fallback_size: Vector2 = (load(fallback_asset_path) as Texture2D).get_size()
 	assert(absf(fallback_rect.size.x - fallback_size.x) <= 1.0)
 	assert(absf(fallback_rect.size.y - fallback_size.y) <= 1.0)
 	assert(dock.model.undo())
