@@ -1,0 +1,25 @@
+{
+  "id": "ch2_notice",
+  "entry": "read",
+  "nodes": [
+    {
+      "id": "read",
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            { "text": "旁边有个通知栏 去看看吧" },
+            { "text": "“图书馆24h开放”" },
+            { "text": "“天黑后不得在校内游荡”" },
+            {
+              "speaker": "我",
+              "text": "谁天黑不回家啊",
+              "side": "left",
+              "portrait": "protagonist/puzzled"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

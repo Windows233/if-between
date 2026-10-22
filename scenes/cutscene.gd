@@ -251,6 +251,7 @@ func _perform(step: StageStep) -> void:
 ## - `wait` / `wait_click`：补演是瞬时的，等时间、等点击都说不通
 const REPLAY_SKIP: Array[StringName] = [
 	&"say", &"goto", &"place_player", &"play_sound", &"wait", &"wait_click",
+	&"save",
 ]
 
 
@@ -291,6 +292,8 @@ func _apply(step: StageStep) -> void:
 			await _sleep(step.number("time", 0.5))
 		&"wait_click":
 			await _wait_click()
+		&"save":
+			_save_game()
 		&"image":
 			await _image(step)
 		&"image_hide":
@@ -394,8 +397,8 @@ func _banner(step: StageStep) -> void:
 ## 黑屏上的心声（开场那三句）和 end1 的两行都走这条 —— 它们**不该占对话框**：
 ## 那会儿没有人在说话，底下一块面板反而像有人在念旁白。
 ##
-## `wait_click` 为真就停在场上等玩家点一下（**点完不收** —— 后面通常是
-## 结局，那两行字要一直留到回标题）；`hold` 是「停这么久然后自己淡下去」。
+## `wait_click` 为真就停在场上等玩家点一下；写了 `out` 才在点完后收起，
+## 没写则保留字幕直到后续演出接手。`hold` 是「停这么久然后自己淡下去」。
 ## 两个都不写就是浮完留在场上，由后面那一幕接手。
 ##
 ## **即时模式照样把字摆上**，只是不做动画。它跟黑幕一样是「状态」——
@@ -411,6 +414,8 @@ func _caption(step: StageStep) -> void:
 		return
 	if step.flag("wait_click", false):
 		await _wait_click()
+		if step.has("out"):
+			await overlay.hide_caption(step.number("out", 0.5))
 	elif step.has("hold"):
 		await _sleep(_time(step.number("hold", 0.0)))
 		await overlay.hide_caption(step.number("out", 0.5))
@@ -420,6 +425,11 @@ func _caption(step: StageStep) -> void:
 func _location(step: StageStep) -> void:
 	if main != null:
 		main.show_location(step.text("text"))
+
+
+func _save_game() -> void:
+	if main != null:
+		main.save_game()
 
 
 ## 一条提示。`at` 不写就是右上角（稿子②），写 `center` 是画面中线上方。

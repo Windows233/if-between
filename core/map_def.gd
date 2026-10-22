@@ -141,6 +141,10 @@ class Actor:
 	## 往前铺到玩家站得住的地方，桌子才点得着。
 	## **只影响「够不够得着」，不影响挡不挡路**（那只看 `walls`）。
 	var reach: Rect2 = Rect2()
+	var collisions: Array[Rect2] = []
+	var has_local_collision := false
+	var sort_collider := 0
+	var sort_offset := 0.0
 	## 显示用名字。没有贴图时直接画在方块上。
 	var label: String = ""
 	## 物件贴图。**从地图插画里切出来的那一块**（`art/props/`），
@@ -215,6 +219,29 @@ class Actor:
 	## 满足这个条件才出现在场景里。为 null 表示一直在。
 	## 这是概念图里「NPC 头顶的 IF 气泡」的基础。
 	var condition: Condition = null
+
+
+	func collision_rects() -> Array[Rect2]:
+		var result: Array[Rect2] = []
+		if has_local_collision:
+			for shape: Rect2 in collisions:
+				result.append(Rect2(rect.position + shape.position, shape.size))
+		elif solid:
+			result.append(rect)
+		elif person:
+			result.append(Rect2(rect.position + Vector2(2.0, rect.size.y - 8.0),
+				Vector2(maxf(rect.size.x - 4.0, 1.0), 8.0)))
+		return result
+
+
+	func auto_cover_y() -> float:
+		if has_local_collision and sort_collider >= 0 and sort_collider < collisions.size():
+			return rect.position.y + collisions[sort_collider].position.y
+		return rect.end.y
+
+
+	func effective_cover_y() -> float:
+		return cover_y if cover_y >= 0.0 else auto_cover_y() + sort_offset
 
 
 	func is_active(p_flags: WorldState) -> bool:
@@ -463,6 +490,12 @@ func validate() -> Array[String]:
 			problems.append("场景 %s 的第 %d 个角色没有 id" % [id, i])
 		if actor.rect.size.x <= 0.0 or actor.rect.size.y <= 0.0:
 			problems.append("场景 %s 的角色 %s 尺寸为 0" % [id, actor.id])
+		for shape: Rect2 in actor.collisions:
+			if shape.size.x <= 0.0 or shape.size.y <= 0.0:
+				problems.append("场景 %s 的角色 %s 局部碰撞尺寸无效" % [id, actor.id])
+		if actor.has_local_collision and actor.cover and not actor.over \
+				and (actor.sort_collider < 0 or actor.sort_collider >= actor.collisions.size()):
+			problems.append("场景 %s 的角色 %s 没有有效排序参考碰撞箱" % [id, actor.id])
 
 	return problems
 
@@ -537,6 +570,16 @@ static func _actor_from(raw: Variant) -> Actor:
 	actor.id = StringName(str(raw.get("id", "")))
 	actor.rect = _to_rect(raw.get("rect"))
 	actor.reach = _to_rect(raw.get("reach")) if raw.has("reach") else actor.rect
+	if raw.has("reach_local"):
+		var local_reach := _to_rect(raw["reach_local"])
+		actor.reach = Rect2(actor.rect.position + local_reach.position, local_reach.size)
+	actor.has_local_collision = raw.has("collision")
+	var local_shapes: Variant = raw.get("collision", [])
+	if local_shapes is Array:
+		for shape: Variant in local_shapes:
+			actor.collisions.append(_to_rect(shape))
+	actor.sort_collider = int(raw.get("sort_collider", 0))
+	actor.sort_offset = float(raw.get("sort_offset", 0.0))
 	actor.label = str(raw.get("label", ""))
 	actor.sprite = str(raw.get("sprite", ""))
 	actor.solid = bool(raw.get("solid", false))

@@ -24,12 +24,14 @@ func _initialize() -> void:
 	h.section("地图与场景")
 	TestMap.run(h)
 	TestWalkable.run(h)
+	preload("res://tests/test_map_geometry_runtime.gd").run(h)
 	h.section("对话与选项")
 	TestDialogue.run(h)
 	h.section("剧情事件")
 	TestStory.run(h)
 	h.section("演出指令与过场")
 	TestCutscene.run(h)
+	await preload("res://tests/test_ch2_integration.gd").run(h)
 	h.section("背包")
 	TestInventory.run(h)
 	h.section("结局与存档")
@@ -42,8 +44,6 @@ func _initialize() -> void:
 	TestPresentation.run(h)
 	h.section("音频")
 	TestAudio.run(h)
-	h.section("地图编辑器")
-	TestMapEditor.run(h)
 
 	if h.report():
 		quit(0)

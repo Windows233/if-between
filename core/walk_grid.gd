@@ -35,7 +35,11 @@ static func is_free(def: MapDef, point: Vector2) -> bool:
 		if foot_hits(wall, point):
 			return false
 	for actor: MapDef.Actor in def.actors:
-		if actor.solid and foot_hits(actor.rect, point):
+		if actor.has_local_collision:
+			for shape: Rect2 in actor.collision_rects():
+				if foot_hits(shape, point):
+					return false
+		elif actor.solid and foot_hits(actor.rect, point):
 			return false
 	return true
 
@@ -62,7 +66,11 @@ static func has_landing_room(def: MapDef, point: Vector2) -> bool:
 		if foot_hits(wall.grow(LANDING_MARGIN), point):
 			return false
 	for actor: MapDef.Actor in def.actors:
-		if actor.solid and foot_hits(actor.rect.grow(LANDING_MARGIN), point):
+		if actor.has_local_collision:
+			for shape: Rect2 in actor.collision_rects():
+				if foot_hits(shape.grow(LANDING_MARGIN), point):
+					return false
+		elif actor.solid and foot_hits(actor.rect.grow(LANDING_MARGIN), point):
 			return false
 	return true
 

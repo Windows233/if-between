@@ -1,0 +1,36 @@
+{
+  "id": "ch2_sandbox",
+  "entry": "read",
+  "nodes": [
+    {
+      "id": "read",
+      "set": { "item/student_id": 1 },
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            { "text": "沙坑里有爪印，旁边埋着一个东西" }
+          ]
+        },
+        {
+          "do": "image",
+          "path": "res://art/item/student_id_half.png",
+          "fade": 0.4,
+          "wait_click": true,
+          "hide": true
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "姓名栏被撕了啊，只有班级，嗯...六年二班。",
+              "side": "left",
+              "portrait": "protagonist/reading"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -25,6 +25,7 @@ const KINDS: Dictionary = {
 	                            # 等画面亮起来、人出现在屋里再起前奏
 	&"wait": [],                # 干等一段时间
 	&"wait_click": [],          # 等玩家点一下鼠标或按空格
+	&"save": [],                # 写入当前槽位（用于剧情检查点）
 	&"image": ["path"],         # 屏幕中央的大图淡入
 	&"image_hide": [],          # 大图淡出
 	&"npc": ["id", "sprite", "at"],  # 在地图上放一个临时角色

@@ -1,21 +1,398 @@
 {
+  "actors": [
+    {
+      "collision": [
+        [
+          2.986328125,
+          63.0715835140998,
+          30,
+          14
+        ]
+      ],
+      "cover": true,
+      "id": "shelf_a",
+      "label": "书柜",
+      "line": "书柜。",
+      "reach_local": [
+        0,
+        0,
+        35.4709201388889,
+        79.7082429501085
+      ],
+      "rect": [
+        114.013671875,
+        109.9284164859,
+        35.4709201388889,
+        79.7082429501085
+      ],
+      "sort_collider": 0,
+      "sprite": "res://art/props/library_shelf_a_cover.png"
+    },
+    {
+      "collision": [
+        [
+          3.48459201388891,
+          60.5645336225596,
+          30,
+          15
+        ]
+      ],
+      "cover": true,
+      "id": "shelf_b",
+      "label": "书柜",
+      "line": "书柜。",
+      "reach_local": [
+        0,
+        0,
+        35.4709201388889,
+        78.9983731019523
+      ],
+      "rect": [
+        317.515407986111,
+        110.43546637744,
+        35.4709201388889,
+        78.9983731019523
+      ],
+      "sort_collider": 0,
+      "sprite": "res://art/props/library_shelf_b_cover.png"
+    },
+    {
+      "collision": [
+        [
+          3.986328125,
+          59.9040130151844,
+          29,
+          14
+        ]
+      ],
+      "cover": true,
+      "id": "shelf_c",
+      "label": "书柜",
+      "line": "书柜。",
+      "reach_local": [
+        0,
+        0,
+        35.8763020833333,
+        78.9983731019523
+      ],
+      "rect": [
+        114.013671875,
+        201.095986984816,
+        35.8763020833333,
+        78.9983731019523
+      ],
+      "sort_collider": 0,
+      "sprite": "res://art/props/library_shelf_c_cover.png"
+    },
+    {
+      "collision": [
+        [
+          3.48459201388891,
+          59.0927331887202,
+          30,
+          16
+        ]
+      ],
+      "cover": true,
+      "id": "shelf_d",
+      "label": "书柜",
+      "line": "书柜。",
+      "reach_local": [
+        0,
+        0,
+        35.7749565972222,
+        78.1870932754881
+      ],
+      "rect": [
+        317.515407986111,
+        201.90726681128,
+        35.7749565972222,
+        78.1870932754881
+      ],
+      "sort_collider": 0,
+      "sprite": "res://art/props/library_shelf_d_cover.png"
+    },
+    {
+      "id": "cat_monster",
+      "label": "小猫怪兽",
+      "line": "……",
+      "rect": [
+        112,
+        104,
+        240,
+        176
+      ]
+    },
+    {
+      "collision": [
+        [
+          2.14865451388889,
+          40.4387201735358,
+          91,
+          10
+        ]
+      ],
+      "cover": true,
+      "decor": true,
+      "id": "shelf_nw",
+      "label": "书柜",
+      "reach_local": [
+        0,
+        0,
+        96.5822482638889,
+        54.45715835141
+      ],
+      "rect": [
+        116.851345486111,
+        47.5612798264642,
+        96.5822482638889,
+        54.45715835141
+      ],
+      "sort_collider": 0,
+      "sprite": "res://art/props/library_shelf_nw_cover.png"
+    },
+    {
+      "collision": [
+        [
+          3.33224826388889,
+          40.7429501084599,
+          117,
+          10
+        ]
+      ],
+      "cover": true,
+      "decor": true,
+      "id": "shelf_ne",
+      "label": "书柜",
+      "reach_local": [
+        0,
+        0,
+        124.350911458333,
+        54.659978308026
+      ],
+      "rect": [
+        253.667751736111,
+        47.2570498915401,
+        124.350911458333,
+        54.659978308026
+      ],
+      "sort_collider": 0,
+      "sprite": "res://art/props/library_shelf_ne_cover.png"
+    },
+    {
+      "collision": [
+        [
+          0.847439236111114,
+          10.8096529284165,
+          23,
+          147
+        ]
+      ],
+      "cover": true,
+      "decor": true,
+      "id": "shelf_w",
+      "label": "书柜",
+      "reach_local": [
+        0,
+        0,
+        26.5525173611111,
+        159.112255965293
+      ],
+      "rect": [
+        49.1525607638889,
+        107.190347071584,
+        26.5525173611111,
+        159.112255965293
+      ],
+      "sort_collider": 0,
+      "sprite": "res://art/props/library_shelf_w_cover.png"
+    },
+    {
+      "collision": [
+        [
+          -2.00434027777777,
+          19.2776572668113,
+          24,
+          164
+        ]
+      ],
+      "cover": true,
+      "decor": true,
+      "id": "shelf_e",
+      "label": "书柜",
+      "reach_local": [
+        0,
+        0,
+        27.0592447916667,
+        185.377440347072
+      ],
+      "rect": [
+        392.004340277778,
+        80.7223427331887,
+        27.0592447916667,
+        185.377440347072
+      ],
+      "sort_collider": 0,
+      "sprite": "res://art/props/library_shelf_e_cover.png"
+    },
+    {
+      "collision": [
+        [
+          3.42491319444444,
+          21.1675704989154,
+          75,
+          7
+        ]
+      ],
+      "cover": true,
+      "decor": true,
+      "id": "shelf_sw",
+      "label": "书柜",
+      "reach_local": [
+        0,
+        0,
+        81.3804253472222,
+        40.7668112798265
+      ],
+      "rect": [
+        103.575086805556,
+        282.832429501085,
+        81.3804253472222,
+        40.7668112798265
+      ],
+      "sort_collider": 0,
+      "sprite": "res://art/props/library_shelf_sw_cover.png"
+    },
+    {
+      "collision": [
+        [
+          4.34743923611109,
+          21.1675704989154,
+          74,
+          7
+        ]
+      ],
+      "cover": true,
+      "decor": true,
+      "id": "shelf_se",
+      "label": "书柜",
+      "reach_local": [
+        0,
+        0,
+        81.177734375,
+        40.7668112798265
+      ],
+      "rect": [
+        282.652560763889,
+        282.832429501085,
+        81.177734375,
+        40.7668112798265
+      ],
+      "sort_collider": 0,
+      "sprite": "res://art/props/library_shelf_se_cover.png"
+    },
+    {
+      "collision": [
+        [
+          0.0193142361111143,
+          22.015726681128,
+          32,
+          7
+        ]
+      ],
+      "cover": true,
+      "decor": true,
+      "id": "library_altar",
+      "label": "陈设桌",
+      "reach_local": [
+        0,
+        0,
+        33.1399739583333,
+        29.1046637744035
+      ],
+      "rect": [
+        216.980685763889,
+        77.984273318872,
+        33.1399739583333,
+        29.1046637744035
+      ],
+      "sort_collider": 0,
+      "sprite": "res://art/props/library_library_altar_cover.png"
+    },
+    {
+      "collision": [
+        [
+          0.0232204861111143,
+          26.0439262472885,
+          33,
+          16
+        ]
+      ],
+      "cover": true,
+      "decor": true,
+      "id": "library_plant",
+      "label": "盆栽与烛台",
+      "reach_local": [
+        0,
+        0,
+        34.1534288194444,
+        42.1865509761388
+      ],
+      "rect": [
+        50.9767795138889,
+        262.956073752712,
+        34.1534288194444,
+        42.1865509761388
+      ],
+      "sort_collider": 0,
+      "sprite": "res://art/props/library_library_plant_cover.png"
+    },
+    {
+      "collision": [
+        [
+          2.00824652777777,
+          26.9848156182213,
+          37,
+          18
+        ]
+      ],
+      "cover": true,
+      "decor": true,
+      "id": "library_reading_desk",
+      "label": "阅览桌",
+      "reach_local": [
+        0,
+        0,
+        39.1193576388889,
+        47.0542299349241
+      ],
+      "rect": [
+        375.991753472222,
+        260.015184381779,
+        39.1193576388889,
+        47.0542299349241
+      ],
+      "sort_collider": 0,
+      "sprite": "res://art/props/library_library_reading_desk_cover.png"
+    }
+  ],
+  "background": "res://art/map/library.png",
   "id": "library",
+  "indoor": true,
   "name": "图书馆",
+  "overlay": "res://art/map/library_wall.png",
   "size": [
     467,
     374
   ],
-  "background": "res://art/map/library.png",
-  "overlay": "res://art/map/library_wall.png",
-  "indoor": true,
   "spawns": {
     "from_school_gate": [
       233,
-      265
+      296
     ],
     "start": [
       233,
-      265
+      296
     ]
   },
   "walls": [
@@ -23,100 +400,61 @@
       0,
       0,
       467,
-      18
+      34
     ],
     [
       0,
-      0,
-      29,
-      374
-    ],
-    [
-      441,
-      0,
-      26,
-      374
-    ],
-    [
-      0,
-      349,
-      467,
-      25
-    ],
-    [
-      29,
-      27,
-      204,
-      80
-    ],
-    [
-      33,
-      27,
+      34,
       50,
-      130
+      316
     ],
     [
-      29,
-      107,
-      46,
-      165
+      437,
+      34,
+      30,
+      316
+    ],
+    [
+      32,
+      34,
+      405,
+      66
+    ],
+    [
+      414,
+      100,
+      23,
+      204
+    ],
+    [
+      32,
+      311,
+      173,
+      39
+    ],
+    [
+      263,
+      311,
+      174,
+      39
+    ],
+    [
+      189,
+      284,
+      16,
+      66
+    ],
+    [
+      263,
+      284,
+      16,
+      66
+    ],
+    [
+      0,
+      350,
+      467,
+      24
     ]
-  ],
-  "actors": [
-    {
-      "id": "shelf_a",
-      "label": "书柜",
-      "rect": [
-        115,
-        110,
-        35,
-        79
-      ],
-      "line": "书柜。"
-    },
-    {
-      "id": "shelf_b",
-      "label": "书柜",
-      "rect": [
-        318,
-        111,
-        35,
-        78
-      ],
-      "line": "书柜。"
-    },
-    {
-      "id": "shelf_c",
-      "label": "书柜",
-      "rect": [
-        115,
-        202,
-        35,
-        78
-      ],
-      "line": "书柜。"
-    },
-    {
-      "id": "shelf_d",
-      "label": "书柜",
-      "rect": [
-        318,
-        202,
-        35,
-        77
-      ],
-      "line": "书柜。"
-    },
-    {
-      "id": "cat_monster",
-      "label": "小猫怪兽",
-      "rect": [
-        112,
-        104,
-        240,
-        176
-      ],
-      "line": "……"
-    }
   ]
 }
