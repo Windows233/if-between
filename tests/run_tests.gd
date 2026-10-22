@@ -44,6 +44,14 @@ func _initialize() -> void:
 	TestAudio.run(h)
 	h.section("地图编辑器")
 	TestMapEditor.run(h)
+	preload("res://tests/test_map_objects.gd").run(h)
+	preload("res://tests/test_map_hierarchy.gd").run(h)
+	preload("res://tests/test_map_templates.gd").run(h)
+	preload("res://tests/test_map_geometry_transfer.gd").run(h)
+	preload("res://tests/test_map_transfer_ui.gd").run(h)
+	preload("res://tests/test_map_collision_edit.gd").run(h)
+	preload("res://tests/test_map_creation.gd").run(h)
+	preload("res://tests/test_map_preview.gd").run(h)
 
 	if h.report():
 		quit(0)

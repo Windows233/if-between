@@ -12,13 +12,25 @@
 extends RefCounted
 
 const MAP_DIR := "res://data/maps"
+const BackupStore := preload("res://addons/if_map_editor/map_backup_store.gd")
 
 enum Kind { WALL, PORTAL, ACTOR, SPAWN, OVERLAY }
+enum ActorAlignment { LEFT, CENTER_X, RIGHT, TOP, CENTER_Y, BOTTOM }
+enum DistributionAxis { HORIZONTAL, VERTICAL }
 
 var map_id: String = ""
 var path: String = ""
 var data: Dictionary = {}
 var dirty: bool = false
+var _history: Array[Dictionary] = []
+var _history_index := -1
+var _saved_text := ""
+var _clipboard: Array[Dictionary] = []
+var _clipboard_groups: Array[Dictionary] = []
+var _paste_serial := 0
+var backup_store = BackupStore.new()
+var last_backup_name := ""
+var last_backup_failed := false
 
 ## 草稿目录。**切地图时没保存的改动会写到这儿**（`user://`，在仓库外面）——
 ## 这样「改到一半去看另一张图」不会白干。
@@ -56,6 +68,7 @@ func load_map(id: String, prefer_draft := true) -> bool:
 			data = draft_data
 			dirty = true
 			from_draft = true
+			reset_history()
 			return true
 	if not FileAccess.file_exists(path):
 		return false
@@ -65,7 +78,133 @@ func load_map(id: String, prefer_draft := true) -> bool:
 		return false
 	data = parsed
 	dirty = false
+	reset_history()
 	return true
+
+
+func reset_history() -> void:
+	_history = [data.duplicate(true)]
+	_history_index = 0
+	_saved_text = stringify(data)
+	if from_draft and FileAccess.file_exists(path):
+		var saved: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+		if saved is Dictionary:
+			_saved_text = stringify(saved)
+
+
+func record_history() -> void:
+	if _history_index < 0:
+		reset_history()
+		return
+	if stringify(_history[_history_index]) == stringify(data):
+		dirty = stringify(data) != _saved_text
+		return
+	_history.resize(_history_index + 1)
+	_history.append(data.duplicate(true))
+	if _history.size() > 80:
+		_history.pop_front()
+	_history_index = _history.size() - 1
+	dirty = stringify(data) != _saved_text
+
+
+func undo() -> bool:
+	return _restore_history(_history_index - 1)
+
+
+func redo() -> bool:
+	return _restore_history(_history_index + 1)
+
+
+func _restore_history(index: int) -> bool:
+	if index < 0 or index >= _history.size():
+		return false
+	_history_index = index
+	data = _history[index].duplicate(true)
+	dirty = stringify(data) != _saved_text
+	return true
+
+
+func copy_actors(indices: Array[int]) -> void:
+	_clipboard.clear()
+	_clipboard_groups.clear()
+	_paste_serial = 0
+	var selected := expand_group_selection(indices)
+	var clipboard_offsets: Dictionary = {}
+	for index: int in selected:
+		var item := actor_dict(index)
+		if item.is_empty():
+			continue
+		clipboard_offsets[str(item.get("id", ""))] = _clipboard.size()
+		_clipboard.append(item.duplicate(true))
+	for group: Variant in editor_groups():
+		if not group is Dictionary:
+			continue
+		var offsets: Array[int] = []
+		var complete := true
+		for member: Variant in (group as Dictionary).get("members", []):
+			var member_id := str(member)
+			if not clipboard_offsets.has(member_id):
+				complete = false
+				break
+			offsets.append(int(clipboard_offsets[member_id]))
+		if complete and offsets.size() >= 2:
+			_clipboard_groups.append({"name": str(group.get("name", "组")), "offsets": offsets})
+
+
+func paste_actors() -> Array[int]:
+	_paste_serial += 1
+	var pasted := insert_actors(_clipboard, Vector2.ONE * 12.0 * _paste_serial)
+	for group: Dictionary in _clipboard_groups:
+		var members: Array[int] = []
+		for offset: int in group.get("offsets", []):
+			if offset >= 0 and offset < pasted.size():
+				members.append(pasted[offset])
+		if members.size() >= 2:
+			var copied_name := str(group.get("name", "组")) + " 副本"
+			if _paste_serial > 1:
+				copied_name += " %d" % _paste_serial
+			group_actors(members, copied_name)
+	return pasted
+
+
+func insert_actors(items: Array[Dictionary], offset: Vector2) -> Array[int]:
+	var result: Array[int] = []
+	var list := actors()
+	for source: Dictionary in items:
+		var item := source.duplicate(true)
+		var stem := str(item.get("id", "object"))
+		if stem.is_empty():
+			stem = "object"
+		var candidate := stem
+		var suffix := 2
+		while _actor_id_exists(candidate, list):
+			candidate = "%s_%d" % [stem, suffix]
+			suffix += 1
+		item["id"] = candidate
+		_shift_actor(item, offset)
+		list.append(item)
+		result.append(list.size() - 1)
+	data["actors"] = list
+	if not result.is_empty():
+		dirty = true
+	return result
+
+
+func _actor_id_exists(candidate: String, list: Array) -> bool:
+	for item: Variant in list:
+		if item is Dictionary and str(item.get("id", "")) == candidate:
+			return true
+	return false
+
+
+func _shift_actor(item: Dictionary, offset: Vector2) -> void:
+	var rect := _to_rect(item.get("rect"))
+	item["rect"] = _rect_to_array(Rect2(rect.position + offset, rect.size))
+	if item.has("reach"):
+		var reach := _to_rect(item["reach"])
+		item["reach"] = _rect_to_array(Rect2(reach.position + offset, reach.size))
+	if item.has("cover_y"):
+		item["cover_y"] = float(item["cover_y"]) + offset.y
 
 
 # ---------------------------------------------------------------- 草稿
@@ -156,6 +295,209 @@ func portals() -> Array:
 func actors() -> Array:
 	var raw: Variant = data.get("actors", [])
 	return raw if raw is Array else []
+
+
+func editor_groups() -> Array:
+	var raw: Variant = data.get("editor_groups", [])
+	return raw if raw is Array else []
+
+
+func group_name_for_actor(index: int) -> String:
+	var actor_id := str(actor_field(index, "id", ""))
+	if actor_id.is_empty():
+		return ""
+	for group: Variant in editor_groups():
+		if group is Dictionary and (group as Dictionary).get("members", []).has(actor_id):
+			return str((group as Dictionary).get("name", "组"))
+	return ""
+
+
+func group_members_for_actor(index: int) -> Array[int]:
+	var actor_id := str(actor_field(index, "id", ""))
+	var result: Array[int] = []
+	if actor_id.is_empty():
+		return result
+	for group: Variant in editor_groups():
+		if not group is Dictionary or not (group as Dictionary).get("members", []).has(actor_id):
+			continue
+		var member_ids: Array = (group as Dictionary).get("members", [])
+		for candidate: int in actors().size():
+			if member_ids.has(str(actor_field(candidate, "id", ""))):
+				result.append(candidate)
+		break
+	return result
+
+
+func expand_group_selection(indices: Array[int]) -> Array[int]:
+	var result: Array[int] = []
+	for index: int in indices:
+		if index >= 0 and index < actors().size() and not result.has(index):
+			result.append(index)
+	var changed := true
+	while changed:
+		changed = false
+		var selected_ids: Dictionary = {}
+		for index: int in result:
+			var actor_id := str(actor_field(index, "id", ""))
+			if not actor_id.is_empty():
+				selected_ids[actor_id] = true
+		for group: Variant in editor_groups():
+			if not group is Dictionary:
+				continue
+			var members: Array = (group as Dictionary).get("members", [])
+			var intersects := false
+			for member: Variant in members:
+				if selected_ids.has(str(member)):
+					intersects = true
+					break
+			if not intersects:
+				continue
+			for index: int in actors().size():
+				if members.has(str(actor_field(index, "id", ""))) and not result.has(index):
+					result.append(index)
+					changed = true
+	return result
+
+
+func group_actors(indices: Array[int], requested_name := "") -> String:
+	var selected := expand_group_selection(indices)
+	if selected.size() < 2:
+		return ""
+	var member_ids: Array[String] = []
+	for index: int in selected:
+		var actor_id := str(actor_field(index, "id", ""))
+		if actor_id.is_empty() or member_ids.has(actor_id):
+			return ""
+		var matches := 0
+		for candidate: Variant in actors():
+			if candidate is Dictionary and str((candidate as Dictionary).get("id", "")) == actor_id:
+				matches += 1
+		if matches != 1:
+			return ""
+		member_ids.append(actor_id)
+	var groups: Array = []
+	for group: Variant in editor_groups():
+		if not group is Dictionary:
+			continue
+		var intersects := false
+		for member: Variant in (group as Dictionary).get("members", []):
+			if member_ids.has(str(member)):
+				intersects = true
+				break
+		if not intersects:
+			groups.append((group as Dictionary).duplicate(true))
+	var name := requested_name.strip_edges()
+	if name.is_empty():
+		name = "组 %d" % (_next_group_number(groups))
+	var base_name := name
+	var suffix := 2
+	while _group_name_exists(groups, name):
+		name = "%s %d" % [base_name, suffix]
+		suffix += 1
+	groups.append({"id": _next_group_id(groups), "name": name, "members": member_ids})
+	data["editor_groups"] = groups
+	dirty = true
+	return name
+
+
+func rename_group(group_id: String, requested_name: String) -> bool:
+	var name := requested_name.strip_edges()
+	if group_id.is_empty() or name.is_empty():
+		return false
+	var groups := editor_groups()
+	var target: Dictionary = {}
+	var matches := 0
+	for group: Variant in groups:
+		if group is Dictionary and str((group as Dictionary).get("id", "")) == group_id:
+			target = group
+			matches += 1
+	if matches != 1:
+		return false
+	if str(target.get("name", "")) == name:
+		return true
+	if _group_name_exists(groups, name):
+		return false
+	target["name"] = name
+	data["editor_groups"] = groups
+	dirty = true
+	return true
+
+
+func ungroup_actors(indices: Array[int]) -> int:
+	var selected_ids: Dictionary = {}
+	for index: int in indices:
+		var actor_id := str(actor_field(index, "id", ""))
+		if not actor_id.is_empty():
+			selected_ids[actor_id] = true
+	var groups: Array = []
+	var removed := 0
+	for group: Variant in editor_groups():
+		if not group is Dictionary:
+			continue
+		var intersects := false
+		for member: Variant in (group as Dictionary).get("members", []):
+			if selected_ids.has(str(member)):
+				intersects = true
+				break
+		if intersects:
+			removed += 1
+		else:
+			groups.append((group as Dictionary).duplicate(true))
+	if removed > 0:
+		if groups.is_empty():
+			data.erase("editor_groups")
+		else:
+			data["editor_groups"] = groups
+		dirty = true
+	return removed
+
+
+func _next_group_id(groups: Array) -> String:
+	var number := 1
+	while true:
+		var candidate := "group_%d" % number
+		var used := false
+		for group: Variant in groups:
+			if group is Dictionary and str((group as Dictionary).get("id", "")) == candidate:
+				used = true
+				break
+		if not used:
+			return candidate
+		number += 1
+	return "group"
+
+
+func _next_group_number(groups: Array) -> int:
+	var number := 1
+	while _group_name_exists(groups, "组 %d" % number):
+		number += 1
+	return number
+
+
+func _group_name_exists(groups: Array, candidate: String) -> bool:
+	for group: Variant in groups:
+		if group is Dictionary and str((group as Dictionary).get("name", "")) == candidate:
+			return true
+	return false
+
+
+func _remove_actor_from_groups(actor_id: String) -> void:
+	if actor_id.is_empty():
+		return
+	var groups: Array = []
+	for group: Variant in editor_groups():
+		if not group is Dictionary:
+			continue
+		var updated: Dictionary = (group as Dictionary).duplicate(true)
+		var members: Array = updated.get("members", []).duplicate()
+		members.erase(actor_id)
+		if members.size() >= 2:
+			updated["members"] = members
+			groups.append(updated)
+	if groups.is_empty():
+		data.erase("editor_groups")
+	else:
+		data["editor_groups"] = groups
 
 
 func count(kind: int) -> int:
@@ -273,8 +615,109 @@ func set_rect(kind: int, index: int, rect: Rect2) -> void:
 			return
 		var item: Variant = list[index]
 		if item is Dictionary:
+			if kind == Kind.ACTOR:
+				var old_rect := _to_rect(item.get("rect"))
+				_shift_actor(item, rect.position - old_rect.position)
 			(item as Dictionary)["rect"] = box
 	dirty = true
+
+
+func align_actors(indices: Array[int], alignment: int) -> bool:
+	if alignment < ActorAlignment.LEFT or alignment > ActorAlignment.BOTTOM:
+		return false
+	var selected := _unique_actor_indices(indices)
+	if selected.size() < 2:
+		return false
+	var bounds := rect_of(Kind.ACTOR, selected[0])
+	for index: int in selected.slice(1):
+		bounds = bounds.merge(rect_of(Kind.ACTOR, index))
+	var targets: Array[Rect2] = []
+	for index: int in selected:
+		var rect := rect_of(Kind.ACTOR, index)
+		var position := rect.position
+		match alignment:
+			ActorAlignment.LEFT:
+				position.x = bounds.position.x
+			ActorAlignment.CENTER_X:
+				position.x = bounds.get_center().x - rect.size.x * 0.5
+			ActorAlignment.RIGHT:
+				position.x = bounds.end.x - rect.size.x
+			ActorAlignment.TOP:
+				position.y = bounds.position.y
+			ActorAlignment.CENTER_Y:
+				position.y = bounds.get_center().y - rect.size.y * 0.5
+			ActorAlignment.BOTTOM:
+				position.y = bounds.end.y - rect.size.y
+		targets.append(Rect2(position, rect.size))
+	return _apply_actor_rects(selected, targets)
+
+
+func distribute_actors(indices: Array[int], axis: int) -> bool:
+	if axis != DistributionAxis.HORIZONTAL and axis != DistributionAxis.VERTICAL:
+		return false
+	var ordered := _unique_actor_indices(indices)
+	if ordered.size() < 3:
+		return false
+	var horizontal := axis == DistributionAxis.HORIZONTAL
+	ordered.sort_custom(func(left: int, right: int) -> bool:
+		var left_rect := rect_of(Kind.ACTOR, left)
+		var right_rect := rect_of(Kind.ACTOR, right)
+		var left_start := left_rect.position.x if horizontal else left_rect.position.y
+		var right_start := right_rect.position.x if horizontal else right_rect.position.y
+		return left < right if is_equal_approx(left_start, right_start) else left_start < right_start)
+	var first := rect_of(Kind.ACTOR, ordered[0])
+	var last := rect_of(Kind.ACTOR, ordered[-1])
+	var start := first.position.x if horizontal else first.position.y
+	var finish := last.end.x if horizontal else last.end.y
+	var occupied := 0.0
+	for index: int in ordered:
+		var rect := rect_of(Kind.ACTOR, index)
+		occupied += rect.size.x if horizontal else rect.size.y
+	var gap := (finish - start - occupied) / float(ordered.size() - 1)
+	var cursor := start
+	var targets: Array[Rect2] = []
+	for item_index: int in ordered.size():
+		var rect := rect_of(Kind.ACTOR, ordered[item_index])
+		var dimension := rect.size.x if horizontal else rect.size.y
+		var position := rect.position
+		if item_index == ordered.size() - 1:
+			if horizontal:
+				position.x = finish - dimension
+			else:
+				position.y = finish - dimension
+		elif item_index > 0:
+			if horizontal:
+				position.x = cursor
+			else:
+				position.y = cursor
+		targets.append(Rect2(position, rect.size))
+		cursor = (position.x if horizontal else position.y) + dimension + gap
+	return _apply_actor_rects(ordered, targets)
+
+
+func _unique_actor_indices(indices: Array[int]) -> Array[int]:
+	var unique: Array[int] = []
+	var seen := {}
+	for index: int in indices:
+		if index < 0 or index >= count(Kind.ACTOR) or seen.has(index):
+			continue
+		seen[index] = true
+		unique.append(index)
+	return unique
+
+
+func _apply_actor_rects(indices: Array[int], targets: Array[Rect2]) -> bool:
+	var changed := false
+	for item_index: int in indices.size():
+		var target := targets[item_index]
+		target.position = Vector2(roundi(target.position.x), roundi(target.position.y))
+		if target.position != rect_of(Kind.ACTOR, indices[item_index]).position:
+			changed = true
+	if not changed:
+		return false
+	for item_index: int in indices.size():
+		set_rect(Kind.ACTOR, indices[item_index], targets[item_index])
+	return true
 
 
 ## 新画一个矩形。墙和传送区都往对应列表末尾追加，返回下标。
@@ -320,11 +763,15 @@ func remove_at(kind: int, index: int) -> void:
 		var list: Array = portals() if kind == Kind.PORTAL else actors()
 		if index < 0 or index >= list.size():
 			return
+		var removed_actor_id := ""
+		if kind == Kind.ACTOR and list[index] is Dictionary:
+			removed_actor_id = str((list[index] as Dictionary).get("id", ""))
 		list.remove_at(index)
 		if kind == Kind.PORTAL:
 			data["portals"] = list
 		else:
 			data["actors"] = list
+			_remove_actor_from_groups(removed_actor_id)
 	dirty = true
 
 
@@ -336,7 +783,7 @@ func remove_at(kind: int, index: int) -> void:
 ##
 ## 拷的是**深拷贝**：之后改源不会连带改目标。
 static func copy_layout(source: Dictionary, target: Dictionary, with_spawns := false) -> void:
-	for key in ["walls", "portals", "actors"]:
+	for key in ["walls", "portals", "actors", "editor_groups"]:
 		if source.has(key):
 			target[key] = _normalize(source[key])
 		else:
@@ -358,6 +805,8 @@ func copy_layout_to(target_id: String, with_spawns := false) -> String:
 	other.dirty = true
 	var err: Error = other.save_to()
 	if err != OK:
+		if other.last_backup_failed:
+			return "复制已取消：无法为 %s 创建自动备份，目标地图未覆盖" % target_id
 		return "写 %s 失败，错误码 %d" % [target_id, err]
 	return ""
 
@@ -577,10 +1026,31 @@ func actor_has_story(index: int) -> bool:
 ## 导入一张图做遮罩时走这条：位置和基线之后在画布上调。
 func add_actor_with_sprite(sprite_path: String, cover := false) -> int:
 	var index := add_actor()
-	set_actor_field(index, "sprite", sprite_path)
+	assign_actor_sprite(index, sprite_path)
+	var rect := rect_of(Kind.ACTOR, index)
+	rect.position = (map_size() - rect.size) * 0.5
+	set_rect(Kind.ACTOR, index, rect)
 	if cover:
 		set_actor_field(index, "cover", true)
 	return index
+
+
+func assign_actor_sprite(index: int, sprite_path: String) -> bool:
+	if index < 0 or index >= count(Kind.ACTOR):
+		return false
+	if sprite_path == "":
+		set_actor_field(index, "sprite", "")
+		return true
+	if not FileAccess.file_exists(sprite_path):
+		return false
+	var image := Image.load_from_file(sprite_path)
+	if image == null or image.is_empty():
+		return false
+	set_actor_field(index, "sprite", sprite_path)
+	var rect := rect_of(Kind.ACTOR, index)
+	rect.size = Vector2(image.get_size())
+	set_rect(Kind.ACTOR, index, rect)
+	return true
 
 
 ## 设/清前景层（`overlay`）。**一张图拉伸到整张地图**，所以不用管图的尺寸。
@@ -682,13 +1152,7 @@ func is_cover_actor(index: int) -> bool:
 ## 这件遮挡物的基线。**没写 `cover_y` 就是贴图框的下边界**（自动），
 ## 写了就用写的那个（手动覆盖）。和 `map_view` 里那条判据保持一致。
 func actor_cover_y(index: int) -> float:
-	var rect := rect_of(Kind.ACTOR, index)
-	var list := actors()
-	if index >= 0 and index < list.size():
-		var item: Variant = list[index]
-		if item is Dictionary and (item as Dictionary).has("cover_y"):
-			return float((item as Dictionary)["cover_y"])
-	return rect.position.y + rect.size.y
+	return MapDef._actor_from(actor_dict(index)).effective_cover_y()
 
 
 func has_cover_override(index: int) -> bool:
@@ -696,7 +1160,7 @@ func has_cover_override(index: int) -> bool:
 	if index < 0 or index >= list.size():
 		return false
 	var item: Variant = list[index]
-	return item is Dictionary and (item as Dictionary).has("cover_y")
+	return item is Dictionary and (item.has("cover_y") or float(item.get("sort_offset", 0)) != 0.0)
 
 
 func set_actor_cover_y(index: int, y: float) -> void:
@@ -705,7 +1169,12 @@ func set_actor_cover_y(index: int, y: float) -> void:
 		return
 	var item: Variant = list[index]
 	if item is Dictionary:
-		(item as Dictionary)["cover_y"] = int(round(y))
+		if item.has("collision"):
+			var actor := MapDef._actor_from(item)
+			item.erase("cover_y")
+			item["sort_offset"] = roundf(y - actor.auto_cover_y())
+		else:
+			item["cover_y"] = int(round(y))
 		dirty = true
 
 
@@ -714,29 +1183,108 @@ func clear_actor_cover_y(index: int) -> void:
 	if index < 0 or index >= list.size():
 		return
 	var item: Variant = list[index]
-	if item is Dictionary and (item as Dictionary).has("cover_y"):
-		(item as Dictionary).erase("cover_y")
+	if item is Dictionary:
+		item.erase("cover_y")
+		item.erase("sort_offset")
 		dirty = true
+
+
+func use_local_geometry(index: int) -> void:
+	var item := actor_dict(index)
+	if item.is_empty() or item.has("collision"):
+		return
+	var actor := MapDef._actor_from(item)
+	var shapes: Array = []
+	if actor.solid or actor.person:
+		for shape: Rect2 in actor.collision_rects():
+			shapes.append(_rect_to_array(Rect2(shape.position - actor.rect.position, shape.size)))
+	else:
+		shapes.append([0, roundf(actor.rect.size.y * 0.65), actor.rect.size.x,
+			maxf(1, roundf(actor.rect.size.y * 0.35))])
+	item["collision"] = shapes
+	item["reach_local"] = _rect_to_array(Rect2(actor.reach.position - actor.rect.position, actor.reach.size))
+	item.erase("reach")
+	item["sort_collider"] = 0
+	item["cover"] = true
+	item.erase("over")
+	dirty = true
+
+
+func validation_errors() -> Array[String]:
+	var result := MapDef.from_dictionary(data).validate()
+	var seen: Dictionary = {}
+	for item: Variant in actors():
+		var actor_id := str(item.get("id", ""))
+		if seen.has(actor_id):
+			result.append("物件 id 重复：%s" % actor_id)
+		seen[actor_id] = true
+	return result
+
+
+func add_collision_rect(index: int, world_rect: Rect2) -> void:
+	var item := actor_dict(index)
+	if item.is_empty():
+		return
+	var actor := MapDef._actor_from(item)
+	var shapes: Array = item.get("collision", []).duplicate(true)
+	shapes.append(_rect_to_array(Rect2(world_rect.position - actor.rect.position, world_rect.size)))
+	item["collision"] = shapes
+	if not item.has("reach_local"):
+		item["reach_local"] = _rect_to_array(Rect2(actor.reach.position - actor.rect.position, actor.reach.size))
+		item.erase("reach")
+	item["cover"] = true
+	item["sort_collider"] = int(item.get("sort_collider", 0))
+	dirty = true
 
 
 # ---------------------------------------------------------------- 保存
 
 ## 写回磁盘。`to_path` 留空就写回原来那份。
-##
-## **不做备份** —— 项目有 git，改坏了 `git checkout -- <文件>` 就回来了。
 func save_to(to_path: String = "") -> Error:
 	var target := to_path if to_path != "" else path
 	if target == "":
 		return ERR_UNCONFIGURED
+	last_backup_name = ""
+	last_backup_failed = false
+	if FileAccess.file_exists(target):
+		var target_map_id := target.get_file().get_basename()
+		last_backup_name = backup_store.create_snapshot(target_map_id, target)
+		if last_backup_name == "":
+			last_backup_failed = true
+			return ERR_CANT_CREATE
 	var f := FileAccess.open(target, FileAccess.WRITE)
 	if f == null:
 		return FileAccess.get_open_error()
-	f.store_string(stringify(data))
+	var serialized := stringify(data)
+	f.store_string(serialized)
+	var write_error := f.get_error()
 	f.close()
+	if write_error != OK:
+		return write_error
 	if target == path:
+		_saved_text = serialized
 		dirty = false
 		from_draft = false
 		drop_draft(map_id)   # 已经写进仓库了，草稿留着只会下次吃回旧的
+	return OK
+
+
+func restore_backup(name: String) -> Error:
+	if map_id == "":
+		return ERR_UNCONFIGURED
+	var restored := backup_store.read_snapshot(map_id, name)
+	if restored.is_empty():
+		return ERR_FILE_CORRUPT
+	var current_data := data
+	data = restored
+	var problems := validation_errors()
+	data = current_data
+	if not problems.is_empty():
+		return ERR_INVALID_DATA
+	record_history()
+	data = restored
+	record_history()
+	from_draft = false
 	return OK
 
 

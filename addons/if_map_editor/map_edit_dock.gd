@@ -1,5 +1,4 @@
-## 地图编辑器的面板：地图选择、图层开关、工具、选中项的数值、保存。
-## 画布（`map_edit_canvas.gd`）挂在它下面，占满剩余空间。
+## 地图编辑器主界面：物件列表、中央画布、右侧检查器与地图工具。
 ##
 ## 数值框和画布是**双向同步**的：拖了矩形，数值跟着变；敲了数字，画面跟着动。
 ## 同步时用一个 `_syncing` 旗子挡住回写，免得程序设值又被当成玩家改动（会把
@@ -10,6 +9,17 @@ extends VBoxContainer
 const Model := preload("res://addons/if_map_editor/map_edit_model.gd")
 const Canvas := preload("res://addons/if_map_editor/map_edit_canvas.gd")
 const Kind := Model.Kind
+const ObjectInspector := preload("res://addons/if_map_editor/map_object_inspector.gd")
+const ObjectLibrary := preload("res://addons/if_map_editor/map_object_library.gd")
+const ObjectPreview := preload("res://addons/if_map_editor/map_object_preview.gd")
+const AssetList := preload("res://addons/if_map_editor/map_asset_list.gd")
+const GeometryTransferDialog := preload("res://addons/if_map_editor/map_geometry_transfer_dialog.gd")
+const MapCreationDialog := preload("res://addons/if_map_editor/map_creation_dialog.gd")
+
+const EDITOR_STATE_PATH := "user://if_map_editor_scene_state.cfg"
+
+enum LayoutAction { ALIGN_LEFT, ALIGN_CENTER_X, ALIGN_RIGHT, ALIGN_TOP, ALIGN_CENTER_Y, ALIGN_BOTTOM,
+	DISTRIBUTE_HORIZONTAL, DISTRIBUTE_VERTICAL }
 
 var model = Model.new()
 var canvas: Control = null
@@ -22,6 +32,7 @@ var _sel_label: Label
 var _spins: Array[SpinBox] = []
 var _base_row: HBoxContainer
 var _base_spin: SpinBox
+var _base_auto_button: Button
 var _status: Label
 var _syncing := false
 ## 「物件属性」面板：只在选中物件时出现。**每次换选中项才重建** ——
@@ -30,24 +41,63 @@ var _actor_panel: VBoxContainer
 var _panel_scroll: ScrollContainer
 var _panel_kind := -1
 var _panel_index := -1
+var _panel_locked := false
+var _panel_id_readonly := false
+var _object_tree: Tree
+var _hierarchy_actor_items: Dictionary = {}
+var _hierarchy_group_items: Array[TreeItem] = []
+var _hierarchy_structure: Array = []
+var _hierarchy_map_id := ""
+var _hierarchy_syncing := false
+var _hierarchy_selection_queued := false
+var _hierarchy_selecting := false
+var _hidden_actor_ids: Dictionary = {}
+var _locked_actor_ids: Dictionary = {}
+var _editor_state_path := EDITOR_STATE_PATH
+var _hide_selected_button: Button
+var _lock_selected_button: Button
+var _show_all_button: Button
+var _frame_selected_button: Button
+var _asset_tabs: TabContainer
+var _asset_filter: LineEdit
+var _asset_list: ItemList
+var _asset_empty: Label
+var _group_button: Button
+var _ungroup_button: Button
+var _template_picker: OptionButton
+var _layout_popup: PopupMenu
+var _library = ObjectLibrary.new()
+var _body_split: HSplitContainer
+var _workspace_split: HSplitContainer
+var _transfer_button: Button
+var _transfer_dialog: GeometryTransferDialog
+var _map_management: HFlowContainer
+var _toolbar_drawers: Array[Control] = []
+var _drawer_buttons: Array[Button] = []
 
 
 func _ready() -> void:
 	_build()
 	refresh_map_list(true)
+	await get_tree().process_frame
+	_set_initial_panel_layout()
 
 
 # ---------------------------------------------------------------- 界面
 
 func _build() -> void:
+	size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_map_management = HFlowContainer.new()
 	add_child(_row_title())
 
-	var tools := HBoxContainer.new()
+	var tools := HFlowContainer.new()
 	tools.add_child(_text("工具："))
-	for item in [["选择 / 拖动 / 改尺寸", Canvas.Tool.SELECT],
+	for item in [["选择 / 移动", Canvas.Tool.SELECT],
 			["画墙", Canvas.Tool.WALL],
 			["画传送区", Canvas.Tool.PORTAL],
-			["拉遮挡基线", Canvas.Tool.BASELINE]]:
+			["拉遮挡基线", Canvas.Tool.BASELINE],
+			["画物件碰撞", Canvas.Tool.COLLISION]]:
 		var b := Button.new()
 		b.text = str(item[0])
 		b.toggle_mode = true
@@ -55,19 +105,119 @@ func _build() -> void:
 		tools.add_child(b)
 		_tool_buttons.append(b)
 	_tool_buttons[0].button_pressed = true
+	tools.add_child(VSeparator.new())
+	var drawer_controls: Array[Control] = [_map_management, _row_layers(), _row_selection(), _object_actions()]
+	var drawer_names := ["地图管理", "显示设置", "选择与尺寸", "排布与模板"]
+	for index in drawer_controls.size():
+		var button := Button.new()
+		button.text = drawer_names[index] + " ▾"
+		button.toggle_mode = true
+		button.toggled.connect(_toggle_toolbar_drawer.bind(index))
+		tools.add_child(button)
+		_drawer_buttons.append(button)
+		_toolbar_drawers.append(drawer_controls[index])
 	add_child(tools)
-
-	add_child(_row_layers())
-
-	add_child(_row_selection())
+	for drawer in _toolbar_drawers:
+		drawer.visible = false
+		add_child(drawer)
+	_body_split = HSplitContainer.new()
+	_body_split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_body_split.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	add_child(_body_split)
+	var sidebar := VBoxContainer.new()
+	sidebar.custom_minimum_size.x = 210
+	_body_split.add_child(sidebar)
+	_asset_tabs = TabContainer.new()
+	_asset_tabs.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_asset_tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	sidebar.add_child(_asset_tabs)
+	var scene_page := VBoxContainer.new()
+	scene_page.name = "场景"
+	scene_page.add_child(_text("场景层级（Ctrl / Shift 多选）"))
+	_object_tree = Tree.new()
+	_object_tree.hide_root = true
+	_object_tree.select_mode = Tree.SELECT_MULTI
+	_object_tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_object_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_object_tree.multi_selected.connect(_on_hierarchy_multi_selected)
+	_object_tree.item_edited.connect(_on_hierarchy_item_edited)
+	_object_tree.item_activated.connect(_on_hierarchy_item_activated)
+	scene_page.add_child(_object_tree)
+	var object_tools := HFlowContainer.new()
+	_hide_selected_button = Button.new()
+	_hide_selected_button.text = "隐藏所选"
+	_hide_selected_button.tooltip_text = "隐藏所选物件；隐藏只影响编辑器视图和画布拾取。"
+	_hide_selected_button.pressed.connect(_toggle_selected_actor_visibility)
+	object_tools.add_child(_hide_selected_button)
+	_lock_selected_button = Button.new()
+	_lock_selected_button.text = "锁定所选"
+	_lock_selected_button.tooltip_text = "锁定所选物件，阻止移动、改属性、删除和编组；复制仍可使用。"
+	_lock_selected_button.pressed.connect(_toggle_selected_actor_lock)
+	object_tools.add_child(_lock_selected_button)
+	_show_all_button = Button.new()
+	_show_all_button.text = "全部显示"
+	_show_all_button.tooltip_text = "显示这张地图中的所有隐藏物件。"
+	_show_all_button.pressed.connect(_show_all_actors)
+	object_tools.add_child(_show_all_button)
+	_frame_selected_button = Button.new()
+	_frame_selected_button.text = "定位所选"
+	_frame_selected_button.tooltip_text = "将画布对准所选对象；也可双击物件，或在画布中按 F。"
+	_frame_selected_button.pressed.connect(_frame_selection)
+	object_tools.add_child(_frame_selected_button)
+	scene_page.add_child(object_tools)
+	_asset_tabs.add_child(scene_page)
+	var asset_page := VBoxContainer.new()
+	asset_page.name = "素材"
+	var asset_toolbar := HBoxContainer.new()
+	_asset_filter = LineEdit.new()
+	_asset_filter.placeholder_text = "筛选素材"
+	_asset_filter.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_asset_filter.text_changed.connect(func(_text: String) -> void: _refresh_assets())
+	asset_toolbar.add_child(_asset_filter)
+	var refresh_assets := Button.new()
+	refresh_assets.text = "刷新"
+	refresh_assets.pressed.connect(_refresh_assets)
+	asset_toolbar.add_child(refresh_assets)
+	asset_page.add_child(asset_toolbar)
+	_asset_list = AssetList.new()
+	_asset_list.select_mode = ItemList.SELECT_SINGLE
+	_asset_list.icon_mode = ItemList.ICON_MODE_TOP
+	_asset_list.fixed_icon_size = Vector2i(64, 64)
+	_asset_list.fixed_column_width = 98
+	_asset_list.max_columns = 2
+	_asset_list.max_text_lines = 2
+	_asset_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_asset_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_asset_list.mouse_default_cursor_shape = Control.CURSOR_DRAG
+	asset_page.add_child(_asset_list)
+	_asset_empty = _text("")
+	_asset_empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_asset_empty.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_asset_empty.visible = false
+	asset_page.add_child(_asset_empty)
+	_asset_tabs.add_child(asset_page)
+	_workspace_split = HSplitContainer.new()
+	_workspace_split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_workspace_split.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_body_split.add_child(_workspace_split)
+	canvas = Canvas.new()
+	canvas.custom_minimum_size = Vector2(300, 240)
+	canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	canvas.selection_changed.connect(_on_selection_changed)
+	canvas.edited.connect(_on_canvas_edited)
+	canvas.status.connect(func(text: String) -> void: _status.text = text)
+	canvas.command_requested.connect(_object_command)
+	_workspace_split.add_child(canvas)
 
 	# 属性面板放进**定高滚动区**：对话一行一句，行数一多面板会很长，
 	# 不挡住下面的画布（也不把下面的东西挤出屏幕）。
 	_panel_scroll = ScrollContainer.new()
-	_panel_scroll.custom_minimum_size = Vector2(0, 168)
-	_panel_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_panel_scroll.custom_minimum_size = Vector2(300, 0)
+	_panel_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_panel_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	_panel_scroll.visible = false
-	add_child(_panel_scroll)
+	_workspace_split.add_child(_panel_scroll)
 	_actor_panel = VBoxContainer.new()
 	_actor_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_panel_scroll.add_child(_actor_panel)
@@ -76,46 +226,638 @@ func _build() -> void:
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(_status)
 
-	canvas = Canvas.new()
-	canvas.custom_minimum_size = Vector2(360, 320)
-	canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	canvas.selection_changed.connect(_on_selection_changed)
-	canvas.edited.connect(_on_edited)
-	canvas.status.connect(func(t: String) -> void: _status.text = t)
-	add_child(canvas)
+	_refresh_templates()
+	_refresh_assets()
 
 
-func _row_title() -> HBoxContainer:
-	var row := HBoxContainer.new()
+func _set_initial_panel_layout() -> void:
+	_body_split.split_offset = 220
+	var inspector_width := clampi(roundi(_workspace_split.size.x * 0.28), 300, 380)
+	_workspace_split.split_offset = maxi(300, int(_workspace_split.size.x) - inspector_width)
+
+
+func _object_actions() -> HFlowContainer:
+	var row := HFlowContainer.new()
+	for action: Array in [["撤销", "undo"], ["重做", "redo"], ["复制物件", "copy"],
+			["粘贴", "paste"], ["复制并偏移", "duplicate"], ["存为物件模板…", "template"]]:
+		var button := Button.new()
+		button.text = str(action[0])
+		button.pressed.connect(_object_command.bind(str(action[1])))
+		row.add_child(button)
+	_group_button = Button.new()
+	_group_button.text = "编组"
+	_group_button.tooltip_text = "将至少两件物件编为一组；选中组内任一物件会整体选择、移动和复制。"
+	_group_button.pressed.connect(_object_command.bind("group"))
+	row.add_child(_group_button)
+	_ungroup_button = Button.new()
+	_ungroup_button.text = "解组"
+	_ungroup_button.tooltip_text = "移除所选物件所属的组，不删除物件。"
+	_ungroup_button.pressed.connect(_object_command.bind("ungroup"))
+	row.add_child(_ungroup_button)
+	var layout_button := MenuButton.new()
+	layout_button.text = "对齐 / 分布"
+	layout_button.tooltip_text = "对齐至少选择两件物件；等间距至少选择三件。"
+	_layout_popup = layout_button.get_popup()
+	for action: Array in [["左对齐", LayoutAction.ALIGN_LEFT], ["水平居中", LayoutAction.ALIGN_CENTER_X],
+			["右对齐", LayoutAction.ALIGN_RIGHT], ["顶对齐", LayoutAction.ALIGN_TOP],
+			["垂直居中", LayoutAction.ALIGN_CENTER_Y], ["底对齐", LayoutAction.ALIGN_BOTTOM]]:
+		_layout_popup.add_item(str(action[0]), int(action[1]))
+	_layout_popup.add_separator()
+	_layout_popup.add_item("水平等间距", LayoutAction.DISTRIBUTE_HORIZONTAL)
+	_layout_popup.add_item("垂直等间距", LayoutAction.DISTRIBUTE_VERTICAL)
+	_layout_popup.about_to_popup.connect(_refresh_layout_menu)
+	_layout_popup.id_pressed.connect(_on_layout_action)
+	row.add_child(layout_button)
+	_template_picker = OptionButton.new()
+	_template_picker.custom_minimum_size.x = 180
+	row.add_child(_template_picker)
+	var place := Button.new()
+	place.text = "从模板放置"
+	place.pressed.connect(func() -> void:
+		if _template_picker.item_count == 0:
+			return
+		var selected: Array[int] = _library.instantiate(_template_picker.get_item_text(_template_picker.selected),
+			model, model.map_size() * 0.5)
+		canvas.select_actors(selected)
+		_on_edited()
+		_refresh_selection())
+	row.add_child(place)
+	return row
+
+
+func _refresh_layout_menu() -> void:
+	var count: int = canvas.selected_actors().size()
+	for index: int in _layout_popup.item_count:
+		var minimum := 2 if index < 6 else 3
+		_layout_popup.set_item_disabled(index, count < minimum or _selection_has_locked_actor())
+
+
+func _refresh_templates() -> void:
+	_template_picker.clear()
+	for name: String in _library.list_templates():
+		_template_picker.add_item(name)
+
+
+func _refresh_assets() -> void:
+	if _asset_list == null:
+		return
+	_asset_list.clear()
+	var query := _asset_filter.text.strip_edges().to_lower() if _asset_filter != null else ""
+	for path: String in model.prop_files():
+		var filename := path.get_file().get_basename()
+		if not query.is_empty() and not filename.to_lower().contains(query):
+			continue
+		var texture := load(path) as Texture2D
+		_asset_list.add_item(filename, texture)
+		var index := _asset_list.item_count - 1
+		_asset_list.set_item_metadata(index, path)
+		_asset_list.set_item_tooltip(index, path)
+	_asset_list.visible = _asset_list.item_count > 0
+	_asset_empty.visible = _asset_list.item_count == 0
+	_asset_empty.text = "没有匹配的素材" if not query.is_empty() else "素材目录为空"
+
+
+func _refresh_objects() -> void:
+	if _object_tree == null:
+		return
+	var actor_ids := PackedStringArray()
+	for index: int in model.count(Kind.ACTOR):
+		actor_ids.append(str(model.actor_field(index, "id", "")))
+	var groups: Array[Dictionary] = []
+	var group_structure: Array = []
+	for raw_group: Variant in model.editor_groups():
+		if not raw_group is Dictionary:
+			continue
+		var group: Dictionary = raw_group
+		groups.append(group)
+		group_structure.append({"id": str(group.get("id", "")),
+			"members": group.get("members", [])})
+	var structure: Array = [model.map_id, actor_ids, group_structure]
+	_hierarchy_syncing = true
+	if structure != _hierarchy_structure or _object_tree.get_root() == null:
+		var collapsed: Dictionary = {}
+		if _hierarchy_map_id == model.map_id:
+			for item: TreeItem in _hierarchy_group_items:
+				collapsed[str(item.get_metadata(0).get("id", ""))] = item.collapsed
+		_object_tree.clear()
+		_hierarchy_actor_items.clear()
+		_hierarchy_group_items.clear()
+		var root := _object_tree.create_item()
+		root.set_selectable(0, false)
+		for group: Dictionary in groups:
+			var item := _object_tree.create_item(root)
+			var group_id := str(group.get("id", ""))
+			item.set_metadata(0, {"kind": "group", "id": group_id,
+				"name": str(group.get("name", "组"))})
+			item.collapsed = bool(collapsed.get(group_id, false))
+			_hierarchy_group_items.append(item)
+		for index: int in model.count(Kind.ACTOR):
+			var parent := root
+			var actor_id := str(model.actor_field(index, "id", ""))
+			if not actor_id.is_empty():
+				for group_index: int in groups.size():
+					if groups[group_index].get("members", []).has(actor_id):
+						parent = _hierarchy_group_items[group_index]
+						break
+			var item := _object_tree.create_item(parent)
+			item.set_metadata(0, {"kind": "actor", "index": index})
+			_hierarchy_actor_items[index] = item
+		_hierarchy_structure = structure.duplicate(true)
+		_hierarchy_map_id = model.map_id
+	var group_id_counts: Dictionary = {}
+	for group: Dictionary in groups:
+		var group_id := str(group.get("id", ""))
+		group_id_counts[group_id] = int(group_id_counts.get(group_id, 0)) + 1
+	for group_index: int in groups.size():
+		var item := _hierarchy_group_items[group_index]
+		var group: Dictionary = groups[group_index]
+		var group_id := str(group.get("id", ""))
+		var group_name := str(group.get("name", "组"))
+		item.set_text(0, group_name)
+		item.set_metadata(0, {"kind": "group", "id": group_id, "name": group_name})
+		var editable := not group_id.is_empty() and int(group_id_counts.get(group_id, 0)) == 1
+		for index: int in _hierarchy_item_actor_indices(item):
+			editable = editable and not canvas.actor_is_locked(index)
+		item.set_editable(0, editable)
+		item.set_tooltip_text(0, "双击编组名称可改名；选中编组会整体选择成员。" if editable
+			else "编组包含锁定物件或组 ID 无效，暂时不能改名。")
+	for index: int in model.count(Kind.ACTOR):
+		var item: TreeItem = _hierarchy_actor_items[index]
+		var label := model.label_of(Kind.ACTOR, index)
+		var actor_id := str(model.actor_field(index, "id", ""))
+		var state_tags: Array[String] = []
+		if _hidden_actor_ids.has(actor_id):
+			state_tags.append("隐藏")
+		if _locked_actor_ids.has(actor_id):
+			state_tags.append("锁定")
+		if not state_tags.is_empty():
+			label += "  [%s]" % " / ".join(state_tags)
+		item.set_text(0, "%s  [%s]" % [label, actor_id])
+		item.set_tooltip_text(0, "双击定位物件；隐藏与锁定状态仅影响编辑器。")
+	_sync_hierarchy_selection()
+	_hierarchy_syncing = false
+	_refresh_object_state_buttons()
+	_refresh_group_buttons()
+
+
+func _sync_hierarchy_selection() -> void:
+	var selected: Array[int] = canvas.selected_actors()
+	var primary: TreeItem = null
+	if _hierarchy_selecting:
+		primary = _object_tree.get_selected()
+	elif canvas.sel_kind == Kind.ACTOR:
+		primary = _hierarchy_actor_items.get(canvas.sel_index)
+	for index: int in _hierarchy_actor_items:
+		var item: TreeItem = _hierarchy_actor_items[index]
+		if item.is_selected(0) != selected.has(index):
+			if selected.has(index):
+				item.select(0, false)
+			else:
+				item.deselect(0)
+	for item: TreeItem in _hierarchy_group_items:
+		var members := _hierarchy_item_actor_indices(item)
+		var all_selected := not members.is_empty()
+		for index: int in members:
+			all_selected = all_selected and selected.has(index)
+		if all_selected:
+			item.select(0, false)
+		else:
+			item.deselect(0)
+	if primary != null and primary.is_selected(0) and _object_tree.get_selected() != primary:
+		primary.select(0)
+
+
+func _hierarchy_item_actor_indices(item: TreeItem) -> Array[int]:
+	var indices: Array[int] = []
+	var metadata: Dictionary = item.get_metadata(0)
+	if metadata.get("kind", "") == "actor":
+		var index := int(metadata.get("index", -1))
+		if index >= 0 and index < model.count(Kind.ACTOR):
+			indices.append(index)
+	else:
+		var child := item.get_first_child()
+		while child != null:
+			indices.append_array(_hierarchy_item_actor_indices(child))
+			child = child.get_next()
+	return indices
+
+
+func _on_hierarchy_multi_selected(item: TreeItem, _column: int, selected: bool) -> void:
+	if _hierarchy_syncing:
+		return
+	if not selected:
+		var target := item
+		if item.get_metadata(0).get("kind", "") == "actor" \
+				and item.get_parent() != _object_tree.get_root():
+			target = item.get_parent()
+		_hierarchy_syncing = true
+		target.deselect(0)
+		for index: int in _hierarchy_item_actor_indices(target):
+			(_hierarchy_actor_items[index] as TreeItem).deselect(0)
+		_hierarchy_syncing = false
+	if not _hierarchy_selection_queued:
+		_hierarchy_selection_queued = true
+		_on_hierarchy_item_selected.call_deferred()
+
+
+func _on_hierarchy_item_selected() -> void:
+	_hierarchy_selection_queued = false
+	if _hierarchy_syncing:
+		return
+	var selected := _selected_actor_indices()
+	var primary := _object_tree.get_selected()
+	canvas.select_actors(selected)
+	if primary != null and primary.is_selected(0) \
+			and primary.get_metadata(0).get("kind", "") == "group":
+		primary.collapsed = false
+	if primary != null and primary.get_metadata(0).get("kind", "") == "actor":
+		var index := int(primary.get_metadata(0).get("index", -1))
+		if canvas.selected_actors().has(index):
+			canvas.sel_index = index
+	_hierarchy_selecting = true
+	_refresh_selection()
+	_hierarchy_selecting = false
+
+
+func _on_hierarchy_item_edited(item: TreeItem = null) -> void:
+	if _hierarchy_syncing:
+		return
+	if item == null:
+		item = _object_tree.get_edited()
+	if item == null:
+		return
+	var metadata: Dictionary = item.get_metadata(0)
+	if metadata.get("kind", "") != "group":
+		return
+	for index: int in _hierarchy_item_actor_indices(item):
+		if canvas.actor_is_locked(index):
+			item.set_text(0, str(metadata.get("name", "组")))
+			_status.text = "编组包含锁定物件，请先解锁后再改名。"
+			return
+	var old_name := str(metadata.get("name", "组"))
+	var requested_name := item.get_text(0).strip_edges()
+	if not model.rename_group(str(metadata.get("id", "")), requested_name):
+		item.set_text(0, old_name)
+		_status.text = "编组改名失败：名称不能为空或重名，且编组必须有唯一有效的 ID。"
+		return
+	item.set_text(0, requested_name)
+	if requested_name == old_name:
+		return
+	_on_edited()
+	_status.text = "编组已改名为「%s」，可撤销或重做。" % requested_name
+
+
+func _on_hierarchy_item_activated() -> void:
+	var item := _object_tree.get_selected()
+	if item == null or item.get_metadata(0).get("kind", "") != "actor":
+		return
+	_on_hierarchy_item_selected()
+	_frame_selection()
+
+
+func _frame_selection() -> void:
+	_status.text = "画布已定位到所选对象。" if canvas.frame_selection() \
+		else "没有可定位的选区；隐藏物件需要先显示。"
+
+
+func _refresh_group_buttons() -> void:
+	if _group_button == null or _ungroup_button == null or canvas == null:
+		return
+	var selected: Array[int] = canvas.selected_actors()
+	var selected_groups: Dictionary = {}
+	var has_ungrouped := false
+	_ungroup_button.disabled = true
+	for index: int in selected:
+		var group_name := model.group_name_for_actor(index)
+		if group_name.is_empty():
+			has_ungrouped = true
+		else:
+			selected_groups[group_name] = true
+			_ungroup_button.disabled = false
+	_group_button.disabled = selected.size() < 2 or (not has_ungrouped and selected_groups.size() <= 1)
+	if _selection_has_locked_actor():
+		_group_button.disabled = true
+		_ungroup_button.disabled = true
+
+
+func _selection_has_locked_actor() -> bool:
+	for index: int in canvas.selected_actors():
+		if canvas.actor_is_locked(index):
+			return true
+	return false
+
+
+func _allow_selection_edit() -> bool:
+	if not _selection_has_locked_actor():
+		return true
+	_status.text = "选区包含锁定物件，请先在场景列表中解锁。"
+	return false
+
+
+func _selected_actor_indices() -> Array[int]:
+	var selected: Array[int] = []
+	var item := _object_tree.get_next_selected(null)
+	while item != null:
+		for index: int in _hierarchy_item_actor_indices(item):
+			if not selected.has(index):
+				selected.append(index)
+		item = _object_tree.get_next_selected(item)
+	return selected
+
+
+func _refresh_object_state_buttons() -> void:
+	if _hide_selected_button == null:
+		return
+	var selected := _selected_actor_indices()
+	var all_hidden := not selected.is_empty()
+	var all_locked := not selected.is_empty()
+	for index: int in selected:
+		var actor_id := str(model.actor_field(index, "id", ""))
+		all_hidden = all_hidden and _hidden_actor_ids.has(actor_id)
+		all_locked = all_locked and _locked_actor_ids.has(actor_id)
+	_hide_selected_button.disabled = selected.is_empty()
+	_hide_selected_button.text = "显示所选" if all_hidden else "隐藏所选"
+	_lock_selected_button.disabled = selected.is_empty()
+	_lock_selected_button.text = "解锁所选" if all_locked else "锁定所选"
+	_show_all_button.disabled = _hidden_actor_ids.is_empty()
+	_frame_selected_button.disabled = canvas.sel_kind < 0
+
+
+func _toggle_selected_actor_visibility() -> void:
+	var selected_ids := _selected_editor_state_ids()
+	if selected_ids.is_empty():
+		return
+	var should_hide := false
+	for actor_id: String in selected_ids:
+		if not _hidden_actor_ids.has(actor_id):
+			should_hide = true
+			break
+	for actor_id: String in selected_ids:
+		if should_hide:
+			_hidden_actor_ids[actor_id] = true
+		else:
+			_hidden_actor_ids.erase(actor_id)
+	var save_error := _save_actor_editor_state()
+	canvas.set_actor_editor_state(_hidden_actor_ids, _locked_actor_ids)
+	_refresh_selection()
+	if save_error == OK:
+		_status.text = "所选物件已隐藏。仍可从场景列表选中并显示。" if should_hide else "所选物件已显示。"
+	else:
+		_status.text = "状态已临时应用，但未能写入编辑器状态文件：%d" % save_error
+
+
+func _toggle_selected_actor_lock() -> void:
+	var selected_ids := _selected_editor_state_ids()
+	if selected_ids.is_empty():
+		return
+	var should_lock := false
+	for actor_id: String in selected_ids:
+		if not _locked_actor_ids.has(actor_id):
+			should_lock = true
+			break
+	for actor_id: String in selected_ids:
+		if should_lock:
+			_locked_actor_ids[actor_id] = true
+		else:
+			_locked_actor_ids.erase(actor_id)
+	var save_error := _save_actor_editor_state()
+	canvas.set_actor_editor_state(_hidden_actor_ids, _locked_actor_ids)
+	_refresh_selection()
+	if save_error == OK:
+		_status.text = "所选物件已锁定，属性只读；仍可复制或从场景列表解锁。" if should_lock else "所选物件已解锁。"
+	else:
+		_status.text = "状态已临时应用，但未能写入编辑器状态文件：%d" % save_error
+
+
+func _show_all_actors() -> void:
+	if _hidden_actor_ids.is_empty():
+		return
+	_hidden_actor_ids.clear()
+	var save_error := _save_actor_editor_state()
+	canvas.set_actor_editor_state(_hidden_actor_ids, _locked_actor_ids)
+	_refresh_selection()
+	_status.text = "这张地图中的隐藏物件已全部显示。" if save_error == OK \
+		else "状态已临时应用，但未能写入编辑器状态文件：%d" % save_error
+
+
+func _load_actor_editor_state(map_id: String) -> void:
+	_hidden_actor_ids.clear()
+	_locked_actor_ids.clear()
+	var config := ConfigFile.new()
+	if FileAccess.file_exists(_editor_state_path):
+		var error := config.load(_editor_state_path)
+		if error != OK:
+			_status.text = "编辑器隐藏/锁定状态读取失败：%d" % error
+		else:
+			_hidden_actor_ids = _id_lookup(config.get_value(map_id, "hidden_actor_ids", []))
+			_locked_actor_ids = _id_lookup(config.get_value(map_id, "locked_actor_ids", []))
+	canvas.set_actor_editor_state(_hidden_actor_ids, _locked_actor_ids)
+	_prune_actor_editor_state()
+	_refresh_objects()
+
+
+func _actor_id_counts() -> Dictionary:
+	var counts: Dictionary = {}
+	for index: int in model.count(Kind.ACTOR):
+		var actor_id := str(model.actor_field(index, "id", ""))
+		counts[actor_id] = int(counts.get(actor_id, 0)) + 1
+	return counts
+
+
+func _selected_editor_state_ids() -> PackedStringArray:
+	var actor_counts := _actor_id_counts()
+	var result := PackedStringArray()
+	for index: int in _selected_actor_indices():
+		var actor_id := str(model.actor_field(index, "id", ""))
+		if actor_id.is_empty() or int(actor_counts.get(actor_id, 0)) != 1:
+			_status.text = "隐藏/锁定前，请先为所选物件填写非空且唯一的 ID。"
+			return PackedStringArray()
+		result.append(actor_id)
+	return result
+
+
+func _prune_actor_editor_state() -> void:
+	var actor_counts := _actor_id_counts()
+	var changed := false
+	for lookup: Dictionary in [_hidden_actor_ids, _locked_actor_ids]:
+		for actor_id: Variant in lookup.keys():
+			if str(actor_id).is_empty() or int(actor_counts.get(actor_id, 0)) != 1:
+				lookup.erase(actor_id)
+				changed = true
+	if changed:
+		var save_error := _save_actor_editor_state()
+		canvas.set_actor_editor_state(_hidden_actor_ids, _locked_actor_ids)
+		if save_error != OK:
+			_status.text = "已清理失效物件状态，但写入状态文件失败：%d" % save_error
+
+
+func _id_lookup(value: Variant) -> Dictionary:
+	var result: Dictionary = {}
+	if value is Array or value is PackedStringArray:
+		for raw_id: Variant in value:
+			var actor_id := str(raw_id)
+			if not actor_id.is_empty():
+				result[actor_id] = true
+	return result
+
+
+func _ids_from_lookup(lookup: Dictionary) -> PackedStringArray:
+	var result := PackedStringArray()
+	for actor_id: Variant in lookup:
+		if bool(lookup[actor_id]):
+			result.append(str(actor_id))
+	result.sort()
+	return result
+
+
+func _save_actor_editor_state() -> Error:
+	var config := ConfigFile.new()
+	if FileAccess.file_exists(_editor_state_path):
+		var load_error := config.load(_editor_state_path)
+		if load_error != OK:
+			return load_error
+	config.set_value(model.map_id, "hidden_actor_ids", _ids_from_lookup(_hidden_actor_ids))
+	config.set_value(model.map_id, "locked_actor_ids", _ids_from_lookup(_locked_actor_ids))
+	return config.save(_editor_state_path)
+
+
+func _object_command(command: String) -> void:
+	if (command == "group" or command == "ungroup") and not _allow_selection_edit():
+		return
+	if command == "group":
+		var group_name: String = model.group_actors(canvas.selected_actors())
+		if group_name.is_empty():
+			_status.text = "编组需要至少两件物件，且每件物件都要有唯一 ID。"
+			return
+		_on_edited()
+		_refresh_selection()
+		_status.text = "已将所选物件编为「%s」；选中组内任一件即可整体移动或复制。" % group_name
+		return
+	if command == "ungroup":
+		var removed: int = model.ungroup_actors(canvas.selected_actors())
+		if removed == 0:
+			_status.text = "所选物件没有所属编组。"
+			return
+		_on_edited()
+		_refresh_selection()
+		_status.text = "已解散 %d 个编组；物件保留。" % removed
+		return
+	if command == "preview":
+		var errors: Array[String] = model.validation_errors()
+		if not errors.is_empty():
+			_status.text = "试走前请修正：\n" + "\n".join(errors)
+			return
+		var preview := ObjectPreview.new()
+		add_child(preview)
+		preview.configure(model.data.duplicate(true))
+		preview.popup_centered()
+		return
+	if command == "undo" or command == "redo":
+		var restored: bool = model.undo() if command == "undo" else model.redo()
+		if restored:
+			_prune_actor_editor_state()
+			var no_selection: Array[int] = []
+			canvas.select_actors(no_selection)
+			canvas.set_overlay_texture(model.overlay_path())
+			canvas.invalidate_def()
+			_panel_kind = -1
+			_refresh_dirty()
+			_refresh_objects()
+			_refresh_selection()
+		return
+	if command == "copy" or command == "duplicate":
+		model.copy_actors(canvas.selected_actors())
+		_status.text = "已复制 %d 件物件（包含碰撞与交互）" % canvas.selected_actors().size()
+	if command == "paste" or command == "duplicate":
+		canvas.select_actors(model.paste_actors())
+		_on_edited()
+		_refresh_selection()
+	if command == "template" and canvas.sel_kind == Kind.ACTOR:
+		var dialog := ConfirmationDialog.new()
+		dialog.title = "存为物件模板（新实例取当前属性快照）"
+		var field := LineEdit.new()
+		field.text = str(model.actor_field(canvas.sel_index, "id", "object"))
+		dialog.add_child(field)
+		var source: Dictionary = model.actor_dict(canvas.sel_index).duplicate(true)
+		dialog.confirmed.connect(func() -> void:
+			var error: Error = _library.save_template(field.text.strip_edges(), source)
+			_status.text = "模板已保存；修改模板不会静默改动已有实例。" if error == OK else "模板保存失败（重名不会覆盖）：%d" % error
+			_refresh_templates()
+			dialog.queue_free())
+		dialog.canceled.connect(dialog.queue_free)
+		add_child(dialog)
+		dialog.popup_centered(Vector2i(460, 120))
+
+
+func _rebuild_object_inspector() -> void:
+	_build_actor_panel()
+	_refresh_selection()
+
+
+func _toggle_toolbar_drawer(open: bool, index: int) -> void:
+	for drawer_index in _toolbar_drawers.size():
+		var visible := open and drawer_index == index
+		_toolbar_drawers[drawer_index].visible = visible
+		_drawer_buttons[drawer_index].set_pressed_no_signal(visible)
+
+
+func _row_title() -> HFlowContainer:
+	var row := HFlowContainer.new()
 	row.add_child(_text("地图："))
 	_map_picker = OptionButton.new()
 	_map_picker.custom_minimum_size = Vector2(200, 0)
 	_map_picker.item_selected.connect(_on_map_selected)
 	row.add_child(_map_picker)
+	var create := Button.new()
+	create.text = "新建地图…"
+	create.pressed.connect(_open_create_map)
+	row.add_child(create)
+	var add_actor := Button.new()
+	add_actor.text = "新建物件"
+	add_actor.pressed.connect(_on_add_actor)
+	row.add_child(add_actor)
+	var import_actor := Button.new()
+	import_actor.text = "导入物件…"
+	import_actor.pressed.connect(_open_import_dialog)
+	row.add_child(import_actor)
 	var reload := Button.new()
 	reload.text = "重新载入（丢弃改动）"
 	reload.tooltip_text = "从磁盘重读这张图，丢掉这次没保存的改动"
 	reload.pressed.connect(_on_reload)
-	row.add_child(reload)
+	_map_management.add_child(reload)
+	var fit := Button.new()
+	fit.text = "适应画布"
+	fit.tooltip_text = "把整张地图缩放并居中到当前画布区域"
+	fit.pressed.connect(func() -> void: canvas.fit_to_view())
+	row.add_child(fit)
 	_drop_draft_button = Button.new()
 	_drop_draft_button.text = "丢弃草稿"
 	_drop_draft_button.tooltip_text = "把这张图的未保存草稿删掉（改动就此消失）"
 	_drop_draft_button.pressed.connect(_on_drop_draft)
-	row.add_child(_drop_draft_button)
+	_map_management.add_child(_drop_draft_button)
 	_save_button = Button.new()
 	_save_button.text = "保存到 JSON"
 	_save_button.pressed.connect(_on_save)
 	row.add_child(_save_button)
+	var preview := Button.new()
+	preview.text = "当前布局试走"
+	preview.pressed.connect(_object_command.bind("preview"))
+	row.add_child(preview)
+	var backup_history := Button.new()
+	backup_history.text = "备份历史…"
+	backup_history.tooltip_text = "载入一份旧地图快照到编辑器；确认后仍需手动保存才会覆盖地图。"
+	backup_history.pressed.connect(_open_backup_dialog)
+	_map_management.add_child(backup_history)
 	var copy := Button.new()
 	copy.text = "复制布局到…"
 	copy.tooltip_text = "把这张图的碰撞箱/传送区/物件覆盖到另一张图上（白天版↔夜间版）"
 	copy.pressed.connect(_open_copy_dialog)
-	row.add_child(copy)
+	_map_management.add_child(copy)
 	return row
 
 
-func _row_layers() -> HBoxContainer:
-	var row := HBoxContainer.new()
+func _row_layers() -> HFlowContainer:
+	var row := HFlowContainer.new()
 	row.add_child(_text("显示："))
 	for item in [["背景", "show_bg"], ["前景层", "show_overlay"], ["墙", "show_walls"],
 			["传送区", "show_portals"], ["物件", "show_actors"], ["出生点", "show_spawns"],
@@ -150,35 +892,37 @@ func _row_layers() -> HBoxContainer:
 	return row
 
 
-func _row_selection() -> HBoxContainer:
-	var row := HBoxContainer.new()
+func _row_selection() -> HFlowContainer:
+	var row := HFlowContainer.new()
 	_sel_label = _text("未选中")
 	_sel_label.custom_minimum_size = Vector2(150, 0)
 	row.add_child(_sel_label)
 	for name in ["x", "y", "宽", "高"]:
-		row.add_child(_text(name))
+		var field := HBoxContainer.new()
+		field.add_child(_text(name))
 		var spin := SpinBox.new()
-		spin.min_value = -4096
-		spin.max_value = 4096
+		spin.min_value = -1000000
+		spin.max_value = 1000000
 		spin.step = 1
 		spin.custom_minimum_size = Vector2(78, 0)
 		spin.value_changed.connect(_on_spin_changed)
-		row.add_child(spin)
+		field.add_child(spin)
+		row.add_child(field)
 		_spins.append(spin)
 
 	_base_row = HBoxContainer.new()
 	_base_row.add_child(_text("遮挡基线 Y"))
 	_base_spin = SpinBox.new()
-	_base_spin.min_value = -4096
-	_base_spin.max_value = 4096
+	_base_spin.min_value = -1000000
+	_base_spin.max_value = 1000000
 	_base_spin.step = 1
 	_base_spin.custom_minimum_size = Vector2(78, 0)
 	_base_spin.value_changed.connect(_on_base_spin)
 	_base_row.add_child(_base_spin)
-	var auto_button := Button.new()
-	auto_button.text = "恢复自动（贴图底边）"
-	auto_button.pressed.connect(_on_base_auto)
-	_base_row.add_child(auto_button)
+	_base_auto_button = Button.new()
+	_base_auto_button.text = "恢复自动"
+	_base_auto_button.pressed.connect(_on_base_auto)
+	_base_row.add_child(_base_auto_button)
 	_base_row.visible = false
 	row.add_child(_base_row)
 
@@ -248,6 +992,38 @@ func _on_map_selected(_index: int) -> void:
 	refresh_map_list()
 
 
+func _open_create_map() -> void:
+	var dialog := MapCreationDialog.new()
+	dialog.map_created.connect(func(result: Dictionary) -> void:
+		_on_map_created(result)
+		dialog.queue_free())
+	dialog.canceled.connect(dialog.queue_free)
+	add_child(dialog)
+	dialog.open_creation()
+
+
+func _on_map_created(result: Dictionary) -> void:
+	if not bool(result.get("ok", false)):
+		_status.text = str(result.get("error", "新建地图失败。"))
+		return
+	if model.map_id != "" and model.dirty:
+		model.stash_draft()
+	refresh_map_list()
+	var id := str((result["data"] as Dictionary).get("id", ""))
+	for index in _map_picker.item_count:
+		if str(_map_picker.get_item_metadata(index)) == id:
+			_map_picker.select(index)
+			_load_selected()
+			break
+	if Engine.is_editor_hint():
+		EditorInterface.get_resource_filesystem().scan()
+	_refresh_assets()
+	_status.text = "已创建 %s，背景原图 1:1。接下来放置物件、碰撞和传送区。" % id
+	get_tree().create_timer(1.2).timeout.connect(func() -> void:
+		if model.map_id == id:
+			canvas.load_map(model, model.background_path(), model.overlay_path(), model.map_size()))
+
+
 func _on_reload() -> void:
 	# 「重新载入」= 丢掉改动重读文件，所以连草稿一起丢掉
 	if model.map_id != "":
@@ -295,16 +1071,69 @@ func _load_selected() -> void:
 	else:
 		_status.text = "已载入 %s（%d×%d 游戏单位）。滚轮缩放，中键/右键拖动平移。" % [
 			id, int(model.map_size().x), int(model.map_size().y)]
+	_load_actor_editor_state(id)
 
 
 func _on_save() -> void:
+	var problems: Array[String] = model.validation_errors()
+	if not problems.is_empty():
+		_status.text = "保存前请修正：\n" + "\n".join(problems)
+		return
 	var err := model.save_to()
 	if err == OK:
 		_refresh_dirty()
 		refresh_map_list()
-		_status.text = "已保存 %s（git 里能看 diff，草稿已清掉）" % model.path
+		var backup_note := "；旧版已备份 %s" % model.last_backup_name if model.last_backup_name != "" else ""
+		_status.text = "已保存 %s%s（草稿已清掉）" % [model.path, backup_note]
+	elif model.last_backup_failed:
+		_status.text = "保存已取消：无法创建自动备份，原地图未覆盖；请检查备份目录写入权限。"
 	else:
 		_status.text = "保存失败，错误码 %d" % err
+
+
+func _open_backup_dialog() -> void:
+	if model.map_id == "":
+		return
+	var names: Array[String] = model.backup_store.list_snapshots(model.map_id)
+	if names.is_empty():
+		var empty_dialog := AcceptDialog.new()
+		empty_dialog.title = "地图备份历史"
+		empty_dialog.dialog_text = "这张地图还没有旧版快照。每次保存覆盖已有地图后，编辑器会自动保留备份。"
+		add_child(empty_dialog)
+		empty_dialog.confirmed.connect(func() -> void: empty_dialog.queue_free())
+		empty_dialog.canceled.connect(func() -> void: empty_dialog.queue_free())
+		empty_dialog.popup_centered()
+		return
+	var dialog := ConfirmationDialog.new()
+	dialog.title = "载入地图备份"
+	dialog.ok_button_text = "载入到编辑器"
+	var box := VBoxContainer.new()
+	var warning := _text("载入会替换当前编辑内容，但不会立刻改磁盘地图；载入后检查无误，再点「保存到 JSON」。")
+	warning.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(warning)
+	var picker := OptionButton.new()
+	for name: String in names:
+		picker.add_item(name.trim_suffix(".json"))
+	box.add_child(picker)
+	dialog.add_child(_scrolled(box, Vector2(520, 120)))
+	dialog.confirmed.connect(func() -> void:
+		var error := model.restore_backup(names[picker.selected])
+		if error == OK:
+			var no_selection: Array[int] = []
+			canvas.select_actors(no_selection)
+			canvas.set_overlay_texture(model.overlay_path())
+			canvas.invalidate_def()
+			_panel_kind = -1
+			_refresh_dirty()
+			_refresh_objects()
+			_refresh_selection()
+			_status.text = "已载入备份 %s；改动尚未写入地图文件。" % names[picker.selected].trim_suffix(".json")
+		else:
+			_status.text = "备份无法载入，错误码 %d；地图内容未替换。" % error
+		dialog.queue_free())
+	dialog.canceled.connect(func() -> void: dialog.queue_free())
+	add_child(dialog)
+	dialog.popup_centered(Vector2i(620, 220))
 
 
 func _refresh_dirty() -> void:
@@ -321,13 +1150,15 @@ func _on_tool(which: int) -> void:
 		_tool_buttons[i].button_pressed = i == which
 	match which:
 		Canvas.Tool.SELECT:
-			_status.text = "选择：点中矩形拖走；八个白点改尺寸；Delete 删掉；数值框可精确改。"
+			_status.text = "选择：拖动物件；单选物件的碰撞框优先拾取，拖内部移动、八柄缩放；精确数值见「选择与尺寸」。"
 		Canvas.Tool.WALL:
 			_status.text = "画墙：在图上按住左键拖出一个框，松手就加进 walls。"
 		Canvas.Tool.PORTAL:
 			_status.text = "画传送区：同上，落进 portals（默认 locked，不通往任何地方）。"
 		Canvas.Tool.BASELINE:
 			_status.text = "拉基线：点一件遮挡物（身上有黄线），上下拖，松手写进它的 cover_y。"
+		Canvas.Tool.COLLISION:
+			_status.text = "先单选物件：空白处拖出碰撞，已有红框可移动和八柄缩放，Esc 取消；排序取参考碰撞上边缘。"
 
 
 func _on_layer(on: bool, prop: String) -> void:
@@ -343,7 +1174,7 @@ func _on_layer(on: bool, prop: String) -> void:
 ## 而且数据本身还是合法的，`check_data` 也不会报（它只查「引用存在不存在」，
 ## 查不出「本来该有个人来触发」）。
 func _on_delete() -> void:
-	if canvas.sel_kind < 0:
+	if canvas.sel_kind < 0 or not _allow_selection_edit():
 		return
 	var names := ["墙", "传送区", "物件", "出生点", "前景层"]
 	var what: String = names[canvas.sel_kind]
@@ -378,6 +1209,8 @@ func _on_delete() -> void:
 
 
 func _do_delete(what: String, was: String) -> void:
+	if not _allow_selection_edit():
+		return
 	model.remove_at(canvas.sel_kind, canvas.sel_index)
 	canvas.sel_kind = -1
 	canvas.sel_index = -1
@@ -426,6 +1259,45 @@ func _open_spawn_dialog() -> void:
 	field.grab_focus()
 
 
+func _on_layout_action(action: int) -> void:
+	if not _allow_selection_edit():
+		return
+	var selected: Array[int] = canvas.selected_actors()
+	var changed := false
+	var label := ""
+	match action:
+		LayoutAction.ALIGN_LEFT:
+			changed = model.align_actors(selected, Model.ActorAlignment.LEFT)
+			label = "左对齐"
+		LayoutAction.ALIGN_CENTER_X:
+			changed = model.align_actors(selected, Model.ActorAlignment.CENTER_X)
+			label = "水平居中"
+		LayoutAction.ALIGN_RIGHT:
+			changed = model.align_actors(selected, Model.ActorAlignment.RIGHT)
+			label = "右对齐"
+		LayoutAction.ALIGN_TOP:
+			changed = model.align_actors(selected, Model.ActorAlignment.TOP)
+			label = "顶对齐"
+		LayoutAction.ALIGN_CENTER_Y:
+			changed = model.align_actors(selected, Model.ActorAlignment.CENTER_Y)
+			label = "垂直居中"
+		LayoutAction.ALIGN_BOTTOM:
+			changed = model.align_actors(selected, Model.ActorAlignment.BOTTOM)
+			label = "底对齐"
+		LayoutAction.DISTRIBUTE_HORIZONTAL:
+			changed = model.distribute_actors(selected, Model.DistributionAxis.HORIZONTAL)
+			label = "水平等间距"
+		LayoutAction.DISTRIBUTE_VERTICAL:
+			changed = model.distribute_actors(selected, Model.DistributionAxis.VERTICAL)
+			label = "垂直等间距"
+	if not changed:
+		_status.text = "位置无需调整；对齐需两件物件，等间距需三件。"
+		return
+	_on_edited()
+	_refresh_selection()
+	_status.text = "已完成物件%s" % label
+
+
 func _open_copy_dialog() -> void:
 	if model.map_id == "":
 		return
@@ -468,7 +1340,7 @@ func _open_copy_dialog() -> void:
 
 
 func _on_spin_changed(_v: float) -> void:
-	if _syncing or canvas.sel_kind < 0:
+	if _syncing or canvas.sel_kind < 0 or not _allow_selection_edit():
 		return
 	if canvas.sel_kind == Kind.SPAWN:
 		# 出生点是坐标，不是矩形 —— 只认 x / y 两个框
@@ -489,13 +1361,15 @@ func _on_spin_changed(_v: float) -> void:
 func _on_base_spin(v: float) -> void:
 	if _syncing or canvas.sel_kind != Kind.ACTOR or not canvas.model.is_cover_actor(canvas.sel_index):
 		return
+	if not _allow_selection_edit():
+		return
 	canvas.model.set_actor_cover_y(canvas.sel_index, v)
 	_on_edited()
 	canvas.queue_redraw()
 
 
 func _on_base_auto() -> void:
-	if canvas.sel_kind != Kind.ACTOR:
+	if canvas.sel_kind != Kind.ACTOR or not _allow_selection_edit():
 		return
 	canvas.model.clear_actor_cover_y(canvas.sel_index)
 	_on_edited()
@@ -507,6 +1381,7 @@ func _on_selection_changed() -> void:
 
 
 func _refresh_selection() -> void:
+	_refresh_objects()
 	var kind: int = canvas.sel_kind
 	var index: int = canvas.sel_index
 	_syncing = true
@@ -525,11 +1400,12 @@ func _refresh_selection() -> void:
 		_spins[3].value = r.size.y
 		var is_spawn: bool = kind == Kind.SPAWN
 		var is_overlay: bool = kind == Kind.OVERLAY
+		var is_locked: bool = _selection_has_locked_actor()
 		# 出生点没有宽高可改（它就是个坐标）；前景层整张拉伸，四个都不给改
-		_spins[0].editable = not is_overlay
-		_spins[1].editable = not is_overlay
-		_spins[2].editable = not is_spawn and not is_overlay
-		_spins[3].editable = not is_spawn and not is_overlay
+		_spins[0].editable = not is_overlay and not is_locked
+		_spins[1].editable = not is_overlay and not is_locked
+		_spins[2].editable = not is_spawn and not is_overlay and not is_locked
+		_spins[3].editable = not is_spawn and not is_overlay and not is_locked
 		if is_overlay:
 			_spins[0].value = 0
 			_spins[1].value = 0
@@ -543,15 +1419,96 @@ func _refresh_selection() -> void:
 		var is_cover: bool = kind == Kind.ACTOR and model.is_cover_actor(index)
 		_base_row.visible = is_cover
 		if is_cover:
+			_base_spin.editable = not is_locked
+			_base_auto_button.disabled = is_locked
 			_base_spin.value = model.actor_cover_y(index)
-			_base_spin.tooltip_text = "黄线=自动（贴图底边）；橙线=手动覆盖"
+			_base_spin.tooltip_text = "独立物件：碰撞箱上边缘；旧物件：贴图底边。橙线表示手动调整。"
 	_syncing = false
 	_sync_actor_panel()
+	_refresh_transfer_button()
+
+
+func _transfer_target_error(expected_model = null, expected_map := "", expected_index := -1,
+		expected_id := "") -> String:
+	if expected_model != null and (model != expected_model or model.map_id != expected_map):
+		return "地图已切换或重新载入，请关闭助手后重新打开。"
+	if canvas.sel_kind != Kind.ACTOR or canvas.sel_index < 0:
+		return "请先选中单个物件。"
+	var selected: Array[int] = canvas.selected_actors()
+	if selected.size() != 1 or selected[0] != canvas.sel_index:
+		return "归属目标必须是单个物件；请先解除编组或取消多选。"
+	if _selected_actor_indices().size() > 1:
+		return "场景树仍选中了多个物件；请先取消多选后再归入地图墙。"
+	if model.expand_group_selection(selected).size() != 1:
+		return "编组包含多个物件，请先解组后指定归属目标。"
+	var index: int = canvas.sel_index
+	if index >= model.count(Kind.ACTOR):
+		return "目标物件已不存在，请重新选择。"
+	var actor_id := str(model.actor_field(index, "id", ""))
+	if expected_index >= 0 and (index != expected_index or actor_id != expected_id):
+		return "当前目标已改变，请关闭助手后重新打开。"
+	if canvas.actor_is_hidden(index) or _hidden_actor_ids.has(actor_id):
+		return "目标物件已隐藏，请先显示物件再归入地图墙。"
+	if canvas.actor_is_locked(index) or _locked_actor_ids.has(actor_id):
+		return "目标物件已锁定，请先解锁物件再归入地图墙。"
+	return ""
+
+
+func _refresh_transfer_button() -> void:
+	if not is_instance_valid(_transfer_button):
+		return
+	_transfer_button.visible = canvas.sel_kind == Kind.ACTOR
+	var reason := _transfer_target_error()
+	_transfer_button.disabled = not reason.is_empty()
+	_transfer_button.tooltip_text = reason if not reason.is_empty() else "手动勾选旧地图墙，归入当前物件的局部碰撞；确认前可预览。"
+
+
+func _open_geometry_transfer() -> void:
+	var reason := _transfer_target_error()
+	if not reason.is_empty():
+		_status.text = reason
+		return
+	if not is_instance_valid(_transfer_dialog):
+		_transfer_dialog = GeometryTransferDialog.new()
+		_transfer_dialog.applied.connect(_on_geometry_transferred)
+		add_child(_transfer_dialog)
+	var index: int = canvas.sel_index
+	var actor_id := str(model.actor_field(index, "id", ""))
+	_transfer_dialog.configure(model, index,
+		_transfer_target_error.bind(model, model.map_id, index, actor_id))
+	if is_inside_tree():
+		_transfer_dialog.open_for_viewport()
+
+
+func _on_geometry_transferred(index: int) -> void:
+	var selection: Array[int] = [index]
+	canvas.select_actors(selection)
+	_on_edited()
+	if canvas.show_walk:
+		canvas.recompute_walk()
+	_panel_kind = -1
+	_refresh_selection()
+	_status.text = "已归入所选地图墙；可撤销，尚未保存到 JSON。"
 
 
 func _on_edited() -> void:
+	model.record_history()
+	_prune_actor_editor_state()
 	canvas.invalidate_def()      # 数据改了，脚底框/可走格那边的 MapDef 要重建
 	_refresh_dirty()
+	_refresh_objects()
+	if canvas.sel_kind == Kind.ACTOR and _base_row.visible:
+		_syncing = true
+		_base_spin.value = model.actor_cover_y(canvas.sel_index)
+		_syncing = false
+	canvas.queue_redraw()
+
+
+func _on_canvas_edited() -> void:
+	_on_edited()
+	if canvas.sel_kind == Kind.ACTOR and (canvas.tool == Canvas.Tool.COLLISION or canvas._has_collision_selection()):
+		_build_actor_panel()
+	_refresh_selection()
 
 
 # ---------------------------------------------------------------- 物件属性面板
@@ -584,7 +1541,10 @@ func _sync_actor_panel() -> void:
 		_panel_kind = -1
 		_panel_index = -1
 		return
-	if _panel_kind == kind and _panel_index == canvas.sel_index:
+	var is_locked := _selection_has_locked_actor()
+	var id_readonly: bool = kind == Kind.ACTOR and canvas.actor_is_hidden(canvas.sel_index)
+	if _panel_kind == kind and _panel_index == canvas.sel_index \
+			and _panel_locked == is_locked and _panel_id_readonly == id_readonly:
 		_panel_scroll.visible = true
 		return
 	if kind == Kind.OVERLAY:
@@ -639,6 +1599,8 @@ func _build_overlay_panel() -> void:
 func _build_actor_panel() -> void:
 	_panel_kind = Kind.ACTOR
 	_panel_index = canvas.sel_index
+	_panel_locked = _selection_has_locked_actor()
+	_panel_id_readonly = canvas.actor_is_hidden(_panel_index)
 	for child in _actor_panel.get_children():
 		child.queue_free()
 	_panel_scroll.visible = true
@@ -652,7 +1614,7 @@ func _build_actor_panel() -> void:
 	row1.add_child(_field("label", 130.0))
 	_actor_panel.add_child(row1)
 
-	var row2 := HBoxContainer.new()
+	var row2 := HFlowContainer.new()
 	row2.add_child(_text("贴图"))
 	var sprite_line := _field("sprite", 320.0)
 	row2.add_child(sprite_line)
@@ -665,11 +1627,18 @@ func _build_actor_panel() -> void:
 		if i <= 0:
 			return
 		var path: String = props[i - 1]
-		model.set_actor_field(_panel_index, "sprite", path)
-		sprite_line.text = path
-		_on_edited()
-		canvas.queue_redraw())
+		if _set_actor_texture(_panel_index, path):
+			sprite_line.text = path)
 	row2.add_child(picker)
+	var import_texture := Button.new()
+	import_texture.text = "导入贴图…"
+	import_texture.pressed.connect(_open_actor_texture_import)
+	row2.add_child(import_texture)
+	var native_size := Button.new()
+	native_size.text = "恢复原图尺寸"
+	native_size.pressed.connect(func() -> void:
+		_set_actor_texture(_panel_index, str(model.actor_field(_panel_index, "sprite", ""))))
+	row2.add_child(native_size)
 	_actor_panel.add_child(row2)
 
 	var row3 := HBoxContainer.new()
@@ -678,9 +1647,35 @@ func _build_actor_panel() -> void:
 	row3.add_child(_bool_field("cover", "会挡人（按站位分前后）"))
 	row3.add_child(_bool_field("over", "永远画在角色之上"))
 	_actor_panel.add_child(row3)
+	var geometry := ObjectInspector.new()
+	geometry.configure(model, _panel_index)
+	geometry.edited.connect(_on_edited)
+	geometry.rebuild_requested.connect(_rebuild_object_inspector)
+	_actor_panel.add_child(geometry)
+	_transfer_button = Button.new()
+	_transfer_button.text = "归入地图墙…"
+	_transfer_button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_transfer_button.pressed.connect(_open_geometry_transfer)
+	_actor_panel.add_child(_transfer_button)
+	_refresh_transfer_button()
 
 	_build_interaction_section()
 	_actor_panel.add_child(_switch_row())
+	if _panel_locked:
+		_set_controls_readonly(_actor_panel)
+
+
+func _set_controls_readonly(node: Node) -> void:
+	if node is BaseButton:
+		(node as BaseButton).disabled = true
+	elif node is LineEdit:
+		(node as LineEdit).editable = false
+	elif node is TextEdit:
+		(node as TextEdit).editable = false
+	elif node is SpinBox:
+		(node as SpinBox).editable = false
+	for child: Node in node.get_children():
+		_set_controls_readonly(child)
 
 
 func _build_interaction_section() -> void:
@@ -858,10 +1853,68 @@ func _field(key: String, width: float) -> LineEdit:
 	var edit := LineEdit.new()
 	edit.text = str(model.actor_field(_panel_index, key, ""))
 	edit.custom_minimum_size = Vector2(width, 0)
+	if key == "sprite":
+		var apply_texture := func() -> void:
+			if edit.text != str(model.actor_field(_panel_index, "sprite", "")):
+				_set_actor_texture(_panel_index, edit.text.strip_edges())
+		edit.text_submitted.connect(func(_text: String) -> void: apply_texture.call())
+		edit.tooltip_text = "输入项目内贴图路径后按 Enter；自动采用原图像素尺寸。"
+		return edit
+	if key == "id" and canvas.actor_is_hidden(_panel_index):
+		edit.editable = false
+		edit.tooltip_text = "请先显示并解锁物件，再修改 ID；隐藏/锁定状态按地图与 ID 保存。"
 	edit.text_changed.connect(func(t: String) -> void:
+		if not _allow_selection_edit():
+			return
+		if key == "id" and canvas.actor_is_hidden(_panel_index):
+			return
 		model.set_actor_field(_panel_index, key, t)
 		_on_edited())
 	return edit
+
+
+func _set_actor_texture(index: int, path: String) -> bool:
+	if not _allow_selection_edit():
+		return false
+	if not model.assign_actor_sprite(index, path):
+		_status.text = "贴图无法读取，请选择有效的 PNG 图片。"
+		return false
+	_on_edited()
+	_refresh_selection()
+	_status.text = "贴图已更新，物件尺寸恢复为原图像素 1:1。"
+	return true
+
+
+func _open_actor_texture_import() -> void:
+	if not _allow_selection_edit():
+		return
+	var target_model = model
+	var target_map: String = model.map_id
+	var target_index := _panel_index
+	var target_id := str(model.actor_field(target_index, "id", ""))
+	var dialog := FileDialog.new()
+	dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+	dialog.access = FileDialog.ACCESS_FILESYSTEM
+	dialog.use_native_dialog = true
+	dialog.add_filter("*.png", "PNG 图片")
+	dialog.title = "为当前物件导入贴图（原图 1:1）"
+	dialog.file_selected.connect(func(source: String) -> void:
+		if model == target_model and model.map_id == target_map and _panel_index == target_index and str(model.actor_field(target_index, "id", "")) == target_id and _allow_selection_edit():
+			var image := Image.load_from_file(source)
+			if image != null and not image.is_empty():
+				var imported: String = model.import_image(source)
+				if imported != "" and _set_actor_texture(target_index, imported):
+					if Engine.is_editor_hint():
+						EditorInterface.get_resource_filesystem().scan()
+					canvas.clear_texture_cache()
+					get_tree().create_timer(1.2).timeout.connect(func() -> void:
+						canvas.clear_texture_cache()
+						canvas.queue_redraw()
+						_refresh_assets())
+		dialog.queue_free())
+	dialog.canceled.connect(dialog.queue_free)
+	add_child(dialog)
+	dialog.popup_centered(Vector2i(760, 500))
 
 
 func _bool_field(key: String, label: String) -> CheckBox:
@@ -981,13 +2034,17 @@ func _import_overlay(source_path: String) -> void:
 
 
 func _import_and_create(source_path: String) -> void:
+	var image := Image.load_from_file(source_path)
+	if image == null or image.is_empty():
+		_status.text = "导入失败：图片无法解码，请选择完整的 PNG 文件。"
+		return
 	var res_path := model.import_image(source_path, "res://art/props")
 	if res_path == "":
 		_status.text = "导入失败：得是能读的 .png。别的格式先在画图工具里另存成 png。"
 		return
 	var index := model.add_actor_with_sprite(res_path, true)
-	canvas.sel_kind = Kind.ACTOR
-	canvas.sel_index = index
+	var selection: Array[int] = [index]
+	canvas.select_actors(selection)
 	canvas.clear_texture_cache()
 	if Engine.is_editor_hint():
 		EditorInterface.get_resource_filesystem().scan()
@@ -998,4 +2055,5 @@ func _import_and_create(source_path: String) -> void:
 	# 新文件被 Godot 导成纹理要一两秒，等一下再清缓存重画一次，图才出得来
 	get_tree().create_timer(1.2).timeout.connect(func() -> void:
 		canvas.clear_texture_cache()
-		canvas.queue_redraw())
+		canvas.queue_redraw()
+		_refresh_assets())

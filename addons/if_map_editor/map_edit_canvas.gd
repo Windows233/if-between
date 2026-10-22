@@ -1,15 +1,16 @@
 ## 编辑器的画布：把地图画出来、接鼠标。
 ##
-## 坐标系：**屏幕像素 ↔ 游戏单位**（地图 `size`，1 游戏单位 = 背景图上的 12 像素）。
+## 坐标系：**屏幕像素 ↔ 地图单位**。新置入贴图默认原图像素 1:1，旧地图保留原有 size。
 ## 所有矩形数据都以游戏单位存，界面上的数字和 JSON 里的数字是同一个。
 ## 缩放/平移自己实现（不借 2D 编辑器），因为整个画布是自成一体的面板，
 ## 不依赖当前打开哪个场景。
 ##
-## 四种工具：选择 / 画墙 / 画传送区 / 拉基线。
+## 五种工具：选择 / 画墙 / 画传送区 / 拉基线 / 画物件碰撞箱。
 ## 纯绘制与交互，数据全部交给 `map_edit_model.gd`。
+@tool
 extends Control
 
-enum Tool { SELECT, WALL, PORTAL, BASELINE }
+enum Tool { SELECT, WALL, PORTAL, BASELINE, COLLISION }
 
 const Kind := preload("res://addons/if_map_editor/map_edit_model.gd").Kind
 
@@ -31,15 +32,24 @@ const HIT_SLOP := 4.0
 signal selection_changed
 signal edited
 signal status(text)
+signal command_requested(command: String)
 
 var model = null
 var tex_bg: Texture2D = null
 var tex_overlay: Texture2D = null
 var map_size := Vector2.ZERO
 
-var tool: int = Tool.SELECT
+var tool: int = Tool.SELECT:
+	set(value):
+		if tool != value:
+			_clear_collision_selection()
+		tool = value
+		queue_redraw()
 var zoom := 1.0
 var pan := Vector2.ZERO
+var _view_touched := false
+var hidden_actor_ids: Dictionary = {}
+var locked_actor_ids: Dictionary = {}
 
 var show_bg := true
 var show_overlay := true
@@ -68,6 +78,12 @@ var _overlay_used := Rect2()
 
 var sel_kind := -1
 var sel_index := -1
+var actor_selection: Array[int] = []
+var _drag_actor_rects: Dictionary = {}
+var _collision_index := -1
+var _collision_actor := -1
+var _collision_actor_id := ""
+var _collision_drag_source: Dictionary = {}
 
 var _drag_mode := 0            # 0 无 / 1 移动 / 2 改尺寸 / 3 画新框 / 4 拉基线
 var _drag_start_game := Vector2.ZERO
@@ -82,6 +98,7 @@ func _ready() -> void:
 	focus_mode = Control.FOCUS_CLICK
 	clip_contents = true
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	resized.connect(_on_viewport_resized)
 	# 像素画缩小时要脆，不要糊
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	mouse_entered.connect(func() -> void:
@@ -95,6 +112,9 @@ func _ready() -> void:
 # ---------------------------------------------------------------- 载入
 
 func load_map(model_ref, bg_path: String, overlay_path: String, size: Vector2) -> void:
+	_clear_collision_selection()
+	_drag_mode = 0
+	_drag_actor_rects.clear()
 	model = model_ref
 	map_size = size
 	tex_bg = _load_tex(bg_path)
@@ -102,11 +122,204 @@ func load_map(model_ref, bg_path: String, overlay_path: String, size: Vector2) -
 	_overlay_used = _used_rect_of(tex_overlay)
 	sel_kind = -1
 	sel_index = -1
+	actor_selection.clear()
+	_view_touched = false
 	_walk_texture = null
 	_def = null
 	fit_to_view()
 	queue_redraw()
 	selection_changed.emit()
+
+
+func set_actor_editor_state(hidden_ids: Dictionary, locked_ids: Dictionary) -> void:
+	if _drag_mode == 1 or _drag_mode == 2 or _drag_mode == 4:
+		_drag_mode = 0
+		edited.emit()
+		selection_changed.emit()
+	elif _drag_mode == 3:
+		_drag_mode = 0
+	hidden_actor_ids = hidden_ids.duplicate()
+	locked_actor_ids = locked_ids.duplicate()
+	if not _collision_editable():
+		_clear_collision_selection()
+	queue_redraw()
+
+
+func actor_is_hidden(index: int) -> bool:
+	if model == null or index < 0 or index >= model.count(Kind.ACTOR):
+		return false
+	var actor_id := str(model.actor_field(index, "id", ""))
+	return not actor_id.is_empty() and hidden_actor_ids.has(actor_id)
+
+
+func actor_is_locked(index: int) -> bool:
+	if model == null or index < 0 or index >= model.count(Kind.ACTOR):
+		return false
+	var actor_id := str(model.actor_field(index, "id", ""))
+	return not actor_id.is_empty() and locked_actor_ids.has(actor_id)
+
+
+func _actor_selection_block_reason() -> String:
+	for index: int in selected_actors():
+		if actor_is_hidden(index):
+			return "选区包含隐藏物件，请先显示后再移动"
+		if actor_is_locked(index):
+			return "选区包含锁定物件，请先解锁后再移动"
+	return ""
+
+
+func selected_actors() -> Array[int]:
+	if sel_kind != Kind.ACTOR:
+		return []
+	if actor_selection.is_empty() and sel_index >= 0:
+		return [sel_index]
+	return actor_selection.duplicate()
+
+
+func select_actors(indices: Array[int]) -> void:
+	_clear_collision_selection()
+	actor_selection = model.expand_group_selection(indices) if model != null else indices.duplicate()
+	sel_kind = Kind.ACTOR if not actor_selection.is_empty() else -1
+	sel_index = actor_selection.back() if not actor_selection.is_empty() else -1
+	queue_redraw()
+
+
+func _collision_editable() -> bool:
+	if model == null or not show_actors or sel_kind != Kind.ACTOR \
+			or sel_index < 0 or sel_index >= model.count(Kind.ACTOR):
+		return false
+	var selected := selected_actors()
+	return selected.size() == 1 and selected[0] == sel_index \
+		and model.expand_group_selection(selected).size() == 1 \
+		and _actor_selection_block_reason().is_empty()
+
+
+func _collision_owner_valid() -> bool:
+	return _collision_editable() and _collision_actor == sel_index \
+		and _collision_actor_id == str(model.actor_field(sel_index, "id", ""))
+
+
+func _has_collision_selection() -> bool:
+	return _collision_owner_valid() and _collision_index >= 0 \
+		and _collision_rect_at(_collision_index).has_area()
+
+
+func _clear_collision_selection() -> void:
+	if _drag_mode >= 5 and _drag_mode <= 7:
+		_drag_mode = 0
+	_collision_drag_source.clear()
+	_collision_index = -1
+	_collision_actor = -1
+	_collision_actor_id = ""
+	queue_redraw()
+
+
+func _collision_rect_at(index: int) -> Rect2:
+	if model == null or sel_kind != Kind.ACTOR:
+		return Rect2()
+	var shapes: Variant = model.actor_dict(sel_index).get("collision", [])
+	if not shapes is Array or index < 0 or index >= shapes.size():
+		return Rect2()
+	var shape: Variant = shapes[index]
+	if not shape is Array or shape.size() != 4:
+		return Rect2()
+	for component: Variant in shape:
+		if not (component is int or component is float):
+			return Rect2()
+	var origin: Vector2 = model.rect_of(Kind.ACTOR, sel_index).position
+	return Rect2(origin + Vector2(shape[0], shape[1]), Vector2(shape[2], shape[3]))
+
+
+func _hit_collision_handle(pos: Vector2) -> int:
+	if not _has_collision_selection():
+		return -1
+	var points := _handle_points(_collision_rect_at(_collision_index))
+	for index in points.size():
+		if points[index].distance_to(pos) <= HANDLE_SIZE:
+			return index
+	return -1
+
+
+func _press_collision(pos: Vector2) -> bool:
+	if not _collision_editable():
+		return false
+	var handle := _hit_collision_handle(pos)
+	var index := _collision_index if handle >= 0 else -1
+	if index < 0:
+		var shapes: Variant = model.actor_dict(sel_index).get("collision", [])
+		if shapes is Array:
+			for candidate in range(shapes.size() - 1, -1, -1):
+				var shape := _collision_rect_at(candidate)
+				if shape.has_area() and _rect_hit(shape, pos):
+					index = candidate
+					break
+	if index < 0:
+		return false
+	_begin_collision_drag(6 if handle >= 0 else 5, pos, index)
+	_drag_handle = handle
+	_drag_start_rect = _collision_rect_at(index)
+	_drag_new_rect = _drag_start_rect
+	queue_redraw()
+	return true
+
+
+func _begin_collision_drag(mode: int, pos: Vector2, index := -1) -> void:
+	_collision_index = index
+	_collision_actor = sel_index
+	_collision_actor_id = str(model.actor_field(sel_index, "id", ""))
+	_collision_drag_source = model.actor_dict(sel_index).duplicate(true)
+	_drag_mode = mode
+	_drag_start_game = to_game(pos)
+	_drag_new_rect = Rect2(_snap(_drag_start_game), Vector2.ZERO)
+
+
+func _collision_drag_valid() -> bool:
+	return _collision_owner_valid() and not _collision_drag_source.is_empty() \
+		and model.actor_dict(sel_index) == _collision_drag_source
+
+
+func _update_collision_drag(pos: Vector2) -> void:
+	if not _collision_drag_valid():
+		_clear_collision_selection()
+		return
+	if _drag_mode == 5:
+		_drag_new_rect = Rect2(_drag_start_rect.position + _snap(to_game(pos) - _drag_start_game),
+			_drag_start_rect.size)
+	elif _drag_mode == 6:
+		_drag_new_rect = _resized_rect(pos)
+	elif _drag_mode == 7:
+		var start := _snap(_drag_start_game)
+		var end := _snap(to_game(pos))
+		_drag_new_rect = Rect2(start.min(end), (end - start).abs())
+	queue_redraw()
+
+
+func _release_collision_drag() -> void:
+	if not _collision_drag_valid():
+		_clear_collision_selection()
+		return
+	var mode := _drag_mode
+	_drag_mode = 0
+	_collision_drag_source.clear()
+	if not _drag_new_rect.has_area() or (mode != 7 and _drag_new_rect == _drag_start_rect):
+		queue_redraw()
+		return
+	if mode == 7:
+		model.add_collision_rect(sel_index, _drag_new_rect)
+		_collision_index = model.actor_dict(sel_index)["collision"].size() - 1
+	else:
+		var shapes: Array = model.actor_dict(sel_index)["collision"].duplicate(true)
+		var local: Vector2 = _drag_new_rect.position - model.rect_of(Kind.ACTOR, sel_index).position
+		var shape: Array = [local.x, local.y, _drag_new_rect.size.x, _drag_new_rect.size.y]
+		for component in shape.size():
+			if shape[component] == roundf(shape[component]):
+				shape[component] = int(shape[component])
+		shapes[_collision_index] = shape
+		model.set_actor_field(sel_index, "collision", shapes)
+	invalidate_def()
+	edited.emit()
+	selection_changed.emit()
+	queue_redraw()
 
 
 ## 一张图里真正有像素的范围（全透明的不算）。算不出来就返回空矩形。
@@ -123,7 +336,15 @@ func _load_tex(path: String) -> Texture2D:
 	if path == "":
 		return null
 	if not _tex_cache.has(path):
-		_tex_cache[path] = load(path)
+		var texture: Texture2D = null
+		if FileAccess.file_exists(path):
+			if path.get_extension().to_lower() == "png" and not FileAccess.file_exists(path + ".import"):
+				var image := Image.load_from_file(path)
+				if image != null and not image.is_empty():
+					texture = ImageTexture.create_from_image(image)
+			else:
+				texture = load(path) as Texture2D
+		_tex_cache[path] = texture
 	var tex: Variant = _tex_cache[path]
 	return tex if tex is Texture2D else null
 
@@ -194,9 +415,48 @@ func foot_is_free(point: Vector2) -> bool:
 func fit_to_view() -> void:
 	if map_size == Vector2.ZERO or size.x <= 0.0 or size.y <= 0.0:
 		return
-	zoom = maxf(0.2, minf((size.x - 24.0) / map_size.x, (size.y - 24.0) / map_size.y))
+	_view_touched = false
+	zoom = maxf(0.01, minf((size.x - 24.0) / map_size.x, (size.y - 24.0) / map_size.y))
 	pan = (size - map_size * zoom) * 0.5
 	queue_redraw()
+
+
+func frame_selection() -> bool:
+	if model == null or sel_kind < 0 or size.x <= 24.0 or size.y <= 24.0:
+		return false
+	if _drag_mode != 0:
+		return false
+	if not is_kind_visible(sel_kind):
+		status.emit("所选项所在图层未显示，请先在顶部打开显示开关。")
+		return false
+	var bounds := Rect2()
+	var has_bounds := false
+	if sel_kind == Kind.ACTOR:
+		for index: int in selected_actors():
+			if index < 0 or index >= model.count(Kind.ACTOR) or actor_is_hidden(index):
+				continue
+			var actor_rect: Rect2 = model.rect_of(Kind.ACTOR, index)
+			bounds = bounds.merge(actor_rect) if has_bounds else actor_rect
+			has_bounds = true
+	else:
+		if sel_index < 0 or sel_index >= model.count(sel_kind):
+			return false
+		bounds = overlay_game_rect() if sel_kind == Kind.OVERLAY else model.rect_of(sel_kind, sel_index)
+		has_bounds = true
+	if not has_bounds:
+		status.emit("选区中没有可见物件，请先显示后再定位。")
+		return false
+	var framing_size := Vector2(maxf(bounds.size.x, 24.0), maxf(bounds.size.y, 24.0)) * 1.25
+	zoom = clampf(minf((size.x - 24.0) / framing_size.x, (size.y - 24.0) / framing_size.y), 0.01, 12.0)
+	pan = size * 0.5 - bounds.get_center() * zoom
+	_view_touched = true
+	queue_redraw()
+	return true
+
+
+func _on_viewport_resized() -> void:
+	if not _view_touched:
+		fit_to_view()
 
 
 func recompute_walk() -> void:
@@ -245,6 +505,44 @@ func _snap(p: Vector2) -> Vector2:
 	return Vector2(roundf(p.x), roundf(p.y))
 
 
+func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
+	if model == null or tool != Tool.SELECT or map_size.x <= 0.0 or map_size.y <= 0.0:
+		return false
+	if not Rect2(Vector2.ZERO, map_size).has_point(to_game(at_position)):
+		return false
+	if not data is Dictionary or str(data.get("type", "")) != "if_map_asset":
+		return false
+	var path := str(data.get("path", ""))
+	if not path.begins_with("res://art/props/") or path.get_extension().to_lower() != "png":
+		return false
+	return FileAccess.file_exists(path) and load(path) is Texture2D
+
+
+func _drop_data(at_position: Vector2, data: Variant) -> void:
+	if not _can_drop_data(at_position, data):
+		return
+	var path := str(data["path"])
+	var texture := load(path) as Texture2D
+	if texture == null:
+		return
+	var source_image := Image.load_from_file(path)
+	if source_image == null or source_image.is_empty():
+		return
+	var image_size := Vector2(source_image.get_size())
+	if image_size.x <= 0.0 or image_size.y <= 0.0:
+		return
+	var size := image_size
+	var position := _snap(to_game(at_position) - size * 0.5)
+	var index: int = model.add_actor_with_sprite(path)
+	model.set_rect(Kind.ACTOR, index, Rect2(position, size))
+	select_actors([index])
+	_drag_mode = 0
+	edited.emit()
+	selection_changed.emit()
+	queue_redraw()
+	status.emit("已按原图 1:1 放置 %s（%d×%d），可继续手动缩放。" % [path.get_file().get_basename(), int(size.x), int(size.y)])
+
+
 # ---------------------------------------------------------------- 绘制
 
 func _draw() -> void:
@@ -282,16 +580,30 @@ func _draw() -> void:
 			_label(r.position + Vector2(2, 9), model.label_of(Kind.PORTAL, i), PORTAL_EDGE)
 	if show_actors:
 		for i in model.count(Kind.ACTOR):
+			if actor_is_hidden(i):
+				continue
 			var r: Rect2 = model.rect_of(Kind.ACTOR, i)
 			var item: Variant = model.actors()[i]
 			var sprite_path := str((item as Dictionary).get("sprite", "")) if item is Dictionary else ""
 			var tex := _load_tex(sprite_path)
-			_draw_rect_game(r, ACTOR_FILL, ACTOR_EDGE)
+			var actor_edge := Color(0.62, 0.66, 0.70, 0.9) if actor_is_locked(i) else ACTOR_EDGE
+			_draw_rect_game(r, ACTOR_FILL, actor_edge)
 			if tex != null:
 				draw_texture_rect(tex, Rect2(to_screen(r.position), r.size * zoom), false)
-			_label(r.position + Vector2(2, r.size.y - 3), model.label_of(Kind.ACTOR, i), ACTOR_EDGE)
+			_label(r.position + Vector2(2, r.size.y - 3), model.label_of(Kind.ACTOR, i), actor_edge)
 			if model.is_cover_actor(i):
 				_draw_baseline(i)
+			if selected_actors().has(i):
+				var actor := MapDef._actor_from(model.actor_dict(i))
+				var shapes := actor.collision_rects()
+				for shape_index in shapes.size():
+					var shape: Rect2 = shapes[shape_index]
+					if i == _collision_actor and shape_index == _collision_index \
+							and (_drag_mode == 5 or _drag_mode == 6) and _collision_drag_valid():
+						shape = _drag_new_rect
+					_draw_rect_game(shape, WALL_FILL, WALL_EDGE, 2.0)
+				_draw_rect_game(actor.reach, Color(0.2, 0.7, 1, 0.08), PORTAL_EDGE)
+				_draw_rect_game(r, Color.TRANSPARENT, SELECT_COLOR, 2.0)
 
 	# 出生点（紫点 + 名字）
 	if show_spawns:
@@ -301,7 +613,7 @@ func _draw() -> void:
 			draw_string(ThemeDB.fallback_font, p + Vector2(7, 4), model.label_of(Kind.SPAWN, i),
 				HORIZONTAL_ALIGNMENT_LEFT, -1, 12, SPAWN_COLOR)
 
-	if _drag_mode == 3:
+	if _drag_mode == 3 or _drag_mode == 7:
 		_draw_rect_game(_drag_new_rect, Color(1, 1, 1, 0.15), SELECT_COLOR)
 
 	# 测试工具：鼠标处的脚底框（绿=站得住，红=站不住）
@@ -315,15 +627,25 @@ func _draw() -> void:
 		_label(Vector2(foot.position.x, foot.position.y - 3),
 			"%s  (%d, %d)" % ["站得住" if ok else "站不住", int(_mouse_game.x), int(_mouse_game.y)], color)
 
-	if sel_kind >= 0 and is_kind_visible(sel_kind):
+	if sel_kind >= 0 and is_kind_visible(sel_kind) \
+			and not (sel_kind == Kind.ACTOR and actor_is_hidden(sel_index)):
 		var r: Rect2 = overlay_game_rect() if sel_kind == Kind.OVERLAY \
 			else model.rect_of(sel_kind, sel_index)
 		_draw_rect_game(r, Color(0, 0, 0, 0), SELECT_COLOR, 2.0)
 		# 出生点是个点、前景层整张拉伸 —— 都没有「改尺寸」这回事，不给手柄
-		if tool == Tool.SELECT and sel_kind != Kind.SPAWN and sel_kind != Kind.OVERLAY:
+		if tool == Tool.SELECT and sel_kind != Kind.SPAWN and sel_kind != Kind.OVERLAY \
+				and selected_actors().size() <= 1 and _actor_selection_block_reason().is_empty() \
+				and not _has_collision_selection():
 			for h in _handle_points(r):
 				draw_rect(Rect2(h - Vector2(HANDLE_SIZE, HANDLE_SIZE) * 0.5,
 					Vector2(HANDLE_SIZE, HANDLE_SIZE)), SELECT_COLOR, true)
+	if (tool == Tool.SELECT or tool == Tool.COLLISION) and _has_collision_selection():
+		var collision_rect := _drag_new_rect if _drag_mode == 5 or _drag_mode == 6 \
+			else _collision_rect_at(_collision_index)
+		_draw_rect_game(collision_rect, Color.TRANSPARENT, SELECT_COLOR, 2.0)
+		for handle in _handle_points(collision_rect):
+			draw_rect(Rect2(handle - Vector2.ONE * HANDLE_SIZE * 0.5,
+				Vector2.ONE * HANDLE_SIZE), WALL_EDGE, true)
 
 
 func _draw_rect_game(r: Rect2, fill: Color, edge: Color, width := 1.0) -> void:
@@ -364,6 +686,30 @@ func _handle_points(r: Rect2) -> Array[Vector2]:
 
 # ---------------------------------------------------------------- 鼠标
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_WINDOW_FOCUS_OUT or what == NOTIFICATION_EXIT_TREE \
+			or what == NOTIFICATION_FOCUS_EXIT:
+		_clear_collision_selection()
+	elif what == NOTIFICATION_VISIBILITY_CHANGED and not is_visible_in_tree():
+		_clear_collision_selection()
+
+
+func _input(event: InputEvent) -> void:
+	if _drag_mode < 5 or _drag_mode > 7:
+		return
+	if event is InputEventMouseMotion:
+		_update_collision_drag(get_global_transform_with_canvas().affine_inverse() * event.position)
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and not event.pressed:
+		_update_collision_drag(get_global_transform_with_canvas().affine_inverse() * event.position)
+		_release()
+		if is_inside_tree():
+			get_viewport().set_input_as_handled()
+	elif event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+		_clear_collision_selection()
+		if is_inside_tree():
+			get_viewport().set_input_as_handled()
+
+
 func _gui_input(event: InputEvent) -> void:
 	if model == null:
 		return
@@ -377,6 +723,7 @@ func _gui_input(event: InputEvent) -> void:
 			return
 		if mb.button_index == MOUSE_BUTTON_MIDDLE or mb.button_index == MOUSE_BUTTON_RIGHT:
 			if mb.pressed:
+				_clear_collision_selection()
 				_drag_mode = 9
 				_drag_start_game = mb.position - pan
 			elif _drag_mode == 9:
@@ -384,7 +731,8 @@ func _gui_input(event: InputEvent) -> void:
 			return
 		if mb.button_index == MOUSE_BUTTON_LEFT:
 			if mb.pressed:
-				_press(mb.position)
+				grab_focus()
+				_press(mb.position, mb.shift_pressed)
 			else:
 				_release()
 			return
@@ -395,11 +743,17 @@ func _gui_input(event: InputEvent) -> void:
 			queue_redraw()
 		match _drag_mode:
 			9:
+				_view_touched = true
 				pan = mm.position - _drag_start_game
 				queue_redraw()
 			1:
 				var delta := _snap(to_game(mm.position) - _drag_start_game)
-				model.set_rect(sel_kind, sel_index, Rect2(_drag_start_rect.position + delta, _drag_start_rect.size))
+				if sel_kind == Kind.ACTOR:
+					for index: int in _drag_actor_rects:
+						var initial: Rect2 = _drag_actor_rects[index]
+						model.set_rect(Kind.ACTOR, index, Rect2(initial.position + delta, initial.size))
+				else:
+					model.set_rect(sel_kind, sel_index, Rect2(_drag_start_rect.position + delta, _drag_start_rect.size))
 				queue_redraw()
 			2:
 				_resize_to(mm.position)
@@ -415,10 +769,33 @@ func _gui_input(event: InputEvent) -> void:
 				model.set_actor_cover_y(sel_index, y)
 				queue_redraw()
 				status.emit("基线拖动中：%.0f（松手即写入）" % y)
+			5, 6, 7:
+				_update_collision_drag(mm.position)
 		return
 	elif event is InputEventKey:
 		var key := event as InputEventKey
+		if key.pressed and key.keycode == KEY_ESCAPE:
+			_clear_collision_selection()
+			accept_event()
+			return
+		if key.pressed and not key.echo and key.keycode == KEY_F \
+				and not key.ctrl_pressed and not key.alt_pressed and not key.meta_pressed:
+			frame_selection()
+			accept_event()
+			return
+		if key.pressed and not key.echo and key.ctrl_pressed:
+			var command: String = {KEY_C: "copy", KEY_V: "paste", KEY_D: "duplicate",
+				KEY_Y: "redo", KEY_Z: "redo" if key.shift_pressed else "undo"}.get(key.keycode, "")
+			if command != "":
+				_clear_collision_selection()
+				command_requested.emit(command)
+				accept_event()
+				return
 		if key.pressed and key.keycode == KEY_DELETE and sel_kind >= 0:
+			_clear_collision_selection()
+			if sel_kind == Kind.ACTOR:
+				status.emit("删除物件请使用「选择与尺寸 → 删除选中」，以便检查剧情引用。")
+				return
 			model.remove_at(sel_kind, sel_index)
 			sel_kind = -1
 			sel_index = -1
@@ -427,8 +804,22 @@ func _gui_input(event: InputEvent) -> void:
 			queue_redraw()
 
 
-func _press(pos: Vector2) -> void:
+func _press(pos: Vector2, additive := false) -> void:
+	if (tool == Tool.SELECT or tool == Tool.COLLISION) and not additive and _press_collision(pos):
+		return
+	_clear_collision_selection()
 	match tool:
+		Tool.COLLISION:
+			if sel_kind != Kind.ACTOR:
+				status.emit("先在左侧选中一个物件，再在图上拖出它的碰撞箱。")
+				return
+			if not _actor_selection_block_reason().is_empty():
+				status.emit("物件已隐藏或锁定，请先在左侧场景列表中显示并解锁。")
+				return
+			if not _collision_editable():
+				status.emit("编辑碰撞箱需要单选一个可见且未锁定的独立物件。")
+				return
+			_begin_collision_drag(7, pos)
 		Tool.WALL, Tool.PORTAL:
 			_drag_mode = 3
 			_drag_start_game = to_game(pos)
@@ -443,30 +834,58 @@ func _press(pos: Vector2) -> void:
 				status.emit("拖动中：上下移动鼠标改基线，松手写入 JSON")
 				queue_redraw()
 		_:
-			var handle := _hit_handle(pos)
+			var handle := _hit_handle(pos) if selected_actors().size() <= 1 else -1
 			if handle >= 0:
 				_drag_mode = 2
 				_drag_handle = handle
 				_drag_start_rect = model.rect_of(sel_kind, sel_index)
 				return
 			var hit := _hit_item(pos)
+			if hit.x == Kind.ACTOR:
+				var selection := selected_actors()
+				if additive:
+					if selection.has(hit.y):
+						selection.erase(hit.y)
+					else:
+						selection.append(hit.y)
+					select_actors(selection)
+					selection_changed.emit()
+					return
+				if not selection.has(hit.y):
+					selection = [hit.y]
+				actor_selection = model.expand_group_selection(selection)
+			else:
+				actor_selection.clear()
 			sel_kind = hit.x
 			sel_index = hit.y
 			selection_changed.emit()
 			if sel_kind >= 0:
-				_drag_mode = 1
-				_drag_start_game = to_game(pos)
-				_drag_start_rect = model.rect_of(sel_kind, sel_index)
+				var block_reason := _actor_selection_block_reason() if sel_kind == Kind.ACTOR else ""
+				if block_reason.is_empty():
+					_drag_mode = 1
+					_drag_start_game = to_game(pos)
+					_drag_start_rect = model.rect_of(sel_kind, sel_index)
+					_drag_actor_rects.clear()
+					for index: int in selected_actors():
+						_drag_actor_rects[index] = model.rect_of(Kind.ACTOR, index)
+				else:
+					status.emit(block_reason)
 			queue_redraw()
 
 
 func _release() -> void:
+	if _drag_mode >= 5 and _drag_mode <= 7:
+		_release_collision_drag()
+		return
 	if _drag_mode == 3:
 		var r := Rect2(_snap(_drag_new_rect.position),
 			Vector2(maxf(1.0, roundf(_drag_new_rect.size.x)), maxf(1.0, roundf(_drag_new_rect.size.y))))
-		var kind: int = Kind.WALL if tool == Tool.WALL else Kind.PORTAL
-		sel_index = model.add_rect(kind, r)
-		sel_kind = kind
+		if tool == Tool.COLLISION:
+			model.add_collision_rect(sel_index, r)
+		else:
+			var kind: int = Kind.WALL if tool == Tool.WALL else Kind.PORTAL
+			sel_index = model.add_rect(kind, r)
+			sel_kind = kind
 		edited.emit()
 		selection_changed.emit()
 	elif _drag_mode == 4:
@@ -479,12 +898,17 @@ func _release() -> void:
 
 func _zoom_at(pos: Vector2, factor: float) -> void:
 	var before := to_game(pos)
-	zoom = clampf(zoom * factor, 0.1, 12.0)
+	_view_touched = true
+	zoom = clampf(zoom * factor, 0.01, 12.0)
 	pan = pos - before * zoom
 	queue_redraw()
 
 
 func _resize_to(pos: Vector2) -> void:
+	model.set_rect(sel_kind, sel_index, _resized_rect(pos))
+
+
+func _resized_rect(pos: Vector2) -> Rect2:
 	var r := _drag_start_rect
 	var g := to_game(pos)
 	match _drag_handle:
@@ -512,7 +936,7 @@ func _resize_to(pos: Vector2) -> void:
 		r.size.x = 1.0
 	if r.size.y < 1.0:
 		r.size.y = 1.0
-	model.set_rect(sel_kind, sel_index, r)
+	return r
 
 
 ## 这一类现在露不露。
@@ -536,6 +960,8 @@ func is_kind_visible(kind: int) -> bool:
 
 func set_layer_visible(prop: String, on: bool) -> void:
 	set(prop, on)
+	if not show_actors:
+		_clear_collision_selection()
 	if prop == "show_walk":
 		set_walk_visible(on)
 	elif sel_kind >= 0 and not is_kind_visible(sel_kind):
@@ -557,7 +983,8 @@ func _hit_item(pos: Vector2) -> Vector2i:
 				return Vector2i(Kind.SPAWN, i)
 	if show_actors:
 		for i in range(model.count(Kind.ACTOR) - 1, -1, -1):
-			if _rect_hit(model.rect_of(Kind.ACTOR, i), pos):
+			if not actor_is_hidden(i) and not actor_is_locked(i) \
+					and _rect_hit(model.rect_of(Kind.ACTOR, i), pos):
 				return Vector2i(Kind.ACTOR, i)
 	if show_portals:
 		for i in range(model.count(Kind.PORTAL) - 1, -1, -1):
@@ -579,7 +1006,7 @@ func _hit_cover_actor(pos: Vector2) -> int:
 	if not show_actors:
 		return -1
 	for i in range(model.count(Kind.ACTOR) - 1, -1, -1):
-		if not model.is_cover_actor(i):
+		if actor_is_hidden(i) or actor_is_locked(i) or not model.is_cover_actor(i):
 			continue
 		if _rect_hit(model.rect_of(Kind.ACTOR, i), pos, 6.0):
 			return i
@@ -594,8 +1021,12 @@ func _rect_hit(r: Rect2, pos: Vector2, slop := 0.0) -> bool:
 func _hit_handle(pos: Vector2) -> int:
 	if sel_kind < 0 or tool != Tool.SELECT:
 		return -1
+	if _has_collision_selection():
+		return -1
 	if sel_kind == Kind.SPAWN or sel_kind == Kind.OVERLAY:
 		return -1          # 出生点没有尺寸；前景层整张拉伸，也改不了
+	if sel_kind == Kind.ACTOR and not _actor_selection_block_reason().is_empty():
+		return -1
 	var r: Rect2 = model.rect_of(sel_kind, sel_index)
 	var points := _handle_points(r)
 	for i in points.size():

@@ -207,9 +207,7 @@ func _add_actor(actor: MapDef.Actor) -> void:
 		if actor.cover:
 			# 基线：写了 `cover_y` 就用手动的那个值，没写就是贴图框的下边界。
 			# 手动的入口在地图编辑器（拉黄线），见 `MapDef.Actor.cover_y`。
-			var baseline: float = actor.rect.position.y + actor.rect.size.y
-			if actor.cover_y >= 0.0:
-				baseline = actor.cover_y
+			var baseline: float = actor.effective_cover_y()
 			_covers.append({"node": node, "cover_y": baseline})
 		return
 
@@ -671,6 +669,11 @@ func _build_actor_collision() -> void:
 
 	var any := false
 	for actor: MapDef.Actor in map_def.active_actors(_flags):
+		if actor.has_local_collision:
+			for local_shape: Rect2 in actor.collision_rects():
+				_add_box_collision(body, local_shape, "actor_%s" % actor.id)
+				any = true
+			continue
 		if actor.solid:
 			_add_box_collision(body, actor.rect, "actor_%s" % actor.id)
 			any = true
