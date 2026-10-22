@@ -14,6 +14,8 @@ const ObjectLibrary := preload("res://addons/if_map_editor/map_object_library.gd
 const ObjectPreview := preload("res://addons/if_map_editor/map_object_preview.gd")
 const AssetList := preload("res://addons/if_map_editor/map_asset_list.gd")
 
+const EDITOR_STATE_PATH := "user://if_map_editor_scene_state.cfg"
+
 enum LayoutAction { ALIGN_LEFT, ALIGN_CENTER_X, ALIGN_RIGHT, ALIGN_TOP, ALIGN_CENTER_Y, ALIGN_BOTTOM,
 	DISTRIBUTE_HORIZONTAL, DISTRIBUTE_VERTICAL }
 
@@ -28,6 +30,7 @@ var _sel_label: Label
 var _spins: Array[SpinBox] = []
 var _base_row: HBoxContainer
 var _base_spin: SpinBox
+var _base_auto_button: Button
 var _status: Label
 var _syncing := false
 ## 「物件属性」面板：只在选中物件时出现。**每次换选中项才重建** ——
@@ -36,7 +39,15 @@ var _actor_panel: VBoxContainer
 var _panel_scroll: ScrollContainer
 var _panel_kind := -1
 var _panel_index := -1
+var _panel_locked := false
+var _panel_id_readonly := false
 var _object_list: ItemList
+var _hidden_actor_ids: Dictionary = {}
+var _locked_actor_ids: Dictionary = {}
+var _editor_state_path := EDITOR_STATE_PATH
+var _hide_selected_button: Button
+var _lock_selected_button: Button
+var _show_all_button: Button
 var _asset_tabs: TabContainer
 var _asset_filter: LineEdit
 var _asset_list: ItemList
@@ -104,6 +115,23 @@ func _build() -> void:
 	_object_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_object_list.multi_selected.connect(_objects_selected)
 	scene_page.add_child(_object_list)
+	var object_tools := HFlowContainer.new()
+	_hide_selected_button = Button.new()
+	_hide_selected_button.text = "隐藏所选"
+	_hide_selected_button.tooltip_text = "隐藏所选物件；隐藏只影响编辑器视图和画布拾取。"
+	_hide_selected_button.pressed.connect(_toggle_selected_actor_visibility)
+	object_tools.add_child(_hide_selected_button)
+	_lock_selected_button = Button.new()
+	_lock_selected_button.text = "锁定所选"
+	_lock_selected_button.tooltip_text = "锁定所选物件，阻止移动、改属性、删除和编组；复制仍可使用。"
+	_lock_selected_button.pressed.connect(_toggle_selected_actor_lock)
+	object_tools.add_child(_lock_selected_button)
+	_show_all_button = Button.new()
+	_show_all_button.text = "全部显示"
+	_show_all_button.tooltip_text = "显示这张地图中的所有隐藏物件。"
+	_show_all_button.pressed.connect(_show_all_actors)
+	object_tools.add_child(_show_all_button)
+	scene_page.add_child(object_tools)
 	_asset_tabs.add_child(scene_page)
 	var asset_page := VBoxContainer.new()
 	asset_page.name = "素材"
@@ -228,7 +256,7 @@ func _refresh_layout_menu() -> void:
 	var count: int = canvas.selected_actors().size()
 	for index: int in _layout_popup.item_count:
 		var minimum := 2 if index < 6 else 3
-		_layout_popup.set_item_disabled(index, count < minimum)
+		_layout_popup.set_item_disabled(index, count < minimum or _selection_has_locked_actor())
 
 
 func _refresh_templates() -> void:
@@ -265,9 +293,18 @@ func _refresh_objects() -> void:
 		var label := model.label_of(Kind.ACTOR, index)
 		if not group_name.is_empty():
 			label = "%s / %s" % [group_name, label]
-		_object_list.add_item("%s  [%s]" % [label, str(model.actor_field(index, "id", ""))])
+		var actor_id := str(model.actor_field(index, "id", ""))
+		var state_tags: Array[String] = []
+		if _hidden_actor_ids.has(actor_id):
+			state_tags.append("隐藏")
+		if _locked_actor_ids.has(actor_id):
+			state_tags.append("锁定")
+		if not state_tags.is_empty():
+			label += "  [%s]" % " / ".join(state_tags)
+		_object_list.add_item("%s  [%s]" % [label, actor_id])
 		if canvas.sel_kind == Kind.ACTOR and canvas.selected_actors().has(index):
 			_object_list.select(index, false)
+	_refresh_object_state_buttons()
 	_refresh_group_buttons()
 
 
@@ -286,6 +323,23 @@ func _refresh_group_buttons() -> void:
 			selected_groups[group_name] = true
 			_ungroup_button.disabled = false
 	_group_button.disabled = selected.size() < 2 or (not has_ungrouped and selected_groups.size() <= 1)
+	if _selection_has_locked_actor():
+		_group_button.disabled = true
+		_ungroup_button.disabled = true
+
+
+func _selection_has_locked_actor() -> bool:
+	for index: int in canvas.selected_actors():
+		if canvas.actor_is_locked(index):
+			return true
+	return false
+
+
+func _allow_selection_edit() -> bool:
+	if not _selection_has_locked_actor():
+		return true
+	_status.text = "选区包含锁定物件，请先在场景列表中解锁。"
+	return false
 
 
 func _objects_selected(_index: int, _selected: bool) -> void:
@@ -296,7 +350,171 @@ func _objects_selected(_index: int, _selected: bool) -> void:
 	_refresh_selection()
 
 
+func _selected_actor_indices() -> Array[int]:
+	var selected: Array[int] = []
+	for index: int in _object_list.get_selected_items():
+		selected.append(index)
+	return selected
+
+
+func _refresh_object_state_buttons() -> void:
+	if _hide_selected_button == null:
+		return
+	var selected := _selected_actor_indices()
+	var all_hidden := not selected.is_empty()
+	var all_locked := not selected.is_empty()
+	for index: int in selected:
+		var actor_id := str(model.actor_field(index, "id", ""))
+		all_hidden = all_hidden and _hidden_actor_ids.has(actor_id)
+		all_locked = all_locked and _locked_actor_ids.has(actor_id)
+	_hide_selected_button.disabled = selected.is_empty()
+	_hide_selected_button.text = "显示所选" if all_hidden else "隐藏所选"
+	_lock_selected_button.disabled = selected.is_empty()
+	_lock_selected_button.text = "解锁所选" if all_locked else "锁定所选"
+	_show_all_button.disabled = _hidden_actor_ids.is_empty()
+
+
+func _toggle_selected_actor_visibility() -> void:
+	var selected_ids := _selected_editor_state_ids()
+	if selected_ids.is_empty():
+		return
+	var should_hide := false
+	for actor_id: String in selected_ids:
+		if not _hidden_actor_ids.has(actor_id):
+			should_hide = true
+			break
+	for actor_id: String in selected_ids:
+		if should_hide:
+			_hidden_actor_ids[actor_id] = true
+		else:
+			_hidden_actor_ids.erase(actor_id)
+	var save_error := _save_actor_editor_state()
+	canvas.set_actor_editor_state(_hidden_actor_ids, _locked_actor_ids)
+	_refresh_selection()
+	if save_error == OK:
+		_status.text = "所选物件已隐藏。仍可从场景列表选中并显示。" if should_hide else "所选物件已显示。"
+	else:
+		_status.text = "状态已临时应用，但未能写入编辑器状态文件：%d" % save_error
+
+
+func _toggle_selected_actor_lock() -> void:
+	var selected_ids := _selected_editor_state_ids()
+	if selected_ids.is_empty():
+		return
+	var should_lock := false
+	for actor_id: String in selected_ids:
+		if not _locked_actor_ids.has(actor_id):
+			should_lock = true
+			break
+	for actor_id: String in selected_ids:
+		if should_lock:
+			_locked_actor_ids[actor_id] = true
+		else:
+			_locked_actor_ids.erase(actor_id)
+	var save_error := _save_actor_editor_state()
+	canvas.set_actor_editor_state(_hidden_actor_ids, _locked_actor_ids)
+	_refresh_selection()
+	if save_error == OK:
+		_status.text = "所选物件已锁定，属性只读；仍可复制或从场景列表解锁。" if should_lock else "所选物件已解锁。"
+	else:
+		_status.text = "状态已临时应用，但未能写入编辑器状态文件：%d" % save_error
+
+
+func _show_all_actors() -> void:
+	if _hidden_actor_ids.is_empty():
+		return
+	_hidden_actor_ids.clear()
+	var save_error := _save_actor_editor_state()
+	canvas.set_actor_editor_state(_hidden_actor_ids, _locked_actor_ids)
+	_refresh_selection()
+	_status.text = "这张地图中的隐藏物件已全部显示。" if save_error == OK \
+		else "状态已临时应用，但未能写入编辑器状态文件：%d" % save_error
+
+
+func _load_actor_editor_state(map_id: String) -> void:
+	_hidden_actor_ids.clear()
+	_locked_actor_ids.clear()
+	var config := ConfigFile.new()
+	if FileAccess.file_exists(_editor_state_path):
+		var error := config.load(_editor_state_path)
+		if error != OK:
+			_status.text = "编辑器隐藏/锁定状态读取失败：%d" % error
+		else:
+			_hidden_actor_ids = _id_lookup(config.get_value(map_id, "hidden_actor_ids", []))
+			_locked_actor_ids = _id_lookup(config.get_value(map_id, "locked_actor_ids", []))
+	canvas.set_actor_editor_state(_hidden_actor_ids, _locked_actor_ids)
+	_prune_actor_editor_state()
+	_refresh_objects()
+
+
+func _actor_id_counts() -> Dictionary:
+	var counts: Dictionary = {}
+	for index: int in model.count(Kind.ACTOR):
+		var actor_id := str(model.actor_field(index, "id", ""))
+		counts[actor_id] = int(counts.get(actor_id, 0)) + 1
+	return counts
+
+
+func _selected_editor_state_ids() -> PackedStringArray:
+	var actor_counts := _actor_id_counts()
+	var result := PackedStringArray()
+	for index: int in _selected_actor_indices():
+		var actor_id := str(model.actor_field(index, "id", ""))
+		if actor_id.is_empty() or int(actor_counts.get(actor_id, 0)) != 1:
+			_status.text = "隐藏/锁定前，请先为所选物件填写非空且唯一的 ID。"
+			return PackedStringArray()
+		result.append(actor_id)
+	return result
+
+
+func _prune_actor_editor_state() -> void:
+	var actor_counts := _actor_id_counts()
+	var changed := false
+	for lookup: Dictionary in [_hidden_actor_ids, _locked_actor_ids]:
+		for actor_id: Variant in lookup.keys():
+			if str(actor_id).is_empty() or int(actor_counts.get(actor_id, 0)) != 1:
+				lookup.erase(actor_id)
+				changed = true
+	if changed:
+		var save_error := _save_actor_editor_state()
+		canvas.set_actor_editor_state(_hidden_actor_ids, _locked_actor_ids)
+		if save_error != OK:
+			_status.text = "已清理失效物件状态，但写入状态文件失败：%d" % save_error
+
+
+func _id_lookup(value: Variant) -> Dictionary:
+	var result: Dictionary = {}
+	if value is Array or value is PackedStringArray:
+		for raw_id: Variant in value:
+			var actor_id := str(raw_id)
+			if not actor_id.is_empty():
+				result[actor_id] = true
+	return result
+
+
+func _ids_from_lookup(lookup: Dictionary) -> PackedStringArray:
+	var result := PackedStringArray()
+	for actor_id: Variant in lookup:
+		if bool(lookup[actor_id]):
+			result.append(str(actor_id))
+	result.sort()
+	return result
+
+
+func _save_actor_editor_state() -> Error:
+	var config := ConfigFile.new()
+	if FileAccess.file_exists(_editor_state_path):
+		var load_error := config.load(_editor_state_path)
+		if load_error != OK:
+			return load_error
+	config.set_value(model.map_id, "hidden_actor_ids", _ids_from_lookup(_hidden_actor_ids))
+	config.set_value(model.map_id, "locked_actor_ids", _ids_from_lookup(_locked_actor_ids))
+	return config.save(_editor_state_path)
+
+
 func _object_command(command: String) -> void:
+	if (command == "group" or command == "ungroup") and not _allow_selection_edit():
+		return
 	if command == "group":
 		var group_name: String = model.group_actors(canvas.selected_actors())
 		if group_name.is_empty():
@@ -328,6 +546,7 @@ func _object_command(command: String) -> void:
 	if command == "undo" or command == "redo":
 		var restored: bool = model.undo() if command == "undo" else model.redo()
 		if restored:
+			_prune_actor_editor_state()
 			var no_selection: Array[int] = []
 			canvas.select_actors(no_selection)
 			canvas.set_overlay_texture(model.overlay_path())
@@ -466,10 +685,10 @@ func _row_selection() -> HBoxContainer:
 	_base_spin.custom_minimum_size = Vector2(78, 0)
 	_base_spin.value_changed.connect(_on_base_spin)
 	_base_row.add_child(_base_spin)
-	var auto_button := Button.new()
-	auto_button.text = "恢复自动（贴图底边）"
-	auto_button.pressed.connect(_on_base_auto)
-	_base_row.add_child(auto_button)
+	_base_auto_button = Button.new()
+	_base_auto_button.text = "恢复自动"
+	_base_auto_button.pressed.connect(_on_base_auto)
+	_base_row.add_child(_base_auto_button)
 	_base_row.visible = false
 	row.add_child(_base_row)
 
@@ -586,6 +805,7 @@ func _load_selected() -> void:
 	else:
 		_status.text = "已载入 %s（%d×%d 游戏单位）。滚轮缩放，中键/右键拖动平移。" % [
 			id, int(model.map_size().x), int(model.map_size().y)]
+	_load_actor_editor_state(id)
 
 
 func _on_save() -> void:
@@ -688,7 +908,7 @@ func _on_layer(on: bool, prop: String) -> void:
 ## 而且数据本身还是合法的，`check_data` 也不会报（它只查「引用存在不存在」，
 ## 查不出「本来该有个人来触发」）。
 func _on_delete() -> void:
-	if canvas.sel_kind < 0:
+	if canvas.sel_kind < 0 or not _allow_selection_edit():
 		return
 	var names := ["墙", "传送区", "物件", "出生点", "前景层"]
 	var what: String = names[canvas.sel_kind]
@@ -723,6 +943,8 @@ func _on_delete() -> void:
 
 
 func _do_delete(what: String, was: String) -> void:
+	if not _allow_selection_edit():
+		return
 	model.remove_at(canvas.sel_kind, canvas.sel_index)
 	canvas.sel_kind = -1
 	canvas.sel_index = -1
@@ -772,6 +994,8 @@ func _open_spawn_dialog() -> void:
 
 
 func _on_layout_action(action: int) -> void:
+	if not _allow_selection_edit():
+		return
 	var selected: Array[int] = canvas.selected_actors()
 	var changed := false
 	var label := ""
@@ -850,7 +1074,7 @@ func _open_copy_dialog() -> void:
 
 
 func _on_spin_changed(_v: float) -> void:
-	if _syncing or canvas.sel_kind < 0:
+	if _syncing or canvas.sel_kind < 0 or not _allow_selection_edit():
 		return
 	if canvas.sel_kind == Kind.SPAWN:
 		# 出生点是坐标，不是矩形 —— 只认 x / y 两个框
@@ -871,13 +1095,15 @@ func _on_spin_changed(_v: float) -> void:
 func _on_base_spin(v: float) -> void:
 	if _syncing or canvas.sel_kind != Kind.ACTOR or not canvas.model.is_cover_actor(canvas.sel_index):
 		return
+	if not _allow_selection_edit():
+		return
 	canvas.model.set_actor_cover_y(canvas.sel_index, v)
 	_on_edited()
 	canvas.queue_redraw()
 
 
 func _on_base_auto() -> void:
-	if canvas.sel_kind != Kind.ACTOR:
+	if canvas.sel_kind != Kind.ACTOR or not _allow_selection_edit():
 		return
 	canvas.model.clear_actor_cover_y(canvas.sel_index)
 	_on_edited()
@@ -908,11 +1134,12 @@ func _refresh_selection() -> void:
 		_spins[3].value = r.size.y
 		var is_spawn: bool = kind == Kind.SPAWN
 		var is_overlay: bool = kind == Kind.OVERLAY
+		var is_locked: bool = _selection_has_locked_actor()
 		# 出生点没有宽高可改（它就是个坐标）；前景层整张拉伸，四个都不给改
-		_spins[0].editable = not is_overlay
-		_spins[1].editable = not is_overlay
-		_spins[2].editable = not is_spawn and not is_overlay
-		_spins[3].editable = not is_spawn and not is_overlay
+		_spins[0].editable = not is_overlay and not is_locked
+		_spins[1].editable = not is_overlay and not is_locked
+		_spins[2].editable = not is_spawn and not is_overlay and not is_locked
+		_spins[3].editable = not is_spawn and not is_overlay and not is_locked
 		if is_overlay:
 			_spins[0].value = 0
 			_spins[1].value = 0
@@ -926,6 +1153,8 @@ func _refresh_selection() -> void:
 		var is_cover: bool = kind == Kind.ACTOR and model.is_cover_actor(index)
 		_base_row.visible = is_cover
 		if is_cover:
+			_base_spin.editable = not is_locked
+			_base_auto_button.disabled = is_locked
 			_base_spin.value = model.actor_cover_y(index)
 			_base_spin.tooltip_text = "独立物件：碰撞箱上边缘；旧物件：贴图底边。橙线表示手动调整。"
 	_syncing = false
@@ -934,6 +1163,7 @@ func _refresh_selection() -> void:
 
 func _on_edited() -> void:
 	model.record_history()
+	_prune_actor_editor_state()
 	canvas.invalidate_def()      # 数据改了，脚底框/可走格那边的 MapDef 要重建
 	_refresh_dirty()
 	_refresh_objects()
@@ -981,7 +1211,10 @@ func _sync_actor_panel() -> void:
 		_panel_kind = -1
 		_panel_index = -1
 		return
-	if _panel_kind == kind and _panel_index == canvas.sel_index:
+	var is_locked := _selection_has_locked_actor()
+	var id_readonly: bool = kind == Kind.ACTOR and canvas.actor_is_hidden(canvas.sel_index)
+	if _panel_kind == kind and _panel_index == canvas.sel_index \
+			and _panel_locked == is_locked and _panel_id_readonly == id_readonly:
 		_panel_scroll.visible = true
 		return
 	if kind == Kind.OVERLAY:
@@ -1036,6 +1269,8 @@ func _build_overlay_panel() -> void:
 func _build_actor_panel() -> void:
 	_panel_kind = Kind.ACTOR
 	_panel_index = canvas.sel_index
+	_panel_locked = _selection_has_locked_actor()
+	_panel_id_readonly = canvas.actor_is_hidden(_panel_index)
 	for child in _actor_panel.get_children():
 		child.queue_free()
 	_panel_scroll.visible = true
@@ -1083,6 +1318,21 @@ func _build_actor_panel() -> void:
 
 	_build_interaction_section()
 	_actor_panel.add_child(_switch_row())
+	if _panel_locked:
+		_set_controls_readonly(_actor_panel)
+
+
+func _set_controls_readonly(node: Node) -> void:
+	if node is BaseButton:
+		(node as BaseButton).disabled = true
+	elif node is LineEdit:
+		(node as LineEdit).editable = false
+	elif node is TextEdit:
+		(node as TextEdit).editable = false
+	elif node is SpinBox:
+		(node as SpinBox).editable = false
+	for child: Node in node.get_children():
+		_set_controls_readonly(child)
 
 
 func _build_interaction_section() -> void:
@@ -1260,7 +1510,14 @@ func _field(key: String, width: float) -> LineEdit:
 	var edit := LineEdit.new()
 	edit.text = str(model.actor_field(_panel_index, key, ""))
 	edit.custom_minimum_size = Vector2(width, 0)
+	if key == "id" and canvas.actor_is_hidden(_panel_index):
+		edit.editable = false
+		edit.tooltip_text = "请先显示并解锁物件，再修改 ID；隐藏/锁定状态按地图与 ID 保存。"
 	edit.text_changed.connect(func(t: String) -> void:
+		if not _allow_selection_edit():
+			return
+		if key == "id" and canvas.actor_is_hidden(_panel_index):
+			return
 		model.set_actor_field(_panel_index, key, t)
 		_on_edited())
 	return edit

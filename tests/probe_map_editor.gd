@@ -18,9 +18,16 @@ const TestHarness := preload("res://tests/test_harness.gd")
 
 
 func _initialize() -> void:
+	create_timer(45.0).timeout.connect(func() -> void:
+		push_error("地图编辑器探针超时，请检查前面的断言。")
+		quit(1))
+	root.size = Vector2i(1280, 800)
+	root.content_scale_size = Vector2i(1280, 800)
 	var dock: Control = Dock.new()
+	dock._editor_state_path = "user://if_map_editor_probe_%d.cfg" % Time.get_ticks_usec()
 	dock.size = Vector2(1280, 640)
 	get_root().add_child(dock)
+	dock.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	await process_frame
 	await process_frame
 
@@ -39,7 +46,6 @@ func _initialize() -> void:
 	var pick := ids.find("gatehouse")
 	dock._map_picker.select(pick if pick >= 0 else 0)
 	dock._load_selected()
-	dock.canvas.size = Vector2(1280, 420)
 	dock.canvas.fit_to_view()
 	await process_frame
 	print("② 载入 %s：尺寸 %s" % [dock.model.map_id, dock.model.map_size()])
@@ -85,6 +91,16 @@ func _initialize() -> void:
 		if str(dock.model.actor_field(actor_index, "sprite", "")) == asset_path:
 			matching_size = dock.model.rect_of(Model.Kind.ACTOR, actor_index).size
 			break
+	await _check_editor_layout(dock)
+	await _capture_editor("editor-1280.png")
+	root.size = Vector2i(1024, 768)
+	root.content_scale_size = Vector2i(1024, 768)
+	await _check_editor_layout(dock)
+	await _capture_editor("editor-1024.png")
+	root.size = Vector2i(1280, 800)
+	root.content_scale_size = Vector2i(1280, 800)
+	await process_frame
+	await process_frame
 	assert(matching_size.x > 0.0 and matching_size.y > 0.0)
 	var dropped_rect: Rect2 = dock.model.rect_of(Model.Kind.ACTOR, before_drop)
 	assert(dropped_rect.size == matching_size)
@@ -136,7 +152,6 @@ func _initialize() -> void:
 	if bed >= 0:
 		dock._map_picker.select(bed)
 		dock._load_selected()
-		dock.canvas.size = Vector2(1280, 420)
 		dock.canvas.fit_to_view()
 		await process_frame
 		var covers: int = 0
@@ -250,6 +265,7 @@ func _initialize() -> void:
 	dock._object_command("undo")
 	assert(dock.model.group_name_for_actor(0) == "组 1")
 	print("⑬ 编组按钮、整组选取/复制、解组及撤销重做通过")
+	await _probe_editor_state(dock)
 	var backup_harness = TestHarness.new()
 	backup_harness.setup(root)
 	MapObjectTests.test_copy_and_history(backup_harness)
@@ -257,7 +273,163 @@ func _initialize() -> void:
 	MapObjectTests.test_groups(backup_harness)
 	MapObjectTests.test_backups(backup_harness)
 	assert(backup_harness.failed == 0, "\n".join(backup_harness.failures))
-	print("⑭ 编组模型与自动快照、备份恢复、撤销重做通过（%d 项断言）" % backup_harness.passed)
+	print("⑮ 编组模型与自动快照、备份恢复、撤销重做通过（%d 项断言）" % backup_harness.passed)
 
 	print("=== 地图编辑器探针通过 ===")
 	quit(0)
+
+
+func _select_objects(dock: Control, indices: Array[int]) -> void:
+	dock.canvas.select_actors(indices)
+	dock._refresh_selection()
+
+
+func _probe_editor_state(dock: Control) -> void:
+	var state_model = Model.new()
+	state_model.map_id = "scene_state_probe"
+	state_model.data = MapObjectTests.fixture()
+	state_model.data["id"] = state_model.map_id
+	state_model.data["actors"][0]["cover_y"] = 95
+	for actor_number: int in [1, 2]:
+		var actor: Dictionary = state_model.data["actors"][0].duplicate(true)
+		actor["id"] = "desk_%d" % (actor_number + 10)
+		actor["rect"] = [60 + actor_number * 100, 40 + actor_number * 20, 80, 60]
+		state_model.data["actors"].append(actor)
+	state_model.reset_history()
+	dock.model = state_model
+	dock.canvas.load_map(state_model, "", "", state_model.map_size())
+	dock._load_actor_editor_state(state_model.map_id)
+	_select_objects(dock, [0])
+	var saved_data: String = Model.stringify(state_model.data)
+	dock._toggle_selected_actor_visibility()
+	assert(dock.canvas.actor_is_hidden(0))
+	assert(dock._object_list.get_item_text(0).contains("隐藏"))
+	assert(dock._panel_id_readonly)
+	var id_field: LineEdit = dock._field("id", 110.0)
+	assert(not id_field.editable)
+	id_field.text_changed.emit("renamed_while_hidden")
+	assert(state_model.actor_field(0, "id") == "desk")
+	id_field.free()
+	var hidden_hit: Vector2i = dock.canvas._hit_item(
+		dock.canvas.to_screen(state_model.rect_of(Model.Kind.ACTOR, 0).get_center()))
+	assert(hidden_hit != Vector2i(Model.Kind.ACTOR, 0))
+	assert(not WalkGrid.is_free(MapDef.from_dictionary(state_model.data), Vector2(90, 80)))
+	dock._load_actor_editor_state("other_scene_state_probe")
+	assert(not dock.canvas.actor_is_hidden(0))
+	dock._load_actor_editor_state(state_model.map_id)
+	assert(dock.canvas.actor_is_hidden(0))
+	dock._show_all_actors()
+	assert(not dock.canvas.actor_is_hidden(0))
+	_select_objects(dock, [0])
+	dock._toggle_selected_actor_lock()
+	assert(dock.canvas.actor_is_locked(0))
+	await process_frame
+	_assert_controls_readonly(dock._actor_panel)
+	assert(not dock._spins[0].editable and not dock._spins[2].editable)
+	assert(not dock._base_spin.editable and dock._base_auto_button.disabled)
+	_probe_locked_commands(dock, saved_data)
+	var locked_rect: Rect2 = state_model.rect_of(Model.Kind.ACTOR, 0)
+	dock._on_tool(Canvas.Tool.SELECT)
+	assert(dock.canvas._hit_handle(dock.canvas.to_screen(locked_rect.position)) == -1)
+	dock.canvas._press(dock.canvas.to_screen(locked_rect.get_center()))
+	assert(dock.canvas._drag_mode == 0)
+	assert(state_model.rect_of(Model.Kind.ACTOR, 0) == locked_rect)
+	dock._load_actor_editor_state("other_scene_state_probe")
+	assert(not dock.canvas.actor_is_locked(0))
+	dock._load_actor_editor_state(state_model.map_id)
+	assert(dock.canvas.actor_is_locked(0))
+	assert(Model.stringify(state_model.data) == saved_data and not state_model.dirty)
+	_select_objects(dock, [0])
+	dock._object_command("duplicate")
+	assert(state_model.count(Model.Kind.ACTOR) == 4)
+	assert(not dock.canvas.actor_is_locked(3) and not dock.canvas.actor_is_hidden(3))
+	dock._object_command("undo")
+	_select_objects(dock, [0])
+	dock._toggle_selected_actor_lock()
+	assert(not dock.canvas.actor_is_locked(0))
+	_select_objects(dock, [1])
+	dock._toggle_selected_actor_visibility()
+	dock._do_delete("物件", "书桌")
+	assert(not dock._hidden_actor_ids.has("desk_11"))
+	dock._object_command("undo")
+	assert(not dock.canvas.actor_is_hidden(1))
+	_select_objects(dock, [0])
+	state_model.set_actor_field(0, "id", "")
+	dock._toggle_selected_actor_lock()
+	assert(dock._locked_actor_ids.is_empty() and dock._status.text.contains("唯一"))
+	state_model.set_actor_field(0, "id", "desk_11")
+	dock._toggle_selected_actor_visibility()
+	assert(dock._hidden_actor_ids.is_empty() and dock._status.text.contains("唯一"))
+	state_model.set_actor_field(0, "id", "desk")
+	state_model.set_actor_field(0, "id", "renamed_actor")
+	dock._on_edited()
+	dock._toggle_selected_actor_lock()
+	dock._object_command("undo")
+	assert(not dock._locked_actor_ids.has("renamed_actor"))
+	assert(state_model.actor_field(0, "id") == "desk")
+	var corrupted_config := "[invalid section"
+	var config_file := FileAccess.open(dock._editor_state_path, FileAccess.WRITE)
+	config_file.store_string(corrupted_config)
+	config_file.close()
+	assert(dock._save_actor_editor_state() != OK)
+	assert(FileAccess.get_file_as_string(dock._editor_state_path) == corrupted_config)
+	_select_objects(dock, [0])
+	dock._toggle_selected_actor_visibility()
+	assert(dock._status.text.contains("未能写入"))
+	assert(DirAccess.remove_absolute(ProjectSettings.globalize_path(dock._editor_state_path)) == OK)
+	print("⑭ 隐藏/锁定、批量操作旁路、只读属性、状态隔离与文件错误保护通过")
+
+
+func _probe_locked_commands(dock: Control, saved_data: String) -> void:
+	dock._on_base_spin(123.0)
+	dock._on_base_auto()
+	dock._spins[0].set_value_no_signal(150.0)
+	dock._on_spin_changed(150.0)
+	dock._on_delete()
+	dock._do_delete("物件", "书桌")
+	_select_objects(dock, [0, 1, 2])
+	dock._refresh_layout_menu()
+	assert(dock._layout_popup.is_item_disabled(0))
+	assert(dock._layout_popup.is_item_disabled(7))
+	assert(dock._group_button.disabled)
+	dock._on_layout_action(Dock.LayoutAction.ALIGN_LEFT)
+	dock._on_layout_action(Dock.LayoutAction.DISTRIBUTE_HORIZONTAL)
+	dock._object_command("group")
+	dock._object_command("ungroup")
+	assert(Model.stringify(dock.model.data) == saved_data and not dock.model.dirty)
+	_select_objects(dock, [0])
+
+
+func _assert_controls_readonly(node: Node) -> void:
+	if node is BaseButton:
+		assert((node as BaseButton).disabled)
+	elif node is LineEdit:
+		assert(not (node as LineEdit).editable)
+	elif node is TextEdit:
+		assert(not (node as TextEdit).editable)
+	elif node is SpinBox:
+		assert(not (node as SpinBox).editable)
+	for child: Node in node.get_children():
+		_assert_controls_readonly(child)
+
+
+func _check_editor_layout(dock: Control) -> void:
+	await process_frame
+	await process_frame
+	print("   属性栏展开：窗口 %s / 面板 %s / 画布 %s" % [root.size, dock.size, dock.canvas.size])
+	assert(dock.size.x <= root.content_scale_size.x + 1)
+	assert(dock.canvas.size.x >= dock.size.x * 0.40)
+	assert(dock.canvas.size.y >= 400)
+	assert(dock._panel_scroll.visible)
+	assert(dock._panel_scroll.get_rect().end.x <= dock._workspace_split.size.x + 1)
+
+
+func _capture_editor(filename: String) -> void:
+	var directory := OS.get_environment("IF_MAP_EDITOR_SCREENSHOT_DIR")
+	if directory.is_empty():
+		return
+	await RenderingServer.frame_post_draw
+	assert(DirAccess.make_dir_recursive_absolute(directory) == OK)
+	var image := root.get_texture().get_image()
+	assert(not image.is_empty())
+	assert(image.save_png(directory.path_join(filename)) == OK)

@@ -20,6 +20,7 @@ static func run(h: TestHarness) -> void:
 	test_backups(h)
 	test_library(h)
 	test_canvas(h)
+	test_editor_state(h)
 	test_runtime(h)
 
 
@@ -304,6 +305,166 @@ static func test_canvas(h: TestHarness) -> void:
 	canvas._release()
 	h.check("画布画出的碰撞写成局部坐标", model.actor_field(0, "collision"),
 		[[5, 30, 70, 20], [10, 25, 20, 10]])
+	canvas.free()
+
+
+static func test_editor_state(h: TestHarness) -> void:
+	var model = Model.new()
+	model.data = fixture()
+	model.reset_history()
+	var original_data: Dictionary = model.data.duplicate(true)
+	var original_text: String = Model.stringify(model.data)
+	var original_dirty: bool = model.dirty
+	var selected_actor: Array[int] = [0]
+	var canvas = Canvas.new()
+	canvas.model = model
+	canvas.zoom = 1.0
+	canvas.pan = Vector2.ZERO
+	var motion := InputEventMouseMotion.new()
+	var actor_point := Vector2(100, 60)
+	var handle_point := Vector2(60, 40)
+	var edit_attempts: Array[Dictionary] = [
+		{"name": "移动", "tool": Canvas.Tool.SELECT,
+			"start": actor_point, "end": Vector2(120, 80)},
+		{"name": "改尺寸", "tool": Canvas.Tool.SELECT,
+			"start": handle_point, "end": Vector2(80, 50)},
+		{"name": "拉基线", "tool": Canvas.Tool.BASELINE,
+			"start": actor_point, "end": Vector2(100, 120)},
+		{"name": "画碰撞", "tool": Canvas.Tool.COLLISION,
+			"start": Vector2(70, 65), "end": Vector2(90, 75)},
+	]
+	canvas.select_actors(selected_actor)
+	h.check("未受限物件可拾取", canvas._hit_item(actor_point), Vector2i(Model.Kind.ACTOR, 0))
+	h.check("未受限物件可命中尺寸手柄", canvas._hit_handle(handle_point), 0)
+	h.check("未受限物件可命中遮挡基线", canvas._hit_cover_actor(actor_point), 0)
+	for state_name: String in ["隐藏", "锁定"]:
+		canvas.set_actor_editor_state({"desk": true} if state_name == "隐藏" else {},
+			{"desk": true} if state_name == "锁定" else {})
+		h.check("%s状态按物件ID生效" % state_name,
+			[canvas.actor_is_hidden(0), canvas.actor_is_locked(0)],
+			[state_name == "隐藏", state_name == "锁定"])
+		h.check("%s物件不可拾取" % state_name, canvas._hit_item(actor_point), Vector2i(-1, -1))
+		canvas.tool = Canvas.Tool.SELECT
+		canvas.select_actors(selected_actor)
+		h.check("%s物件不能命中尺寸手柄" % state_name, canvas._hit_handle(handle_point), -1)
+		h.check("%s物件不能命中遮挡基线" % state_name, canvas._hit_cover_actor(actor_point), -1)
+		for attempt: Dictionary in edit_attempts:
+			canvas.tool = attempt["tool"]
+			canvas.select_actors(selected_actor)
+			canvas._press(attempt["start"])
+			h.check("%s物件阻止%s起手" % [state_name, attempt["name"]], canvas._drag_mode, 0)
+			motion.position = attempt["end"]
+			canvas._gui_input(motion)
+			canvas._release()
+			h.check("%s物件拒绝%s后数据不变" % [state_name, attempt["name"]],
+				model.data, original_data)
+		h.check("%s不污染地图JSON" % state_name, Model.stringify(model.data), original_text)
+		h.check("%s及被拒绝的操作不改变dirty" % state_name, model.dirty, original_dirty)
+		var definition := MapDef.from_dictionary(JSON.parse_string(Model.stringify(model.data)))
+		h.check("%s后存盘仍保留物件" % state_name, definition.actors.size(), 1)
+		h.check("%s后运行时仍有脚底碰撞" % state_name,
+			WalkGrid.is_free(definition, Vector2(90, 80)), false)
+		h.check("%s后导航仍避让物件碰撞" % state_name,
+			WalkGrid.has_landing_room(definition, Vector2(90, 80)), false)
+		var nearby_actor: MapDef.Actor = definition.actor_near(Vector2(90, 100), 1.0)
+		h.check("%s后运行时交互仍可命中" % state_name,
+			nearby_actor.id if nearby_actor != null else &"", &"desk")
+	model.dirty = true
+	canvas.set_actor_editor_state({"desk": true}, {})
+	h.check("隐藏保留已有未保存状态", model.dirty, true)
+	h.check("重复设置隐藏仍不修改地图数据", model.data, original_data)
+	var external_hidden: Dictionary = {"desk": true}
+	var external_locked: Dictionary = {"desk": true}
+	canvas.set_actor_editor_state(external_hidden, external_locked)
+	h.check("传入状态字典不会被修改", [external_hidden, external_locked],
+		[{"desk": true}, {"desk": true}])
+	external_hidden.clear()
+	external_locked.clear()
+	h.check("清空外部字典不清空画布状态",
+		[canvas.actor_is_hidden(0), canvas.actor_is_locked(0)], [true, true])
+	canvas.set_actor_editor_state(external_hidden, external_locked)
+	external_hidden["desk"] = true
+	external_locked["desk"] = true
+	h.check("外部字典新增条目不污染画布状态",
+		[canvas.actor_is_hidden(0), canvas.actor_is_locked(0)], [false, false])
+	canvas.set_actor_editor_state({"desk": true}, {"desk": true})
+	var other_model = Model.new()
+	other_model.data = fixture()
+	other_model.data["id"] = "other_fixture"
+	canvas.model = other_model
+	canvas.set_actor_editor_state({"other_actor": true}, {"other_actor": true})
+	canvas.tool = Canvas.Tool.SELECT
+	canvas.select_actors(selected_actor)
+	h.check("换地图范围后相同物件ID不继承旧状态",
+		[canvas.actor_is_hidden(0), canvas.actor_is_locked(0)], [false, false])
+	h.check("换地图范围后可恢复拾取", canvas._hit_item(actor_point), Vector2i(Model.Kind.ACTOR, 0))
+	h.check("换地图范围后可恢复尺寸手柄", canvas._hit_handle(handle_point), 0)
+	h.check("换地图范围后可恢复基线拾取", canvas._hit_cover_actor(actor_point), 0)
+	canvas._press(actor_point)
+	motion.position = Vector2(120, 80)
+	canvas._gui_input(motion)
+	canvas._release()
+	h.check("换地图范围后可恢复实际拖动", other_model.rect_of(Model.Kind.ACTOR, 0),
+		Rect2(80, 60, 80, 60))
+	canvas.model = model
+	canvas.set_actor_editor_state({"desk": true}, {"desk": true})
+	h.check("切回原地图可重新应用该地图状态",
+		[canvas.actor_is_hidden(0), canvas.actor_is_locked(0)], [true, true])
+	h.check("另一地图拖动不修改原地图", model.data, original_data)
+	var overlap_model = Model.new()
+	overlap_model.data = fixture()
+	var front_actor: Dictionary = overlap_model.data["actors"][0].duplicate(true)
+	front_actor["id"] = "desk_front"
+	overlap_model.data["actors"].append(front_actor)
+	canvas.model = overlap_model
+	canvas.set_actor_editor_state({}, {})
+	h.check("重叠物件默认拾取上层", canvas._hit_item(actor_point), Vector2i(Model.Kind.ACTOR, 1))
+	for state_name: String in ["隐藏", "锁定"]:
+		canvas.set_actor_editor_state({"desk_front": true} if state_name == "隐藏" else {},
+			{"desk_front": true} if state_name == "锁定" else {})
+		h.check("%s上层物件后可穿透拾取下层" % state_name,
+			canvas._hit_item(actor_point), Vector2i(Model.Kind.ACTOR, 0))
+		h.check("%s上层物件后基线拾取穿透到下层" % state_name,
+			canvas._hit_cover_actor(actor_point), 0)
+		overlap_model.data["actors"].reverse()
+		h.check("%s状态随物件ID而不是数组下标" % state_name,
+			[canvas.actor_is_hidden(0), canvas.actor_is_locked(0),
+			canvas.actor_is_hidden(1), canvas.actor_is_locked(1)],
+			[state_name == "隐藏", state_name == "锁定", false, false])
+		overlap_model.data["actors"].reverse()
+	var group_model = Model.new()
+	group_model.data = fixture()
+	group_model.data["actors"].append({"id": "desk_peer", "rect": [200, 40, 80, 60]})
+	var group_members: Array[int] = [0, 1]
+	group_model.group_actors(group_members, "受限组合")
+	var original_group_data: Dictionary = group_model.data.duplicate(true)
+	var original_group_dirty: bool = group_model.dirty
+	canvas.model = group_model
+	for state_name: String in ["隐藏", "锁定"]:
+		canvas.set_actor_editor_state({"desk_peer": true} if state_name == "隐藏" else {},
+			{"desk_peer": true} if state_name == "锁定" else {})
+		canvas.tool = Canvas.Tool.SELECT
+		canvas.select_actors(selected_actor)
+		h.check("%s另一组员不影响当前成员拾取" % state_name,
+			canvas._hit_item(actor_point), Vector2i(Model.Kind.ACTOR, 0))
+		canvas._press(actor_point)
+		h.check("%s另一组员时当前物件仍未受限" % state_name,
+			[canvas.sel_index, canvas.actor_is_hidden(0), canvas.actor_is_locked(0)], [0, false, false])
+		h.check("%s另一组员时选择仍扩展到整组" % state_name, canvas.selected_actors(), [0, 1])
+		h.check("%s另一组员不能绕过整体拖动保护" % state_name, canvas._drag_mode, 0)
+		motion.position = Vector2(120, 80)
+		canvas._gui_input(motion)
+		canvas._release()
+		h.check("%s组员的组拒绝拖动且两成员不变" % state_name, group_model.data, original_group_data)
+		h.check("%s另一组员时整体手柄不可用" % state_name, canvas._hit_handle(handle_point), -1)
+		canvas.tool = Canvas.Tool.COLLISION
+		canvas._press(Vector2(70, 65))
+		h.check("%s另一组员不能绕过碰撞绘制保护" % state_name, canvas._drag_mode, 0)
+		motion.position = Vector2(90, 75)
+		canvas._gui_input(motion)
+		canvas._release()
+		h.check("%s组员的组拒绝碰撞绘制且数据不变" % state_name, group_model.data, original_group_data)
+		h.check("%s另一组员的受阻操作保留dirty" % state_name, group_model.dirty, original_group_dirty)
 	canvas.free()
 
 

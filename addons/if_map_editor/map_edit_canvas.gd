@@ -43,6 +43,8 @@ var tool: int = Tool.SELECT
 var zoom := 1.0
 var pan := Vector2.ZERO
 var _view_touched := false
+var hidden_actor_ids: Dictionary = {}
+var locked_actor_ids: Dictionary = {}
 
 var show_bg := true
 var show_overlay := true
@@ -115,6 +117,41 @@ func load_map(model_ref, bg_path: String, overlay_path: String, size: Vector2) -
 	fit_to_view()
 	queue_redraw()
 	selection_changed.emit()
+
+
+func set_actor_editor_state(hidden_ids: Dictionary, locked_ids: Dictionary) -> void:
+	if _drag_mode == 1 or _drag_mode == 2 or _drag_mode == 4:
+		_drag_mode = 0
+		edited.emit()
+		selection_changed.emit()
+	elif _drag_mode == 3:
+		_drag_mode = 0
+	hidden_actor_ids = hidden_ids.duplicate()
+	locked_actor_ids = locked_ids.duplicate()
+	queue_redraw()
+
+
+func actor_is_hidden(index: int) -> bool:
+	if model == null or index < 0 or index >= model.count(Kind.ACTOR):
+		return false
+	var actor_id := str(model.actor_field(index, "id", ""))
+	return not actor_id.is_empty() and hidden_actor_ids.has(actor_id)
+
+
+func actor_is_locked(index: int) -> bool:
+	if model == null or index < 0 or index >= model.count(Kind.ACTOR):
+		return false
+	var actor_id := str(model.actor_field(index, "id", ""))
+	return not actor_id.is_empty() and locked_actor_ids.has(actor_id)
+
+
+func _actor_selection_block_reason() -> String:
+	for index: int in selected_actors():
+		if actor_is_hidden(index):
+			return "选区包含隐藏物件，请先显示后再移动"
+		if actor_is_locked(index):
+			return "选区包含锁定物件，请先解锁后再移动"
+	return ""
 
 
 func selected_actors() -> Array[int]:
@@ -360,14 +397,17 @@ func _draw() -> void:
 			_label(r.position + Vector2(2, 9), model.label_of(Kind.PORTAL, i), PORTAL_EDGE)
 	if show_actors:
 		for i in model.count(Kind.ACTOR):
+			if actor_is_hidden(i):
+				continue
 			var r: Rect2 = model.rect_of(Kind.ACTOR, i)
 			var item: Variant = model.actors()[i]
 			var sprite_path := str((item as Dictionary).get("sprite", "")) if item is Dictionary else ""
 			var tex := _load_tex(sprite_path)
-			_draw_rect_game(r, ACTOR_FILL, ACTOR_EDGE)
+			var actor_edge := Color(0.62, 0.66, 0.70, 0.9) if actor_is_locked(i) else ACTOR_EDGE
+			_draw_rect_game(r, ACTOR_FILL, actor_edge)
 			if tex != null:
 				draw_texture_rect(tex, Rect2(to_screen(r.position), r.size * zoom), false)
-			_label(r.position + Vector2(2, r.size.y - 3), model.label_of(Kind.ACTOR, i), ACTOR_EDGE)
+			_label(r.position + Vector2(2, r.size.y - 3), model.label_of(Kind.ACTOR, i), actor_edge)
 			if model.is_cover_actor(i):
 				_draw_baseline(i)
 			if selected_actors().has(i):
@@ -399,12 +439,14 @@ func _draw() -> void:
 		_label(Vector2(foot.position.x, foot.position.y - 3),
 			"%s  (%d, %d)" % ["站得住" if ok else "站不住", int(_mouse_game.x), int(_mouse_game.y)], color)
 
-	if sel_kind >= 0 and is_kind_visible(sel_kind):
+	if sel_kind >= 0 and is_kind_visible(sel_kind) \
+			and not (sel_kind == Kind.ACTOR and actor_is_hidden(sel_index)):
 		var r: Rect2 = overlay_game_rect() if sel_kind == Kind.OVERLAY \
 			else model.rect_of(sel_kind, sel_index)
 		_draw_rect_game(r, Color(0, 0, 0, 0), SELECT_COLOR, 2.0)
 		# 出生点是个点、前景层整张拉伸 —— 都没有「改尺寸」这回事，不给手柄
-		if tool == Tool.SELECT and sel_kind != Kind.SPAWN and sel_kind != Kind.OVERLAY and selected_actors().size() <= 1:
+		if tool == Tool.SELECT and sel_kind != Kind.SPAWN and sel_kind != Kind.OVERLAY \
+				and selected_actors().size() <= 1 and _actor_selection_block_reason().is_empty():
 			for h in _handle_points(r):
 				draw_rect(Rect2(h - Vector2(HANDLE_SIZE, HANDLE_SIZE) * 0.5,
 					Vector2(HANDLE_SIZE, HANDLE_SIZE)), SELECT_COLOR, true)
@@ -534,6 +576,9 @@ func _press(pos: Vector2, additive := false) -> void:
 			if sel_kind != Kind.ACTOR:
 				status.emit("先在左侧选中一个物件，再在图上拖出它的碰撞箱。")
 				return
+			if not _actor_selection_block_reason().is_empty():
+				status.emit("物件已隐藏或锁定，请先在左侧场景列表中显示并解锁。")
+				return
 			_drag_mode = 3
 			_drag_start_game = to_game(pos)
 			_drag_new_rect = Rect2(_snap(_drag_start_game), Vector2.ZERO)
@@ -577,12 +622,16 @@ func _press(pos: Vector2, additive := false) -> void:
 			sel_index = hit.y
 			selection_changed.emit()
 			if sel_kind >= 0:
-				_drag_mode = 1
-				_drag_start_game = to_game(pos)
-				_drag_start_rect = model.rect_of(sel_kind, sel_index)
-				_drag_actor_rects.clear()
-				for index: int in selected_actors():
-					_drag_actor_rects[index] = model.rect_of(Kind.ACTOR, index)
+				var block_reason := _actor_selection_block_reason() if sel_kind == Kind.ACTOR else ""
+				if block_reason.is_empty():
+					_drag_mode = 1
+					_drag_start_game = to_game(pos)
+					_drag_start_rect = model.rect_of(sel_kind, sel_index)
+					_drag_actor_rects.clear()
+					for index: int in selected_actors():
+						_drag_actor_rects[index] = model.rect_of(Kind.ACTOR, index)
+				else:
+					status.emit(block_reason)
 			queue_redraw()
 
 
@@ -687,7 +736,8 @@ func _hit_item(pos: Vector2) -> Vector2i:
 				return Vector2i(Kind.SPAWN, i)
 	if show_actors:
 		for i in range(model.count(Kind.ACTOR) - 1, -1, -1):
-			if _rect_hit(model.rect_of(Kind.ACTOR, i), pos):
+			if not actor_is_hidden(i) and not actor_is_locked(i) \
+					and _rect_hit(model.rect_of(Kind.ACTOR, i), pos):
 				return Vector2i(Kind.ACTOR, i)
 	if show_portals:
 		for i in range(model.count(Kind.PORTAL) - 1, -1, -1):
@@ -709,7 +759,7 @@ func _hit_cover_actor(pos: Vector2) -> int:
 	if not show_actors:
 		return -1
 	for i in range(model.count(Kind.ACTOR) - 1, -1, -1):
-		if not model.is_cover_actor(i):
+		if actor_is_hidden(i) or actor_is_locked(i) or not model.is_cover_actor(i):
 			continue
 		if _rect_hit(model.rect_of(Kind.ACTOR, i), pos, 6.0):
 			return i
@@ -726,6 +776,8 @@ func _hit_handle(pos: Vector2) -> int:
 		return -1
 	if sel_kind == Kind.SPAWN or sel_kind == Kind.OVERLAY:
 		return -1          # 出生点没有尺寸；前景层整张拉伸，也改不了
+	if sel_kind == Kind.ACTOR and not _actor_selection_block_reason().is_empty():
+		return -1
 	var r: Rect2 = model.rect_of(sel_kind, sel_index)
 	var points := _handle_points(r)
 	for i in points.size():
