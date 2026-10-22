@@ -400,6 +400,29 @@ func group_actors(indices: Array[int], requested_name := "") -> String:
 	return name
 
 
+func rename_group(group_id: String, requested_name: String) -> bool:
+	var name := requested_name.strip_edges()
+	if group_id.is_empty() or name.is_empty():
+		return false
+	var groups := editor_groups()
+	var target: Dictionary = {}
+	var matches := 0
+	for group: Variant in groups:
+		if group is Dictionary and str((group as Dictionary).get("id", "")) == group_id:
+			target = group
+			matches += 1
+	if matches != 1:
+		return false
+	if str(target.get("name", "")) == name:
+		return true
+	if _group_name_exists(groups, name):
+		return false
+	target["name"] = name
+	data["editor_groups"] = groups
+	dirty = true
+	return true
+
+
 func ungroup_actors(indices: Array[int]) -> int:
 	var selected_ids: Dictionary = {}
 	for index: int in indices:

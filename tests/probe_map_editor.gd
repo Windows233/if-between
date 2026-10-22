@@ -14,6 +14,7 @@ const Dock := preload("res://addons/if_map_editor/map_edit_dock.gd")
 const Canvas := preload("res://addons/if_map_editor/map_edit_canvas.gd")
 const Model := preload("res://addons/if_map_editor/map_edit_model.gd")
 const MapObjectTests := preload("res://tests/test_map_objects.gd")
+const HierarchyTests := preload("res://tests/test_map_hierarchy.gd")
 const TestHarness := preload("res://tests/test_harness.gd")
 
 
@@ -59,7 +60,7 @@ func _initialize() -> void:
 			Canvas.Tool.BASELINE, Canvas.Tool.COLLISION]:
 		dock._on_tool(tool)
 		await process_frame
-	assert(dock._object_list != null)
+	assert(dock._object_tree is Tree)
 	assert(dock._actor_panel != null)
 	assert(dock._asset_list != null and dock._asset_list.item_count > 0)
 	dock._asset_filter.text = "gatehouse_desk"
@@ -91,8 +92,16 @@ func _initialize() -> void:
 		if str(dock.model.actor_field(actor_index, "sprite", "")) == asset_path:
 			matching_size = dock.model.rect_of(Model.Kind.ACTOR, actor_index).size
 			break
+	var before_capture: String = Model.stringify(dock.model.data)
+	var map_file_hash := FileAccess.get_sha256(dock.model.path)
+	var capture_group_members: Array[int] = [0, 1]
+	assert(not dock.model.group_actors(capture_group_members, "门卫室陈设").is_empty())
+	dock._on_edited()
+	_select_objects(dock, capture_group_members)
+	dock._hierarchy_group_items.back().collapsed = false
 	await _check_editor_layout(dock)
 	await _capture_editor("editor-1280.png")
+	await _capture_editor("editor-hierarchy.png")
 	root.size = Vector2i(1024, 768)
 	root.content_scale_size = Vector2i(1024, 768)
 	await _check_editor_layout(dock)
@@ -101,6 +110,9 @@ func _initialize() -> void:
 	root.content_scale_size = Vector2i(1280, 800)
 	await process_frame
 	await process_frame
+	dock._object_command("undo")
+	assert(Model.stringify(dock.model.data) == before_capture)
+	assert(FileAccess.get_sha256(dock.model.path) == map_file_hash)
 	assert(matching_size.x > 0.0 and matching_size.y > 0.0)
 	var dropped_rect: Rect2 = dock.model.rect_of(Model.Kind.ACTOR, before_drop)
 	assert(dropped_rect.size == matching_size)
@@ -266,6 +278,7 @@ func _initialize() -> void:
 	assert(dock.model.group_name_for_actor(0) == "组 1")
 	print("⑬ 编组按钮、整组选取/复制、解组及撤销重做通过")
 	await _probe_editor_state(dock)
+	await _probe_hierarchy(dock)
 	var backup_harness = TestHarness.new()
 	backup_harness.setup(root)
 	MapObjectTests.test_copy_and_history(backup_harness)
@@ -282,6 +295,101 @@ func _initialize() -> void:
 func _select_objects(dock: Control, indices: Array[int]) -> void:
 	dock.canvas.select_actors(indices)
 	dock._refresh_selection()
+
+
+func _probe_hierarchy(dock: Control) -> void:
+	var hierarchy_model = Model.new()
+	hierarchy_model.map_id = "hierarchy_probe"
+	hierarchy_model.data = HierarchyTests.fixture()
+	hierarchy_model.data["id"] = hierarchy_model.map_id
+	for actor: Dictionary in hierarchy_model.data["actors"]:
+		actor["sprite"] = "res://art/props/gatehouse_desk.png"
+	hierarchy_model.reset_history()
+	dock.model = hierarchy_model
+	dock.canvas.load_map(hierarchy_model, "", "", hierarchy_model.map_size())
+	dock._load_actor_editor_state(hierarchy_model.map_id)
+	dock._refresh_selection()
+	var group: TreeItem = dock._hierarchy_group_items[0]
+	var group_instance_id := group.get_instance_id()
+	_select_hierarchy_item(dock, group)
+	await process_frame
+	await process_frame
+	assert(is_instance_valid(group) and group.get_instance_id() == group_instance_id)
+	var selected: Array[int] = dock.canvas.selected_actors()
+	selected.sort()
+	assert(selected == [1, 2])
+	assert(group.is_selected(0) and dock._hierarchy_actor_items[2].is_selected(0))
+	var first_member: TreeItem = dock._hierarchy_actor_items[1]
+	_select_hierarchy_item(dock, first_member)
+	await process_frame
+	await process_frame
+	assert(dock.canvas.sel_index == 1 and dock._panel_index == 1)
+	assert(dock._object_tree.get_selected() == first_member)
+	dock._hidden_actor_ids["object_2"] = true
+	dock._locked_actor_ids["object_2"] = true
+	dock.canvas.set_actor_editor_state(dock._hidden_actor_ids, dock._locked_actor_ids)
+	group.collapsed = true
+	dock._refresh_selection()
+	assert(group.collapsed and dock._panel_locked)
+	assert(dock._hierarchy_actor_items[2].get_text(0).contains("隐藏 / 锁定"))
+	assert(not group.is_editable(0))
+	assert(dock._hide_selected_button.text == "隐藏所选")
+	assert(dock._lock_selected_button.text == "锁定所选")
+	dock._toggle_selected_actor_lock()
+	assert(dock.canvas.actor_is_locked(1) and dock.canvas.actor_is_locked(2))
+	assert(group.collapsed and dock._lock_selected_button.text == "解锁所选")
+	dock._toggle_selected_actor_lock()
+	dock._toggle_selected_actor_visibility()
+	assert(dock.canvas.actor_is_hidden(1) and dock.canvas.actor_is_hidden(2))
+	assert(group.collapsed and dock._hide_selected_button.text == "显示所选")
+	var hidden_pan: Vector2 = dock.canvas.pan
+	var hidden_zoom: float = dock.canvas.zoom
+	dock._frame_selection()
+	assert(dock.canvas.pan == hidden_pan and dock.canvas.zoom == hidden_zoom)
+	dock._show_all_actors()
+	dock._frame_selected_button.pressed.emit()
+	var bounds: Rect2 = hierarchy_model.rect_of(Model.Kind.ACTOR, 1).merge(
+		hierarchy_model.rect_of(Model.Kind.ACTOR, 2))
+	assert(dock.canvas.to_screen(bounds.get_center()).distance_to(dock.canvas.size * 0.5) < 1.0)
+	group.set_text(0, "探针阅读组")
+	dock._on_hierarchy_item_edited(group)
+	assert(hierarchy_model.editor_groups()[0]["name"] == "探针阅读组")
+	assert(group.collapsed and group.get_instance_id() == group_instance_id)
+	dock._object_command("undo")
+	assert(hierarchy_model.editor_groups()[0]["name"] == "阅读区" and group.collapsed)
+	dock._object_command("redo")
+	assert(hierarchy_model.editor_groups()[0]["name"] == "探针阅读组" and group.collapsed)
+	var one_actor: Array[int] = [1]
+	dock.canvas.select_actors(one_actor)
+	dock._refresh_selection()
+	assert(group.collapsed)
+	group.collapsed = false
+	await _check_editor_layout(dock)
+	await _capture_editor("hierarchy-1280.png")
+	root.size = Vector2i(1024, 768)
+	root.content_scale_size = Vector2i(1024, 768)
+	await _check_editor_layout(dock)
+	await _capture_editor("hierarchy-1024.png")
+	root.size = Vector2i(1280, 800)
+	root.content_scale_size = Vector2i(1280, 800)
+	group.collapsed = true
+	hierarchy_model.map_id = "hierarchy_other_probe"
+	hierarchy_model.data["id"] = hierarchy_model.map_id
+	dock.canvas.load_map(hierarchy_model, "", "", hierarchy_model.map_size())
+	dock._load_actor_editor_state(hierarchy_model.map_id)
+	assert(not is_instance_valid(group))
+	assert(not dock._hierarchy_group_items[0].collapsed)
+	if FileAccess.file_exists(dock._editor_state_path):
+		assert(DirAccess.remove_absolute(ProjectSettings.globalize_path(dock._editor_state_path)) == OK)
+	print("⑯ 层级树信号合并、组员主选、整组状态、折叠隔离、改名撤销与定位通过")
+
+
+func _select_hierarchy_item(dock: Control, item: TreeItem) -> void:
+	dock._hierarchy_syncing = true
+	dock._object_tree.deselect_all()
+	item.select(0)
+	dock._hierarchy_syncing = false
+	dock._object_tree.multi_selected.emit(item, 0, true)
 
 
 func _probe_editor_state(dock: Control) -> void:
@@ -303,7 +411,7 @@ func _probe_editor_state(dock: Control) -> void:
 	var saved_data: String = Model.stringify(state_model.data)
 	dock._toggle_selected_actor_visibility()
 	assert(dock.canvas.actor_is_hidden(0))
-	assert(dock._object_list.get_item_text(0).contains("隐藏"))
+	assert(dock._hierarchy_actor_items[0].get_text(0).contains("隐藏"))
 	assert(dock._panel_id_readonly)
 	var id_field: LineEdit = dock._field("id", 110.0)
 	assert(not id_field.editable)
@@ -426,7 +534,7 @@ func _check_editor_layout(dock: Control) -> void:
 
 func _capture_editor(filename: String) -> void:
 	var directory := OS.get_environment("IF_MAP_EDITOR_SCREENSHOT_DIR")
-	if directory.is_empty():
+	if directory.is_empty() or DisplayServer.get_name() == "headless":
 		return
 	await RenderingServer.frame_post_draw
 	assert(DirAccess.make_dir_recursive_absolute(directory) == OK)

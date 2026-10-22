@@ -41,13 +41,21 @@ var _panel_kind := -1
 var _panel_index := -1
 var _panel_locked := false
 var _panel_id_readonly := false
-var _object_list: ItemList
+var _object_tree: Tree
+var _hierarchy_actor_items: Dictionary = {}
+var _hierarchy_group_items: Array[TreeItem] = []
+var _hierarchy_structure: Array = []
+var _hierarchy_map_id := ""
+var _hierarchy_syncing := false
+var _hierarchy_selection_queued := false
+var _hierarchy_selecting := false
 var _hidden_actor_ids: Dictionary = {}
 var _locked_actor_ids: Dictionary = {}
 var _editor_state_path := EDITOR_STATE_PATH
 var _hide_selected_button: Button
 var _lock_selected_button: Button
 var _show_all_button: Button
+var _frame_selected_button: Button
 var _asset_tabs: TabContainer
 var _asset_filter: LineEdit
 var _asset_list: ItemList
@@ -108,13 +116,16 @@ func _build() -> void:
 	sidebar.add_child(_asset_tabs)
 	var scene_page := VBoxContainer.new()
 	scene_page.name = "场景"
-	scene_page.add_child(_text("场景物件（Ctrl / Shift 多选）"))
-	_object_list = ItemList.new()
-	_object_list.select_mode = ItemList.SELECT_MULTI
-	_object_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_object_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_object_list.multi_selected.connect(_objects_selected)
-	scene_page.add_child(_object_list)
+	scene_page.add_child(_text("场景层级（Ctrl / Shift 多选）"))
+	_object_tree = Tree.new()
+	_object_tree.hide_root = true
+	_object_tree.select_mode = Tree.SELECT_MULTI
+	_object_tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_object_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_object_tree.multi_selected.connect(_on_hierarchy_multi_selected)
+	_object_tree.item_edited.connect(_on_hierarchy_item_edited)
+	_object_tree.item_activated.connect(_on_hierarchy_item_activated)
+	scene_page.add_child(_object_tree)
 	var object_tools := HFlowContainer.new()
 	_hide_selected_button = Button.new()
 	_hide_selected_button.text = "隐藏所选"
@@ -131,6 +142,11 @@ func _build() -> void:
 	_show_all_button.tooltip_text = "显示这张地图中的所有隐藏物件。"
 	_show_all_button.pressed.connect(_show_all_actors)
 	object_tools.add_child(_show_all_button)
+	_frame_selected_button = Button.new()
+	_frame_selected_button.text = "定位所选"
+	_frame_selected_button.tooltip_text = "将画布对准所选对象；也可双击物件，或在画布中按 F。"
+	_frame_selected_button.pressed.connect(_frame_selection)
+	object_tools.add_child(_frame_selected_button)
 	scene_page.add_child(object_tools)
 	_asset_tabs.add_child(scene_page)
 	var asset_page := VBoxContainer.new()
@@ -285,14 +301,72 @@ func _refresh_assets() -> void:
 
 
 func _refresh_objects() -> void:
-	if _object_list == null:
+	if _object_tree == null:
 		return
-	_object_list.clear()
+	var actor_ids := PackedStringArray()
 	for index: int in model.count(Kind.ACTOR):
-		var group_name := model.group_name_for_actor(index)
+		actor_ids.append(str(model.actor_field(index, "id", "")))
+	var groups: Array[Dictionary] = []
+	var group_structure: Array = []
+	for raw_group: Variant in model.editor_groups():
+		if not raw_group is Dictionary:
+			continue
+		var group: Dictionary = raw_group
+		groups.append(group)
+		group_structure.append({"id": str(group.get("id", "")),
+			"members": group.get("members", [])})
+	var structure: Array = [model.map_id, actor_ids, group_structure]
+	_hierarchy_syncing = true
+	if structure != _hierarchy_structure or _object_tree.get_root() == null:
+		var collapsed: Dictionary = {}
+		if _hierarchy_map_id == model.map_id:
+			for item: TreeItem in _hierarchy_group_items:
+				collapsed[str(item.get_metadata(0).get("id", ""))] = item.collapsed
+		_object_tree.clear()
+		_hierarchy_actor_items.clear()
+		_hierarchy_group_items.clear()
+		var root := _object_tree.create_item()
+		root.set_selectable(0, false)
+		for group: Dictionary in groups:
+			var item := _object_tree.create_item(root)
+			var group_id := str(group.get("id", ""))
+			item.set_metadata(0, {"kind": "group", "id": group_id,
+				"name": str(group.get("name", "组"))})
+			item.collapsed = bool(collapsed.get(group_id, false))
+			_hierarchy_group_items.append(item)
+		for index: int in model.count(Kind.ACTOR):
+			var parent := root
+			var actor_id := str(model.actor_field(index, "id", ""))
+			if not actor_id.is_empty():
+				for group_index: int in groups.size():
+					if groups[group_index].get("members", []).has(actor_id):
+						parent = _hierarchy_group_items[group_index]
+						break
+			var item := _object_tree.create_item(parent)
+			item.set_metadata(0, {"kind": "actor", "index": index})
+			_hierarchy_actor_items[index] = item
+		_hierarchy_structure = structure.duplicate(true)
+		_hierarchy_map_id = model.map_id
+	var group_id_counts: Dictionary = {}
+	for group: Dictionary in groups:
+		var group_id := str(group.get("id", ""))
+		group_id_counts[group_id] = int(group_id_counts.get(group_id, 0)) + 1
+	for group_index: int in groups.size():
+		var item := _hierarchy_group_items[group_index]
+		var group: Dictionary = groups[group_index]
+		var group_id := str(group.get("id", ""))
+		var group_name := str(group.get("name", "组"))
+		item.set_text(0, group_name)
+		item.set_metadata(0, {"kind": "group", "id": group_id, "name": group_name})
+		var editable := not group_id.is_empty() and int(group_id_counts.get(group_id, 0)) == 1
+		for index: int in _hierarchy_item_actor_indices(item):
+			editable = editable and not canvas.actor_is_locked(index)
+		item.set_editable(0, editable)
+		item.set_tooltip_text(0, "双击编组名称可改名；选中编组会整体选择成员。" if editable
+			else "编组包含锁定物件或组 ID 无效，暂时不能改名。")
+	for index: int in model.count(Kind.ACTOR):
+		var item: TreeItem = _hierarchy_actor_items[index]
 		var label := model.label_of(Kind.ACTOR, index)
-		if not group_name.is_empty():
-			label = "%s / %s" % [group_name, label]
 		var actor_id := str(model.actor_field(index, "id", ""))
 		var state_tags: Array[String] = []
 		if _hidden_actor_ids.has(actor_id):
@@ -301,11 +375,132 @@ func _refresh_objects() -> void:
 			state_tags.append("锁定")
 		if not state_tags.is_empty():
 			label += "  [%s]" % " / ".join(state_tags)
-		_object_list.add_item("%s  [%s]" % [label, actor_id])
-		if canvas.sel_kind == Kind.ACTOR and canvas.selected_actors().has(index):
-			_object_list.select(index, false)
+		item.set_text(0, "%s  [%s]" % [label, actor_id])
+		item.set_tooltip_text(0, "双击定位物件；隐藏与锁定状态仅影响编辑器。")
+	_sync_hierarchy_selection()
+	_hierarchy_syncing = false
 	_refresh_object_state_buttons()
 	_refresh_group_buttons()
+
+
+func _sync_hierarchy_selection() -> void:
+	var selected: Array[int] = canvas.selected_actors()
+	var primary: TreeItem = null
+	if _hierarchy_selecting:
+		primary = _object_tree.get_selected()
+	elif canvas.sel_kind == Kind.ACTOR:
+		primary = _hierarchy_actor_items.get(canvas.sel_index)
+	for index: int in _hierarchy_actor_items:
+		var item: TreeItem = _hierarchy_actor_items[index]
+		if item.is_selected(0) != selected.has(index):
+			if selected.has(index):
+				item.select(0, false)
+			else:
+				item.deselect(0)
+	for item: TreeItem in _hierarchy_group_items:
+		var members := _hierarchy_item_actor_indices(item)
+		var all_selected := not members.is_empty()
+		for index: int in members:
+			all_selected = all_selected and selected.has(index)
+		if all_selected:
+			item.select(0, false)
+		else:
+			item.deselect(0)
+	if primary != null and primary.is_selected(0) and _object_tree.get_selected() != primary:
+		primary.select(0)
+
+
+func _hierarchy_item_actor_indices(item: TreeItem) -> Array[int]:
+	var indices: Array[int] = []
+	var metadata: Dictionary = item.get_metadata(0)
+	if metadata.get("kind", "") == "actor":
+		var index := int(metadata.get("index", -1))
+		if index >= 0 and index < model.count(Kind.ACTOR):
+			indices.append(index)
+	else:
+		var child := item.get_first_child()
+		while child != null:
+			indices.append_array(_hierarchy_item_actor_indices(child))
+			child = child.get_next()
+	return indices
+
+
+func _on_hierarchy_multi_selected(item: TreeItem, _column: int, selected: bool) -> void:
+	if _hierarchy_syncing:
+		return
+	if not selected:
+		var target := item
+		if item.get_metadata(0).get("kind", "") == "actor" \
+				and item.get_parent() != _object_tree.get_root():
+			target = item.get_parent()
+		_hierarchy_syncing = true
+		target.deselect(0)
+		for index: int in _hierarchy_item_actor_indices(target):
+			(_hierarchy_actor_items[index] as TreeItem).deselect(0)
+		_hierarchy_syncing = false
+	if not _hierarchy_selection_queued:
+		_hierarchy_selection_queued = true
+		_on_hierarchy_item_selected.call_deferred()
+
+
+func _on_hierarchy_item_selected() -> void:
+	_hierarchy_selection_queued = false
+	if _hierarchy_syncing:
+		return
+	var selected := _selected_actor_indices()
+	var primary := _object_tree.get_selected()
+	canvas.select_actors(selected)
+	if primary != null and primary.is_selected(0) \
+			and primary.get_metadata(0).get("kind", "") == "group":
+		primary.collapsed = false
+	if primary != null and primary.get_metadata(0).get("kind", "") == "actor":
+		var index := int(primary.get_metadata(0).get("index", -1))
+		if canvas.selected_actors().has(index):
+			canvas.sel_index = index
+	_hierarchy_selecting = true
+	_refresh_selection()
+	_hierarchy_selecting = false
+
+
+func _on_hierarchy_item_edited(item: TreeItem = null) -> void:
+	if _hierarchy_syncing:
+		return
+	if item == null:
+		item = _object_tree.get_edited()
+	if item == null:
+		return
+	var metadata: Dictionary = item.get_metadata(0)
+	if metadata.get("kind", "") != "group":
+		return
+	for index: int in _hierarchy_item_actor_indices(item):
+		if canvas.actor_is_locked(index):
+			item.set_text(0, str(metadata.get("name", "组")))
+			_status.text = "编组包含锁定物件，请先解锁后再改名。"
+			return
+	var old_name := str(metadata.get("name", "组"))
+	var requested_name := item.get_text(0).strip_edges()
+	if not model.rename_group(str(metadata.get("id", "")), requested_name):
+		item.set_text(0, old_name)
+		_status.text = "编组改名失败：名称不能为空或重名，且编组必须有唯一有效的 ID。"
+		return
+	item.set_text(0, requested_name)
+	if requested_name == old_name:
+		return
+	_on_edited()
+	_status.text = "编组已改名为「%s」，可撤销或重做。" % requested_name
+
+
+func _on_hierarchy_item_activated() -> void:
+	var item := _object_tree.get_selected()
+	if item == null or item.get_metadata(0).get("kind", "") != "actor":
+		return
+	_on_hierarchy_item_selected()
+	_frame_selection()
+
+
+func _frame_selection() -> void:
+	_status.text = "画布已定位到所选对象。" if canvas.frame_selection() \
+		else "没有可定位的选区；隐藏物件需要先显示。"
 
 
 func _refresh_group_buttons() -> void:
@@ -342,18 +537,14 @@ func _allow_selection_edit() -> bool:
 	return false
 
 
-func _objects_selected(_index: int, _selected: bool) -> void:
-	var selected: Array[int] = []
-	for index: int in _object_list.get_selected_items():
-		selected.append(index)
-	canvas.select_actors(selected)
-	_refresh_selection()
-
-
 func _selected_actor_indices() -> Array[int]:
 	var selected: Array[int] = []
-	for index: int in _object_list.get_selected_items():
-		selected.append(index)
+	var item := _object_tree.get_next_selected(null)
+	while item != null:
+		for index: int in _hierarchy_item_actor_indices(item):
+			if not selected.has(index):
+				selected.append(index)
+		item = _object_tree.get_next_selected(item)
 	return selected
 
 
@@ -372,6 +563,7 @@ func _refresh_object_state_buttons() -> void:
 	_lock_selected_button.disabled = selected.is_empty()
 	_lock_selected_button.text = "解锁所选" if all_locked else "锁定所选"
 	_show_all_button.disabled = _hidden_actor_ids.is_empty()
+	_frame_selected_button.disabled = canvas.sel_kind < 0
 
 
 func _toggle_selected_actor_visibility() -> void:

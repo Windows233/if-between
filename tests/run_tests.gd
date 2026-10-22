@@ -45,6 +45,8 @@ func _initialize() -> void:
 	h.section("地图编辑器")
 	TestMapEditor.run(h)
 	preload("res://tests/test_map_objects.gd").run(h)
+	preload("res://tests/test_map_hierarchy.gd").run(h)
+	preload("res://tests/test_map_templates.gd").run(h)
 
 	if h.report():
 		quit(0)

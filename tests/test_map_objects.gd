@@ -20,6 +20,7 @@ static func run(h: TestHarness) -> void:
 	test_backups(h)
 	test_library(h)
 	test_canvas(h)
+	test_frame_selection(h)
 	test_editor_state(h)
 	test_runtime(h)
 
@@ -92,6 +93,35 @@ static func test_groups(h: TestHarness) -> void:
 	h.check("组成员保存稳定物件 ID", model.editor_groups()[0].get("members"), ["desk", "chair_a"])
 	h.check("选择组员扩展到整组", model.expand_group_selection(one_member), [1, 0])
 	h.check("地图运行时忽略编辑器分组数据", MapDef.from_dictionary(model.data).validate(), [])
+	var group_id: String = model.editor_groups()[0].get("id", "")
+	h.check("组名可按稳定组 ID 重命名", model.rename_group(group_id, "书桌与椅子"), true)
+	model.record_history()
+	h.check("重命名保留组 ID 与成员", model.editor_groups()[0], {
+		"id": group_id, "name": "书桌与椅子", "members": ["desk", "chair_a"]})
+	h.check("空白组名被拒绝", model.rename_group(group_id, "  "), false)
+	h.check("未知组 ID 被拒绝", model.rename_group("missing", "新组名"), false)
+	var conflict_model: Variant = layout_model()
+	conflict_model.data["actors"].append({"id": "chair_c", "rect": [330, 40, 30, 25]})
+	var conflict_first: Array[int] = [0, 1]
+	var conflict_second: Array[int] = [2, 3]
+	conflict_model.group_actors(conflict_first, "第一组")
+	conflict_model.group_actors(conflict_second, "其他组")
+	conflict_model.reset_history()
+	conflict_model.dirty = false
+	var conflict_before: String = Model.stringify(conflict_model.data)
+	h.check("重复组名被拒绝", conflict_model.rename_group(
+		str(conflict_model.editor_groups()[0].get("id", "")), "其他组"), false)
+	h.check("组名冲突不修改地图", Model.stringify(conflict_model.data), conflict_before)
+	h.check("组名冲突不产生未保存变更", conflict_model.dirty, false)
+	h.check("同名提交可保持现状", conflict_model.rename_group(
+		str(conflict_model.editor_groups()[0].get("id", "")), "第一组"), true)
+	h.check("同名提交不产生未保存变更", conflict_model.dirty, false)
+	h.check("重命名被拒绝时组数据不变", model.editor_groups()[0].get("name"), "书桌与椅子")
+	h.check("组名可以撤销", model.undo(), true)
+	h.check("撤销恢复旧组名", model.editor_groups()[0].get("name"), "桌面组合")
+	h.check("组名可以重做", model.redo(), true)
+	h.check("重做恢复新组名", model.editor_groups()[0].get("name"), "书桌与椅子")
+	model.undo()
 	var invalid_model: Variant = layout_model()
 	invalid_model.data["actors"].append({"id": "desk", "rect": [5, 5, 10, 10]})
 	h.check("重复物件 ID 不允许编组", invalid_model.group_actors(invalid_members), "")
@@ -115,7 +145,7 @@ static func test_groups(h: TestHarness) -> void:
 	h.check("编组操作可撤销", model.undo(), true)
 	h.check("撤销会清除组关系", model.editor_groups().size(), 0)
 	h.check("编组操作可重做", model.redo(), true)
-	h.check("编组操作可重做后再恢复位置", model.redo(), true)
+	h.check("编组重做后恢复原组名", model.group_name_for_actor(0), "桌面组合")
 	model.copy_actors(first_member)
 	var pasted: Array[int] = model.paste_actors()
 	model.record_history()
@@ -305,6 +335,54 @@ static func test_canvas(h: TestHarness) -> void:
 	canvas._release()
 	h.check("画布画出的碰撞写成局部坐标", model.actor_field(0, "collision"),
 		[[5, 30, 70, 20], [10, 25, 20, 10]])
+	canvas.free()
+
+
+static func test_frame_selection(h: TestHarness) -> void:
+	var model = layout_model()
+	var canvas = Canvas.new()
+	canvas.model = model
+	canvas.size = Vector2(700, 500)
+	canvas.map_size = model.map_size()
+	var before: String = Model.stringify(model.data)
+	h.check("没有选中项时定位失败", canvas.frame_selection(), false)
+	var selected: Array[int] = [0, 1]
+	canvas.select_actors(selected)
+	h.check("多选物件可定位", canvas.frame_selection(), true)
+	var bounds: Rect2 = model.rect_of(Model.Kind.ACTOR, 0).merge(model.rect_of(Model.Kind.ACTOR, 1))
+	h.check("定位把选区中心放到画布中心", canvas.to_screen(bounds.get_center()), canvas.size * 0.5)
+	h.check("定位后两个物件都在画布内", Rect2(Vector2.ZERO, canvas.size).encloses(
+		Rect2(canvas.to_screen(bounds.position), bounds.size * canvas.zoom)), true)
+	var position_before: Vector2 = canvas.pan
+	var zoom_before: float = canvas.zoom
+	canvas._on_viewport_resized()
+	h.check("定位后不被自动适配重置", [canvas.pan, canvas.zoom], [position_before, zoom_before])
+	canvas.set_actor_editor_state({"desk": true, "chair_a": true}, {})
+	h.check("全隐藏的选区不定位", canvas.frame_selection(), false)
+	h.check("失败定位保留视角", [canvas.pan, canvas.zoom], [position_before, zoom_before])
+	canvas.set_actor_editor_state({}, {"desk": true})
+	canvas.show_actors = false
+	h.check("关闭的物件图层不定位", canvas.frame_selection(), false)
+	canvas.show_actors = true
+	h.check("锁定物件仍可定位", canvas.frame_selection(), true)
+	var focus_key := InputEventKey.new()
+	focus_key.keycode = KEY_F
+	focus_key.pressed = true
+	canvas.pan = Vector2(-1000, -2000)
+	canvas._gui_input(focus_key)
+	h.check("F快捷键定位当前选区", canvas.to_screen(bounds.get_center()), canvas.size * 0.5)
+	canvas._drag_mode = 1
+	h.check("拖动期间不改变定位视角", canvas.frame_selection(), false)
+	canvas._drag_mode = 0
+	canvas.sel_kind = Model.Kind.SPAWN
+	canvas.sel_index = 0
+	h.check("无效出生点不定位", canvas.frame_selection(), false)
+	model.data["spawns"] = {"entry": [100, 120]}
+	h.check("出生点可定位", canvas.frame_selection(), true)
+	h.check("出生点定位到中心", canvas.to_screen(Vector2(100, 120)), canvas.size * 0.5)
+	model.data.erase("spawns")
+	h.check("定位不修改地图数据", Model.stringify(model.data), before)
+	h.check("定位不增加未保存状态", model.dirty, false)
 	canvas.free()
 
 

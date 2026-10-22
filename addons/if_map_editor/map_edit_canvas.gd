@@ -260,6 +260,39 @@ func fit_to_view() -> void:
 	queue_redraw()
 
 
+func frame_selection() -> bool:
+	if model == null or sel_kind < 0 or size.x <= 24.0 or size.y <= 24.0:
+		return false
+	if _drag_mode != 0:
+		return false
+	if not is_kind_visible(sel_kind):
+		status.emit("所选项所在图层未显示，请先在顶部打开显示开关。")
+		return false
+	var bounds := Rect2()
+	var has_bounds := false
+	if sel_kind == Kind.ACTOR:
+		for index: int in selected_actors():
+			if index < 0 or index >= model.count(Kind.ACTOR) or actor_is_hidden(index):
+				continue
+			var actor_rect: Rect2 = model.rect_of(Kind.ACTOR, index)
+			bounds = bounds.merge(actor_rect) if has_bounds else actor_rect
+			has_bounds = true
+	else:
+		if sel_index < 0 or sel_index >= model.count(sel_kind):
+			return false
+		bounds = overlay_game_rect() if sel_kind == Kind.OVERLAY else model.rect_of(sel_kind, sel_index)
+		has_bounds = true
+	if not has_bounds:
+		status.emit("选区中没有可见物件，请先显示后再定位。")
+		return false
+	var framing_size := Vector2(maxf(bounds.size.x, 24.0), maxf(bounds.size.y, 24.0)) * 1.25
+	zoom = clampf(minf((size.x - 24.0) / framing_size.x, (size.y - 24.0) / framing_size.y), 0.1, 12.0)
+	pan = size * 0.5 - bounds.get_center() * zoom
+	_view_touched = true
+	queue_redraw()
+	return true
+
+
 func _on_viewport_resized() -> void:
 	if not _view_touched:
 		fit_to_view()
@@ -551,6 +584,11 @@ func _gui_input(event: InputEvent) -> void:
 		return
 	elif event is InputEventKey:
 		var key := event as InputEventKey
+		if key.pressed and not key.echo and key.keycode == KEY_F \
+				and not key.ctrl_pressed and not key.alt_pressed and not key.meta_pressed:
+			frame_selection()
+			accept_event()
+			return
 		if key.pressed and not key.echo and key.ctrl_pressed:
 			var command: String = {KEY_C: "copy", KEY_V: "paste", KEY_D: "duplicate",
 				KEY_Y: "redo", KEY_Z: "redo" if key.shift_pressed else "undo"}.get(key.keycode, "")
