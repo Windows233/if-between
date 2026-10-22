@@ -80,14 +80,31 @@ func _initialize() -> void:
 	assert(dock.model.count(Model.Kind.ACTOR) == before_drop + 1)
 	assert(str(dock.model.actor_field(before_drop, "sprite")) == asset_path)
 	assert(dock.canvas.selected_actors().has(before_drop))
+	var matching_size := Vector2.ZERO
+	for actor_index in before_drop:
+		if str(dock.model.actor_field(actor_index, "sprite", "")) == asset_path:
+			matching_size = dock.model.rect_of(Model.Kind.ACTOR, actor_index).size
+			break
+	assert(matching_size.x > 0.0 and matching_size.y > 0.0)
 	var dropped_rect: Rect2 = dock.model.rect_of(Model.Kind.ACTOR, before_drop)
-	var expected_size: Vector2 = (load(asset_path) as Texture2D).get_size() / 12.0
-	assert(absf(dropped_rect.size.x - expected_size.x) <= 1.0)
-	assert(absf(dropped_rect.size.y - expected_size.y) <= 1.0)
+	assert(dropped_rect.size == matching_size)
 	assert(absf(dropped_rect.get_center().x - drop_game_position.x) <= 1.0)
 	assert(absf(dropped_rect.get_center().y - drop_game_position.y) <= 1.0)
 	assert(dock.model.undo())
 	var no_selection: Array[int] = []
+	dock.canvas.select_actors(no_selection)
+	dock._refresh_selection()
+	var fallback_asset_path := "res://art/props/desk.png"
+	var fallback_drop_data := {"type": "if_map_asset", "path": fallback_asset_path}
+	assert(dock.canvas._can_drop_data(drop_screen_position, fallback_drop_data))
+	dock.canvas._drop_data(drop_screen_position, fallback_drop_data)
+	assert(dock.model.count(Model.Kind.ACTOR) == before_drop + 1)
+	assert(str(dock.model.actor_field(before_drop, "sprite")) == fallback_asset_path)
+	var fallback_rect: Rect2 = dock.model.rect_of(Model.Kind.ACTOR, before_drop)
+	var fallback_size: Vector2 = (load(fallback_asset_path) as Texture2D).get_size() / 12.0
+	assert(absf(fallback_rect.size.x - fallback_size.x) <= 1.0)
+	assert(absf(fallback_rect.size.y - fallback_size.y) <= 1.0)
+	assert(dock.model.undo())
 	dock.canvas.select_actors(no_selection)
 	dock._refresh_selection()
 	print("③ 素材筛选、画布拖放、尺寸与撤销通过")

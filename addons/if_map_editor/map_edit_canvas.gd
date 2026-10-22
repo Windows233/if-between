@@ -297,11 +297,19 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 	var image_size := texture.get_size()
 	if image_size.x <= 0.0 or image_size.y <= 0.0:
 		return
-	var natural_size := image_size / 12.0
-	var fit_scale := minf(1.0, minf(map_size.x / natural_size.x, map_size.y / natural_size.y))
+	var initial_size := Vector2.ZERO
+	for index in model.count(Kind.ACTOR):
+		if str(model.actor_field(index, "sprite", "")) != path:
+			continue
+		initial_size = model.rect_of(Kind.ACTOR, index).size
+		if initial_size.x > 0.0 and initial_size.y > 0.0:
+			break
+	if initial_size.x <= 0.0 or initial_size.y <= 0.0:
+		initial_size = image_size / 12.0
+	var fit_scale := minf(1.0, minf(map_size.x / initial_size.x, map_size.y / initial_size.y))
 	var size := Vector2(
-		minf(map_size.x, maxf(1.0, roundf(natural_size.x * fit_scale))),
-		minf(map_size.y, maxf(1.0, roundf(natural_size.y * fit_scale))))
+		minf(map_size.x, maxf(1.0, roundf(initial_size.x * fit_scale))),
+		minf(map_size.y, maxf(1.0, roundf(initial_size.y * fit_scale))))
 	var position := _snap(to_game(at_position) - size * 0.5)
 	position.x = clampf(position.x, 0.0, map_size.x - size.x)
 	position.y = clampf(position.y, 0.0, map_size.y - size.y)
