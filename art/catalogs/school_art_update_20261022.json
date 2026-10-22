@@ -1,0 +1,219 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-22",
+  "source_archive": "更改图.zip",
+  "archive_sha256": "1811c39a7a5f941e9446b2488cbc7d11033168d9f985a276cfdb2823671377c7",
+  "source_image_count": 13,
+  "target_image_count": 14,
+  "macos_metadata_ignored": true,
+  "source_png_bytes_preserved": true,
+  "map_data_modified": false,
+  "formal_yard_background_preserved_sha256": "5d8a228a74c87a26223b13f78042639fa0b2f002bc4fc22df924dea7c3c6d204",
+  "assets": [
+    {
+      "source_name": "校门口公告栏.PNG",
+      "target": "res://art/props/ch2_notice_board.png",
+      "action": "更新已有未接入素材",
+      "review_note": "新图可读文字与ch2_notice一致；现有地图通知栏是背景中的物件及交互框，无独立sprite引用",
+      "source_size_px": [
+        993,
+        1584
+      ],
+      "sha256": "e0668040ecaa0109b46dfc21d3b90e8e7d26d194f586c4c8aaad0bdd37ff790f",
+      "previous_sha256": "4ff6c65b80d0043f1b49c92a4137a9c2de4fe35bb60697c208c589da2fb20e84",
+      "replaced_existing": true,
+      "godot_import_max_size": 0
+    },
+    {
+      "source_name": "黑板.PNG",
+      "target": "res://art/props/ch2_blackboard.png",
+      "action": "新增可调用素材",
+      "review_note": "可读的重复句与简笔画；教室目前没有黑板事件，后续接入时由文案确认文字",
+      "source_size_px": [
+        1402,
+        1122
+      ],
+      "sha256": "a4bdf828068830941e1628fced0e702bf46b4652f0fa4a261b48e580d1c6f2c7",
+      "previous_sha256": null,
+      "replaced_existing": false,
+      "godot_import_max_size": 0
+    },
+    {
+      "source_name": "学生证.PNG",
+      "target": "res://art/item/student_id_half.png",
+      "action": "替换现用剧情特写",
+      "review_note": "ch2_sandbox 正在调用；姓名栏撕除，六年二班与对白一致",
+      "source_size_px": [
+        1200,
+        896
+      ],
+      "sha256": "a8a2b870ea8fb13dde1b5f9f6688f997ad4044eb0577fa0be3c4f705c05d2baa",
+      "previous_sha256": "c66e6a77060e1130518cc8d3848c31cdee2dfe9eedffa91c6feb0f6c6ce94a2e",
+      "replaced_existing": true,
+      "godot_import_max_size": 512
+    },
+    {
+      "source_name": "学生证.PNG",
+      "target": "res://art/item/student_id.png",
+      "action": "替换背包占位图",
+      "review_note": "背包按student_id物品ID动态加载；与剧情特写使用同一张交付图",
+      "source_size_px": [
+        1200,
+        896
+      ],
+      "sha256": "a8a2b870ea8fb13dde1b5f9f6688f997ad4044eb0577fa0be3c4f705c05d2baa",
+      "previous_sha256": "de2a493f382810fa6b5ccae8b26189b27783e7e292906561754f3f2ba74ead86",
+      "replaced_existing": true,
+      "godot_import_max_size": 512
+    },
+    {
+      "source_name": "猫玩偶.PNG",
+      "target": "res://art/item/cat_doll.png",
+      "action": "替换物品占位图",
+      "review_note": "破损耳、缝补与白尾尖可辨；当前物品已登记，尚无获取剧情",
+      "source_size_px": [
+        1792,
+        2400
+      ],
+      "sha256": "fd9e19c1484836a06aa47ad5dd57e88141ba280ba9c758d9d0b340ac2dfe73f4",
+      "previous_sha256": "53af91fa4f3c4e429a3b925bafc6fb896e5f4cf94da441bc54098431e2e120f3",
+      "replaced_existing": true,
+      "godot_import_max_size": 512
+    },
+    {
+      "source_name": "教学楼公告栏.PNG",
+      "target": "res://art/props/ch2_teaching_notice_board.png",
+      "action": "新增可调用素材",
+      "review_note": "公告栏特写，当前地图无对应独立贴图引用；接入时复核小字与文案",
+      "source_size_px": [
+        1121,
+        1403
+      ],
+      "sha256": "a555edf3ca7c6e5c559ad8314c18e45aca9d1de1c6da27cbcccbc2154176155f",
+      "previous_sha256": null,
+      "replaced_existing": false,
+      "godot_import_max_size": 0
+    },
+    {
+      "source_name": "晶石.PNG",
+      "target": "res://art/item/night_tear.png",
+      "action": "替换物品占位图",
+      "review_note": "深色泪滴晶石；当前物品已登记，尚无获取剧情",
+      "source_size_px": [
+        1792,
+        2400
+      ],
+      "sha256": "11aa5a36f83f896cbd3324025f873179a20f3d19f41ec367c9d0db067e2e5ed1",
+      "previous_sha256": "6765e87c983a6ed8c035ad5655f9e659688e24f795e6fa1fcbfea1d000d58376",
+      "replaced_existing": true,
+      "godot_import_max_size": 512
+    },
+    {
+      "source_name": "沙坑.PNG",
+      "target": "res://art/props/ch2_sandbox_dug.png",
+      "action": "更新已有未接入素材",
+      "review_note": "沙坑与半张学生证特写；当前地图没有引用独立沙坑贴图，暂不覆盖底图",
+      "source_size_px": [
+        1327,
+        1185
+      ],
+      "sha256": "68483a3084f85d119787c4c42089d9f4246ed2b0931dc144453215bfa7a8191c",
+      "previous_sha256": "455ef0e17bae1101bf9dcd0102b42617ce2110f738dfb1ef47bd8bb0226b859e",
+      "replaced_existing": true,
+      "godot_import_max_size": 0
+    },
+    {
+      "source_name": "登记册.PNG",
+      "target": "res://art/props/ch2_register.png",
+      "action": "入库待补关键文字",
+      "review_note": "画面未出现现有剧情要求的主角姓名；保留现有门卫室桌子贴图和对白，不接作最终剧情特写",
+      "source_size_px": [
+        1298,
+        1212
+      ],
+      "sha256": "5dcba2a7f4a8dec9595bc93738b575ebe2e93d3c29e0329d411c776f92885216",
+      "previous_sha256": null,
+      "replaced_existing": false,
+      "godot_import_max_size": 0
+    },
+    {
+      "source_name": "童话书.PNG",
+      "target": "res://art/props/ch2_fairy_tale_book.png",
+      "action": "新增可调用素材",
+      "review_note": "书页与黑猫图案清楚；目前没有读取事件，后续接入时确认图上故事文字",
+      "source_size_px": [
+        1535,
+        1024
+      ],
+      "sha256": "ae1dbe3867f8d9c12abb5b742eb41946630ef157f89178510709520dce9e29e2",
+      "previous_sha256": null,
+      "replaced_existing": false,
+      "godot_import_max_size": 0
+    },
+    {
+      "source_name": "操场.PNG",
+      "target": "res://art/map/candidates/school_yard_no_c.png",
+      "action": "候选未启用",
+      "review_note": "1535×1024，原图1264×843；非局部补地，旗杆基座、沙坑与围墙等视觉位置发生偏移。保持正式school_yard.png与地图数据不变，需在地图编辑器校准后另行接入",
+      "source_size_px": [
+        1535,
+        1024
+      ],
+      "sha256": "267c71118e1a66eb3277fbd485ed94b2b0183b790af8ce120992b1c6cea6f11b",
+      "previous_sha256": null,
+      "replaced_existing": false,
+      "godot_import_max_size": 0
+    },
+    {
+      "source_name": "镜子.PNG",
+      "target": "res://art/props/ch2_mirror.png",
+      "action": "新增可调用素材",
+      "review_note": "猫是人类的好朋友等文字可读；教室目前没有镜子事件，后续接入时由文案确认文字",
+      "source_size_px": [
+        1402,
+        1122
+      ],
+      "sha256": "146ba7142e17c721ba79f8367f3fc467b2eb232eae4371c535c86adcf154922e",
+      "previous_sha256": null,
+      "replaced_existing": false,
+      "godot_import_max_size": 0
+    },
+    {
+      "source_name": "雕塑.PNG",
+      "target": "res://art/props/ch2_sculpture_inscription.png",
+      "action": "新增可调用素材",
+      "review_note": "实际是雕塑铭文牌特写，静候归期/但归期不至与现有对白一致；不是完整雕塑或喷泉贴图",
+      "source_size_px": [
+        1624,
+        969
+      ],
+      "sha256": "2989127835e03ae7b45636aedf9f238e87dd8610e5fd4ae6ee3510a1abb78381",
+      "previous_sha256": null,
+      "replaced_existing": false,
+      "godot_import_max_size": 0
+    },
+    {
+      "source_name": "御守.PNG",
+      "target": "res://art/item/charm.png",
+      "action": "替换物品占位图",
+      "review_note": "深蓝御守；当前物品已登记，尚无获取剧情",
+      "source_size_px": [
+        1920,
+        2208
+      ],
+      "sha256": "6b46249ee413f58c152e75c8b9ad0d0d596ed69948a42199c1d0ec8bcdea1c61",
+      "previous_sha256": "6fdda9db5df663a9d4c6a8576016e9632469f666533bcb88cb1dfef843725317",
+      "replaced_existing": true,
+      "godot_import_max_size": 512
+    }
+  ],
+  "local_pre_replacement_backup_directory": "C:\\Users\\admin\\.codex\\visualizations\\2026\\10\\21\\01a15ee2-f568-7772-b6c4-3de0233ee5d3\\art_update_review\\before",
+  "verification": {
+    "godot_import_exit_code": 0,
+    "texture_load_check": "14/14",
+    "existing_student_card_event_reference_preserved": true,
+    "data_check": "14 maps,18 events,4 endings,7 items; exit0",
+    "full_suite": "4350/4350; exit0",
+    "editor_exit_diagnostics": "existing ObjectDB/resource leak diagnostics remain; second import has no asset-loading errors"
+  }
+}
