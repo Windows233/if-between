@@ -5,11 +5,12 @@
 ## 缩放/平移自己实现（不借 2D 编辑器），因为整个画布是自成一体的面板，
 ## 不依赖当前打开哪个场景。
 ##
-## 四种工具：选择 / 画墙 / 画传送区 / 拉基线。
+## 五种工具：选择 / 画墙 / 画传送区 / 拉基线 / 画物件碰撞箱。
 ## 纯绘制与交互，数据全部交给 `map_edit_model.gd`。
+@tool
 extends Control
 
-enum Tool { SELECT, WALL, PORTAL, BASELINE }
+enum Tool { SELECT, WALL, PORTAL, BASELINE, COLLISION }
 
 const Kind := preload("res://addons/if_map_editor/map_edit_model.gd").Kind
 
@@ -31,6 +32,7 @@ const HIT_SLOP := 4.0
 signal selection_changed
 signal edited
 signal status(text)
+signal command_requested(command: String)
 
 var model = null
 var tex_bg: Texture2D = null
@@ -40,6 +42,7 @@ var map_size := Vector2.ZERO
 var tool: int = Tool.SELECT
 var zoom := 1.0
 var pan := Vector2.ZERO
+var _view_touched := false
 
 var show_bg := true
 var show_overlay := true
@@ -68,6 +71,8 @@ var _overlay_used := Rect2()
 
 var sel_kind := -1
 var sel_index := -1
+var actor_selection: Array[int] = []
+var _drag_actor_rects: Dictionary = {}
 
 var _drag_mode := 0            # 0 无 / 1 移动 / 2 改尺寸 / 3 画新框 / 4 拉基线
 var _drag_start_game := Vector2.ZERO
@@ -82,6 +87,7 @@ func _ready() -> void:
 	focus_mode = Control.FOCUS_CLICK
 	clip_contents = true
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	resized.connect(_on_viewport_resized)
 	# 像素画缩小时要脆，不要糊
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	mouse_entered.connect(func() -> void:
@@ -102,11 +108,28 @@ func load_map(model_ref, bg_path: String, overlay_path: String, size: Vector2) -
 	_overlay_used = _used_rect_of(tex_overlay)
 	sel_kind = -1
 	sel_index = -1
+	actor_selection.clear()
+	_view_touched = false
 	_walk_texture = null
 	_def = null
 	fit_to_view()
 	queue_redraw()
 	selection_changed.emit()
+
+
+func selected_actors() -> Array[int]:
+	if sel_kind != Kind.ACTOR:
+		return []
+	if actor_selection.is_empty() and sel_index >= 0:
+		return [sel_index]
+	return actor_selection.duplicate()
+
+
+func select_actors(indices: Array[int]) -> void:
+	actor_selection = model.expand_group_selection(indices) if model != null else indices.duplicate()
+	sel_kind = Kind.ACTOR if not actor_selection.is_empty() else -1
+	sel_index = actor_selection.back() if not actor_selection.is_empty() else -1
+	queue_redraw()
 
 
 ## 一张图里真正有像素的范围（全透明的不算）。算不出来就返回空矩形。
@@ -194,9 +217,15 @@ func foot_is_free(point: Vector2) -> bool:
 func fit_to_view() -> void:
 	if map_size == Vector2.ZERO or size.x <= 0.0 or size.y <= 0.0:
 		return
+	_view_touched = false
 	zoom = maxf(0.2, minf((size.x - 24.0) / map_size.x, (size.y - 24.0) / map_size.y))
 	pan = (size - map_size * zoom) * 0.5
 	queue_redraw()
+
+
+func _on_viewport_resized() -> void:
+	if not _view_touched:
+		fit_to_view()
 
 
 func recompute_walk() -> void:
@@ -243,6 +272,47 @@ func to_game(p: Vector2) -> Vector2:
 
 func _snap(p: Vector2) -> Vector2:
 	return Vector2(roundf(p.x), roundf(p.y))
+
+
+func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
+	if model == null or tool != Tool.SELECT or map_size.x <= 0.0 or map_size.y <= 0.0:
+		return false
+	if not Rect2(Vector2.ZERO, map_size).has_point(to_game(at_position)):
+		return false
+	if not data is Dictionary or str(data.get("type", "")) != "if_map_asset":
+		return false
+	var path := str(data.get("path", ""))
+	if not path.begins_with("res://art/props/") or path.get_extension().to_lower() != "png":
+		return false
+	return FileAccess.file_exists(path) and load(path) is Texture2D
+
+
+func _drop_data(at_position: Vector2, data: Variant) -> void:
+	if not _can_drop_data(at_position, data):
+		return
+	var path := str(data["path"])
+	var texture := load(path) as Texture2D
+	if texture == null:
+		return
+	var image_size := texture.get_size()
+	if image_size.x <= 0.0 or image_size.y <= 0.0:
+		return
+	var natural_size := image_size / 12.0
+	var fit_scale := minf(1.0, minf(map_size.x / natural_size.x, map_size.y / natural_size.y))
+	var size := Vector2(
+		minf(map_size.x, maxf(1.0, roundf(natural_size.x * fit_scale))),
+		minf(map_size.y, maxf(1.0, roundf(natural_size.y * fit_scale))))
+	var position := _snap(to_game(at_position) - size * 0.5)
+	position.x = clampf(position.x, 0.0, map_size.x - size.x)
+	position.y = clampf(position.y, 0.0, map_size.y - size.y)
+	var index: int = model.add_actor_with_sprite(path)
+	model.set_rect(Kind.ACTOR, index, Rect2(position, size))
+	select_actors([index])
+	_drag_mode = 0
+	edited.emit()
+	selection_changed.emit()
+	queue_redraw()
+	status.emit("已放置 %s（初始尺寸按贴图像素 ÷ 12，可继续调整）" % path.get_file().get_basename())
 
 
 # ---------------------------------------------------------------- 绘制
@@ -292,6 +362,12 @@ func _draw() -> void:
 			_label(r.position + Vector2(2, r.size.y - 3), model.label_of(Kind.ACTOR, i), ACTOR_EDGE)
 			if model.is_cover_actor(i):
 				_draw_baseline(i)
+			if selected_actors().has(i):
+				var actor := MapDef._actor_from(model.actor_dict(i))
+				for shape: Rect2 in actor.collision_rects():
+					_draw_rect_game(shape, WALL_FILL, WALL_EDGE, 2.0)
+				_draw_rect_game(actor.reach, Color(0.2, 0.7, 1, 0.08), PORTAL_EDGE)
+				_draw_rect_game(r, Color.TRANSPARENT, SELECT_COLOR, 2.0)
 
 	# 出生点（紫点 + 名字）
 	if show_spawns:
@@ -320,7 +396,7 @@ func _draw() -> void:
 			else model.rect_of(sel_kind, sel_index)
 		_draw_rect_game(r, Color(0, 0, 0, 0), SELECT_COLOR, 2.0)
 		# 出生点是个点、前景层整张拉伸 —— 都没有「改尺寸」这回事，不给手柄
-		if tool == Tool.SELECT and sel_kind != Kind.SPAWN and sel_kind != Kind.OVERLAY:
+		if tool == Tool.SELECT and sel_kind != Kind.SPAWN and sel_kind != Kind.OVERLAY and selected_actors().size() <= 1:
 			for h in _handle_points(r):
 				draw_rect(Rect2(h - Vector2(HANDLE_SIZE, HANDLE_SIZE) * 0.5,
 					Vector2(HANDLE_SIZE, HANDLE_SIZE)), SELECT_COLOR, true)
@@ -384,7 +460,8 @@ func _gui_input(event: InputEvent) -> void:
 			return
 		if mb.button_index == MOUSE_BUTTON_LEFT:
 			if mb.pressed:
-				_press(mb.position)
+				grab_focus()
+				_press(mb.position, mb.shift_pressed)
 			else:
 				_release()
 			return
@@ -395,11 +472,17 @@ func _gui_input(event: InputEvent) -> void:
 			queue_redraw()
 		match _drag_mode:
 			9:
+				_view_touched = true
 				pan = mm.position - _drag_start_game
 				queue_redraw()
 			1:
 				var delta := _snap(to_game(mm.position) - _drag_start_game)
-				model.set_rect(sel_kind, sel_index, Rect2(_drag_start_rect.position + delta, _drag_start_rect.size))
+				if sel_kind == Kind.ACTOR:
+					for index: int in _drag_actor_rects:
+						var initial: Rect2 = _drag_actor_rects[index]
+						model.set_rect(Kind.ACTOR, index, Rect2(initial.position + delta, initial.size))
+				else:
+					model.set_rect(sel_kind, sel_index, Rect2(_drag_start_rect.position + delta, _drag_start_rect.size))
 				queue_redraw()
 			2:
 				_resize_to(mm.position)
@@ -418,7 +501,17 @@ func _gui_input(event: InputEvent) -> void:
 		return
 	elif event is InputEventKey:
 		var key := event as InputEventKey
+		if key.pressed and not key.echo and key.ctrl_pressed:
+			var command: String = {KEY_C: "copy", KEY_V: "paste", KEY_D: "duplicate",
+				KEY_Y: "redo", KEY_Z: "redo" if key.shift_pressed else "undo"}.get(key.keycode, "")
+			if command != "":
+				command_requested.emit(command)
+				accept_event()
+				return
 		if key.pressed and key.keycode == KEY_DELETE and sel_kind >= 0:
+			if sel_kind == Kind.ACTOR:
+				status.emit("删除物件请使用上方「删除选中」，以便检查剧情引用。")
+				return
 			model.remove_at(sel_kind, sel_index)
 			sel_kind = -1
 			sel_index = -1
@@ -427,8 +520,15 @@ func _gui_input(event: InputEvent) -> void:
 			queue_redraw()
 
 
-func _press(pos: Vector2) -> void:
+func _press(pos: Vector2, additive := false) -> void:
 	match tool:
+		Tool.COLLISION:
+			if sel_kind != Kind.ACTOR:
+				status.emit("先在左侧选中一个物件，再在图上拖出它的碰撞箱。")
+				return
+			_drag_mode = 3
+			_drag_start_game = to_game(pos)
+			_drag_new_rect = Rect2(_snap(_drag_start_game), Vector2.ZERO)
 		Tool.WALL, Tool.PORTAL:
 			_drag_mode = 3
 			_drag_start_game = to_game(pos)
@@ -443,13 +543,28 @@ func _press(pos: Vector2) -> void:
 				status.emit("拖动中：上下移动鼠标改基线，松手写入 JSON")
 				queue_redraw()
 		_:
-			var handle := _hit_handle(pos)
+			var handle := _hit_handle(pos) if selected_actors().size() <= 1 else -1
 			if handle >= 0:
 				_drag_mode = 2
 				_drag_handle = handle
 				_drag_start_rect = model.rect_of(sel_kind, sel_index)
 				return
 			var hit := _hit_item(pos)
+			if hit.x == Kind.ACTOR:
+				var selection := selected_actors()
+				if additive:
+					if selection.has(hit.y):
+						selection.erase(hit.y)
+					else:
+						selection.append(hit.y)
+					select_actors(selection)
+					selection_changed.emit()
+					return
+				if not selection.has(hit.y):
+					selection = [hit.y]
+				actor_selection = model.expand_group_selection(selection)
+			else:
+				actor_selection.clear()
 			sel_kind = hit.x
 			sel_index = hit.y
 			selection_changed.emit()
@@ -457,6 +572,9 @@ func _press(pos: Vector2) -> void:
 				_drag_mode = 1
 				_drag_start_game = to_game(pos)
 				_drag_start_rect = model.rect_of(sel_kind, sel_index)
+				_drag_actor_rects.clear()
+				for index: int in selected_actors():
+					_drag_actor_rects[index] = model.rect_of(Kind.ACTOR, index)
 			queue_redraw()
 
 
@@ -464,9 +582,12 @@ func _release() -> void:
 	if _drag_mode == 3:
 		var r := Rect2(_snap(_drag_new_rect.position),
 			Vector2(maxf(1.0, roundf(_drag_new_rect.size.x)), maxf(1.0, roundf(_drag_new_rect.size.y))))
-		var kind: int = Kind.WALL if tool == Tool.WALL else Kind.PORTAL
-		sel_index = model.add_rect(kind, r)
-		sel_kind = kind
+		if tool == Tool.COLLISION:
+			model.add_collision_rect(sel_index, r)
+		else:
+			var kind: int = Kind.WALL if tool == Tool.WALL else Kind.PORTAL
+			sel_index = model.add_rect(kind, r)
+			sel_kind = kind
 		edited.emit()
 		selection_changed.emit()
 	elif _drag_mode == 4:
@@ -479,6 +600,7 @@ func _release() -> void:
 
 func _zoom_at(pos: Vector2, factor: float) -> void:
 	var before := to_game(pos)
+	_view_touched = true
 	zoom = clampf(zoom * factor, 0.1, 12.0)
 	pan = pos - before * zoom
 	queue_redraw()

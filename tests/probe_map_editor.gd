@@ -1,4 +1,4 @@
-## 探针：地图编辑器的**界面层能不能被构造出来**（无头跑）。
+## 探针：地图编辑器主界面、物件检查器与画布工具能否构造（无头跑）。
 ##
 ## 插件本体只能在编辑器里点，但面板与画布都是普通 `Control` ——
 ## 无头也能 new 出来、载入地图、跑模型操作。它抓的是「一打开就报错」
@@ -13,6 +13,8 @@ extends SceneTree
 const Dock := preload("res://addons/if_map_editor/map_edit_dock.gd")
 const Canvas := preload("res://addons/if_map_editor/map_edit_canvas.gd")
 const Model := preload("res://addons/if_map_editor/map_edit_model.gd")
+const MapObjectTests := preload("res://tests/test_map_objects.gd")
+const TestHarness := preload("res://tests/test_harness.gd")
 
 
 func _initialize() -> void:
@@ -24,6 +26,13 @@ func _initialize() -> void:
 
 	print("① 面板起来了。地图数：%d" % Model.list_maps().size())
 	print("   当前载入：%s" % dock.model.map_id)
+	print("   三栏宽度：物件 %.0f / 画布 %.0f / 检查器 %.0f；画布高度 %.0f" % [
+		dock._body_split.get_child(0).size.x,
+		dock.canvas.size.x,
+		dock._panel_scroll.size.x,
+		dock.canvas.size.y])
+	assert(dock.canvas.size.x > dock.canvas.custom_minimum_size.x)
+	assert(dock.canvas.size.y > dock.canvas.custom_minimum_size.y)
 
 	# 载一张具体的图（门卫室）
 	var ids := Model.list_maps()
@@ -39,11 +48,49 @@ func _initialize() -> void:
 		dock.model.count(Model.Kind.PORTAL),
 		dock.model.count(Model.Kind.ACTOR)])
 
-	# 三个工具都切一遍
-	for tool in [Canvas.Tool.SELECT, Canvas.Tool.WALL, Canvas.Tool.PORTAL, Canvas.Tool.BASELINE]:
+	# 五种工具都切一遍
+	for tool in [Canvas.Tool.SELECT, Canvas.Tool.WALL, Canvas.Tool.PORTAL,
+			Canvas.Tool.BASELINE, Canvas.Tool.COLLISION]:
 		dock._on_tool(tool)
 		await process_frame
-	print("③ 四个工具切换正常")
+	assert(dock._object_list != null)
+	assert(dock._actor_panel != null)
+	assert(dock._asset_list != null and dock._asset_list.item_count > 0)
+	dock._asset_filter.text = "gatehouse_desk"
+	dock._refresh_assets()
+	assert(dock._asset_list.item_count == 1)
+	assert(str(dock._asset_list.get_item_metadata(0)) == "res://art/props/gatehouse_desk.png")
+	dock._asset_filter.text = ""
+	dock._refresh_assets()
+	print("③ 五种工具切换正常；物件列表与检查器已构造")
+
+	dock._on_tool(Canvas.Tool.SELECT)
+	var before_drop: int = dock.model.count(Model.Kind.ACTOR)
+	var asset_path := "res://art/props/gatehouse_desk.png"
+	var drop_data := {"type": "if_map_asset", "path": asset_path}
+	var drop_game_position := Vector2(120, 80)
+	var drop_screen_position: Vector2 = dock.canvas.to_screen(drop_game_position)
+	assert(dock.canvas._can_drop_data(drop_screen_position, drop_data))
+	var outside_map_position: Vector2 = dock.canvas.to_screen(Vector2(-1, drop_game_position.y))
+	assert(not dock.canvas._can_drop_data(outside_map_position, drop_data))
+	dock._on_tool(Canvas.Tool.COLLISION)
+	assert(not dock.canvas._can_drop_data(drop_screen_position, drop_data))
+	dock._on_tool(Canvas.Tool.SELECT)
+	dock.canvas._drop_data(drop_screen_position, drop_data)
+	assert(dock.model.count(Model.Kind.ACTOR) == before_drop + 1)
+	assert(str(dock.model.actor_field(before_drop, "sprite")) == asset_path)
+	assert(dock.canvas.selected_actors().has(before_drop))
+	var dropped_rect: Rect2 = dock.model.rect_of(Model.Kind.ACTOR, before_drop)
+	var expected_size: Vector2 = (load(asset_path) as Texture2D).get_size() / 12.0
+	assert(absf(dropped_rect.size.x - expected_size.x) <= 1.0)
+	assert(absf(dropped_rect.size.y - expected_size.y) <= 1.0)
+	assert(absf(dropped_rect.get_center().x - drop_game_position.x) <= 1.0)
+	assert(absf(dropped_rect.get_center().y - drop_game_position.y) <= 1.0)
+	assert(dock.model.undo())
+	var no_selection: Array[int] = []
+	dock.canvas.select_actors(no_selection)
+	dock._refresh_selection()
+	print("③ 素材筛选、画布拖放、尺寸与撤销通过")
 
 	# 可走格（调的是游戏同一份 WalkGrid）
 	dock.canvas.set_walk_visible(true)
@@ -99,8 +146,11 @@ func _initialize() -> void:
 	if dock.model.count(Model.Kind.ACTOR) > 0:
 		dock.canvas.sel_kind = Model.Kind.ACTOR
 		dock.canvas.sel_index = 0
+		dock.model.use_local_geometry(0)
 		dock._refresh_selection()
 		await process_frame
+		assert(dock.model.actor_field(0, "collision", null) is Array)
+		assert(dock.model.actor_field(0, "reach_local", null) is Array)
 		print("⑨ 物件 #0「%s」：互动写法=%s，对话行 %d，属性面板子项 %d（可见 %s）" % [
 			dock.model.label_of(Model.Kind.ACTOR, 0),
 			dock.model.actor_form(0),
@@ -128,6 +178,69 @@ func _initialize() -> void:
 		dock.canvas._mouse_game,
 		dock.canvas.foot_rect_at(dock.canvas._mouse_game),
 		"站得住" if dock.canvas.foot_is_free(dock.canvas._mouse_game) else "站不住"])
+
+	dock.model.data = {"id": "layout_probe", "size": [400, 300], "walls": [], "actors": [
+		{"id": "first", "rect": [20, 40, 20, 20], "decor": true},
+		{"id": "middle", "rect": [110, 80, 40, 30], "decor": true},
+		{"id": "last", "rect": [200, 160, 60, 40], "decor": true}]}
+	dock.model.reset_history()
+	var one_actor: Array[int] = [0]
+	var two_actors: Array[int] = [0, 1]
+	var three_actors: Array[int] = [0, 1, 2]
+	dock.canvas.select_actors(one_actor)
+	dock._refresh_layout_menu()
+	assert(dock._layout_popup.is_item_disabled(dock._layout_popup.get_item_index(Dock.LayoutAction.ALIGN_LEFT)))
+	dock.canvas.select_actors(two_actors)
+	dock._refresh_layout_menu()
+	assert(not dock._layout_popup.is_item_disabled(dock._layout_popup.get_item_index(Dock.LayoutAction.ALIGN_LEFT)))
+	assert(dock._layout_popup.is_item_disabled(dock._layout_popup.get_item_index(Dock.LayoutAction.DISTRIBUTE_HORIZONTAL)))
+	dock.canvas.select_actors(three_actors)
+	dock._refresh_layout_menu()
+	assert(not dock._layout_popup.is_item_disabled(dock._layout_popup.get_item_index(Dock.LayoutAction.DISTRIBUTE_HORIZONTAL)))
+	dock._on_layout_action(Dock.LayoutAction.ALIGN_LEFT)
+	assert(dock.model.rect_of(Model.Kind.ACTOR, 1).position.x == 20)
+	assert(dock.model.rect_of(Model.Kind.ACTOR, 2).position.x == 20)
+	dock._object_command("undo")
+	assert(dock.model.rect_of(Model.Kind.ACTOR, 1).position.x == 110)
+	assert(dock.model.rect_of(Model.Kind.ACTOR, 2).position.x == 200)
+	dock._object_command("redo")
+	assert(dock.model.rect_of(Model.Kind.ACTOR, 1).position.x == 20)
+	dock._object_command("undo")
+	dock.canvas.select_actors(three_actors)
+	dock._on_layout_action(Dock.LayoutAction.DISTRIBUTE_HORIZONTAL)
+	assert(dock.model.rect_of(Model.Kind.ACTOR, 1).position.x == 100)
+	dock._object_command("undo")
+	assert(dock.model.rect_of(Model.Kind.ACTOR, 1).position.x == 110)
+	print("⑫ 对齐/分布菜单门槛、排布操作与整步撤销重做通过")
+	assert(dock._group_button != null and dock._ungroup_button != null)
+	dock.canvas.select_actors(two_actors)
+	dock._refresh_selection()
+	assert(not dock._group_button.disabled)
+	dock._object_command("group")
+	assert(dock.model.group_name_for_actor(0) == "组 1")
+	assert(dock._group_button.disabled)
+	dock.canvas.select_actors(one_actor)
+	assert(dock.canvas.selected_actors() == two_actors)
+	dock._refresh_selection()
+	assert(not dock._ungroup_button.disabled)
+	dock._object_command("copy")
+	dock._object_command("paste")
+	assert(dock.model.group_name_for_actor(3) == "组 1 副本")
+	dock._object_command("undo")
+	dock.canvas.select_actors(one_actor)
+	dock._object_command("ungroup")
+	assert(dock.model.group_name_for_actor(0).is_empty())
+	dock._object_command("undo")
+	assert(dock.model.group_name_for_actor(0) == "组 1")
+	print("⑬ 编组按钮、整组选取/复制、解组及撤销重做通过")
+	var backup_harness = TestHarness.new()
+	backup_harness.setup(root)
+	MapObjectTests.test_copy_and_history(backup_harness)
+	MapObjectTests.test_canvas(backup_harness)
+	MapObjectTests.test_groups(backup_harness)
+	MapObjectTests.test_backups(backup_harness)
+	assert(backup_harness.failed == 0, "\n".join(backup_harness.failures))
+	print("⑭ 编组模型与自动快照、备份恢复、撤销重做通过（%d 项断言）" % backup_harness.passed)
 
 	print("=== 地图编辑器探针通过 ===")
 	quit(0)

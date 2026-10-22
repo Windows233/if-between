@@ -10,6 +10,7 @@
 退出码 0 表示没问题。
 """
 import json
+import math
 import os
 import sys
 
@@ -27,6 +28,31 @@ def note(where: str, msg: str) -> None:
 def load_json(path: str):
     with open(path, encoding="utf-8") as f:
         return json.load(f)
+
+
+def check_object_geometry(where: str, actor: dict) -> None:
+    def finite_number(value):
+        return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+
+    def valid_box(value):
+        return (isinstance(value, list) and len(value) == 4
+                and all(finite_number(part) for part in value)
+                and value[2] > 0 and value[3] > 0)
+
+    if "reach_local" in actor and not valid_box(actor["reach_local"]):
+        note(where, "物件 %s 的 reach_local 必须是有效局部矩形" % actor.get("id", "?"))
+    if "collision" in actor:
+        shapes = actor["collision"]
+        if not isinstance(shapes, list) or not all(valid_box(shape) for shape in shapes):
+            note(where, "物件 %s 的 collision 必须是局部矩形数组" % actor.get("id", "?"))
+            return
+        reference = actor.get("sort_collider", 0)
+        if actor.get("cover") and not actor.get("over"):
+            if (not isinstance(reference, int) or isinstance(reference, bool)
+                    or not 0 <= reference < len(shapes)):
+                note(where, "物件 %s 的排序参考碰撞箱不存在" % actor.get("id", "?"))
+    if "sort_offset" in actor and not finite_number(actor["sort_offset"]):
+        note(where, "物件 %s 的 sort_offset 必须是有限数值" % actor.get("id", "?"))
 
 
 def walk_line_talk(raw):
@@ -227,6 +253,7 @@ def main() -> int:
                 note(where, "传送点「%s」用的出生点 %s 在目标地图里没有"
                      % (p.get("label", "?"), spawn))
         for a in m.get("actors", []):
+            check_object_geometry(where, a)
             # 物件贴图是从插画里切的，路径错了画面上就是一块色块 —— 提前抓出来
             sprite = a.get("sprite", "")
             if sprite and not os.path.exists(

@@ -44,6 +44,7 @@ func _initialize() -> void:
 	TestAudio.run(h)
 	h.section("地图编辑器")
 	TestMapEditor.run(h)
+	preload("res://tests/test_map_objects.gd").run(h)
 
 	if h.report():
 		quit(0)
