@@ -1,43 +1,70 @@
 {
+  "actors": [
+    {
+      "actions": [
+        {
+          "event": "ch2_enter_school",
+          "id": "push",
+          "label": "推开铁门"
+        }
+      ],
+      "auto_menu": true,
+      "id": "iron_gate",
+      "label": "锈蚀铁门",
+      "reach": [
+        155,
+        46,
+        73,
+        14
+      ],
+      "rect": [
+        155,
+        16,
+        73,
+        42
+      ]
+    }
+  ],
+  "background": "res://art/background/chapter2_dead_alley.png",
   "id": "dead_alley",
+  "indoor": false,
+  "music": "res://audio/bgm/reclamation.mp3",
   "name": "学校后巷",
+  "portals": [],
   "size": [
     384,
     256
   ],
-  "background": "res://art/background/chapter2_dead_alley.png",
-  "indoor": false,
-  "music": "res://audio/bgm/reclamation.mp3",
   "spawns": {
     "from_overworld": [
-      192,
-      222
+      191,
+      232
     ]
   },
   "walls": [
     [
       0,
-      0,
-      155,
+      -1,
+      115,
       256
     ],
     [
-      228,
+      266,
       0,
-      156,
+      118,
       256
     ],
     [
-      155,
-      16,
-      73,
-      30
+      157,
+      17,
+      70,
+      28
     ],
     [
-      0,
-      233,
+      -2,
+      238,
       384,
-      4
+      15
     ],
     [
       0,
@@ -49,34 +76,79 @@
       0,
       0,
       384,
-      3
+      17
+    ],
+    [
+      115,
+      17,
+      22,
+      62
+    ],
+    [
+      137,
+      17,
+      20,
+      35
+    ],
+    [
+      227,
+      17,
+      18,
+      35
+    ],
+    [
+      245,
+      17,
+      21,
+      93
+    ],
+    [
+      115,
+      93,
+      32,
+      17
+    ],
+    [
+      230,
+      88,
+      15,
+      22
+    ],
+    [
+      237,
+      110,
+      29,
+      14
+    ],
+    [
+      126,
+      135,
+      17,
+      14
+    ],
+    [
+      115,
+      225,
+      42,
+      13
+    ],
+    [
+      227,
+      225,
+      39,
+      13
+    ],
+    [
+      115,
+      177,
+      28,
+      14
+    ],
+    [
+      115,
+      162,
+      15,
+      15
     ]
-  ],
-  "portals": [],
-  "actors": [
-    {
-      "id": "iron_gate",
-      "rect": [
-        155,
-        16,
-        73,
-        42
-      ],
-      "reach": [
-        155,
-        46,
-        73,
-        14
-      ],
-      "label": "锈蚀铁门",
-      "auto_menu": true,
-      "actions": [
-        {
-          "id": "push",
-          "label": "推开铁门",
-          "event": "ch2_enter_school"
-        }
-      ]
-    }
   ]
 }

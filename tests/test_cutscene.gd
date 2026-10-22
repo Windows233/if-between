@@ -1075,10 +1075,17 @@ static func test_accepted_and_sleep(h: TestHarness) -> void:
 	# 2026-09-25 策划改的：死过一次的人不会再往那张床上躺。
 	# 条件是互补的，所以任何时刻只有一个活着 —— 这条要真拿 flags 去问。
 	#
-	# 两个口里现在只有一个带 `event`，所以**按位置找**，不按有没有事件找。
+	# 两个口里现在只有一个带 `event`，所以**按「同一块矩形上成对出现、且都带条件」找**。
+	# 2026-09-27 之前这里钉的是 `Vector2(73, 79)`，策划把门挪了 11 像素就红了 ——
+	# 门摆在哪是他调的，测试只该盯「是不是一对、条件是不是互补」。
+	var pair_counts: Dictionary = {}
+	for portal: MapDef.Portal in main.current_map.portals:
+		if portal.condition != null:
+			var key := portal.rect.position
+			pair_counts[key] = int(pair_counts.get(key, 0)) + 1
 	var bedroom_doors: Array[MapDef.Portal] = []
 	for portal: MapDef.Portal in main.current_map.portals:
-		if portal.rect.position == Vector2(73, 79):
+		if portal.condition != null and int(pair_counts.get(portal.rect.position, 0)) == 2:
 			bedroom_doors.append(portal)
 	h.check("卧室门是两个口", bedroom_doors.size(), 2)
 	if bedroom_doors.size() == 2:
@@ -1104,7 +1111,8 @@ static func test_accepted_and_sleep(h: TestHarness) -> void:
 			for portal: MapDef.Portal in main.current_map.active_portals(main.flags):
 				if portal.event_id != &"":
 					second_events.append(portal.event_id)
-				if portal.rect.position == Vector2(73, 79):
+				elif bedroom_doors.has(portal):
+					# 那一对里**不带事件**的那个，就是睡过之后拦人的
 					shut = portal
 			h.check("睡过之后这扇门不再演剧情", second_events.is_empty(), true)
 			h.check("睡过之后这扇门是拦着的",

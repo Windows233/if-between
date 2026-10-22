@@ -1,35 +1,157 @@
 {
+  "actors": [
+    {
+      "decor": true,
+      "id": "building_left",
+      "label": "街边楼房",
+      "rect": [
+        0,
+        92,
+        262,
+        142
+      ],
+      "sprite": "res://art/props/market_day_building_left.png"
+    },
+    {
+      "decor": true,
+      "id": "building_right",
+      "label": "街边楼房",
+      "rect": [
+        299,
+        107,
+        258,
+        127
+      ],
+      "sprite": "res://art/props/market_day_building_right.png"
+    },
+    {
+      "cover": true,
+      "cover_y": 313,
+      "decor": true,
+      "id": "bottom_wall",
+      "label": "南侧围墙",
+      "rect": [
+        0,
+        234,
+        557,
+        80
+      ],
+      "sprite": "res://art/props/market_day_bottom_wall.png"
+    },
+    {
+      "cover": true,
+      "cover_y": 107,
+      "decor": true,
+      "id": "stall_white",
+      "label": "白棚摊位",
+      "rect": [
+        65,
+        65,
+        103,
+        77
+      ],
+      "sprite": "res://art/props/market_day_stall_white.png"
+    },
+    {
+      "cover": true,
+      "cover_y": 107,
+      "decor": true,
+      "id": "stall_red",
+      "label": "红棚摊位",
+      "rect": [
+        322,
+        71,
+        87,
+        72
+      ],
+      "sprite": "res://art/props/market_day_stall_red.png"
+    },
+    {
+      "cover": true,
+      "cover_y": 107,
+      "decor": true,
+      "id": "stall_purple",
+      "label": "紫棚摊位",
+      "rect": [
+        418,
+        69,
+        96,
+        78
+      ],
+      "sprite": "res://art/props/market_day_stall_purple.png"
+    },
+    {
+      "cover": true,
+      "cover_y": 188,
+      "decor": true,
+      "id": "fountain",
+      "label": "喷泉",
+      "rect": [
+        236,
+        151,
+        85,
+        74
+      ],
+      "sprite": "res://art/props/market_day_fountain.png"
+    }
+  ],
+  "background": "res://art/map/market.png",
   "id": "market",
+  "indoor": false,
+  "music": "res://audio/bgm/集市音乐.wav",
   "name": "集市",
+  "portals": [
+    {
+      "action": "overworld",
+      "label": "南门",
+      "rect": [
+        255,
+        273,
+        46,
+        25
+      ]
+    },
+    {
+      "action": "overworld",
+      "label": "东侧小门",
+      "rect": [
+        509,
+        268,
+        28,
+        11
+      ]
+    },
+    {
+      "action": "overworld",
+      "label": "西侧石阶",
+      "rect": [
+        19,
+        76,
+        41,
+        19
+      ]
+    },
+    {
+      "label": "大宅正门",
+      "locked": true,
+      "rect": [
+        231,
+        107,
+        22,
+        15
+      ]
+    }
+  ],
   "size": [
     557,
     314
   ],
-  "background": "res://art/map/market.png",
-  "indoor": false,
-  "music": "res://audio/bgm/集市音乐.wav",
   "spawns": {
     "from_overworld": [
       278,
       279
     ]
   },
-  "actors": [
-    { "id": "building_left", "decor": true, "rect": [0, 91, 262, 142],
-      "sprite": "res://art/props/market_day_building_left.png", "label": "街边楼房" },
-    { "id": "building_right", "decor": true, "rect": [299, 106, 258, 127],
-      "sprite": "res://art/props/market_day_building_right.png", "label": "街边楼房" },
-    { "id": "bottom_wall", "decor": true, "rect": [0, 234, 557, 80],
-      "sprite": "res://art/props/market_day_bottom_wall.png", "label": "南侧围墙", "cover": true },
-    { "id": "stall_white", "decor": true, "rect": [65, 65, 103, 77],
-      "sprite": "res://art/props/market_day_stall_white.png", "label": "白棚摊位", "cover": true },
-    { "id": "stall_red", "decor": true, "rect": [322, 71, 87, 72],
-      "sprite": "res://art/props/market_day_stall_red.png", "label": "红棚摊位", "cover": true },
-    { "id": "stall_purple", "decor": true, "rect": [418, 69, 96, 78],
-      "sprite": "res://art/props/market_day_stall_purple.png", "label": "紫棚摊位", "cover": true },
-    { "id": "fountain", "decor": true, "rect": [236, 151, 85, 74],
-      "sprite": "res://art/props/market_day_fountain.png", "label": "喷泉", "cover": true }
-  ],
   "walls": [
     [
       81,
@@ -101,13 +223,13 @@
       1,
       57,
       78,
-      20
+      19
     ],
     [
-      164,
+      165,
       73,
-      162,
-      7
+      160,
+      10
     ],
     [
       505,
@@ -116,15 +238,15 @@
       14
     ],
     [
-      61,
-      77,
-      19,
-      11
+      59,
+      76,
+      14,
+      10
     ],
     [
-      181,
+      177,
       80,
-      145,
+      137,
       11
     ],
     [
@@ -143,7 +265,7 @@
       181,
       91,
       132,
-      17
+      16
     ],
     [
       522,
@@ -153,9 +275,9 @@
     ],
     [
       5,
-      91,
-      13,
-      23
+      76,
+      14,
+      37
     ],
     [
       532,
@@ -164,15 +286,15 @@
       7
     ],
     [
-      254,
+      253,
       107,
-      59,
+      60,
       11
     ],
     [
       181,
       107,
-      52,
+      50,
       12
     ],
     [
@@ -183,15 +305,15 @@
     ],
     [
       424,
-      106,
+      107,
       85,
-      25
+      24
     ],
     [
       71,
-      101,
-      94,
-      37
+      100,
+      92,
+      35
     ],
     [
       328,
@@ -200,16 +322,16 @@
       31
     ],
     [
-      427,
+      428,
       131,
-      77,
-      14
+      75,
+      8
     ],
     [
       262,
-      170,
+      169,
       32,
-      2
+      3
     ],
     [
       257,
@@ -219,21 +341,21 @@
     ],
     [
       14,
-      129,
-      19,
-      51
+      128,
+      18,
+      52
     ],
     [
       241,
       177,
       75,
-      15
+      14
     ],
     [
       250,
-      192,
+      191,
       58,
-      12
+      13
     ],
     [
       14,
@@ -250,14 +372,14 @@
     [
       14,
       205,
-      39,
-      19
+      36,
+      18
     ],
     [
       272,
       212,
       13,
-      13
+      8
     ],
     [
       487,
@@ -273,75 +395,69 @@
     ],
     [
       14,
-      224,
-      30,
-      28
-    ],
-    [
-      239,
-      261,
-      3,
-      4
+      223,
+      28,
+      30
     ],
     [
       14,
-      252,
-      39,
-      13
+      253,
+      35,
+      17
     ],
     [
       537,
       117,
       19,
-      161
+      162
     ],
     [
-      456,
-      262,
-      53,
+      457,
+      268,
+      52,
+      11
+    ],
+    [
+      301,
+      273,
+      8,
+      16
+    ],
+    [
+      444,
+      279,
+      112,
+      10
+    ],
+    [
+      14,
+      270,
+      57,
+      19
+    ],
+    [
+      247,
+      273,
+      8,
       16
     ],
     [
       301,
-      272,
-      9,
-      8
-    ],
-    [
-      456,
-      278,
-      100,
-      2
-    ],
-    [
-      14,
-      265,
-      74,
-      16
-    ],
-    [
-      245,
-      272,
-      10,
+      289,
+      255,
       9
     ],
     [
-      301,
-      281,
-      255,
-      15
+      15,
+      289,
+      240,
+      9
     ],
     [
       14,
-      281,
-      241,
-      15
-    ],
-    [
-      14,
-      297,
+      298,
       525,
-      5
+      4
     ],
     [
       14,
@@ -349,47 +465,5 @@
       476,
       11
     ]
-  ],
-  "portals": [
-    {
-      "rect": [
-        255,
-        273,
-        45,
-        25
-      ],
-      "label": "南门",
-      "action": "overworld"
-    },
-    {
-      "rect": [
-        510,
-        268,
-        27,
-        10
-      ],
-      "label": "东侧小门",
-      "action": "overworld"
-    },
-    {
-      "rect": [
-        19,
-        92,
-        41,
-        14
-      ],
-      "label": "西侧石阶",
-      "action": "overworld"
-    },
-    {
-      "rect": [
-        233,
-        124,
-        20,
-        12
-      ],
-      "label": "大宅正门",
-      "locked": true
-    }
   ]
 }

@@ -205,10 +205,12 @@ func _add_actor(actor: MapDef.Actor) -> void:
 			return
 		# 会挡人的家具登记一下，层级交给 `set_player_y()` 每帧算
 		if actor.cover:
-			_covers.append({
-				"node": node,
-				"cover_y": actor.rect.position.y + actor.rect.size.y,
-			})
+			# 基线：写了 `cover_y` 就用手动的那个值，没写就是贴图框的下边界。
+			# 手动的入口在地图编辑器（拉黄线），见 `MapDef.Actor.cover_y`。
+			var baseline: float = actor.rect.position.y + actor.rect.size.y
+			if actor.cover_y >= 0.0:
+				baseline = actor.cover_y
+			_covers.append({"node": node, "cover_y": baseline})
 		return
 
 	# 没有贴图。插画上画着它，所以**什么都不画** ——
