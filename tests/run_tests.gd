@@ -47,6 +47,8 @@ func _initialize() -> void:
 	preload("res://tests/test_map_objects.gd").run(h)
 	preload("res://tests/test_map_hierarchy.gd").run(h)
 	preload("res://tests/test_map_templates.gd").run(h)
+	preload("res://tests/test_map_geometry_transfer.gd").run(h)
+	preload("res://tests/test_map_transfer_ui.gd").run(h)
 
 	if h.report():
 		quit(0)

@@ -13,6 +13,7 @@ const ObjectInspector := preload("res://addons/if_map_editor/map_object_inspecto
 const ObjectLibrary := preload("res://addons/if_map_editor/map_object_library.gd")
 const ObjectPreview := preload("res://addons/if_map_editor/map_object_preview.gd")
 const AssetList := preload("res://addons/if_map_editor/map_asset_list.gd")
+const GeometryTransferDialog := preload("res://addons/if_map_editor/map_geometry_transfer_dialog.gd")
 
 const EDITOR_STATE_PATH := "user://if_map_editor_scene_state.cfg"
 
@@ -67,6 +68,8 @@ var _layout_popup: PopupMenu
 var _library = ObjectLibrary.new()
 var _body_split: HSplitContainer
 var _workspace_split: HSplitContainer
+var _transfer_button: Button
+var _transfer_dialog: GeometryTransferDialog
 
 
 func _ready() -> void:
@@ -1351,6 +1354,70 @@ func _refresh_selection() -> void:
 			_base_spin.tooltip_text = "独立物件：碰撞箱上边缘；旧物件：贴图底边。橙线表示手动调整。"
 	_syncing = false
 	_sync_actor_panel()
+	_refresh_transfer_button()
+
+
+func _transfer_target_error(expected_model = null, expected_map := "", expected_index := -1,
+		expected_id := "") -> String:
+	if expected_model != null and (model != expected_model or model.map_id != expected_map):
+		return "地图已切换或重新载入，请关闭助手后重新打开。"
+	if canvas.sel_kind != Kind.ACTOR or canvas.sel_index < 0:
+		return "请先选中单个物件。"
+	var selected: Array[int] = canvas.selected_actors()
+	if selected.size() != 1 or selected[0] != canvas.sel_index:
+		return "归属目标必须是单个物件；请先解除编组或取消多选。"
+	if _selected_actor_indices().size() > 1:
+		return "场景树仍选中了多个物件；请先取消多选后再归入地图墙。"
+	if model.expand_group_selection(selected).size() != 1:
+		return "编组包含多个物件，请先解组后指定归属目标。"
+	var index: int = canvas.sel_index
+	if index >= model.count(Kind.ACTOR):
+		return "目标物件已不存在，请重新选择。"
+	var actor_id := str(model.actor_field(index, "id", ""))
+	if expected_index >= 0 and (index != expected_index or actor_id != expected_id):
+		return "当前目标已改变，请关闭助手后重新打开。"
+	if canvas.actor_is_hidden(index) or _hidden_actor_ids.has(actor_id):
+		return "目标物件已隐藏，请先显示物件再归入地图墙。"
+	if canvas.actor_is_locked(index) or _locked_actor_ids.has(actor_id):
+		return "目标物件已锁定，请先解锁物件再归入地图墙。"
+	return ""
+
+
+func _refresh_transfer_button() -> void:
+	if not is_instance_valid(_transfer_button):
+		return
+	_transfer_button.visible = canvas.sel_kind == Kind.ACTOR
+	var reason := _transfer_target_error()
+	_transfer_button.disabled = not reason.is_empty()
+	_transfer_button.tooltip_text = reason if not reason.is_empty() else "手动勾选旧地图墙，归入当前物件的局部碰撞；确认前可预览。"
+
+
+func _open_geometry_transfer() -> void:
+	var reason := _transfer_target_error()
+	if not reason.is_empty():
+		_status.text = reason
+		return
+	if not is_instance_valid(_transfer_dialog):
+		_transfer_dialog = GeometryTransferDialog.new()
+		_transfer_dialog.applied.connect(_on_geometry_transferred)
+		add_child(_transfer_dialog)
+	var index: int = canvas.sel_index
+	var actor_id := str(model.actor_field(index, "id", ""))
+	_transfer_dialog.configure(model, index,
+		_transfer_target_error.bind(model, model.map_id, index, actor_id))
+	if is_inside_tree():
+		_transfer_dialog.open_for_viewport()
+
+
+func _on_geometry_transferred(index: int) -> void:
+	var selection: Array[int] = [index]
+	canvas.select_actors(selection)
+	_on_edited()
+	if canvas.show_walk:
+		canvas.recompute_walk()
+	_panel_kind = -1
+	_refresh_selection()
+	_status.text = "已归入所选地图墙；可撤销，尚未保存到 JSON。"
 
 
 func _on_edited() -> void:
@@ -1507,6 +1574,12 @@ func _build_actor_panel() -> void:
 	geometry.edited.connect(_on_edited)
 	geometry.rebuild_requested.connect(_rebuild_object_inspector)
 	_actor_panel.add_child(geometry)
+	_transfer_button = Button.new()
+	_transfer_button.text = "归入地图墙…"
+	_transfer_button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	_transfer_button.pressed.connect(_open_geometry_transfer)
+	_actor_panel.add_child(_transfer_button)
+	_refresh_transfer_button()
 
 	_build_interaction_section()
 	_actor_panel.add_child(_switch_row())
