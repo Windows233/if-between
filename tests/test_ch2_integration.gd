@@ -131,7 +131,6 @@ static func _test_save_and_caption(harness: TestHarness) -> void:
 		harness.check("字幕点击前没有继续演出", finished[0], false)
 		harness.check("字幕点击前可见", observed_main.stage_overlay.caption_lines(), 1)
 		harness.check("字幕点击被消费", cutscene.consume_click(), true)
-		await harness.root.get_tree().process_frame
 		harness.check("字幕点击后演出继续", finished[0], true)
 		harness.check("只有指定 out 的字幕点击后收起",
 			observed_main.stage_overlay.caption_lines(), 0 if should_hide else 1)
