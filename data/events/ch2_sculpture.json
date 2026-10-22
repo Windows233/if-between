@@ -1,0 +1,31 @@
+{
+  "id": "ch2_sculpture",
+  "entry": "read",
+  "nodes": [
+    {
+      "id": "read",
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "竟然还有刻字。静候归期...",
+              "side": "left",
+              "portrait": "protagonist/puzzled"
+            },
+            {
+              "text": "旁边还有一行小字，像是后来有人用直接刻上去的"
+            },
+            {
+              "speaker": "我",
+              "text": "....但归期不至？",
+              "side": "left",
+              "portrait": "protagonist/puzzled"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

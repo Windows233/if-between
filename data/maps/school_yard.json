@@ -1,10 +1,108 @@
 {
+  "actors": [
+    {
+      "actions": [
+        {
+          "event": "ch2_flagpole",
+          "id": "check",
+          "label": "查看旗杆"
+        }
+      ],
+      "id": "flagpole",
+      "label": "旗杆",
+      "reach": [
+        98,
+        32,
+        48,
+        72
+      ],
+      "rect": [
+        108,
+        28,
+        28,
+        62
+      ]
+    },
+    {
+      "actions": [
+        {
+          "event": "ch2_sandbox",
+          "id": "check",
+          "label": "查看沙坑"
+        }
+      ],
+      "id": "sandbox",
+      "label": "沙坑",
+      "reach": [
+        174,
+        91,
+        64,
+        53
+      ],
+      "rect": [
+        180,
+        96,
+        52,
+        42
+      ]
+    },
+    {
+      "actions": [
+        {
+          "event": "ch2_swing",
+          "id": "check",
+          "label": "查看秋千",
+          "once": true
+        }
+      ],
+      "id": "swing",
+      "label": "秋千",
+      "reach": [
+        184,
+        35,
+        70,
+        52
+      ],
+      "rect": [
+        190,
+        38,
+        58,
+        42
+      ]
+    }
+  ],
+  "background": "res://art/map/school_yard.png",
+  "cover": [
+    [
+      190,
+      44,
+      58,
+      17
+    ]
+  ],
   "id": "school_yard",
+  "portals": [
+    {
+      "action": "overworld",
+      "label": "南门",
+      "rect": [
+        152,
+        151,
+        29,
+        60
+      ]
+    }
+  ],
   "size": [
     316,
     211
   ],
-  "background": "res://art/map/school_yard.png",
+  "spawns": {
+    "from_gate": [
+      158,
+      186
+    ]
+  },
   "walls": [
     [
       0,
@@ -96,31 +194,5 @@
       10,
       17
     ]
-  ],
-  "portals": [
-    {
-      "rect": [
-        152,
-        151,
-        29,
-        60
-      ],
-      "label": "南门",
-      "action": "overworld"
-    }
-  ],
-  "cover": [
-    [
-      190,
-      44,
-      58,
-      17
-    ]
-  ],
-  "spawns": {
-    "from_gate": [
-      158,
-      186
-    ]
-  }
+  ]
 }

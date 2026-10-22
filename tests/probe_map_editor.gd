@@ -80,6 +80,9 @@ func _initialize() -> void:
 	assert(dock.canvas._can_drop_data(drop_screen_position, drop_data))
 	var outside_map_position: Vector2 = dock.canvas.to_screen(Vector2(-1, drop_game_position.y))
 	assert(not dock.canvas._can_drop_data(outside_map_position, drop_data))
+	var collision_owner: Array[int] = [0]
+	dock.canvas.select_actors(collision_owner)
+	dock._on_selection_changed()
 	dock._on_tool(Canvas.Tool.COLLISION)
 	assert(not dock.canvas._can_drop_data(drop_screen_position, drop_data))
 	dock._on_tool(Canvas.Tool.SELECT)
@@ -87,7 +90,8 @@ func _initialize() -> void:
 	assert(dock.model.count(Model.Kind.ACTOR) == before_drop + 1)
 	assert(str(dock.model.actor_field(before_drop, "sprite")) == asset_path)
 	assert(dock.canvas.selected_actors().has(before_drop))
-	var matching_size: Vector2 = (load(asset_path) as Texture2D).get_size()
+	var background_size := Vector2(Image.load_from_file(str(dock.model.data["background"])).get_size())
+	var matching_size: Vector2 = Vector2(Image.load_from_file(asset_path).get_size()) * dock.model.map_size() / background_size
 	var before_capture: String = Model.stringify(dock.model.data)
 	var map_file_hash := FileAccess.get_sha256(dock.model.path)
 	var capture_group_members: Array[int] = [0, 1]
@@ -111,7 +115,7 @@ func _initialize() -> void:
 	assert(FileAccess.get_sha256(dock.model.path) == map_file_hash)
 	assert(matching_size.x > 0.0 and matching_size.y > 0.0)
 	var dropped_rect: Rect2 = dock.model.rect_of(Model.Kind.ACTOR, before_drop)
-	assert(dropped_rect.size == matching_size)
+	assert(dropped_rect.size.is_equal_approx(matching_size))
 	assert(absf(dropped_rect.get_center().x - drop_game_position.x) <= 1.0)
 	assert(absf(dropped_rect.get_center().y - drop_game_position.y) <= 1.0)
 	assert(dock.model.undo())
@@ -125,9 +129,8 @@ func _initialize() -> void:
 	assert(dock.model.count(Model.Kind.ACTOR) == before_drop + 1)
 	assert(str(dock.model.actor_field(before_drop, "sprite")) == fallback_asset_path)
 	var fallback_rect: Rect2 = dock.model.rect_of(Model.Kind.ACTOR, before_drop)
-	var fallback_size: Vector2 = (load(fallback_asset_path) as Texture2D).get_size()
-	assert(absf(fallback_rect.size.x - fallback_size.x) <= 1.0)
-	assert(absf(fallback_rect.size.y - fallback_size.y) <= 1.0)
+	var fallback_size: Vector2 = Vector2(Image.load_from_file(fallback_asset_path).get_size()) * dock.model.map_size() / background_size
+	assert(fallback_rect.size.is_equal_approx(fallback_size))
 	assert(dock.model.undo())
 	dock.canvas.select_actors(no_selection)
 	dock._refresh_selection()

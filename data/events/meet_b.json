@@ -310,7 +310,7 @@
         },
         {
           "do": "banner",
-          "text": "第二章",
+          "text": "第二章 蚀界",
           "hold": 1.6,
           "fade": 0.5
         },
@@ -329,7 +329,82 @@
         },
         {
           "do": "location",
-          "text": "3036年9月25日　22:40　学校后巷"
+          "text": ""
+        },
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.2
+        },
+        {
+          "do": "caption",
+          "wait_click": true,
+          "out": 0.4,
+          "lines": [
+            { "text": "空间不大，像一条被反复折叠的街" },
+            { "text": "天色永远是黄昏，但影子方向全乱" },
+            { "text": "有些东西在重复：同一只鸟飞三次，同一滴水落三次" },
+            { "text": "远处有猫叫，但每叫一声，就有一个东西从墙上剥落" }
+          ]
+        },
+        {
+          "do": "fade",
+          "to": "clear",
+          "time": 0.7
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "这不是猫走丢的地方。这是猫快碎掉的地方。",
+              "side": "left",
+              "portrait": "protagonist/quiet"
+            }
+          ]
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "死巷的尽头，是一扇铁门，靠近它，吊坠就隐隐发烫。",
+              "side": "left",
+              "portrait": "protagonist/puzzled"
+            },
+            {
+              "speaker": "我",
+              "text": "这后面....不是被封起来的学校吗",
+              "side": "left",
+              "portrait": "protagonist/puzzled"
+            }
+          ]
+        },
+        {
+          "do": "npc",
+          "id": "b",
+          "sprite": "res://art/npc/b",
+          "at": [192, 202],
+          "height": 42,
+          "z": 8,
+          "pose": "down"
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "B",
+              "text": "封的是现实，而这就不是了",
+              "side": "right",
+              "portrait": "mysterious"
+            },
+            {
+              "speaker": "我",
+              "text": "！？",
+              "side": "left",
+              "portrait": "protagonist/shocked"
+            }
+          ]
         },
         {
           "do": "fade",

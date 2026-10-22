@@ -1,6 +1,6 @@
 ## 编辑器的画布：把地图画出来、接鼠标。
 ##
-## 坐标系：**屏幕像素 ↔ 地图单位**。新置入贴图默认原图像素 1:1，旧地图保留原有 size。
+## 坐标系：**屏幕像素 ↔ 地图单位**。物件像素按背景原图到地图单位的比例换算。
 ## 所有矩形数据都以游戏单位存，界面上的数字和 JSON 里的数字是同一个。
 ## 缩放/平移自己实现（不借 2D 编辑器），因为整个画布是自成一体的面板，
 ## 不依赖当前打开哪个场景。
@@ -522,25 +522,18 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 	if not _can_drop_data(at_position, data):
 		return
 	var path := str(data["path"])
-	var texture := load(path) as Texture2D
-	if texture == null:
-		return
-	var source_image := Image.load_from_file(path)
-	if source_image == null or source_image.is_empty():
-		return
-	var image_size := Vector2(source_image.get_size())
-	if image_size.x <= 0.0 or image_size.y <= 0.0:
-		return
-	var size := image_size
-	var position := _snap(to_game(at_position) - size * 0.5)
 	var index: int = model.add_actor_with_sprite(path)
-	model.set_rect(Kind.ACTOR, index, Rect2(position, size))
+	if index < 0:
+		return
+	var size: Vector2 = model.rect_of(Kind.ACTOR, index).size
+	var position := _snap(to_game(at_position) - size * 0.5)
+	model.set_actor_field(index, "rect", [position.x, position.y, size.x, size.y])
 	select_actors([index])
 	_drag_mode = 0
 	edited.emit()
 	selection_changed.emit()
 	queue_redraw()
-	status.emit("已按原图 1:1 放置 %s（%d×%d），可继续手动缩放。" % [path.get_file().get_basename(), int(size.x), int(size.y)])
+	status.emit("已按背景原图像素比例放置 %s（%.2f×%.2f 地图单位），可继续手动缩放。" % [path.get_file().get_basename(), size.x, size.y])
 
 
 # ---------------------------------------------------------------- 绘制

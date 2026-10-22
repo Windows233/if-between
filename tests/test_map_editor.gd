@@ -4,7 +4,7 @@
 ## 1. `map_edit_model.gd` 的增删改与写回格式（写回要是「能对 diff」的）；
 ## 2. `MapDef.Actor.cover_y` 这个新字段被 `map_view` 认（游戏侧的行为）。
 ##
-## 由 `tests/run_tests.gd` 统一调用。断言与公共工具在 `TestHarness`。
+## 由插件专用 `tests/run_map_editor_tests.gd` 调用。断言与公共工具在 `TestHarness`。
 class_name TestMapEditor
 extends RefCounted
 

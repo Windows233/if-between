@@ -30,7 +30,7 @@ var _drop_draft_button: Button
 var _tool_buttons: Array[Button] = []
 var _sel_label: Label
 var _spins: Array[SpinBox] = []
-var _base_row: HBoxContainer
+var _base_row: HFlowContainer
 var _base_spin: SpinBox
 var _base_auto_button: Button
 var _status: Label
@@ -74,6 +74,7 @@ var _transfer_dialog: GeometryTransferDialog
 var _map_management: HFlowContainer
 var _toolbar_drawers: Array[Control] = []
 var _drawer_buttons: Array[Button] = []
+var _object_inspector: Control
 
 
 func _ready() -> void:
@@ -95,12 +96,11 @@ func _build() -> void:
 	tools.add_child(_text("工具："))
 	for item in [["选择 / 移动", Canvas.Tool.SELECT],
 			["画墙", Canvas.Tool.WALL],
-			["画传送区", Canvas.Tool.PORTAL],
-			["拉遮挡基线", Canvas.Tool.BASELINE],
-			["画物件碰撞", Canvas.Tool.COLLISION]]:
+			["画传送区", Canvas.Tool.PORTAL]]:
 		var b := Button.new()
 		b.text = str(item[0])
 		b.toggle_mode = true
+		b.set_meta("map_tool", int(item[1]))
 		b.pressed.connect(_on_tool.bind(int(item[1])))
 		tools.add_child(b)
 		_tool_buttons.append(b)
@@ -201,6 +201,7 @@ func _build() -> void:
 	_workspace_split.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_body_split.add_child(_workspace_split)
 	canvas = Canvas.new()
+	_asset_list.canvas = canvas
 	canvas.custom_minimum_size = Vector2(300, 240)
 	canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	canvas.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -255,6 +256,7 @@ func _object_actions() -> HFlowContainer:
 	_ungroup_button.pressed.connect(_object_command.bind("ungroup"))
 	row.add_child(_ungroup_button)
 	var layout_button := MenuButton.new()
+	layout_button.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE
 	layout_button.text = "对齐 / 分布"
 	layout_button.tooltip_text = "对齐至少选择两件物件；等间距至少选择三件。"
 	_layout_popup = layout_button.get_popup()
@@ -269,6 +271,7 @@ func _object_actions() -> HFlowContainer:
 	_layout_popup.id_pressed.connect(_on_layout_action)
 	row.add_child(layout_button)
 	_template_picker = OptionButton.new()
+	_template_picker.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE
 	_template_picker.custom_minimum_size.x = 180
 	row.add_child(_template_picker)
 	var place := Button.new()
@@ -805,6 +808,7 @@ func _row_title() -> HFlowContainer:
 	var row := HFlowContainer.new()
 	row.add_child(_text("地图："))
 	_map_picker = OptionButton.new()
+	_map_picker.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE
 	_map_picker.custom_minimum_size = Vector2(200, 0)
 	_map_picker.item_selected.connect(_on_map_selected)
 	row.add_child(_map_picker)
@@ -910,8 +914,7 @@ func _row_selection() -> HFlowContainer:
 		row.add_child(field)
 		_spins.append(spin)
 
-	_base_row = HBoxContainer.new()
-	_base_row.add_child(_text("遮挡基线 Y"))
+	_base_row = HFlowContainer.new()
 	_base_spin = SpinBox.new()
 	_base_spin.min_value = -1000000
 	_base_spin.max_value = 1000000
@@ -924,7 +927,6 @@ func _row_selection() -> HFlowContainer:
 	_base_auto_button.pressed.connect(_on_base_auto)
 	_base_row.add_child(_base_auto_button)
 	_base_row.visible = false
-	row.add_child(_base_row)
 
 	var remove := Button.new()
 	remove.text = "删除选中"
@@ -957,6 +959,7 @@ func _text(t: String) -> Label:
 	var label := Label.new()
 	label.text = t
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return label
 
 
@@ -1112,6 +1115,7 @@ func _open_backup_dialog() -> void:
 	warning.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(warning)
 	var picker := OptionButton.new()
+	picker.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE
 	for name: String in names:
 		picker.add_item(name.trim_suffix(".json"))
 	box.add_child(picker)
@@ -1145,9 +1149,16 @@ func _refresh_dirty() -> void:
 # ---------------------------------------------------------------- 交互
 
 func _on_tool(which: int) -> void:
+	if which in [Canvas.Tool.BASELINE, Canvas.Tool.COLLISION]:
+		if canvas.sel_kind != Kind.ACTOR or canvas.selected_actors().size() != 1 \
+				or not _allow_selection_edit():
+			_status.text = "请先单选一件未锁定物件，再使用属性卡里的工具。"
+			return
 	canvas.tool = which
-	for i in _tool_buttons.size():
-		_tool_buttons[i].button_pressed = i == which
+	for button: Button in _tool_buttons:
+		button.set_pressed_no_signal(int(button.get_meta("map_tool")) == which)
+	if is_instance_valid(_object_inspector):
+		_object_inspector.set_active_tool(which)
 	match which:
 		Canvas.Tool.SELECT:
 			_status.text = "选择：拖动物件；单选物件的碰撞框优先拾取，拖内部移动、八柄缩放；精确数值见「选择与尺寸」。"
@@ -1310,6 +1321,7 @@ func _open_copy_dialog() -> void:
 	box.add_child(head)
 	var picker := OptionButton.new()
 	picker.fit_to_longest_item = false
+	picker.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE
 	for id in Model.list_maps():
 		if id != model.map_id:
 			picker.add_item(id)
@@ -1377,6 +1389,9 @@ func _on_base_auto() -> void:
 
 
 func _on_selection_changed() -> void:
+	if canvas.tool in [Canvas.Tool.BASELINE, Canvas.Tool.COLLISION] \
+			and (canvas.sel_kind != Kind.ACTOR or canvas.selected_actors().size() != 1):
+		_on_tool(Canvas.Tool.SELECT)
 	_refresh_selection()
 
 
@@ -1389,7 +1404,8 @@ func _refresh_selection() -> void:
 		_sel_label.text = "未选中"
 		for spin in _spins:
 			spin.editable = false
-		_base_row.visible = false
+		if is_instance_valid(_base_row):
+			_base_row.visible = false
 	else:
 		var names := ["墙", "传送区", "物件", "出生点", "前景层"]
 		var r: Rect2 = model.rect_of(kind, index)
@@ -1416,15 +1432,23 @@ func _refresh_selection() -> void:
 			var p: Vector2 = model.spawn_point(index)
 			_spins[0].value = p.x
 			_spins[1].value = p.y
-		var is_cover: bool = kind == Kind.ACTOR and model.is_cover_actor(index)
-		_base_row.visible = is_cover
-		if is_cover:
+		var is_cover: bool = kind == Kind.ACTOR and canvas.selected_actors().size() == 1 \
+			and model.is_cover_actor(index)
+		if is_instance_valid(_base_row):
+			_base_row.visible = is_cover
+		if is_cover and is_instance_valid(_base_spin) and is_instance_valid(_base_auto_button):
 			_base_spin.editable = not is_locked
 			_base_auto_button.disabled = is_locked
-			_base_spin.value = model.actor_cover_y(index)
+			_base_spin.set_value_no_signal(model.actor_cover_y(index))
 			_base_spin.tooltip_text = "独立物件：碰撞箱上边缘；旧物件：贴图底边。橙线表示手动调整。"
 	_syncing = false
 	_sync_actor_panel()
+	if kind == Kind.ACTOR and is_instance_valid(_object_inspector):
+		for object_tool: int in _object_inspector._tool_buttons:
+			var button: Button = _object_inspector._tool_buttons[object_tool]
+			button.disabled = canvas.selected_actors().size() != 1 or _selection_has_locked_actor() \
+				or canvas.actor_is_hidden(index) \
+				or (object_tool == Canvas.Tool.BASELINE and not model.is_cover_actor(index))
 	_refresh_transfer_button()
 
 
@@ -1497,10 +1521,12 @@ func _on_edited() -> void:
 	canvas.invalidate_def()      # 数据改了，脚底框/可走格那边的 MapDef 要重建
 	_refresh_dirty()
 	_refresh_objects()
-	if canvas.sel_kind == Kind.ACTOR and _base_row.visible:
+	if canvas.sel_kind == Kind.ACTOR and is_instance_valid(_base_row) and _base_row.visible:
 		_syncing = true
-		_base_spin.value = model.actor_cover_y(canvas.sel_index)
+		_base_spin.set_value_no_signal(model.actor_cover_y(canvas.sel_index))
 		_syncing = false
+		if is_instance_valid(_object_inspector):
+			_object_inspector._refresh_baseline()
 	canvas.queue_redraw()
 
 
@@ -1559,6 +1585,7 @@ func _build_overlay_panel() -> void:
 	_panel_kind = Kind.OVERLAY
 	_panel_index = 0
 	for child in _actor_panel.get_children():
+		_actor_panel.remove_child(child)
 		child.queue_free()
 	_panel_scroll.visible = true
 
@@ -1602,12 +1629,15 @@ func _build_actor_panel() -> void:
 	_panel_locked = _selection_has_locked_actor()
 	_panel_id_readonly = canvas.actor_is_hidden(_panel_index)
 	for child in _actor_panel.get_children():
+		_actor_panel.remove_child(child)
 		child.queue_free()
 	_panel_scroll.visible = true
 
-	_actor_panel.add_child(_text("物件属性（id 与名字改完，记得点上面的「保存到 JSON」）"))
+	var title := _text("物件属性（改完请保存到 JSON）")
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_actor_panel.add_child(title)
 
-	var row1 := HBoxContainer.new()
+	var row1 := HFlowContainer.new()
 	row1.add_child(_text("id"))
 	row1.add_child(_field("id", 110.0))
 	row1.add_child(_text("  名字"))
@@ -1616,10 +1646,13 @@ func _build_actor_panel() -> void:
 
 	var row2 := HFlowContainer.new()
 	row2.add_child(_text("贴图"))
-	var sprite_line := _field("sprite", 320.0)
+	var sprite_line := _field("sprite", 220.0)
 	row2.add_child(sprite_line)
 	var picker := OptionButton.new()
+	picker.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE
 	picker.add_item("（从 art/props 选）")
+	picker.fit_to_longest_item = false
+	picker.custom_minimum_size.x = 220
 	var props := model.prop_files()
 	for path in props:
 		picker.add_item(path.get_file())
@@ -1636,12 +1669,13 @@ func _build_actor_panel() -> void:
 	row2.add_child(import_texture)
 	var native_size := Button.new()
 	native_size.text = "恢复原图尺寸"
+	native_size.tooltip_text = "按背景像素比例恢复物件尺寸，保持与地图背景一致。"
 	native_size.pressed.connect(func() -> void:
 		_set_actor_texture(_panel_index, str(model.actor_field(_panel_index, "sprite", ""))))
 	row2.add_child(native_size)
 	_actor_panel.add_child(row2)
 
-	var row3 := HBoxContainer.new()
+	var row3 := HFlowContainer.new()
 	row3.add_child(_text("属性："))
 	row3.add_child(_bool_field("decor", "只装饰（不参与交互）"))
 	row3.add_child(_bool_field("cover", "会挡人（按站位分前后）"))
@@ -1649,8 +1683,16 @@ func _build_actor_panel() -> void:
 	_actor_panel.add_child(row3)
 	var geometry := ObjectInspector.new()
 	geometry.configure(model, _panel_index)
+	geometry.tool_requested.connect(_on_tool)
 	geometry.edited.connect(_on_edited)
 	geometry.rebuild_requested.connect(_rebuild_object_inspector)
+	geometry.set_active_tool(canvas.tool)
+	_object_inspector = geometry
+	if is_instance_valid(_base_row) and _base_row.get_parent() == null:
+		_base_row.free()
+	_base_row = geometry.baseline_row
+	_base_spin = geometry.baseline_spin
+	_base_auto_button = geometry.baseline_auto
 	_actor_panel.add_child(geometry)
 	_transfer_button = Button.new()
 	_transfer_button.text = "归入地图墙…"
@@ -1661,6 +1703,9 @@ func _build_actor_panel() -> void:
 
 	_build_interaction_section()
 	_actor_panel.add_child(_switch_row())
+	for child: Node in _actor_panel.get_children():
+		if child is Label:
+			(child as Label).autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	if _panel_locked:
 		_set_controls_readonly(_actor_panel)
 
@@ -1691,7 +1736,7 @@ func _build_interaction_section() -> void:
 
 	match form:
 		"line":
-			_actor_panel.add_child(_text_area("line", 520.0, 44.0))
+			_actor_panel.add_child(_text_area("line", 220.0, 44.0))
 		"talk":
 			_build_talk_list()
 		"event":
@@ -1703,8 +1748,8 @@ func _build_interaction_section() -> void:
 			_actor_panel.add_child(_text("  想让它能说话，就点右边的按钮换成旁白或对话。"))
 
 
-func _switch_row() -> HBoxContainer:
-	var row := HBoxContainer.new()
+func _switch_row() -> HFlowContainer:
+	var row := HFlowContainer.new()
 	var to_line := Button.new()
 	to_line.text = "换成单句旁白"
 	to_line.pressed.connect(func() -> void: _switch_form("line"))
@@ -1713,7 +1758,10 @@ func _switch_row() -> HBoxContainer:
 	to_talk.text = "换成多句对话"
 	to_talk.pressed.connect(func() -> void: _switch_form("talk"))
 	row.add_child(to_talk)
-	row.add_child(_text("（原来的内容会搬过去；挂了剧情事件的件不动）"))
+	var note := _text("原内容会搬过去；挂剧情事件的物件保留原内容。")
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	note.custom_minimum_size.x = 220
+	row.add_child(note)
 	return row
 
 
@@ -1741,7 +1789,7 @@ func _build_talk_list() -> void:
 	var portraits := model.portrait_names()
 	for i in talk.size():
 		var line: Dictionary = talk[i] if talk[i] is Dictionary else {}
-		var row := HBoxContainer.new()
+		var row := HFlowContainer.new()
 
 		var who := LineEdit.new()
 		who.text = str(line.get("speaker", ""))
@@ -1751,6 +1799,7 @@ func _build_talk_list() -> void:
 		row.add_child(who)
 
 		var side := OptionButton.new()
+		side.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE
 		side.add_item("左")
 		side.add_item("右")
 		side.selected = 1 if str(line.get("side", "left")) == "right" else 0
@@ -1759,6 +1808,7 @@ func _build_talk_list() -> void:
 		row.add_child(side)
 
 		var port := OptionButton.new()
+		port.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE
 		port.add_item("（无立绘）")
 		for name in portraits:
 			port.add_item(name)
@@ -1772,7 +1822,7 @@ func _build_talk_list() -> void:
 
 		var body := TextEdit.new()
 		body.text = str(line.get("text", ""))
-		body.custom_minimum_size = Vector2(300, 38)
+		body.custom_minimum_size = Vector2(220, 38)
 		body.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
 		body.text_changed.connect(func() -> void: _set_talk(i, "text", body.text))
 		row.add_child(body)

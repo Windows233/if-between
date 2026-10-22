@@ -31,6 +31,9 @@ var _paste_serial := 0
 var backup_store = BackupStore.new()
 var last_backup_name := ""
 var last_backup_failed := false
+var _background_pixel_path := ""
+var _background_pixel_modified := -1
+var _background_pixel_size := Vector2.ZERO
 
 ## 草稿目录。**切地图时没保存的改动会写到这儿**（`user://`，在仓库外面）——
 ## 这样「改到一半去看另一张图」不会白干。
@@ -199,7 +202,8 @@ func _actor_id_exists(candidate: String, list: Array) -> bool:
 
 func _shift_actor(item: Dictionary, offset: Vector2) -> void:
 	var rect := _to_rect(item.get("rect"))
-	item["rect"] = _rect_to_array(Rect2(rect.position + offset, rect.size))
+	var position := rect.position + offset
+	item["rect"] = _normalize([position.x, position.y, rect.size.x, rect.size.y])
 	if item.has("reach"):
 		var reach := _to_rect(item["reach"])
 		item["reach"] = _rect_to_array(Rect2(reach.position + offset, reach.size))
@@ -269,6 +273,36 @@ func map_size() -> Vector2:
 
 func background_path() -> String:
 	return str(data.get("background", ""))
+
+
+func world_size_for_image(image_size: Vector2) -> Vector2:
+	if not is_finite(image_size.x) or not is_finite(image_size.y) \
+			or image_size.x <= 0.0 or image_size.y <= 0.0:
+		return Vector2.ZERO
+	var world_size := map_size()
+	if not is_finite(world_size.x) or not is_finite(world_size.y) \
+			or world_size.x <= 0.0 or world_size.y <= 0.0:
+		return image_size
+	var pixels := _background_pixels()
+	if pixels.x <= 0.0 or pixels.y <= 0.0:
+		return image_size
+	return image_size * world_size / pixels
+
+
+func _background_pixels() -> Vector2:
+	var source := background_path()
+	if source == "" or not FileAccess.file_exists(source):
+		return Vector2.ZERO
+	var modified := FileAccess.get_modified_time(source)
+	if source == _background_pixel_path and modified == _background_pixel_modified:
+		return _background_pixel_size
+	var image := Image.load_from_file(source)
+	_background_pixel_path = source
+	_background_pixel_modified = modified
+	_background_pixel_size = Vector2.ZERO
+	if image != null and not image.is_empty():
+		_background_pixel_size = Vector2(image.get_size())
+	return _background_pixel_size
 
 
 func overlay_path() -> String:
@@ -604,6 +638,8 @@ func set_rect(kind: int, index: int, rect: Rect2) -> void:
 		set_spawn_point(index, rect.position + rect.size * 0.5)
 		return
 	var box := _rect_to_array(rect)
+	if kind == Kind.ACTOR:
+		box = _normalize([rect.position.x, rect.position.y, rect.size.x, rect.size.y])
 	if kind == Kind.WALL:
 		var list := walls()
 		if index < 0 or index >= list.size():
@@ -725,6 +761,8 @@ func _apply_actor_rects(indices: Array[int], targets: Array[Rect2]) -> bool:
 ## 传送区会带一个占位的 label —— `check_data` 不查它，但界面里空着不好认。
 func add_rect(kind: int, rect: Rect2) -> int:
 	var box := _rect_to_array(rect)
+	if kind == Kind.ACTOR:
+		box = _normalize([rect.position.x, rect.position.y, rect.size.x, rect.size.y])
 	if kind == Kind.WALL:
 		var list := walls()
 		list.append(box)
@@ -1046,11 +1084,18 @@ func assign_actor_sprite(index: int, sprite_path: String) -> bool:
 	var image := Image.load_from_file(sprite_path)
 	if image == null or image.is_empty():
 		return false
-	set_actor_field(index, "sprite", sprite_path)
 	var rect := rect_of(Kind.ACTOR, index)
-	rect.size = Vector2(image.get_size())
-	set_rect(Kind.ACTOR, index, rect)
+	rect.size = world_size_for_image(Vector2(image.get_size()))
+	var actor := actor_dict(index)
+	actor["sprite"] = sprite_path
+	actor["rect"] = _normalize([rect.position.x, rect.position.y, rect.size.x, rect.size.y])
+	dirty = true
 	return true
+
+
+func restore_original_size(index: int) -> bool:
+	var sprite_path := str(actor_field(index, "sprite", ""))
+	return sprite_path != "" and assign_actor_sprite(index, sprite_path)
 
 
 ## 设/清前景层（`overlay`）。**一张图拉伸到整张地图**，所以不用管图的尺寸。
