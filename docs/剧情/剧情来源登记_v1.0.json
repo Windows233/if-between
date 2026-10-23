@@ -1,0 +1,14 @@
+{
+  "title": "剧情修改1.0版",
+  "current_story_source": "剧情修改1.0版.docx",
+  "received_date": "2026-10-23",
+  "sha256": "30523061ba2a65e403244ab769deb2c917cc23bf1940a302d82161493023ea54",
+  "bytes": 44873,
+  "top_level_paragraphs": 770,
+  "media_files": 0,
+  "source_unchanged": true,
+  "scope": "本次仅归档剧情正本与梳理，不修改游戏事件、地图、玩法或结局表",
+  "reviewed_game_commit": "d7c2c31",
+  "summary": "剧情梳理_v1.0.md",
+  "previous_notes": "剧情决策记录.md保留为既有讨论记录，不以其中的建议自动覆盖本次正本文稿；涉及既有决定时逐条与用户确认"
+}
