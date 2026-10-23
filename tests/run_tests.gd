@@ -25,6 +25,7 @@ func _initialize() -> void:
 	TestMap.run(h)
 	TestWalkable.run(h)
 	preload("res://tests/test_map_geometry_runtime.gd").run(h)
+	preload("res://tests/test_map_visual_parts.gd").run(h)
 	h.section("对话与选项")
 	TestDialogue.run(h)
 	h.section("剧情事件")
@@ -44,6 +45,11 @@ func _initialize() -> void:
 	TestPresentation.run(h)
 	h.section("音频")
 	TestAudio.run(h)
+	call_deferred("_finish_with_triggers", h)
+
+
+func _finish_with_triggers(h: TestHarness) -> void:
+	await preload("res://tests/test_map_triggers.gd").run(h)
 
 	if h.report():
 		quit(0)

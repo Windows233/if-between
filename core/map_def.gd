@@ -8,6 +8,8 @@
 class_name MapDef
 extends RefCounted
 
+const Trigger := preload("res://core/map_trigger.gd")
+
 ## 场景类型。决定「怎么触发连接」和「角色能不能走」。
 enum Kind {
 	ROOM,       ## 室内：角色可走动，踩在连接上按交互键触发
@@ -128,6 +130,16 @@ class Interaction:
 
 
 ## 场景里的 NPC 或可调查的物件。玩家走到附近按交互键触发。
+class VisualPart:
+	extends RefCounted
+
+	var id: StringName = &""
+	var sprite := ""
+	var rect := Rect2()
+	var layer := "auto"
+	var sort_offset := 0.0
+
+
 class Actor:
 	extends RefCounted
 
@@ -151,6 +163,13 @@ class Actor:
 	## 按 `rect` 的大小贴上，于是「画好的桌子」和「要交互的桌子」是同一个东西。
 	## 留空则退回占位色块 + 名字。
 	var sprite: String = ""
+	## 非空时替代旧 sprite。每段 rect 相对旋转后 actor.rect 左上角，几何已由编辑器烘焙。
+	var visual_parts: Array[VisualPart] = []
+	## 源纹理先沿局部轴翻转，再顺时针旋转 quarter_turns 个 90 度；不再变换碰撞或交互。
+	var quarter_turns := 0
+	var flip_h := false
+	var flip_v := false
+	var _visual_problems: Array[String] = []
 	## 整块挡路吗。**默认不挡。**
 	##
 	## 挡不挡由地图的 `walls` 说了算 —— 那是策划在示意图上涂绿的地方，
@@ -244,6 +263,59 @@ class Actor:
 		return cover_y if cover_y >= 0.0 else auto_cover_y() + sort_offset
 
 
+	## 返回各部件的世界 AABB，按 visual_parts 原序；无部件时返回单个旧 rect。
+	func world_visual_rects() -> Array[Rect2]:
+		var result: Array[Rect2] = []
+		if visual_parts.is_empty():
+			result.append(rect)
+		else:
+			for part: VisualPart in visual_parts:
+				result.append(Rect2(rect.position + part.rect.position, part.rect.size))
+		return result
+
+
+	## 与 world_visual_rects 同序的贴图路径；无部件时返回单个旧 sprite，允许空路径。
+	func visual_sprites() -> PackedStringArray:
+		var result := PackedStringArray()
+		if visual_parts.is_empty():
+			result.append(sprite)
+		else:
+			for part: VisualPart in visual_parts:
+				result.append(part.sprite)
+		return result
+
+
+	## 与世界矩形同序的 back/auto/front；旧物件由 over、cover 映射成同一协议。
+	func visual_layers() -> PackedStringArray:
+		var result := PackedStringArray()
+		if visual_parts.is_empty():
+			result.append("front" if over else ("auto" if cover else "back"))
+		else:
+			for part: VisualPart in visual_parts:
+				result.append(part.layer)
+		return result
+
+
+	## 与世界矩形同序的有效基线加部件偏移；只有 auto 层使用这些值。
+	func visual_cover_ys() -> PackedFloat64Array:
+		var result := PackedFloat64Array()
+		if visual_parts.is_empty():
+			result.append(effective_cover_y())
+		else:
+			for part: VisualPart in visual_parts:
+				result.append(effective_cover_y() + part.sort_offset)
+		return result
+
+
+	## 将第 index 段的源纹理像素坐标映射到世界矩形；纹理原点必须在左上角。
+	func visual_texture_transform(index: int, texture_size: Vector2) -> Transform2D:
+		var rectangles := world_visual_rects()
+		if index < 0 or index >= rectangles.size():
+			return Transform2D.IDENTITY
+		return MapDef.texture_transform(rectangles[index], texture_size,
+			quarter_turns, flip_h, flip_v)
+
+
 	func is_active(p_flags: WorldState) -> bool:
 		if condition == null or p_flags == null:
 			return true
@@ -310,6 +382,8 @@ var portals: Array[Portal] = []
 var spawns: Dictionary = {}
 ## 场景里的 NPC 与可调查物件
 var actors: Array[Actor] = []
+var triggers: Array = []
+var _trigger_problems: Array[String] = []
 
 
 ## 从字典构造。字段缺失时用默认值，不做严格校验（严格校验交给 validate）。
@@ -353,6 +427,15 @@ static func from_dictionary(data: Dictionary) -> MapDef:
 	if raw_actors is Array:
 		for raw: Variant in raw_actors:
 			def.actors.append(_actor_from(raw))
+	var raw_triggers: Variant = data.get("triggers", [])
+	if raw_triggers is Array:
+		for raw: Variant in raw_triggers:
+			if raw is Dictionary:
+				def.triggers.append(Trigger.from_dictionary(raw))
+			else:
+				def._trigger_problems.append("triggers 项必须是字典")
+	else:
+		def._trigger_problems.append("triggers 必须是数组")
 
 	return def
 
@@ -490,12 +573,41 @@ func validate() -> Array[String]:
 			problems.append("场景 %s 的第 %d 个角色没有 id" % [id, i])
 		if actor.rect.size.x <= 0.0 or actor.rect.size.y <= 0.0:
 			problems.append("场景 %s 的角色 %s 尺寸为 0" % [id, actor.id])
+		if not actor.rect.position.is_finite() or not actor.rect.size.is_finite() \
+				or not actor.rect.end.is_finite() or not actor.reach.position.is_finite() \
+				or not actor.reach.size.is_finite() or not actor.reach.end.is_finite() \
+				or not is_finite(actor.sort_offset) or not is_finite(actor.cover_y):
+			problems.append("场景 %s 的角色 %s 几何或遮挡基线必须是有限数值" % [id, actor.id])
 		for shape: Rect2 in actor.collisions:
-			if shape.size.x <= 0.0 or shape.size.y <= 0.0:
+			if not _valid_visual_rect(shape):
 				problems.append("场景 %s 的角色 %s 局部碰撞尺寸无效" % [id, actor.id])
-		if actor.has_local_collision and actor.cover and not actor.over \
+		if actor.has_local_collision and actor.visual_layers().has("auto") \
 				and (actor.sort_collider < 0 or actor.sort_collider >= actor.collisions.size()):
 			problems.append("场景 %s 的角色 %s 没有有效排序参考碰撞箱" % [id, actor.id])
+		for problem: String in actor._visual_problems:
+			problems.append("场景 %s 的角色 %s：%s" % [id, actor.id, problem])
+		if actor.quarter_turns < 0 or actor.quarter_turns > 3:
+			problems.append("角色 %s 的 quarter_turns 必须是 0..3 的整数" % actor.id)
+		var part_ids := {}
+		for part: VisualPart in actor.visual_parts:
+			if part.id != &"" and part_ids.has(part.id):
+				problems.append("角色 %s 的 visual_parts id 重复：%s" % [actor.id, part.id])
+			part_ids[part.id] = true
+			if part.sprite.is_empty() or not _valid_visual_rect(part.rect) \
+					or not _valid_visual_rect(Rect2(actor.rect.position + part.rect.position, part.rect.size)) \
+					or part.layer not in ["back", "auto", "front"] \
+					or not is_finite(part.sort_offset) \
+					or not is_finite(actor.effective_cover_y() + part.sort_offset):
+				problems.append("角色 %s 的 visual_parts 项无效：%s" % [actor.id, part.id])
+
+	problems.append_array(_trigger_problems)
+	var trigger_ids := {}
+	for trigger: Variant in triggers:
+		for problem: String in trigger.validate():
+			problems.append("场景 %s 的触发区：%s" % [id, problem])
+		if trigger_ids.has(trigger.id):
+			problems.append("场景 %s 的触发区 id 重复：%s" % [id, trigger.id])
+		trigger_ids[trigger.id] = true
 
 	return problems
 
@@ -526,6 +638,80 @@ static func _to_rect(raw: Variant) -> Rect2:
 	if raw is Array and (raw as Array).size() >= 4:
 		return Rect2(float(raw[0]), float(raw[1]), float(raw[2]), float(raw[3]))
 	return Rect2()
+
+
+## 将左上角为零的源纹理映射到已烘焙的世界 AABB。先局部翻转，再绕矩形中心顺时针旋转。
+## 返回可用于 Sprite2D(centered=false) 或 canvas 绘制的完整变换；无效尺寸返回单位矩阵。
+static func texture_transform(rect: Rect2, texture_size: Vector2,
+		quarter_turns: int = 0, flip_h: bool = false, flip_v: bool = false) -> Transform2D:
+	if not _valid_visual_rect(rect) or not texture_size.is_finite() \
+			or texture_size.x <= 0.0 or texture_size.y <= 0.0:
+		return Transform2D.IDENTITY
+	var turns := posmod(quarter_turns, 4)
+	var draw_size := rect.size if turns % 2 == 0 else Vector2(rect.size.y, rect.size.x)
+	var directions: Array[Vector2] = [Vector2.RIGHT, Vector2.DOWN, Vector2.LEFT, Vector2.UP]
+	var axis_x := directions[turns] * (draw_size.x / texture_size.x) * (-1.0 if flip_h else 1.0)
+	var axis_y := directions[(turns + 1) % 4] * (draw_size.y / texture_size.y) * (-1.0 if flip_v else 1.0)
+	return Transform2D(axis_x, axis_y,
+		rect.get_center() - axis_x * texture_size.x * 0.5 - axis_y * texture_size.y * 0.5)
+
+
+static func _finite_number(raw: Variant) -> bool:
+	return (raw is int or raw is float) and is_finite(float(raw))
+
+
+static func _valid_visual_rect(rect: Rect2) -> bool:
+	return rect.position.is_finite() and rect.size.is_finite() and rect.end.is_finite() \
+		and rect.size.x > 0.0 and rect.size.y > 0.0
+
+
+static func _visuals_from(actor: Actor, raw: Dictionary) -> void:
+	var turns: Variant = raw.get("quarter_turns", 0)
+	if _finite_number(turns) and float(turns) == floorf(float(turns)) \
+			and float(turns) >= 0.0 and float(turns) <= 3.0:
+		actor.quarter_turns = int(turns)
+	else:
+		actor._visual_problems.append("quarter_turns 必须是 0..3 的整数")
+	for field: String in ["flip_h", "flip_v"]:
+		if raw.get(field, false) is bool:
+			actor.set(field, raw.get(field, false))
+		else:
+			actor._visual_problems.append("%s 必须是布尔值" % field)
+	var parts: Variant = raw.get("visual_parts", [])
+	if not (parts is Array):
+		actor._visual_problems.append("visual_parts 必须是数组")
+		actor.visual_parts.append(VisualPart.new())
+		return
+	for entry: Variant in parts:
+		var part := VisualPart.new()
+		actor.visual_parts.append(part)
+		if not (entry is Dictionary):
+			actor._visual_problems.append("visual_parts 项必须是字典")
+			continue
+		if entry.get("id", "") is String:
+			part.id = StringName(entry.get("id", ""))
+		else:
+			actor._visual_problems.append("visual_parts.id 必须是字符串")
+		if entry.get("sprite") is String:
+			part.sprite = entry["sprite"]
+		if entry.get("layer") is String:
+			part.layer = entry["layer"]
+		else:
+			actor._visual_problems.append("visual_parts.layer 必须是 back/auto/front")
+		var bounds: Variant = entry.get("rect")
+		var valid_bounds: bool = bounds is Array and bounds.size() == 4
+		if valid_bounds:
+			for value: Variant in bounds:
+				if not _finite_number(value):
+					valid_bounds = false
+		if valid_bounds:
+			part.rect = _to_rect(bounds)
+		else:
+			actor._visual_problems.append("visual_parts.rect 必须是四个有限数值")
+		if _finite_number(entry.get("sort_offset", 0.0)):
+			part.sort_offset = float(entry.get("sort_offset", 0.0))
+		else:
+			actor._visual_problems.append("visual_parts.sort_offset 必须是有限数值")
 
 
 static func _portal_from(raw: Variant) -> Portal:
@@ -582,6 +768,7 @@ static func _actor_from(raw: Variant) -> Actor:
 	actor.sort_offset = float(raw.get("sort_offset", 0.0))
 	actor.label = str(raw.get("label", ""))
 	actor.sprite = str(raw.get("sprite", ""))
+	_visuals_from(actor, raw)
 	actor.solid = bool(raw.get("solid", false))
 	actor.cover = bool(raw.get("cover", false))
 	actor.cover_y = float(raw.get("cover_y", -1.0))

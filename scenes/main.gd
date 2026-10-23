@@ -119,6 +119,7 @@ var pending_actor: MapDef.Actor = null
 var flags := WorldState.new()
 ## 剧情导演。推进与演出都在它那里，这里只负责把信号转过去。
 var story := StoryDirector.new()
+var map_triggers := preload("res://scenes/map_trigger_runner.gd").new()
 ## 整个游戏有哪些结局。达成进度存在 `flags` 里，键是 `ending/<id>`。
 var endings := EndingTable.new()
 ## 游戏里有哪些物品。数量就存在 `flags` 里，键是 `item/<id>`，跟结局一个路子。
@@ -459,6 +460,7 @@ func enter_map(map_id: StringName, spawn_name: StringName,
 		return
 
 	current_map = def
+	map_triggers.configure(def.id, def.triggers, flags, _map_trigger_event_exists, _start_map_trigger)
 	current_spawn = spawn_name
 	map_view.build(def, flags)
 	player.global_position = def.spawn_point(spawn_name)
@@ -631,6 +633,36 @@ func _process(_delta: float) -> void:
 	_announce_items()
 	_check_walk_arrival()
 	_update_footsteps()
+	_update_map_triggers()
+
+
+func _map_trigger_busy() -> bool:
+	return story.is_active() or (ui_host != null and ui_host.is_busy()) \
+		or (fade != null and fade.is_busy()) or (player != null and player.pinned)
+
+
+func _map_trigger_event_exists(event_id: StringName) -> bool:
+	if str(event_id).is_empty() or str(event_id).get_file() != str(event_id) \
+			or str(event_id).contains(".."):
+		return false
+	if not FileAccess.file_exists(DataLoader.EVENT_DIR + str(event_id) + ".json"):
+		return false
+	var event := DataLoader.load_event(event_id, endings.ids())
+	return event != null and event.validate(endings.ids()).is_empty()
+
+
+func _start_map_trigger(event_id: StringName) -> bool:
+	if _map_trigger_busy() or (is_inside_tree() and get_tree().paused):
+		return false
+	start_story(event_id)
+	update_player_control()
+	return true
+
+
+func _update_map_triggers() -> void:
+	if current_map == null or player == null or not is_inside_tree():
+		return
+	map_triggers.update(player.global_position, _map_trigger_busy(), get_tree().paused)
 
 
 ## 玩家走进 `auto_menu` 物件的 `reach` 时，自动弹出它的动作菜单。
@@ -1037,6 +1069,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			open_pause_menu()
 			return
 
+	if event is InputEventMouseButton and not current_map.triggers.is_empty() and is_inside_tree():
+		var trigger_click := event as InputEventMouseButton
+		if trigger_click.pressed and trigger_click.button_index == MOUSE_BUTTON_LEFT \
+				and map_triggers.click(get_global_mouse_position(), _map_trigger_busy(),
+					is_inside_tree() and get_tree().paused):
+			return
+
 	# 大地图：鼠标点选地点
 	if current_map.kind == MapDef.Kind.OVERWORLD:
 		if _is_advance_event(event):
@@ -1121,13 +1160,15 @@ func _is_advance_event(event: InputEvent) -> bool:
 ## 优先级是「身边的角色 > 脚下的连接」。反过来的话，
 ## 站在门口跟人说话会变成直接出门。
 func interact() -> void:
-	if current_map == null:
+	if current_map == null or _map_trigger_busy() or (is_inside_tree() and get_tree().paused):
 		return
 
 	# 站在传送点上就直接走，**先于**看附近有没有人能说话。
 	# 门口那块地方总是紧挨着货架、花架，先查人就会出现
 	# 「对着门按了半天出不去，反而在跟书架说话」。
 	if _take_portal():
+		return
+	if map_triggers.interact(player.global_position):
 		return
 
 	# 只认朝向面前的东西。玩家的原点就在脚底。
@@ -1620,6 +1661,7 @@ func quit_game() -> void:
 ##
 ## **图鉴不动** —— 那是跨存档的全局记录，开新局不该把「你见过几个结局」清掉。
 func new_game() -> void:
+	map_triggers.reset()
 	menu_flow.new_game()
 
 
