@@ -139,15 +139,21 @@
       "to": "classroom"
     },
     {
-      "event": "ch2_library_locked",
       "id": "to_library",
+      "if": {
+        "op": "==",
+        "value": true,
+        "var": "ch2/library_open"
+      },
       "label": "图书馆",
       "rect": [
         341,
         76,
         24,
-        39
-      ]
+        78
+      ],
+      "spawn": "from_school_gate",
+      "to": "library"
     },
     {
       "id": "to_gatehouse",
@@ -160,6 +166,24 @@
       ],
       "spawn": "start",
       "to": "gatehouse"
+    },
+    {
+      "event": "ch2_library_locked",
+      "id": "to_library_locked",
+      "if": {
+        "not": {
+          "op": "==",
+          "value": true,
+          "var": "ch2/library_open"
+        }
+      },
+      "label": "图书馆",
+      "rect": [
+        341,
+        76,
+        24,
+        78
+      ]
     }
   ],
   "size": [
@@ -174,6 +198,10 @@
     "from_gatehouse": [
       343,
       238
+    ],
+    "from_library": [
+      353,
+      164
     ],
     "near_classroom": [
       62,

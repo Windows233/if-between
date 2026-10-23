@@ -193,7 +193,7 @@ static func test_gallery_from_play(h: TestHarness) -> void:
 	# 开图鉴看看
 	main.toggle_gallery()
 	h.check("图鉴打开了", main.gallery_panel.is_open(), true)
-	h.check("四个结局都列出来了", main.gallery_panel.row_count(), 4)
+	h.check("正式结局都列出来了", main.gallery_panel.row_count(), main.endings.endings.size())
 	h.check("第一行是 end1", main.gallery_panel.row_text(0), "平静即死亡")
 	h.check("第二行还没见过", main.gallery_panel.row_text(1), "？？？")
 

@@ -124,7 +124,7 @@ static func test_ending_marks_on_story(h: TestHarness) -> void:
 static func test_ending_from_real_data(h: TestHarness) -> void:
 	var main := h.new_main()
 
-	h.check("结局表读进来了", main.endings.endings.size(), 4)
+	h.check("结局表含救援失败", main.endings.get_ending(&"end4_arrogant") != null, true)
 	h.check("一开始一个都没达成", main.unlocked_endings().size(), 0)
 
 	# 第一章开场整段跑完：接受/不接受那一步选「不接受」，一路走到 end1

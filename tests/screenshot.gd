@@ -115,6 +115,29 @@ func _initialize() -> void:
 				# hold 给一个大数，字就停在屏上不走（不 await，让它自己挂着）。
 				main.stage_curtain.snap_down()
 				_banner_at = 4
+			"rescue_scene":
+				main.enter_map(&"school_yard", &"from_gate")
+				main.stage_curtain.snap_up()
+				main.player.global_position = Vector2(158, 186)
+				main.cutscene.add_actor("c", "res://art/npc/c",
+					Vector2(186, 88), 32.0, 12, "side")
+			"rescue_panel":
+				main.enter_map(&"school_yard", &"from_gate")
+				main.stage_curtain.snap_up()
+				main.player.global_position = Vector2(158, 186)
+				main.cutscene.add_actor("c", "res://art/npc/c",
+					Vector2(186, 88), 32.0, 12, "side")
+				main.rescue_panel.allow_background_process = true
+				main.rescue_panel.open()
+			"rescue_portrait":
+				main.enter_map(&"school_yard", &"from_gate")
+				main.stage_curtain.snap_up()
+				main.player.global_position = Vector2(158, 186)
+				main.dialogue.play(Dialogue.from_array([{
+					"speaker": "C", "text": "这样子啊~ 在下C，白塔分部下的一名专案员。",
+					"side": "right", "portrait": "c_base",
+				}]))
+				main.dialogue.advance()
 			"ch1_hearts":
 				# 章标题之后浮出来的三句心声。**不走对话框** ——
 				# 那会儿没有人在说话，底下冒一块面板像有人在念旁白。
@@ -359,6 +382,9 @@ func _initialize() -> void:
 				# 标题界面本身。底部那行按键说明是它的重点 ——
 				# 「游戏里到底有哪些键」只有这儿会告诉玩家。
 				main.show_title()
+			"title_developer":
+				main.settings.developer_options_enabled = true
+				main.show_title()
 			"desk_back":
 				# 站在书桌**后面**：桌子该盖住腰以下。
 				# 站到哪由参数 4 给（默认按实测的最北 147），
@@ -382,6 +408,14 @@ func _initialize() -> void:
 				panel.handle_key(KEY_DOWN)
 				panel.handle_key(KEY_DOWN)
 				panel.handle_key(KEY_DOWN)
+			"settings_developer":
+				main.enter_map(&"desk_shop", &"start")
+				main.stage_curtain.snap_up()
+				main.settings.developer_options_enabled = true
+				main.open_settings()
+				var developer_panel: SettingsPanel = main.settings_panel
+				for _step: int in SettingsPanel.ROWS.find(&"developer"):
+					developer_panel.handle_key(KEY_DOWN)
 			"pause_settings":
 				# 从暂停菜单开设置 —— 看的是**层号对不对**：
 				# 设置面板得画在暂停菜单上面，而暂停菜单还在下面留着

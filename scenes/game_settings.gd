@@ -50,6 +50,8 @@ var speed := DEFAULT_SPEED
 var music_volume := DEFAULT_VOLUME
 ## 音效音量，同上。和音乐**分开**存 —— 两条总线，两根滑条。
 var sfx_volume := DEFAULT_VOLUME
+## 开发者测试入口。正式默认关闭，保存在跨存档设置中。
+var developer_options_enabled := false
 
 
 ## 读设置。文件不在或者坏了就用默认值 —— 设置丢了最多是速度回到中档，
@@ -60,6 +62,7 @@ func load_settings() -> void:
 	speed = DEFAULT_SPEED
 	music_volume = DEFAULT_VOLUME
 	sfx_volume = DEFAULT_VOLUME
+	developer_options_enabled = false
 
 	if not FileAccess.file_exists(PATH):
 		return
@@ -101,6 +104,10 @@ func load_settings() -> void:
 	if raw_sfx is float or raw_sfx is int:
 		sfx_volume = clampf(float(raw_sfx), 0.0, 1.0)
 
+	var raw_developer_options: Variant = data.get("developer_options_enabled", false)
+	if raw_developer_options is bool:
+		developer_options_enabled = raw_developer_options
+
 
 func save_settings() -> bool:
 	var file := FileAccess.open(PATH, FileAccess.WRITE)
@@ -114,6 +121,7 @@ func save_settings() -> bool:
 		"speed": speed,
 		"music_volume": music_volume,
 		"sfx_volume": sfx_volume,
+		"developer_options_enabled": developer_options_enabled,
 	}, "\t"))
 	file.close()
 	return true
@@ -158,6 +166,13 @@ func adjust_sfx(step: int) -> float:
 	sfx_volume = clampf(sfx_volume + VOLUME_STEP * float(signi(step)), 0.0, 1.0)
 	save_settings()
 	return sfx_volume
+
+
+## 切换开发者测试入口。返回新的开关状态。
+func toggle_developer_options() -> bool:
+	developer_options_enabled = not developer_options_enabled
+	save_settings()
+	return developer_options_enabled
 
 
 ## 把音乐音量**直接设到某个位置**（鼠标把滑条拖到哪儿就是哪儿）。

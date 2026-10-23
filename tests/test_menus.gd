@@ -31,6 +31,7 @@ static func run(h: TestHarness) -> void:
 	test_save_menu_entry(h)
 	test_save_menu_panel(h)
 	test_title_screen(h)
+	test_chapter_two_developer_entry(h)
 	test_ui_host(h)
 	test_save_menu_in_game(h)
 	test_title_in_game(h)
@@ -216,7 +217,75 @@ static func test_title_screen(h: TestHarness) -> void:
 	h.check("ESC 不被吃掉", title.handle_key(KEY_ESCAPE), false)
 	h.check("ESC 不会把人扔出去", title.is_open(), true)
 
+	# 开发者开关在标题页立即显示并排按钮，不增加垂直菜单行数。
+	title.open(false, true)
+	h.check("开启后标题多出第二章按钮", title.item_count(), 6)
+	var chapter_index: int = title._ids.find(TitleScreen.ID_CHAPTER_TWO)
+	var new_rect := title._row_rect(title._ids.find(TitleScreen.ID_NEW))
+	var chapter_rect := title._row_rect(chapter_index)
+	h.check("按钮与新游戏同一行", chapter_rect.position.y, new_rect.position.y)
+	h.check("按钮在新游戏右侧", chapter_rect.position.x > new_rect.end.x, true)
+	h.check("按钮文字清楚", title.row_text(chapter_index), "进入第二章")
+	title.handle_key(KEY_RIGHT)
+	h.check("右键聚焦第二章按钮", title.current_id(), TitleScreen.ID_CHAPTER_TWO)
+	title.handle_key(KEY_LEFT)
+	h.check("左键返回新游戏", title.current_id(), TitleScreen.ID_NEW)
+	title.handle_key(KEY_DOWN)
+	h.check("下键跳过并排按钮", title.current_id(), TitleScreen.ID_GALLERY)
+
+	var chapter_click := InputEventMouseButton.new()
+	chapter_click.button_index = MOUSE_BUTTON_LEFT
+	chapter_click.pressed = true
+	chapter_click.position = chapter_rect.get_center()
+	title._on_gui_input(chapter_click)
+	h.check("鼠标按钮发出第二章入口", picked[0], TitleScreen.ID_CHAPTER_TWO)
+	h.check("选择跳章后标题关闭", title.is_open(), false)
+
+	title.open(false)
+	title.set_chapter_two_enabled(true)
+	h.check("开启开关时标题按钮动态出现", title.item_count(), 6)
+	title.set_chapter_two_enabled(false)
+	h.check("关闭开关时标题按钮动态隐藏", title.item_count(), 5)
+
 	title.queue_free()
+
+
+static func test_chapter_two_developer_entry(h: TestHarness) -> void:
+	var main := h.new_main()
+	main.settings.developer_options_enabled = false
+	main.menu_flow.show_title()
+	h.check("开发者选项关闭时没有跳章入口",
+		main.title_screen.item_count(), 5)
+
+	main.settings_panel.open(main.settings)
+	var developer_index: int = SettingsPanel.ROWS.find(&"developer")
+	for _step: int in developer_index:
+		main.settings_panel.handle_key(KEY_DOWN)
+	main.settings_panel.handle_key(KEY_RIGHT)
+	h.check("从设置开启跳章选项", main.settings.developer_options_enabled, true)
+	h.check("标题页即时显示跳章按钮",
+		main.title_screen.item_count(), 6)
+	main.settings_panel.handle_key(KEY_ESCAPE)
+
+	main.flags.set_value(&"test/stale", true)
+	main.flags.set_value(&"item/charm", 1)
+	var chapter_index: int = main.title_screen._ids.find(TitleScreen.ID_CHAPTER_TWO)
+	main.title_screen.select_index(chapter_index)
+	main.title_screen.handle_key(KEY_ENTER)
+	h.check("入口落在第二章第一场景",
+		main.current_map.id, MenuFlow.CHAPTER_TWO_START_MAP)
+	var expected_spawn := DataLoader.load_map(MenuFlow.CHAPTER_TWO_START_MAP) \
+		.spawn_point(MenuFlow.CHAPTER_TWO_START_SPAWN)
+	h.check("出生于后巷入口", main.player.global_position, expected_spawn)
+	h.check("面向铁门", main.player.facing, Vector2.UP)
+	h.check("新局状态与物品已清空", main.flags.snapshot().is_empty(), true)
+	h.check("没有播放第一章开场", main.story.is_active(), false)
+	h.check("跳章后画面揭开", main.stage_curtain.is_down(), false)
+	h.check("跳章后标题关闭", main.title_screen.is_open(), false)
+
+	main.settings.developer_options_enabled = false
+	main.settings.save_settings()
+	main.queue_free()
 
 
 # ---------------------------------------------------------------- 调度器

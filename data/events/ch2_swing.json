@@ -6,14 +6,15 @@
       "id": "cutscene",
       "stage": [
         { "do": "save" },
+        { "do": "focus", "at": [200, 79] },
         {
           "do": "npc",
           "id": "c",
           "sprite": "res://art/npc/c",
-          "at": [220, 85],
-          "height": 42,
-          "z": 9,
-          "pose": "down"
+          "at": [186, 88],
+          "height": 32,
+          "z": 12,
+          "pose": "side"
         },
         {
           "do": "say",
@@ -31,6 +32,84 @@
             }
           ]
         }
+      ],
+      "next": "challenge"
+    },
+    {
+      "id": "challenge",
+      "stage": [
+        { "do": "say", "slide": "out" },
+        { "do": "rescue", "flag": "ch2/rescue_success" }
+      ],
+      "next": "failed",
+      "next_when": {
+        "if": { "var": "ch2/rescue_success", "op": "==", "value": true },
+        "next": "rescued"
+      }
+    },
+    {
+      "id": "failed",
+      "stage": [
+        { "do": "say", "lines": [
+          { "speaker": "我", "portrait": "protagonist/agony", "side": "left", "text": "啊—！！怎么..." }
+        ] },
+        { "do": "fade", "to": "black", "time": 0.45 },
+        { "do": "say", "lines": [
+          { "speaker": "？？？", "side": "right", "text": "这种程度就不行了吗？呵，是我走眼了__" }
+        ] },
+        { "do": "caption", "wait_click": true, "out": 0.3, "lines": [
+          { "text": "end 4 自以为是的到来", "size": 16 },
+          { "text": "你是主角没错，但主角可以换人啊", "size": 12 }
+        ] }
+      ],
+      "choices": [
+        { "id": "retry", "label": "重试救援", "next": "retry" },
+        { "id": "finish", "label": "返回标题", "next": "ending" }
+      ]
+    },
+    {
+      "id": "retry",
+      "stage": [
+        { "do": "say", "slide": "out" },
+        { "do": "fade", "to": "clear", "time": 0.3 }
+      ],
+      "next": "challenge"
+    },
+    {
+      "id": "ending",
+      "ending": "end4_arrogant",
+      "stage": [
+        { "do": "caption", "wait_click": true, "lines": [
+          { "text": "end 4 自以为是的到来", "size": 16 },
+          { "text": "你是主角没错，但主角可以换人啊", "size": 12 }
+        ] }
+      ]
+    },
+    {
+      "id": "rescued",
+      "set": { "ch2/rescued_c": true },
+      "stage": [
+        { "do": "npc_pose", "id": "c", "pose": "down" },
+        { "do": "say", "lines": [
+          { "speaker": "C", "portrait": "c_base", "side": "right", "text": ".....你竟然能直接引导因果线？" },
+          { "speaker": "C", "portrait": "c_base", "side": "right", "text": "等下，你又是谁！？" },
+          { "speaker": "我", "portrait": "protagonist/puzzled", "side": "left", "text": "你妈妈没有跟你说，问别人前先要自·报·家·门吗？" },
+          { "speaker": "C", "portrait": "c_base", "side": "right", "text": "这样子啊~ 在下C，白塔分部下的一名专案员。" },
+          { "speaker": "C", "portrait": "c_base", "side": "right", "text": "这地方的规则。蚀界里的所有东西都靠‘if - then’运转。" },
+          { "speaker": "C", "portrait": "c_base", "side": "right", "text": "这个给你，只要你拿着它，后面你遇到困难，我都会来英·雄·救·美的呢 ^ ^" },
+          { "speaker": "我", "portrait": "protagonist/quiet", "side": "left", "text": "...不需要" }
+        ] },
+        { "do": "say", "slide": "out" },
+        { "do": "image", "path": "res://art/item/charm.png", "fade": 0.35, "wait_click": true, "hide": true }
+      ],
+      "next": "gift"
+    },
+    {
+      "id": "gift",
+      "set": { "item/charm": 1 },
+      "stage": [
+        { "do": "focus" },
+        { "do": "npc", "id": "c", "sprite": "res://art/npc/c", "at": [186, 88], "height": 32, "z": 12, "pose": "down", "talk": "ch2_c_wait" }
       ]
     }
   ]
