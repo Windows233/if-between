@@ -14,7 +14,8 @@
           "at": [186, 88],
           "height": 32,
           "z": 12,
-          "pose": "side"
+          "pose": "down",
+          "rescue_binding": true
         },
         {
           "do": "say",

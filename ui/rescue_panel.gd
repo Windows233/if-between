@@ -8,8 +8,9 @@ signal completed(success: bool)
 signal cancelled
 signal feedback(kind: StringName)
 
-const PANEL_SIZE: Vector2 = Vector2(244.0, 126.0)
-const DIM_COLOR: Color = Color(0.03, 0.04, 0.07, 0.82)
+const PANEL_SIZE: Vector2 = Vector2(244.0, 74.0)
+const TOP_PANEL_SIZE: Vector2 = Vector2(244.0, 26.0)
+const DIM_COLOR: Color = Color(0.03, 0.04, 0.07, 0.52)
 const PANEL_COLOR: Color = Color(0.06, 0.07, 0.10, 0.98)
 const EDGE_COLOR: Color = Color(0.34, 0.46, 0.38)
 const TITLE_COLOR: Color = Color("#f0e2c0")
@@ -31,7 +32,9 @@ var _footer: Label
 var _lines: Array[Label] = []
 var _button: Button
 var _box: Rect2
+var _top_box: Rect2
 var _track: Rect2
+var _binding_sprite: Sprite2D
 var _open: bool = false
 var _focus_paused: bool = false
 var _window_focused: bool = true
@@ -113,7 +116,15 @@ func close() -> void:
 	model.close()
 	set_process(false)
 	_root.hide()
+	if is_instance_valid(_binding_sprite):
+		_binding_sprite.hide()
+	_binding_sprite = null
 	cancelled.emit()
+
+
+func set_binding_sprite(binding: Sprite2D) -> void:
+	_binding_sprite = binding
+	_sync_binding()
 
 
 func is_open() -> bool:
@@ -233,21 +244,23 @@ func _layout() -> void:
 	if is_inside_tree():
 		view_size = get_viewport().get_visible_rect().size
 	_root.size = view_size
-	_box = Rect2(((view_size - PANEL_SIZE) * 0.5).floor(), PANEL_SIZE)
-	_track = Rect2(_box.position + Vector2(12.0, 68.0), Vector2(220.0, 10.0))
-	_place(_title, Vector2(12, 9), Vector2(112, 16))
-	_place(_counter, Vector2(120, 12), Vector2(112, 12))
+	var left: float = floor((view_size.x - PANEL_SIZE.x) * 0.5)
+	_top_box = Rect2(Vector2(left, 4.0), TOP_PANEL_SIZE)
+	_box = Rect2(Vector2(left, view_size.y - PANEL_SIZE.y - 7.0), PANEL_SIZE)
+	_track = Rect2(_box.position + Vector2(12.0, 20.0), Vector2(220.0, 10.0))
+	_place(_title, _top_box.position + Vector2(12, 3), Vector2(112, 16))
+	_place(_counter, _top_box.position + Vector2(120, 6), Vector2(112, 12))
 	for index: int in _lines.size():
-		_place(_lines[index], Vector2(12 + index * 74, 32), Vector2(72, 12))
-	_place(_status, Vector2(12, 50), Vector2(220, 13))
-	_place(_hint, Vector2(12, 84), Vector2(220, 12))
-	_place(_footer, Vector2(12, 106), Vector2(152, 12))
-	_place(_button, Vector2(168, 101), Vector2(64, 19))
+		_place(_lines[index], _box.position + Vector2(12 + index * 74, 3), Vector2(72, 12))
+	_place(_status, _box.position + Vector2(12, 34), Vector2(220, 13))
+	_place(_hint, _box.position + Vector2(12, 47), Vector2(220, 11))
+	_place(_footer, _box.position + Vector2(12, 60), Vector2(152, 10))
+	_place(_button, _box.position + Vector2(168, 51), Vector2(64, 19))
 	_root.queue_redraw()
 
 
 func _place(control: Control, offset: Vector2, control_size: Vector2) -> void:
-	control.position = _box.position + offset
+	control.position = offset
 	control.size = control_size
 
 
@@ -274,14 +287,25 @@ func _refresh() -> void:
 			_button.text = "开始" if practice else "继续"
 		RescueTiming.State.RUNNING:
 			_status.text = "第 %d 根线 · 绿色区 %d%%" % [model.line_index + 1, roundi(model.window_ratio() * 100.0)]
+	_sync_binding()
 	_root.queue_redraw()
+
+
+func _sync_binding() -> void:
+	if not is_instance_valid(_binding_sprite):
+		_binding_sprite = null
+		return
+	_binding_sprite.call("set_state", model.line_index)
 
 
 func _draw_panel() -> void:
 	_root.draw_rect(Rect2(Vector2.ZERO, _root.size), DIM_COLOR)
+	_root.draw_rect(_top_box, PANEL_COLOR)
+	_root.draw_rect(_top_box, EDGE_COLOR, false, 1.0)
+	_root.draw_line(_top_box.position + Vector2(12, 21), _top_box.position + Vector2(232, 21), EDGE_COLOR)
 	_root.draw_rect(_box, PANEL_COLOR)
 	_root.draw_rect(_box, EDGE_COLOR, false, 1.0)
-	_root.draw_line(_box.position + Vector2(12, 27), _box.position + Vector2(232, 27), EDGE_COLOR)
+	_root.draw_line(_box.position + Vector2(12, 17), _box.position + Vector2(232, 17), EDGE_COLOR)
 	_root.draw_rect(_track, Color("#31373e"))
 	var safe_zone: Rect2 = Rect2(_track.position + Vector2(_track.size.x * model.window_start(), 0), Vector2(_track.size.x * model.window_ratio(), _track.size.y))
 	_root.draw_rect(safe_zone, Color("#477d56"))

@@ -12,7 +12,8 @@ static func run(h: TestHarness) -> void:
 	h.check("开场先自动存档", intro.stage[0].kind, &"save")
 	h.check("C 在秋千处登场", intro.stage[2].kind, &"npc")
 	h.check("C 的脚底位置", intro.stage[2].point("at"), Vector2(186, 88))
-	h.check("救援前 C 使用受困朝向", intro.stage[2].text("pose"), "side")
+	h.check("救援前 C 使用受困朝向", intro.stage[2].text("pose"), "down")
+	h.check("受困 C 挂载束缚状态层", intro.stage[2].flag("rescue_binding"), true)
 	h.check("开场由 C 提醒别碰线",
 		intro.stage[3].dialogue().lines[0].text, "别碰线。碰了会——")
 
@@ -55,7 +56,36 @@ static func run(h: TestHarness) -> void:
 	h.check("救援完成播放对应音效", main.last_sound,
 		"res://audio/sfx/rescue_complete.wav")
 	main.enter_map(&"school_yard", &"from_gate")
+	await main.cutscene._perform(intro.stage[2])
+	var c_actor: Node2D = main.cutscene._actor("c")
+	var binding: Sprite2D = c_actor.get_node_or_null("RescueBinding") as Sprite2D
+	h.check("救援复用场上唯一的 C", main.cutscene.actor_ids(), ["c"])
+	h.check("受困 C 使用正面静止动画", (c_actor as AnimatedSprite2D).animation, &"idle_down")
+	h.check("束缚与角色共用 32 像素画布",
+		binding.scale, Vector2(0.25, 0.25))
+	h.check("束缚中心按 C 帧画布对齐",
+		binding.position, Vector2(0, -32))
+	h.check("初始束缚使用完整状态图", binding.texture.resource_path,
+		"res://art/fx/rescue_c/rescue_bind_state_01.png")
+	var actor_snapshot: Array = main.cutscene.snapshot_actors()
+	h.check("存档记录 C 的受困外观", actor_snapshot[0].get("rescue_binding"), true)
+	main.flags.set_value(&"ch2/rescued_c", true)
+	main.cutscene.clear_actors()
+	main.cutscene.restore_actors(actor_snapshot)
+	c_actor = main.cutscene._actor("c")
+	h.check("已获救状态读档不恢复束缚",
+		c_actor.get_node_or_null("RescueBinding"), null)
+	main.flags.unset_value(&"ch2/rescued_c")
+	main.cutscene.clear_actors()
+	main.cutscene.restore_actors(actor_snapshot)
+	c_actor = main.cutscene._actor("c")
+	binding = c_actor.get_node_or_null("RescueBinding") as Sprite2D
+	h.check("救援前检查点读档恢复完整束缚",
+		binding.texture.resource_path,
+		"res://art/fx/rescue_c/rescue_bind_state_01.png")
+
 	main.rescue_panel.allow_background_process = true
+	main.rescue_panel.set_binding_sprite(binding)
 	main.rescue_panel.open()
 	var input := InputEventKey.new()
 	input.physical_keycode = KEY_SPACE
@@ -76,11 +106,27 @@ static func run(h: TestHarness) -> void:
 	_finish_rescue(main.cutscene, rescue_step, success_finished)
 	await h.root.get_tree().process_frame
 	h.check("演出协程等待救援完成", main.rescue_panel.is_open(), true)
-	main.rescue_panel.model.submit()
-	main.rescue_panel.model.submit()
-	for line: int in RescueTiming.LINE_COUNT:
-		main.rescue_panel.model.phase = 0.25
-		main.rescue_panel.submit()
+	main.rescue_panel.model.phase = 0.25
+	main.rescue_panel.submit()
+	h.check("练习成功不减少束缚", binding.texture.resource_path,
+		"res://art/fx/rescue_c/rescue_bind_state_01.png")
+	main.rescue_panel.submit()
+	main.rescue_panel.model.phase = 0.25
+	main.rescue_panel.submit()
+	h.check("第一次正式成功切换状态02", binding.texture.resource_path,
+		"res://art/fx/rescue_c/rescue_bind_state_02.png")
+	main.rescue_panel.model.phase = 0.0
+	main.rescue_panel.submit()
+	h.check("正式失误保留当前束缚", binding.texture.resource_path,
+		"res://art/fx/rescue_c/rescue_bind_state_02.png")
+	main.rescue_panel.submit()
+	main.rescue_panel.model.phase = 0.25
+	main.rescue_panel.submit()
+	h.check("第二次正式成功切换状态03", binding.texture.resource_path,
+		"res://art/fx/rescue_c/rescue_bind_state_03.png")
+	main.rescue_panel.model.phase = 0.25
+	main.rescue_panel.submit()
+	h.check("第三次正式成功隐藏束缚层", binding.visible, false)
 	for frame: int in 3:
 		if success_finished[0]:
 			break
@@ -90,15 +136,45 @@ static func run(h: TestHarness) -> void:
 		main.flags.get_value(&"ch2/rescue_success"), true)
 
 	main.flags.unset_value(&"ch2/rescue_success")
-	var cancelled_finished: Array[bool] = [false]
-	_finish_rescue(main.cutscene, rescue_step, cancelled_finished)
+	var failed_finished: Array[bool] = [false]
+	_finish_rescue(main.cutscene, rescue_step, failed_finished)
 	await h.root.get_tree().process_frame
+	h.check("失败重试前再次从完整束缚开始",
+		binding.texture.resource_path,
+		"res://art/fx/rescue_c/rescue_bind_state_01.png")
+	main.rescue_panel.model.phase = 0.25
+	main.rescue_panel.submit()
+	main.rescue_panel.submit()
+	main.rescue_panel.model.phase = 0.25
+	main.rescue_panel.submit()
+	for mistake: int in RescueTiming.ERROR_LIMIT:
+		main.rescue_panel.model.phase = 0.0
+		main.rescue_panel.submit()
+		if main.rescue_panel.model.state != RescueTiming.State.FAILED:
+			main.rescue_panel.submit()
+	h.check("失败前已有成功仍显示状态02", binding.texture.resource_path,
+		"res://art/fx/rescue_c/rescue_bind_state_02.png")
+	for frame: int in 3:
+		if failed_finished[0]:
+			break
+		await h.root.get_tree().process_frame
+	h.check("三次失误结束本轮救援", failed_finished[0], true)
+	h.check("失败结果写入剧情状态为否",
+		main.flags.get_value(&"ch2/rescue_success"), false)
+	main.flags.unset_value(&"ch2/rescue_success")
+	var retry_finished: Array[bool] = [false]
+	_finish_rescue(main.cutscene, rescue_step, retry_finished)
+	await h.root.get_tree().process_frame
+	h.check("失败重试重新显示完整束缚", binding.visible, true)
+	h.check("失败重试恢复状态01", binding.texture.resource_path,
+		"res://art/fx/rescue_c/rescue_bind_state_01.png")
 	main.cutscene.cancel()
 	for frame: int in 3:
-		if cancelled_finished[0]:
+		if retry_finished[0]:
 			break
 		await h.root.get_tree().process_frame
 	h.check("取消剧情关闭小游戏面板", main.rescue_panel.is_open(), false)
+	h.check("取消时隐藏并清理受困 C", main.cutscene.actor_ids(), [])
 	h.check("取消期间不写入救援结果",
 		main.flags.has_value(&"ch2/rescue_success"), false)
 	main.queue_free()
