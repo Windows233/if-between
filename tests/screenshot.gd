@@ -382,6 +382,9 @@ func _initialize() -> void:
 				# 标题界面本身。底部那行按键说明是它的重点 ——
 				# 「游戏里到底有哪些键」只有这儿会告诉玩家。
 				main.show_title()
+			"title_developer":
+				main.settings.developer_options_enabled = true
+				main.show_title()
 			"desk_back":
 				# 站在书桌**后面**：桌子该盖住腰以下。
 				# 站到哪由参数 4 给（默认按实测的最北 147），
@@ -405,6 +408,14 @@ func _initialize() -> void:
 				panel.handle_key(KEY_DOWN)
 				panel.handle_key(KEY_DOWN)
 				panel.handle_key(KEY_DOWN)
+			"settings_developer":
+				main.enter_map(&"desk_shop", &"start")
+				main.stage_curtain.snap_up()
+				main.settings.developer_options_enabled = true
+				main.open_settings()
+				var developer_panel: SettingsPanel = main.settings_panel
+				for _step: int in SettingsPanel.ROWS.find(&"developer"):
+					developer_panel.handle_key(KEY_DOWN)
 			"pause_settings":
 				# 从暂停菜单开设置 —— 看的是**层号对不对**：
 				# 设置面板得画在暂停菜单上面，而暂停菜单还在下面留着

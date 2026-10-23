@@ -1686,9 +1686,9 @@ func quit_game() -> void:
 ## 新开一局：清空世界状态，回到起始场景。
 ##
 ## **图鉴不动** —— 那是跨存档的全局记录，开新局不该把「你见过几个结局」清掉。
-func new_game() -> void:
+func new_game(start_map: StringName = &"", start_spawn: StringName = &"") -> void:
 	map_triggers.reset()
-	menu_flow.new_game()
+	menu_flow.new_game(start_map, start_spawn)
 
 
 # ---------------------------------------------------------------- 存档

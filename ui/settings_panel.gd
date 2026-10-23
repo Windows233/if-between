@@ -40,8 +40,10 @@ const BACK_TEXT := "← 返回"
 const BACK_WIDTH := 44.0
 
 ## 面板里都有哪几行，顺序就是显示顺序
-const ROWS: Array[StringName] = [&"display", &"size", &"speed", &"music", &"sfx"]
-const ROW_LABELS: Array[String] = ["显示模式", "分辨率", "文字速度", "音乐音量", "音效音量"]
+const ROWS: Array[StringName] = [&"display", &"size", &"speed", &"music", &"sfx", &"developer"]
+const ROW_LABELS: Array[String] = [
+	"显示模式", "分辨率", "文字速度", "音乐音量", "音效音量", "开发者选项",
+]
 
 ## 带**滑条**的那两行。其余几行是按左右换一档的枚举，值是「〈 全屏 〉」那样。
 ##
@@ -231,6 +233,8 @@ func _cycle_current(direction: int = 1) -> void:
 			_settings.adjust_music(direction)
 		&"sfx":
 			_settings.adjust_sfx(direction)
+		&"developer":
+			_settings.toggle_developer_options()
 	_layout()
 	changed.emit()
 
@@ -451,6 +455,8 @@ func _value_of(row: StringName) -> String:
 			return _settings.music_label()
 		&"sfx":
 			return _settings.sfx_label()
+		&"developer":
+			return "开启" if _settings.developer_options_enabled else "关闭"
 	return ""
 
 

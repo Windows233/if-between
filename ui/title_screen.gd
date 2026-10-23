@@ -18,6 +18,7 @@ signal chosen(id: StringName)
 
 ## 菜单项的 id。外面靠它分辨选了什么，别写成散在的字符串。
 const ID_NEW: StringName = &"new"
+const ID_CHAPTER_TWO: StringName = &"chapter_two"
 const ID_CONTINUE: StringName = &"continue"
 const ID_GALLERY: StringName = &"gallery"
 const ID_SETTINGS: StringName = &"settings"
@@ -55,6 +56,8 @@ const SUBTITLE_Y := 58.0
 const MENU_TOP := 74.0
 const ROW_HEIGHT := 15.0
 const ROWS_WIDTH := 140.0
+const CHAPTER_BUTTON_WIDTH := 78.0
+const CHAPTER_BUTTON_RIGHT := 8.0
 ## 底部按键说明分两行。原来是一行，加了「游戏内 ESC 菜单」之后
 ## 整行宽度超过了视口 320，居中的标签就把右半边顶到画面外面去了
 ## （Label 的框不够宽时，居中的字是往右溢出的）。
@@ -73,12 +76,18 @@ const ROW_COLOR := Color("#d8d8d8")
 const ROW_DISABLED_COLOR := Color("#5c6166")
 const HIGHLIGHT_COLOR := Color(0.22, 0.30, 0.26, 1.0)
 const HINT_COLOR := Color("#6a7078")
+const CHAPTER_EDGE_COLOR := Color("#83744f")
+const CHAPTER_EDGE_ACTIVE_COLOR := Color("#e8c07a")
+const CHAPTER_FILL_COLOR := Color("#111817")
+const CHAPTER_FILL_ACTIVE_COLOR := Color("#354839")
 
 var _root: Control
 var _bg: ColorRect
 ## 背景图。素材不在时是 null，由 `_bg` 那块纯色顶着。
 var _bg_picture: TextureRect
 var _highlight: ColorRect
+var _chapter_button_edge: ColorRect
+var _chapter_button_fill: ColorRect
 var _title: Label
 var _subtitle: Label
 var _hint: Label
@@ -88,6 +97,8 @@ var _ids: Array[StringName] = []
 var _enabled: Array[bool] = []
 var _cursor := 0
 var _open := false
+var _can_continue := false
+var _chapter_two_enabled := false
 
 
 func _ready() -> void:
@@ -112,6 +123,10 @@ func setup() -> void:
 	_bg = _make_rect("Bg", BG_COLOR)
 	_bg_picture = _make_picture("BgPicture", BG_PATH)
 	_highlight = _make_rect("Highlight", HIGHLIGHT_COLOR)
+	_chapter_button_edge = _make_rect("ChapterTwoEdge", CHAPTER_EDGE_COLOR)
+	_chapter_button_fill = _make_rect("ChapterTwoFill", CHAPTER_FILL_COLOR)
+	_chapter_button_edge.visible = false
+	_chapter_button_fill.visible = false
 
 	_title = _make_label("Title", 16, TITLE_COLOR)
 	_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -171,14 +186,13 @@ func _make_label(node_name: String, size: int, color: Color) -> Label:
 
 ## `can_continue` 为 false 时「继续」那一项灰掉 —— 一个存档都没有，
 ## 点下去只会得到一句「槽位还是空的」。
-func open(can_continue: bool) -> void:
+func open(can_continue: bool, allow_chapter_two: bool = false) -> void:
 	setup()
-	_ids = ORDER.duplicate()
-	_enabled = [true, can_continue, true, true, true]
-	_cursor = 0
+	_can_continue = can_continue
+	_chapter_two_enabled = allow_chapter_two
+	_refresh_rows(ID_NEW)
 	_open = true
 	_root.visible = true
-	_rebuild_rows()
 	_layout()
 	_update_highlight()
 
@@ -191,6 +205,18 @@ func close() -> void:
 
 func is_open() -> bool:
 	return _open
+
+
+func set_chapter_two_enabled(enabled: bool) -> void:
+	if _chapter_two_enabled == enabled:
+		return
+	var selected_id := current_id()
+	_chapter_two_enabled = enabled
+	if not _open:
+		return
+	_refresh_rows(selected_id)
+	_layout()
+	_update_highlight()
 
 
 # ---------------------------------------------------------------- 查询
@@ -241,6 +267,10 @@ func handle_key(keycode: int) -> bool:
 		KEY_DOWN, KEY_S:
 			_move(1)
 			return true
+		KEY_LEFT:
+			return _move_to_chapter_button(false)
+		KEY_RIGHT:
+			return _move_to_chapter_button(true)
 		KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
 			_confirm()
 			return true
@@ -259,13 +289,26 @@ func _move(step: int) -> void:
 		return
 	var count := _ids.size()
 	var index := _cursor
+	var current_y := _row_rect(_cursor).position.y
 	# 跳过不能选的那一项，跟 ChoiceMenu 一个道理
 	for _i: int in count:
 		index = (index + step + count) % count
-		if _enabled[index]:
+		if _enabled[index] and not is_equal_approx(_row_rect(index).position.y, current_y):
 			_cursor = index
 			_update_highlight()
 			return
+
+
+func _move_to_chapter_button(to_chapter_two: bool) -> bool:
+	if not _chapter_two_enabled:
+		return false
+	var target_id: StringName = ID_CHAPTER_TWO if to_chapter_two else ID_NEW
+	if to_chapter_two and current_id() != ID_NEW:
+		return false
+	if not to_chapter_two and current_id() != ID_CHAPTER_TWO:
+		return false
+	select_index(_ids.find(target_id))
+	return true
 
 
 func _confirm() -> void:
@@ -332,10 +375,25 @@ func _rebuild_rows() -> void:
 		_row_labels.append(label)
 
 
+func _refresh_rows(selected_id: StringName) -> void:
+	_ids = ORDER.duplicate()
+	if _chapter_two_enabled:
+		_ids.insert(1, ID_CHAPTER_TWO)
+	_enabled.clear()
+	for id: StringName in _ids:
+		_enabled.append(id != ID_CONTINUE or _can_continue)
+	_rebuild_rows()
+	_cursor = _ids.find(selected_id)
+	if _cursor < 0 or not _enabled[_cursor]:
+		_cursor = 0
+
+
 func _label_for(id: StringName) -> String:
 	match id:
 		ID_NEW:
 			return "新游戏"
+		ID_CHAPTER_TWO:
+			return "进入第二章"
 		ID_CONTINUE:
 			return "继续"
 		ID_GALLERY:
@@ -349,8 +407,12 @@ func _label_for(id: StringName) -> String:
 
 func _row_rect(index: int) -> Rect2:
 	var view := _view_size()
+	if _ids[index] == ID_CHAPTER_TWO:
+		return Rect2(view.x - CHAPTER_BUTTON_RIGHT - CHAPTER_BUTTON_WIDTH,
+			MENU_TOP, CHAPTER_BUTTON_WIDTH, ROW_HEIGHT)
 	var left := (view.x - ROWS_WIDTH) * 0.5
-	return Rect2(left, MENU_TOP + float(index) * ROW_HEIGHT, ROWS_WIDTH, ROW_HEIGHT)
+	var row_index := index - 1 if _chapter_two_enabled and index > 0 else index
+	return Rect2(left, MENU_TOP + float(row_index) * ROW_HEIGHT, ROWS_WIDTH, ROW_HEIGHT)
 
 
 func _update_highlight() -> void:
@@ -361,6 +423,11 @@ func _update_highlight() -> void:
 	_highlight.position = rect.position
 	_highlight.size = rect.size
 	_highlight.visible = true
+	var chapter_selected := current_id() == ID_CHAPTER_TWO
+	_chapter_button_edge.color = CHAPTER_EDGE_ACTIVE_COLOR \
+		if chapter_selected else CHAPTER_EDGE_COLOR
+	_chapter_button_fill.color = CHAPTER_FILL_ACTIVE_COLOR \
+		if chapter_selected else CHAPTER_FILL_COLOR
 	# 高亮要压在背景上、文字下。背景现在是「纯色 + 一张图」两层，
 	# **不能写死「`_bg` 后面那一格」** —— 那样会把高亮插到图前面去，
 	# 被图盖住。认最后一层背景。
@@ -392,6 +459,16 @@ func _layout() -> void:
 		var rect := _row_rect(i)
 		_row_labels[i].position = rect.position
 		_row_labels[i].size = rect.size
+
+	var chapter_index := _ids.find(ID_CHAPTER_TWO)
+	_chapter_button_edge.visible = chapter_index >= 0
+	_chapter_button_fill.visible = chapter_index >= 0
+	if chapter_index >= 0:
+		var chapter_rect := _row_rect(chapter_index)
+		_chapter_button_edge.position = chapter_rect.position
+		_chapter_button_edge.size = chapter_rect.size
+		_chapter_button_fill.position = chapter_rect.position + Vector2.ONE
+		_chapter_button_fill.size = chapter_rect.size - Vector2(2.0, 2.0)
 
 	_hint.text = "↑↓ 选择　ENTER 确认"
 	_hint.position = Vector2(0.0, HINT_Y)

@@ -13,6 +13,7 @@ static func run(h: TestHarness) -> void:
 	test_box_layout(h)
 	test_skip_read(h)
 	test_speed_settings(h)
+	test_developer_option_settings(h)
 	test_settings_panel(h)
 	test_toast_and_hud(h)
 	test_portrait_motion(h)
@@ -225,6 +226,21 @@ static func test_speed_settings(h: TestHarness) -> void:
 	settings.save_settings()
 
 
+static func test_developer_option_settings(h: TestHarness) -> void:
+	var settings := GameSettings.new()
+	h.check("开发者选项初始关闭", settings.developer_options_enabled, false)
+	_write_raw('{"version":1}')
+	settings.load_settings()
+	h.check("旧设置缺少开发者字段时仍关闭",
+		settings.developer_options_enabled, false)
+	settings.toggle_developer_options()
+	var loaded := GameSettings.new()
+	loaded.load_settings()
+	h.check("开发者选项跨启动保存", loaded.developer_options_enabled, true)
+	loaded.developer_options_enabled = false
+	loaded.save_settings()
+
+
 static func test_settings_panel(h: TestHarness) -> void:
 	var settings := GameSettings.new()
 	settings.display = WindowMode.DEFAULT_MODE
@@ -239,8 +255,8 @@ static func test_settings_panel(h: TestHarness) -> void:
 	panel.open(settings)
 	h.check("开着了", panel.is_open(), true)
 
-	# 五行：显示模式 / 分辨率 / 文字速度 / 音乐音量 / 音效音量
-	h.check("五行都在", SettingsPanel.ROWS.size(), 5)
+	# 六行：原有设置加开发者入口开关。
+	h.check("六行都在", SettingsPanel.ROWS.size(), 6)
 	h.check("后两行是滑条", SettingsPanel.SLIDER_ROWS.size(), 2)
 	h.check("第一根管音乐", SettingsPanel.SLIDER_ROWS[0], &"music")
 	h.check("第二根管音效", SettingsPanel.SLIDER_ROWS[1], &"sfx")
@@ -298,15 +314,24 @@ static func test_settings_panel(h: TestHarness) -> void:
 	h.check("音效调小了", panel.row_value(4), "45%")
 	h.check("音乐那根没被带上", panel.row_value(3), "55%")
 
-	# 上下是循环的
+	# 第六行是默认关闭的开发者入口。
+	panel.handle_key(KEY_DOWN)
+	h.check("光标走到开发者选项", panel.cursor(), 5)
+	h.check("开发者选项默认关闭", panel.row_value(5), "关闭")
+	panel.handle_key(KEY_RIGHT)
+	h.check("开发者选项可开启", settings.developer_options_enabled, true)
+	h.check("面板显示开启", panel.row_value(5), "开启")
+
+	# 上下仍按行循环。
 	panel.handle_key(KEY_DOWN)
 	h.check("走到底绕回第一行", panel.cursor(), 0)
 	panel.handle_key(KEY_UP)
-	h.check("往上绕到最后一行", panel.cursor(), 4)
+	h.check("往上绕到最后一行", panel.cursor(), 5)
 
 	h.check("ESC 被吃掉", panel.handle_key(KEY_ESCAPE), true)
 	h.check("关掉了", panel.is_open(), false)
 	h.check("关着的时候按键没人吃", panel.handle_key(KEY_RIGHT), false)
+	settings.developer_options_enabled = false
 
 	# 收尾：`adjust_*` 是写盘的，恢复默认，别把后面的用例带跑
 	settings.music_volume = GameSettings.DEFAULT_VOLUME

@@ -13,6 +13,9 @@ extends RefCounted
 
 var main: Node2D = null
 
+const CHAPTER_TWO_START_MAP: StringName = &"dead_alley"
+const CHAPTER_TWO_START_SPAWN: StringName = &"from_overworld"
+
 
 func setup(p_main: Node2D) -> void:
 	main = p_main
@@ -24,7 +27,9 @@ func setup(p_main: Node2D) -> void:
 func show_title() -> void:
 	if main == null or main.title_screen == null:
 		return
-	main.title_screen.open(not SaveStore.list_all().is_empty())
+	main.title_screen.open(
+		not SaveStore.list_all().is_empty(), main.settings.developer_options_enabled
+	)
 
 
 ## 打开存档菜单（存）。转场中不给开。
@@ -101,6 +106,8 @@ func on_title_chosen(id: StringName) -> void:
 	match id:
 		TitleScreen.ID_NEW:
 			new_game()
+		TitleScreen.ID_CHAPTER_TWO:
+			main.new_game(CHAPTER_TWO_START_MAP, CHAPTER_TWO_START_SPAWN)
 		TitleScreen.ID_CONTINUE:
 			# **开加载界面，不自动读最近那个档。**
 			#
@@ -146,6 +153,7 @@ func on_settings_changed() -> void:
 		return
 	main.dialogue.set_speed(main.settings.speed)
 	AudioBuses.apply(main.settings.music_volume, main.settings.sfx_volume)
+	main.title_screen.set_chapter_two_enabled(main.settings.developer_options_enabled)
 
 
 # ---------------------------------------------------------------- 动作
@@ -153,14 +161,17 @@ func on_settings_changed() -> void:
 ## 新开一局：清空世界状态，回到起始场景。
 ##
 ## **图鉴不动** —— 那是跨存档的全局记录，开新局不该把「你见过几个结局」清掉。
-func new_game() -> void:
+func new_game(start_map_override: StringName = &"",
+		start_spawn_override: StringName = &"") -> void:
 	if main == null:
 		return
+	var direct_start: bool = start_map_override != &""
 	# 开场演出。`skip_opening` 是调试开关，正常流程是 false（见 `main.gd`）。
 	# 打开着就别让人以为「剧情没触发」，所以吼一声。
 	# 类型得写死：`main` 声明成 `Node2D`，`skip_opening` 是它脚本上的变量，
 	# 静态看来是 Variant，`:=` 推不出来（会直接编译不过）。
-	var play_opening: bool = not main.skip_opening and main.debug_start_map == ""
+	var play_opening: bool = not direct_start and not main.skip_opening \
+		and main.debug_start_map == ""
 	if not play_opening:
 		print("[调试] 新游戏不演开场：skip_opening=%s debug_start_map=%s"
 			% [main.skip_opening, main.debug_start_map])
@@ -178,12 +189,17 @@ func new_game() -> void:
 		else:
 			main.stage_curtain.snap_up()
 	main.flags.clear()
-	# 测试开关：`debug_start_map` 非空就落进那张图（见 `main.gd` 的开关说明）。
+	# 开发者跳章入口提供明确地图；否则沿用原有新游戏与调试地图流程。
 	# 类型写死的原因同上：`main` 静态是 `Node2D`，`:=` 推不出来。
-	var start_map: String = main.debug_start_map if main.debug_start_map != "" else main.START_MAP
-	main.enter_map(start_map, main.START_SPAWN)
-	# 测试图：出生在门口、面向屋内。正常流程的出生朝向归开场演出管，不动。
-	if main.debug_start_map != "":
+	var start_map: StringName = start_map_override
+	var start_spawn: StringName = start_spawn_override
+	if not direct_start:
+		start_map = StringName(main.debug_start_map) if main.debug_start_map != "" \
+			else main.START_MAP
+		start_spawn = main.START_SPAWN
+	main.enter_map(start_map, start_spawn)
+	# 测试入口从可识别的方向开始；正常流程的出生朝向归开场演出管。
+	if direct_start or main.debug_start_map != "":
 		main.player.facing = Vector2.UP
 	if play_opening:
 		main.start_story(main.OPENING_EVENT)
