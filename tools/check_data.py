@@ -30,15 +30,28 @@ def load_json(path: str):
         return json.load(f)
 
 
+def finite_number(value) -> bool:
+    if not isinstance(value, (int, float)) or isinstance(value, bool):
+        return False
+    try:
+        return math.isfinite(value)
+    except OverflowError:
+        return False
+
+
+def valid_box(value) -> bool:
+    return (isinstance(value, list) and len(value) == 4
+            and all(finite_number(part) for part in value)
+            and value[2] > 0 and value[3] > 0
+            and finite_number(value[0] + value[2])
+            and finite_number(value[1] + value[3]))
+
+
 def check_object_geometry(where: str, actor: dict) -> None:
-    def finite_number(value):
-        return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
-
-    def valid_box(value):
-        return (isinstance(value, list) and len(value) == 4
-                and all(finite_number(part) for part in value)
-                and value[2] > 0 and value[3] > 0)
-
+    if not valid_box(actor.get("rect")):
+        note(where, "物件 %s 的 rect 必须是有效矩形" % actor.get("id", "?"))
+    if "reach" in actor and not valid_box(actor["reach"]):
+        note(where, "物件 %s 的 reach 必须是有效矩形" % actor.get("id", "?"))
     if "reach_local" in actor and not valid_box(actor["reach_local"]):
         note(where, "物件 %s 的 reach_local 必须是有效局部矩形" % actor.get("id", "?"))
     if "collision" in actor:
@@ -47,12 +60,105 @@ def check_object_geometry(where: str, actor: dict) -> None:
             note(where, "物件 %s 的 collision 必须是局部矩形数组" % actor.get("id", "?"))
             return
         reference = actor.get("sort_collider", 0)
-        if actor.get("cover") and not actor.get("over"):
+        parts = actor.get("visual_parts", [])
+        needs_sort = (any(isinstance(part, dict) and part.get("layer") == "auto" for part in parts)
+                      if isinstance(parts, list) and parts else actor.get("cover") and not actor.get("over"))
+        if needs_sort:
             if (not isinstance(reference, int) or isinstance(reference, bool)
                     or not 0 <= reference < len(shapes)):
                 note(where, "物件 %s 的排序参考碰撞箱不存在" % actor.get("id", "?"))
     if "sort_offset" in actor and not finite_number(actor["sort_offset"]):
         note(where, "物件 %s 的 sort_offset 必须是有限数值" % actor.get("id", "?"))
+    if "cover_y" in actor and not finite_number(actor["cover_y"]):
+        note(where, "物件 %s 的 cover_y 必须是有限数值" % actor.get("id", "?"))
+
+
+def check_object_visuals(where: str, actor: dict) -> None:
+    turns = actor.get("quarter_turns", 0)
+    if not isinstance(turns, int) or isinstance(turns, bool) or not 0 <= turns <= 3:
+        note(where, "物件 %s 的 quarter_turns 必须是 0..3 的整数" % actor.get("id", "?"))
+    for field in ("flip_h", "flip_v"):
+        if not isinstance(actor.get(field, False), bool):
+            note(where, "物件 %s 的 %s 必须是布尔值" % (actor.get("id", "?"), field))
+    parts = actor.get("visual_parts", [])
+    if not isinstance(parts, list):
+        note(where, "物件 %s 的 visual_parts 必须是数组" % actor.get("id", "?"))
+        return
+    part_ids = set()
+    for index, part in enumerate(parts):
+        at = "%s 物件 %s visual_parts[%d]" % (where, actor.get("id", "?"), index)
+        if not isinstance(part, dict):
+            note(at, "视觉部件必须是字典")
+            continue
+        part_id = part.get("id", "")
+        if not isinstance(part_id, str):
+            note(at, "id 必须是字符串")
+        elif part_id:
+            if part_id in part_ids:
+                note(at, "视觉部件 id 重复：%s" % part_id)
+            part_ids.add(part_id)
+        if not valid_box(part.get("rect")):
+            note(at, "rect 必须是有效局部矩形")
+        if part.get("layer") not in ("back", "auto", "front"):
+            note(at, "layer 必须是 back/auto/front")
+        if not finite_number(part.get("sort_offset", 0)):
+            note(at, "sort_offset 必须是有限数值")
+        sprite = part.get("sprite")
+        if not isinstance(sprite, str) or not sprite:
+            note(at, "sprite 必须是非空贴图路径")
+        elif not os.path.isfile(os.path.join(ROOT, sprite.replace("res://", "").replace("/", os.sep))):
+            note(at, "贴图不存在：%s" % sprite)
+
+
+def valid_trigger_condition(raw, depth: int = 0) -> bool:
+    if not isinstance(raw, dict) or depth > 32:
+        return False
+    if sum(field in raw for field in ("all", "any", "not", "exists", "var")) != 1:
+        return False
+    for field in ("all", "any"):
+        if field in raw:
+            return (isinstance(raw[field], list)
+                    and all(valid_trigger_condition(child, depth + 1) for child in raw[field]))
+    if "not" in raw:
+        return valid_trigger_condition(raw["not"], depth + 1)
+    key = raw.get("exists", raw.get("var"))
+    if not isinstance(key, str) or not key.strip():
+        return False
+    return "exists" in raw or ("value" in raw and raw.get("op", "==") in (
+        "==", "=", "eq", "!=", "<>", "ne", ">", "gt", ">=", "ge", "<", "lt", "<=", "le"))
+
+
+def check_map_triggers(where: str, triggers, events: dict) -> None:
+    if not isinstance(triggers, list):
+        note(where, "triggers 必须是数组")
+        return
+    trigger_ids = set()
+    for index, trigger in enumerate(triggers):
+        at = "%s triggers[%d]" % (where, index)
+        if not isinstance(trigger, dict):
+            note(at, "触发区必须是字典")
+            continue
+        trigger_id = trigger.get("id")
+        if not isinstance(trigger_id, str) or not trigger_id.strip():
+            note(at, "id 必须是非空字符串")
+        elif trigger_id in trigger_ids:
+            note(at, "触发区 id 重复：%s" % trigger_id)
+        else:
+            trigger_ids.add(trigger_id)
+        if not valid_box(trigger.get("rect")):
+            note(at, "rect 必须是有效矩形")
+        if trigger.get("mode", "enter") not in ("enter_map", "enter", "interact", "click"):
+            note(at, "mode 必须是 enter_map/enter/interact/click")
+        for field in ("enabled", "once"):
+            if not isinstance(trigger.get(field, True), bool):
+                note(at, "%s 必须是布尔值" % field)
+        event = trigger.get("event")
+        if not isinstance(event, str) or not event.strip():
+            note(at, "event 必须是非空剧情 id")
+        elif event not in events:
+            note(at, "挂了不存在的剧情 %s" % event)
+        if "condition" in trigger and not valid_trigger_condition(trigger["condition"]):
+            note(at, "condition 必须是有效条件字典")
 
 
 def walk_line_talk(raw):
@@ -241,6 +347,7 @@ def main() -> int:
     map_ids = {m.get("id") for m in maps.values()}
     for mid, m in maps.items():
         where = "maps/%s.json" % mid
+        check_map_triggers(where, m.get("triggers", []), events)
         for p in m.get("portals", []):
             if "to" in p and p["to"] not in map_ids:
                 note(where, "传送点「%s」指向不存在的地图 %s" % (p.get("label", "?"), p["to"]))
@@ -254,8 +361,9 @@ def main() -> int:
                      % (p.get("label", "?"), spawn))
         for a in m.get("actors", []):
             check_object_geometry(where, a)
+            check_object_visuals(where, a)
             # 物件贴图是从插画里切的，路径错了画面上就是一块色块 —— 提前抓出来
-            sprite = a.get("sprite", "")
+            sprite = a.get("sprite", "") if not a.get("visual_parts") else ""
             if sprite and not os.path.exists(
                     os.path.join(ROOT, sprite.replace("res://", "").replace("/", os.sep))):
                 note(where, "角色「%s」的贴图不存在：%s" % (a.get("id", "?"), sprite))

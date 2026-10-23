@@ -196,19 +196,22 @@ func _add_scene_title() -> void:
 ## 或者要从背景里单个拎出来的（卧室门口那盏提灯）。
 ## 其余家具插画上都有，`sprite` 留空 —— 这里就什么都不画。
 func _add_actor(actor: MapDef.Actor) -> void:
-	var node := _add_prop(actor.sprite, actor.rect, PROP_Z)
-	if node != null:
-		# 「永远盖住角色」的物件（灯这类前景小物件）：一次性定层，不进
-		# `_covers` —— 那一组是每帧按站位重算的，进来就会被算回 PROP_Z。
-		if actor.over:
+	var rectangles := actor.world_visual_rects()
+	var sprites := actor.visual_sprites()
+	var layers := actor.visual_layers()
+	var baselines := actor.visual_cover_ys()
+	var drawn := false
+	for index: int in rectangles.size():
+		var node := _add_prop(sprites[index], rectangles[index], PROP_Z)
+		if node == null:
+			continue
+		drawn = true
+		node.transform = actor.visual_texture_transform(index, node.texture.get_size())
+		if layers[index] == "front":
 			node.z_index = OVER_Z
-			return
-		# 会挡人的家具登记一下，层级交给 `set_player_y()` 每帧算
-		if actor.cover:
-			# 基线：写了 `cover_y` 就用手动的那个值，没写就是贴图框的下边界。
-			# 手动的入口在地图编辑器（拉黄线），见 `MapDef.Actor.cover_y`。
-			var baseline: float = actor.effective_cover_y()
-			_covers.append({"node": node, "cover_y": baseline})
+		elif layers[index] == "auto":
+			_covers.append({"node": node, "cover_y": baselines[index]})
+	if drawn or not actor.visual_parts.is_empty():
 		return
 
 	# 没有贴图。插画上画着它，所以**什么都不画** ——
