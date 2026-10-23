@@ -304,10 +304,10 @@ func world_size_for_image(image_size: Vector2) -> Vector2:
 	var world_size := map_size()
 	if not is_finite(world_size.x) or not is_finite(world_size.y) \
 			or world_size.x <= 0.0 or world_size.y <= 0.0:
-		return image_size
+		return Vector2.ZERO
 	var pixels := _background_pixels()
 	if pixels.x <= 0.0 or pixels.y <= 0.0:
-		return image_size
+		return Vector2.ZERO
 	return image_size * world_size / pixels
 
 
@@ -1086,13 +1086,24 @@ func actor_has_story(index: int) -> bool:
 ## 新建一件物件并指定贴图。`cover` 为真就是「会挡人的遮挡片」——
 ## 导入一张图做遮罩时走这条：位置和基线之后在画布上调。
 func add_actor_with_sprite(sprite_path: String, cover := false) -> int:
+	if not FileAccess.file_exists(sprite_path):
+		return -1
+	var image := Image.load_from_file(sprite_path)
+	if image == null or image.is_empty():
+		return -1
+	var actor_size := world_size_for_image(Vector2(image.get_size()))
+	if actor_size.x <= 0.0 or actor_size.y <= 0.0:
+		return -1
 	var index := add_actor()
-	assign_actor_sprite(index, sprite_path)
 	var rect := rect_of(Kind.ACTOR, index)
+	rect.size = actor_size
 	rect.position = (map_size() - rect.size) * 0.5
-	set_rect(Kind.ACTOR, index, rect)
+	var actor := actor_dict(index)
+	actor["sprite"] = sprite_path
+	actor["rect"] = _normalize([rect.position.x, rect.position.y, rect.size.x, rect.size.y])
 	if cover:
-		set_actor_field(index, "cover", true)
+		actor["cover"] = true
+	dirty = true
 	return index
 
 
@@ -1107,8 +1118,11 @@ func assign_actor_sprite(index: int, sprite_path: String) -> bool:
 	var image := Image.load_from_file(sprite_path)
 	if image == null or image.is_empty():
 		return false
+	var image_size := world_size_for_image(Vector2(image.get_size()))
+	if image_size.x <= 0.0 or image_size.y <= 0.0:
+		return false
 	var rect := rect_of(Kind.ACTOR, index)
-	rect.size = world_size_for_image(Vector2(image.get_size()))
+	rect.size = image_size
 	var actor := actor_dict(index)
 	actor["sprite"] = sprite_path
 	actor["rect"] = _normalize([rect.position.x, rect.position.y, rect.size.x, rect.size.y])

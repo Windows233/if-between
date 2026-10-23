@@ -6,6 +6,8 @@
 @tool
 extends VBoxContainer
 
+signal asset_scan_finished
+
 const Model := preload("res://addons/if_map_editor/map_edit_model.gd")
 const Canvas := preload("res://addons/if_map_editor/map_edit_canvas.gd")
 const Kind := Model.Kind
@@ -72,6 +74,9 @@ var _asset_tabs: TabContainer
 var _asset_filter: LineEdit
 var _asset_list: ItemList
 var _asset_empty: Label
+var _asset_scan_in_progress := false
+var _asset_scan_requested := false
+var _asset_import_pending: Dictionary = {}
 var _group_button: Button
 var _ungroup_button: Button
 var _template_picker: OptionButton
@@ -91,9 +96,14 @@ var _object_inspector: Control
 
 
 func _ready() -> void:
+	if Engine.is_editor_hint():
+		var filesystem := EditorInterface.get_resource_filesystem()
+		if not filesystem.filesystem_changed.is_connected(_on_asset_filesystem_changed):
+			filesystem.filesystem_changed.connect(_on_asset_filesystem_changed)
 	_build()
 	refresh_map_list(true)
 	await get_tree().process_frame
+	_refresh_assets_after_scan()
 	_set_initial_panel_layout()
 
 
@@ -190,7 +200,7 @@ func _build() -> void:
 	asset_toolbar.add_child(_asset_filter)
 	var refresh_assets := Button.new()
 	refresh_assets.text = "刷新"
-	refresh_assets.pressed.connect(_refresh_assets)
+	refresh_assets.pressed.connect(_refresh_assets_after_scan)
 	asset_toolbar.add_child(refresh_assets)
 	asset_page.add_child(asset_toolbar)
 	_asset_list = AssetList.new()
@@ -203,6 +213,8 @@ func _build() -> void:
 	_asset_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_asset_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_asset_list.mouse_default_cursor_shape = Control.CURSOR_DRAG
+	_asset_list.item_clicked.connect(_on_asset_item_clicked)
+	_asset_list.gui_input.connect(_on_asset_list_gui_input)
 	asset_page.add_child(_asset_list)
 	_asset_empty = _text("")
 	_asset_empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -245,7 +257,6 @@ func _build() -> void:
 	add_child(_status)
 
 	_refresh_templates()
-	_refresh_assets()
 	_build_scene_tools()
 	_build_template_browser()
 
@@ -478,19 +489,98 @@ func _refresh_assets() -> void:
 	if _asset_list == null:
 		return
 	_asset_list.clear()
+	_asset_import_pending.clear()
 	var query := _asset_filter.text.strip_edges().to_lower() if _asset_filter != null else ""
-	for path: String in model.prop_files():
+	for path: String in _list_png_files("res://art/props"):
 		var filename := path.get_file().get_basename()
 		if not query.is_empty() and not filename.to_lower().contains(query):
 			continue
-		var texture := load(path) as Texture2D
-		_asset_list.add_item(filename, texture)
+		var texture := _load_imported_asset(path)
+		var item_text := filename if texture != null else "%s（等待导入）" % filename
+		_asset_list.add_item(item_text, texture)
 		var index := _asset_list.item_count - 1
 		_asset_list.set_item_metadata(index, path)
-		_asset_list.set_item_tooltip(index, path)
+		if texture == null:
+			_asset_import_pending[path] = true
+			_asset_list.set_item_tooltip(index, "%s\nGodot 尚未完成此 PNG 的纹理导入。点击或拖动会请求扫描。" % path)
+		else:
+			_asset_list.set_item_tooltip(index, path)
 	_asset_list.visible = _asset_list.item_count > 0
 	_asset_empty.visible = _asset_list.item_count == 0
-	_asset_empty.text = "没有匹配的素材" if not query.is_empty() else "素材目录为空"
+	if not query.is_empty() and _asset_list.item_count == 0:
+		_asset_empty.text = "没有匹配的素材"
+	else:
+		_asset_empty.text = "素材目录为空"
+
+
+static func _list_png_files(directory_path: String) -> Array[String]:
+	var paths: Array[String] = []
+	var directory := DirAccess.open(ProjectSettings.globalize_path(directory_path))
+	if directory == null:
+		return paths
+	for filename: String in directory.get_files():
+		if filename.get_extension().to_lower() == "png":
+			paths.append(directory_path.trim_suffix("/") + "/" + filename)
+	paths.sort()
+	return paths
+
+
+func _load_imported_asset(path: String) -> Texture2D:
+	if not FileAccess.file_exists(path):
+		return null
+	return ResourceLoader.load(path) as Texture2D
+
+
+func _refresh_assets_after_scan() -> void:
+	if not Engine.is_editor_hint():
+		_refresh_assets()
+		return
+	if _asset_scan_in_progress:
+		_asset_scan_requested = true
+		await asset_scan_finished
+		return
+	_asset_scan_in_progress = true
+	var filesystem := EditorInterface.get_resource_filesystem()
+	while is_inside_tree() and (filesystem.is_scanning() or filesystem.is_importing()):
+		await get_tree().process_frame
+	while is_inside_tree():
+		_asset_scan_requested = false
+		filesystem.scan()
+		await get_tree().process_frame
+		while is_inside_tree() and (filesystem.is_scanning() or filesystem.is_importing()):
+			await get_tree().process_frame
+		if not is_inside_tree():
+			break
+		_refresh_assets()
+		if not _asset_scan_requested:
+			break
+	_asset_scan_in_progress = false
+	asset_scan_finished.emit()
+
+
+func _on_asset_filesystem_changed() -> void:
+	_refresh_assets()
+
+
+func _request_asset_import(path: String) -> void:
+	if not _asset_import_pending.has(path):
+		return
+	_status.text = "已发现 %s，正在请求 Godot 扫描并导入；完成后素材列表会自动更新。" % path.get_file()
+	_refresh_assets_after_scan()
+
+
+func _on_asset_item_clicked(index: int, _position: Vector2, _mouse_button_index: int) -> void:
+	if index < 0 or index >= _asset_list.item_count:
+		return
+	_request_asset_import(str(_asset_list.get_item_metadata(index)))
+
+
+func _on_asset_list_gui_input(event: InputEvent) -> void:
+	if not event is InputEventMouseMotion or (event.button_mask & MOUSE_BUTTON_MASK_LEFT) == 0:
+		return
+	var index := _asset_list.get_item_at_position(event.position, true)
+	if index >= 0 and index < _asset_list.item_count:
+		_request_asset_import(str(_asset_list.get_item_metadata(index)))
 
 
 func _refresh_objects() -> void:
@@ -1941,7 +2031,7 @@ func _build_actor_panel() -> void:
 	picker.add_item("（从 art/props 选）")
 	picker.fit_to_longest_item = false
 	picker.custom_minimum_size.x = 220
-	var props := model.prop_files()
+	var props := _list_png_files("res://art/props")
 	for path in props:
 		picker.add_item(path.get_file())
 	picker.item_selected.connect(func(i: int) -> void:
@@ -2228,13 +2318,40 @@ func _field(key: String, width: float) -> LineEdit:
 func _set_actor_texture(index: int, path: String) -> bool:
 	if not _allow_selection_edit():
 		return false
+	if path != "" and not FileAccess.file_exists(path):
+		_status.text = "贴图文件不存在：%s。请刷新素材列表并重新选择。" % path
+		return false
+	if path != "" and _load_imported_asset(path) == null:
+		_status.text = "贴图 PNG 尚未完成 Godot 导入，正在重新扫描；完成后会尝试应用。"
+		_set_actor_texture_after_scan(index, path, model, model.map_id,
+			str(model.actor_field(index, "id", "")))
+		return false
+	return _apply_actor_texture(index, path)
+
+
+func _apply_actor_texture(index: int, path: String) -> bool:
+	if not _allow_selection_edit():
+		return false
 	if not model.assign_actor_sprite(index, path):
-		_status.text = "贴图无法读取，请选择有效的 PNG 图片。"
+		_status.text = "贴图无法读取：%s。请确认文件是有效 PNG，且项目目录可写。" % path
 		return false
 	_on_edited()
 	_refresh_selection()
 	_status.text = "贴图已更新，物件尺寸恢复为原图像素 1:1。"
 	return true
+
+
+func _set_actor_texture_after_scan(index: int, path: String, target_model, target_map: String,
+		target_id: String) -> void:
+	await _refresh_assets_after_scan()
+	if not is_inside_tree() or model != target_model or model.map_id != target_map \
+			or canvas.sel_kind != Kind.ACTOR or canvas.sel_index != index \
+			or str(model.actor_field(index, "id", "")) != target_id:
+		return
+	if _load_imported_asset(path) == null:
+		_status.text = "贴图仍无法载入：%s。请检查 Godot Import/Output 错误；地图数据未修改。" % path
+		return
+	_apply_actor_texture(index, path)
 
 
 func _open_actor_texture_import() -> void:
@@ -2251,22 +2368,35 @@ func _open_actor_texture_import() -> void:
 	dialog.add_filter("*.png", "PNG 图片")
 	dialog.title = "为当前物件导入贴图（原图 1:1）"
 	dialog.file_selected.connect(func(source: String) -> void:
-		if model == target_model and model.map_id == target_map and _panel_index == target_index and str(model.actor_field(target_index, "id", "")) == target_id and _allow_selection_edit():
-			var image := Image.load_from_file(source)
-			if image != null and not image.is_empty():
-				var imported: String = model.import_image(source)
-				if imported != "" and _set_actor_texture(target_index, imported):
-					if Engine.is_editor_hint():
-						EditorInterface.get_resource_filesystem().scan()
-					canvas.clear_texture_cache()
-					get_tree().create_timer(1.2).timeout.connect(func() -> void:
-						canvas.clear_texture_cache()
-						canvas.queue_redraw()
-						_refresh_assets())
+		_import_actor_texture(source, target_model, target_map, target_index, target_id)
 		dialog.queue_free())
 	dialog.canceled.connect(dialog.queue_free)
 	add_child(dialog)
 	dialog.popup_centered(Vector2i(760, 500))
+
+
+func _import_actor_texture(source: String, target_model, target_map: String,
+		target_index: int, target_id: String) -> void:
+	if model != target_model or model.map_id != target_map or _panel_index != target_index \
+			or str(model.actor_field(target_index, "id", "")) != target_id or not _allow_selection_edit():
+		return
+	var image := Image.load_from_file(source)
+	if image == null or image.is_empty():
+		_status.text = "导入失败：所选文件无法解码为 PNG。"
+		return
+	var imported: String = target_model.import_image(source)
+	if imported == "":
+		_status.text = "导入失败：无法读取源文件或写入 art/props/。请确认 PNG 有效且项目目录可写。"
+		return
+	_status.text = "PNG 已复制，等待 Godot 完成纹理导入……"
+	await _refresh_assets_after_scan()
+	if not is_inside_tree() or model != target_model or model.map_id != target_map \
+			or _panel_index != target_index or str(model.actor_field(target_index, "id", "")) != target_id:
+		return
+	if _load_imported_asset(imported) == null:
+		_status.text = "PNG 已复制到 %s，但 Godot 未能导入纹理。请检查编辑器 Import/Output 错误；物件未修改。" % imported
+		return
+	_apply_actor_texture(target_index, imported)
 
 
 func _bool_field(key: String, label: String) -> CheckBox:
@@ -2365,47 +2495,60 @@ func _open_overlay_import_dialog() -> void:
 
 
 func _import_overlay(source_path: String) -> void:
-	var res_path := model.import_image(source_path, "res://art/map", model.map_id + "_wall")
+	var target_model = model
+	var target_map: String = model.map_id
+	var image := Image.load_from_file(source_path)
+	if image == null or image.is_empty():
+		_status.text = "导入失败：图片无法解码，请选择完整的 PNG 文件。"
+		return
+	var res_path := target_model.import_image(source_path, "res://art/map", target_map + "_wall")
 	if res_path == "":
-		_status.text = "导入失败：得是能读的 .png。"
+		_status.text = "导入失败：无法读取 PNG 或写入 art/map/。请确认文件有效且项目目录可写。"
+		return
+	_status.text = "图片已复制，等待 Godot 完成纹理导入……"
+	await _refresh_assets_after_scan()
+	if not is_inside_tree() or model != target_model or model.map_id != target_map:
+		return
+	if _load_imported_asset(res_path) == null:
+		_status.text = "PNG 已复制到 %s，但 Godot 未能导入纹理。请检查编辑器 Import/Output 错误后点刷新。" % res_path
 		return
 	model.set_overlay_path(res_path)
 	canvas.set_overlay_texture(res_path)
 	canvas.clear_texture_cache()
-	if Engine.is_editor_hint():
-		EditorInterface.get_resource_filesystem().scan()
 	canvas.sel_kind = Kind.OVERLAY
 	canvas.sel_index = 0
 	_on_edited()
 	_refresh_selection()
 	canvas.queue_redraw()
 	_status.text = "前景层换成 %s（整张拉伸到地图大小，图的尺寸不用管）" % res_path
-	get_tree().create_timer(1.2).timeout.connect(func() -> void:
-		canvas.clear_texture_cache()
-		canvas.set_overlay_texture(res_path))
 
 
 func _import_and_create(source_path: String) -> void:
+	var target_model = model
+	var target_map: String = model.map_id
 	var image := Image.load_from_file(source_path)
 	if image == null or image.is_empty():
 		_status.text = "导入失败：图片无法解码，请选择完整的 PNG 文件。"
 		return
-	var res_path := model.import_image(source_path, "res://art/props")
+	var res_path := target_model.import_image(source_path, "res://art/props")
 	if res_path == "":
-		_status.text = "导入失败：得是能读的 .png。别的格式先在画图工具里另存成 png。"
+		_status.text = "导入失败：无法读取 PNG 或写入 art/props/。请确认文件有效且项目目录可写。"
 		return
-	var index := model.add_actor_with_sprite(res_path, true)
+	_status.text = "PNG 已复制，等待 Godot 完成纹理导入……"
+	await _refresh_assets_after_scan()
+	if not is_inside_tree() or model != target_model or model.map_id != target_map:
+		return
+	if _load_imported_asset(res_path) == null:
+		_status.text = "PNG 已复制到 %s，但 Godot 未能导入纹理。请检查编辑器 Import/Output 错误后点刷新。" % res_path
+		return
+	var index := target_model.add_actor_with_sprite(res_path, true)
+	if index < 0:
+		_status.text = "纹理已导入，但未能创建物件；请检查当前地图尺寸与背景图。素材仍保留在 art/props/。"
+		return
 	var selection: Array[int] = [index]
 	canvas.select_actors(selection)
 	canvas.clear_texture_cache()
-	if Engine.is_editor_hint():
-		EditorInterface.get_resource_filesystem().scan()
 	_on_edited()
 	_refresh_selection()
 	canvas.queue_redraw()
 	_status.text = "导入成 %s，并建了一件遮挡物件。拖到位置上、拉它的黄线；名字在下面改。" % res_path
-	# 新文件被 Godot 导成纹理要一两秒，等一下再清缓存重画一次，图才出得来
-	get_tree().create_timer(1.2).timeout.connect(func() -> void:
-		canvas.clear_texture_cache()
-		canvas.queue_redraw()
-		_refresh_assets())

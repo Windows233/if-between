@@ -544,6 +544,8 @@ func validate() -> Array[String]:
 		problems.append("场景缺少 id")
 	if size.x <= 0 or size.y <= 0:
 		problems.append("场景 %s 的 size 不合法：%s" % [id, size])
+	if not is_finite(player_scale) or player_scale <= 0.0:
+		problems.append("场景 %s 的 player_scale 必须是大于 0 的有限数值" % id)
 
 	for i: int in walls.size():
 		var wall: Rect2 = walls[i]

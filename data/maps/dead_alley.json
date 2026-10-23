@@ -30,6 +30,7 @@
   "indoor": false,
   "music": "res://audio/bgm/reclamation.mp3",
   "name": "学校后巷",
+  "player_scale": 0.5,
   "portals": [],
   "size": [
     384,

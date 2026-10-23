@@ -183,10 +183,10 @@ static func test_fallback(h: TestHarness, directory: String) -> void:
 	var model = Model.new()
 	model.data = fixture(directory)
 	model.data.erase("background")
-	h.check("缺背景时回退原像素尺寸", model.world_size_for_image(Vector2(120, 80)), Vector2(120, 80))
-	h.check("无背景保留旧 2x2 素材尺寸", model.world_size_for_image(Vector2(2, 2)), Vector2(2, 2))
+	h.check("缺背景时拒绝无法换算的物件尺寸", model.world_size_for_image(Vector2(120, 80)), Vector2.ZERO)
+	h.check("无背景时小素材也拒绝无法换算尺寸", model.world_size_for_image(Vector2(2, 2)), Vector2.ZERO)
 	model.data["background"] = directory.path_join("missing.png")
-	h.check("背景丢失时回退原像素尺寸", model.world_size_for_image(Vector2(120, 80)), Vector2(120, 80))
+	h.check("背景丢失时拒绝无法换算的物件尺寸", model.world_size_for_image(Vector2(120, 80)), Vector2.ZERO)
 	var corrupt := directory.path_join("corrupt.png")
 	var file := FileAccess.open(corrupt, FileAccess.WRITE)
 	h.check("可创建坏背景样例", file != null, true)
@@ -196,16 +196,26 @@ static func test_fallback(h: TestHarness, directory: String) -> void:
 		model.data["background"] = corrupt
 		var print_errors := Engine.print_error_messages
 		Engine.print_error_messages = false
-		var fallback: Vector2 = model.world_size_for_image(Vector2(120, 80))
+		var rejected_size: Vector2 = model.world_size_for_image(Vector2(120, 80))
 		Engine.print_error_messages = print_errors
-		h.check("背景解码失败时回退原像素尺寸", fallback, Vector2(120, 80))
+		h.check("背景解码失败时拒绝无法换算的物件尺寸", rejected_size, Vector2.ZERO)
 	model.data["background"] = directory.path_join("background.png")
 	model.data["size"] = [0, 200]
-	h.check("无效地图尺寸不产生零宽素材", model.world_size_for_image(Vector2(120, 80)), Vector2(120, 80))
+	h.check("无效地图尺寸拒绝生成物件尺寸", model.world_size_for_image(Vector2(120, 80)), Vector2.ZERO)
 	model.data["size"] = [300, 200]
-	model.data["background"] = ""
 	var index: int = model.add_actor_with_sprite(directory.path_join("prop.png"))
-	h.check("无背景的实际添加入口采用同一回退", model.rect_of(Model.Kind.ACTOR, index).size,
-		Vector2(120, 80))
+	h.check("有效背景下实际添加采用像素换算尺寸",
+		model.rect_of(Model.Kind.ACTOR, index).size, Vector2(30, 20))
 	var tiny: int = model.add_actor_with_sprite(directory.path_join("fallback_prop.png"))
-	h.check("无背景的实际添加入口仍保留 2x2", model.rect_of(Model.Kind.ACTOR, tiny).size, Vector2(2, 2))
+	h.check("小素材同样按背景比例换算",
+		model.rect_of(Model.Kind.ACTOR, tiny).size, Vector2(0.5, 0.5))
+	var actor_count := model.count(Model.Kind.ACTOR)
+	model.data["background"] = ""
+	h.check("无背景时实际添加入口拒绝素材",
+		model.add_actor_with_sprite(directory.path_join("prop.png")), -1)
+	h.check("拒绝添加不会留下半成品物件", model.count(Model.Kind.ACTOR), actor_count)
+	var existing: int = model.add_actor()
+	var before: Dictionary = model.data.duplicate(true)
+	h.check("无背景时给已有物件换贴图失败",
+		model.assign_actor_sprite(existing, directory.path_join("prop.png")), false)
+	h.check("换贴图失败不修改已有物件", model.data, before)

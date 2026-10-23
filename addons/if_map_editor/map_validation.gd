@@ -33,9 +33,13 @@ static func validate(data: Variant, context: Dictionary = {}, library: Variant =
 			for index: int in collection.size():
 				var item: Dictionary = collection[index]
 				var identity := str(item.get("id", ""))
-				if identity.strip_edges().is_empty() or seen.has(identity):
+				if identity.strip_edges().is_empty():
+					if kind != "portal":
+						issues.append(issue("error", "ID 缺失或重复：%s" % identity, kind, index, "id", map_id))
+				elif seen.has(identity):
 					issues.append(issue("error", "ID 缺失或重复：%s" % identity, kind, index, "id", map_id))
-				seen[identity] = true
+				else:
+					seen[identity] = true
 				_check_resources(item, issues, kind, index, map_id)
 				_check_event(item, "event", context, issues, kind, index, map_id)
 				for action_index: int in item.get("actions", []).size():
