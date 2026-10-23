@@ -470,7 +470,7 @@ func enter_map(map_id: StringName, spawn_name: StringName,
 	current_spawn = spawn_name
 	map_view.build(def, flags)
 	player.global_position = def.spawn_point(spawn_name)
-	# 每张图自己的主角比例（学校那套美术密度细，老比例站进去是巨人）。
+	# 保留地图坐标中的美术标尺及碰撞；相机以倒数投影，屏幕上的主角始终等高。
 	player.scale = Vector2(def.player_scale, def.player_scale)
 	player.velocity = Vector2.ZERO
 	# 脚步的锚点跟着落地重置：不重置的话，从上一个场景攒下来的那一段距离
@@ -715,7 +715,7 @@ func _update_footsteps() -> void:
 	if not player.is_physics_processing():
 		_footstep_at = player.global_position
 		return
-	if player.global_position.distance_to(_footstep_at) < FOOTSTEP_DISTANCE:
+	if player.global_position.distance_to(_footstep_at) < FOOTSTEP_DISTANCE * player.scale.x:
 		return
 	_footstep_at = player.global_position
 	play_sound(current_map.footstep)
@@ -940,9 +940,7 @@ func _on_picture_changed(_showing: bool) -> void:
 
 ## 让相机跟着角色。怎么夹边界是 `GameCamera` 的事，这里只负责喂数据。
 ##
-## **只有大地图要缩成全景。** 房间也是比视口大的（委托屋 463x378 对 320x180），
-## 但那儿得保持 1:1、相机跟着人走 —— 缩了整间屋子会被压进视口，
-## 变成一张全景图（2026-09-24 就是这么把委托屋的镜头搞坏的）。
+## 可行走地图以统一主角高度为标尺，相机跟随；只有无主角的大地图适配全图。
 func update_camera() -> void:
 	if camera == null or player == null or current_map == null:
 		return
@@ -956,7 +954,7 @@ func update_camera() -> void:
 	if camera_focus != null:
 		focus = camera_focus
 	camera.follow(focus, Vector2(current_map.size),
-		GameCamera.should_shrink(current_map.kind))
+		GameCamera.should_shrink(current_map.kind), current_map.player_scale)
 
 
 ## F11 / Alt+Enter：切全屏。返回 true 表示这个键我吃掉了。

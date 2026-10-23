@@ -108,6 +108,77 @@ static func run(harness: TestHarness) -> void:
 	harness.check("释放窗口清理地图节点", map_reference.get_ref(), null)
 	harness.check("释放窗口清理角色节点", player_reference.get_ref(), null)
 	harness.check("释放窗口清理独立World2D", world_reference.get_ref(), null)
+	test_character_camera(harness)
+
+
+## 试走使用统一屏幕标尺，地图宽高只影响可见范围与边界，不参与主角高度标定。
+static func test_character_camera(harness: TestHarness) -> void:
+	var display_size := Vector2(960, 540)
+	var logical_view := GameCamera.view_size()
+	var fit := minf(display_size.x / logical_view.x, display_size.y / logical_view.y)
+	var expected_height := Player.DISPLAY_HEIGHT * fit
+	for map_size: Vector2i in [Vector2i(900, 700), Vector2i(2400, 1600)]:
+		for character_scale: float in [0.5, 1.0, 2.0]:
+			var data := fixture()
+			data["size"] = [map_size.x, map_size.y]
+			data["player_scale"] = character_scale
+			data["walls"] = []
+			data["actors"] = []
+			var original := JSON.stringify(data)
+			var panel := Preview.create_panel(data)
+			harness.root.add_child(panel)
+			panel.auto_step = false
+			panel._display.size = display_size
+			panel._fit_camera()
+			var label := "地图%s人物比例%s" % [map_size, character_scale]
+			harness.check_float(label + "实际动画显示高度统一",
+				preview_character_height(panel), expected_height, 0.001)
+			harness.check(label + "归一化不修改布局快照", JSON.stringify(data), original)
+			var visible_world: Vector2 = display_size / panel._camera.zoom
+			var half := visible_world * 0.5
+			panel.player.position = Vector2(-9999, -9999)
+			panel._fit_camera()
+			harness.check(label + "左上边界不露出地图之外", panel._camera.position, half)
+			panel.player.position = Vector2(9999, 9999)
+			panel._fit_camera()
+			harness.check(label + "右下边界不露出地图之外", panel._camera.position,
+				Vector2(map_size) - half)
+			panel.player.position = Vector2(map_size) * 0.5
+			panel._fit_camera()
+			harness.check(label + "地图中间跟随主角", panel._camera.position, panel.player.position)
+			var resized := Vector2(640, 480)
+			panel._display.size = resized
+			# 全量入口可能在根节点入树前运行；显式发尺寸信号检验实际连接。
+			panel._display.resized.emit()
+			var resized_fit := minf(resized.x / logical_view.x, resized.y / logical_view.y)
+			harness.check_float(label + "改变面板大小仍保持统一标尺",
+				preview_character_height(panel), Player.DISPLAY_HEIGHT * resized_fit, 0.001)
+			panel.free()
+	var overworld_data := fixture()
+	overworld_data["kind"] = "overworld"
+	overworld_data["size"] = [1600, 900]
+	overworld_data["player_scale"] = 0.5
+	var overworld := Preview.create_panel(overworld_data)
+	harness.root.add_child(overworld)
+	overworld.auto_step = false
+	overworld._display.size = display_size
+	overworld._fit_camera()
+	harness.check("大地图预览隐藏可控主角", overworld.player.visible, false)
+	harness.check("大地图预览保持全景", overworld._camera.zoom, Vector2(0.6, 0.6))
+	harness.check("大地图预览固定地图中心", overworld._camera.position, Vector2(800, 450))
+	overworld.player.position = Vector2(1400, 800)
+	overworld._fit_camera()
+	harness.check("大地图不跟随隐藏主角", overworld._camera.position, Vector2(800, 450))
+	overworld._display.size = Vector2(640, 480)
+	overworld._display.resized.emit()
+	harness.check("大地图面板缩小后仍能展示全图", overworld._camera.zoom, Vector2(0.4, 0.4))
+	overworld.free()
+
+
+static func preview_character_height(panel: Control) -> float:
+	var body := panel.player.get_node("Body") as AnimatedSprite2D
+	var texture := body.sprite_frames.get_frame_texture(&"idle_down", 0)
+	return texture.get_height() * body.scale.y * panel.player.scale.y * panel._camera.zoom.y
 
 
 static func fixture() -> Dictionary:

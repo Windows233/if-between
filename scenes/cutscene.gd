@@ -977,7 +977,7 @@ func _place_player(step: StageStep) -> void:
 ## 直接补间到目标点是**斜着飘过去**的，小人看着像在水上漂（2026-09-24 策划报的）。
 ## 角色在屋里本来就只会上下左右走，路线也该是折的。
 ##
-## `total_time` 不写（0）就**按脚程算**：总长 ÷ `Player.SPEED`。
+## `total_time` 不写（0）就按角色当前地图标尺下的脚程算；显式时长保持剧本值。
 ## 和玩家自己走是一个速度 —— 剧情里走路快一截或者慢一截，一眼就出戏。
 ## 写了就按距离摊到每一段（不分的话短的那段会显得飞快）。
 ##
@@ -996,7 +996,7 @@ func _walk_player(route: Array[Vector2], total_time: float) -> void:
 	var total := 0.0
 	for leg: Vector2 in legs:
 		total += leg.length()
-	var span := total_time if total_time > 0.0 else total / Player.SPEED
+	var span := total_time if total_time > 0.0 else total / player.movement_speed()
 
 	# 脚步按时间撒，和走路一起跑（不 await：await 的话人得先踩完脚步才动）。
 	_footsteps_for(span)
@@ -1184,8 +1184,10 @@ func _move_and_fade(node: Node2D, target: Vector2, time: float) -> void:
 ## 为什么要能做动画：静态图在 `_move_to` 里是**平移**，看着像一张贴纸在滑。
 ## 老人上门那段是从门口一路走进来的，滑过去很出戏。
 ##
-## 两种都按 `height` 缩放，脚底中点落在 `position` 上，靠 `offset` 摆正。
+## height 是与主角共用的逻辑显示高度，制作时换成当前地图标尺。
+## 配方/快照仍保存原 height，恢复时重新换算，不重复累乘；脚底坐标不变。
 func _make_actor(path: String, height: float, z: int = 9, pose: String = "") -> Node2D:
+	height *= _map_character_scale()
 	if DirAccess.dir_exists_absolute(path):
 		return _make_animated_actor(path, height, z, pose)
 	if path == "" or not ResourceLoader.exists(path):
@@ -1209,6 +1211,11 @@ func _make_actor(path: String, height: float, z: int = 9, pose: String = "") -> 
 	sprite.z_index = z
 	_add_actor_body(sprite, Vector2(picture.x * ratio, picture.y * ratio))
 	return sprite
+
+
+## 人物共用地图标尺：不改变剧情的高度参数或脚底世界坐标。
+func _map_character_scale() -> float:
+	return main.current_map.player_scale if main != null and main.current_map != null else 1.0
 
 
 ## 造一个会走路的临时角色。
@@ -1262,11 +1269,13 @@ func _add_actor_body(sprite: Node2D, drawn: Vector2) -> void:
 	body.name = "Body"
 	var shape := CollisionShape2D.new()
 	var box := RectangleShape2D.new()
-	# 脚下那一条（世界尺度）：宽＝画出来的宽度减 4（两边各收 2），高 8
-	box.size = Vector2(maxf(drawn.x - 4.0, 1.0) / wide.x, 8.0 / wide.y)
+	# 脚下那一条按统一显示标尺：宽＝画出来的宽度减 4，高 8。
+	var map_scale := _map_character_scale()
+	box.size = Vector2(maxf(drawn.x - 4.0 * map_scale, map_scale) / wide.x,
+		8.0 * map_scale / wide.y)
 	shape.shape = box
 	# 原点在脚底，所以这一条的中心在往上 4 的地方
-	shape.position = Vector2(0.0, -4.0 / wide.y)
+	shape.position = Vector2(0.0, -4.0 * map_scale / wide.y)
 	body.add_child(shape)
 	sprite.add_child(body)
 

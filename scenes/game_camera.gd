@@ -72,6 +72,14 @@ static func should_shrink(kind: int) -> bool:
 	return kind == MapDef.Kind.OVERWORLD
 
 
+## 地图坐标中的人物比例只标定美术密度；镜头取其倒数，让可控主角始终等高。
+## 不改地图、剧情和存档坐标；背景、物件、碰撞与演出人物共享同一个等比投影。
+static func room_zoom_for(player_scale: float) -> Vector2:
+	if not is_finite(player_scale) or player_scale <= 0.0:
+		return Vector2.ONE
+	return Vector2.ONE / player_scale
+
+
 ## 震屏：还剩多久、多轻、总时长（算衰减用）。
 ##
 ## 抖动是**加在 `offset` 上的**，不是去改焦点 —— 夹边界那套照旧，
@@ -104,21 +112,21 @@ func _process(delta: float) -> void:
 		_shake_total = 0.0
 		return
 	var amount := _shake_strength * (_shake_left / maxf(_shake_total, 0.001))
-	offset = Vector2(randf_range(-amount, amount), randf_range(-amount, amount))
+	# offset 是地图单位；强度按逻辑屏幕像素标定，不能随地图密度翻倍。
+	offset = Vector2(randf_range(-amount, amount), randf_range(-amount, amount)) / zoom
 
 
 ## 对准一个焦点。视口尺寸取不到就不动。
 ##
 ## `shrink` 为真时才把整张图缩进视口 —— **只有大地图要这样**。
 ##
-## 房间（委托屋那种 463x378）比视口大，但**绝对不能缩**：玩法就是相机跟着人走、
-## 只看见眼皮底下那一块。给房间也缩的话，整间屋子会被压进 320x180，
-## 变成一张全景图 —— 2026-09-24 就是这样把委托屋的镜头搞坏的。
-func follow(focus: Vector2, world: Vector2, shrink: bool = false) -> void:
+## 可行走地图按人物标尺投影，超出视口的部分随焦点移动；不按地图大小适配全图。
+func follow(focus: Vector2, world: Vector2, shrink: bool = false,
+		player_scale: float = 1.0) -> void:
 	var view := GameCamera.view_size()
 	if view.x <= 0.0 or view.y <= 0.0:
 		return
-	zoom = zoom_for(world, view) if shrink else Vector2.ONE
+	zoom = zoom_for(world, view) if shrink else room_zoom_for(player_scale)
 	# **夹边界要用「缩放之后能看见多大世界」**，不是视口像素尺寸 ——
 	# 拿像素尺寸去夹，缩到 0.5 之后相机会以为只能看见半张图，位置就偏了。
 	global_position = GameCamera.position_for(focus, world, view / zoom)

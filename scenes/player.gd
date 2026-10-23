@@ -26,7 +26,8 @@ const FRAME_DIR := "res://art/player"
 ## 每秒几帧。步子迈得比这快就会像在滑冰。
 const WALK_FPS := 8.0
 
-## 角色在地图坐标里多高。
+## 角色的统一基准高度（320×180 逻辑视口像素，包含帧图透明留边）。
+## 地图中仍乘 player_scale，相机取其倒数；同一帧在任何可行走场景均显示 45。
 ##
 ## 尺子一直是委托屋左上角那扇木门：**人不能高过门框**。
 ## 2026-09-23 地图换成高清版（图 ÷12），门框在游戏坐标里高 50.4，所以取 45。
@@ -105,9 +106,14 @@ func _physics_process(_delta: float) -> void:
 		direction = _follow_path()
 	if direction != Vector2.ZERO:
 		facing = direction
-	velocity = direction * SPEED
+	velocity = direction * movement_speed()
 	move_and_slide()
 	play_animation(direction != Vector2.ZERO)
+
+
+## 速度按统一显示尺度标定。地图坐标的步长随标尺变化，投影后始终 SPEED。
+func movement_speed() -> float:
+	return SPEED * scale.x
 
 
 ## 沿鼠标点出来的路走，返回这一帧往哪走。整条走完返回零向量，人就停下。
@@ -261,7 +267,7 @@ func facing_side() -> String:
 
 ## 头的正中央相对于脚底在哪儿。**y 是负的** —— 往上。
 func head_offset() -> Vector2:
-	return Vector2(0.0, -DISPLAY_HEIGHT * HEAD_RATIO)
+	return global_transform.basis_xform(Vector2(0.0, -DISPLAY_HEIGHT * HEAD_RATIO))
 
 
 ## 让**头的正中央**落在 `point` 上。脚底自然就落在下面一截。
