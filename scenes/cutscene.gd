@@ -19,6 +19,9 @@
 ## 断言因此能同步跑完，而画面上是什么样由真窗口烟测和截图去管。
 class_name Cutscene
 extends RefCounted
+
+const C_RESCUE_BINDING_SCRIPT = preload("res://scenes/c_rescue_binding.gd")
+
 ## 玩家点了一下 / 按了空格，而且演出正在等这一下。
 signal clicked
 
@@ -73,6 +76,8 @@ func cancel() -> void:
 
 
 func clear_actors() -> void:
+	if main != null and main.get("rescue_panel") != null:
+		main.rescue_panel.set_binding_sprite(null)
 	for key: Variant in _actors:
 		var node: Node = _actors[key]
 		if is_instance_valid(node):
@@ -129,6 +134,8 @@ func add_actor_with_talk(id: String, sprite_path: String, at: Vector2,
 func _drop_actor(id: String) -> void:
 	if not _actors.has(id):
 		return
+	if id == "c" and main != null and main.get("rescue_panel") != null:
+		main.rescue_panel.set_binding_sprite(null)
 	var node: Node = _actors[id]
 	if is_instance_valid(node):
 		node.queue_free()
@@ -156,6 +163,8 @@ func snapshot_actors() -> Array:
 			"pose": str(recipe.get("pose", "")),
 			"talk": str(_talk.get(id, "")),
 		}
+		if recipe.get("rescue_binding", false) == true:
+			entry["rescue_binding"] = true
 		# 翻面过的人（转身走掉的）也要记，不然读档回来他是正着的
 		if sprite is AnimatedSprite2D:
 			entry["flip"] = (sprite as AnimatedSprite2D).flip_h
@@ -184,6 +193,10 @@ func restore_actors(entries: Array) -> void:
 		var sprite := add_actor_with_talk(id, str(item.get("sprite", "")), at,
 			float(item.get("height", 45.0)), int(item.get("z", 9)),
 			str(item.get("pose", "")), str(item.get("talk", "")))
+		if id == "c" and item.get("rescue_binding", false) == true \
+				and not _c_is_rescued():
+			if _add_c_rescue_binding(sprite, float(item.get("height", 45.0))) != null:
+				_recipes[id]["rescue_binding"] = true
 		if sprite is AnimatedSprite2D and item.get("flip", false) == true:
 			(sprite as AnimatedSprite2D).flip_h = true
 
@@ -589,16 +602,21 @@ func _if_panel(step: StageStep) -> void:
 ##
 ## 不写 `flag` 字段就跳过 —— 不需要分下游的那种框（纯展示）不关心这个。
 func _rescue(step: StageStep) -> void:
+	var binding := _actor_binding("c")
 	if instant:
+		if binding != null:
+			binding.call("set_state", RescueTiming.LINE_COUNT)
 		_write_verdict(step.text("flag"), true)
 		return
 	var panel: RescuePanel = main.rescue_panel
 	if panel == null or not main.is_inside_tree():
 		return
 	var generation := _generation
+	panel.set_binding_sprite(binding)
 	panel.open()
 	while panel.is_open() and generation == _generation:
 		await main.get_tree().process_frame
+	panel.set_binding_sprite(null)
 	if generation == _generation:
 		_write_verdict(step.text("flag"), panel.success_result)
 
@@ -714,6 +732,10 @@ func _npc(step: StageStep) -> void:
 		step.text("talk"))
 	if sprite == null:
 		return
+	var id := step.text("id")
+	if id == "c" and step.flag("rescue_binding", false) and not _c_is_rescued():
+		if _add_c_rescue_binding(sprite, height) != null:
+			_recipes[id]["rescue_binding"] = true
 
 	var fade := _time(step.number("fade", 0.0))
 	sprite.modulate.a = 0.0 if fade > 0.0 else 1.0
@@ -722,6 +744,37 @@ func _npc(step: StageStep) -> void:
 		var tween := _tween()
 		tween.tween_property(sprite, "modulate:a", 1.0, fade)
 		await tween.finished
+
+
+func _add_c_rescue_binding(actor: Node2D, height: float) -> Sprite2D:
+	if not actor is AnimatedSprite2D:
+		return null
+	var animated := actor as AnimatedSprite2D
+	var frame := animated.sprite_frames.get_frame_texture(animated.animation, animated.frame)
+	if frame == null or height <= 0.0 or animated.scale.x <= 0.0 or animated.scale.y <= 0.0:
+		return null
+	var binding: Sprite2D = C_RESCUE_BINDING_SCRIPT.new()
+	binding.name = "RescueBinding"
+	binding.call("set_state", 0)
+	var binding_size: Vector2 = binding.texture.get_size()
+	var binding_scale := height / maxf(binding_size.y, 1.0)
+	binding.position = Vector2(0.0, -frame.get_size().y * 0.5)
+	binding.scale = Vector2(binding_scale / animated.scale.x, binding_scale / animated.scale.y)
+	binding.z_index = 1
+	animated.add_child(binding)
+	return binding
+
+
+func _actor_binding(id: String) -> Sprite2D:
+	var actor := _actor(id)
+	if actor == null:
+		return null
+	return actor.get_node_or_null("RescueBinding") as Sprite2D
+
+
+func _c_is_rescued() -> bool:
+	return main != null and main.flags != null \
+		and main.flags.get_value(&"ch2/rescued_c") == true
 
 
 func _npc_move(step: StageStep) -> void:
