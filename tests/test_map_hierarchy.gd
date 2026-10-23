@@ -96,7 +96,7 @@ static func test_structure(h: TestHarness, dock: Control) -> void:
 		var actor_item := _find(tree, "actor", index)
 		h.check("未编组物件%d位于顶层" % index, actor_item.get_parent(), root)
 		h.check("物件%d保留模型下标" % index, actor_item.get_metadata(0),
-			{"kind": "actor", "index": index})
+			{"kind": "actor", "index": index, "id": str(dock.model.actor_field(index, "id", ""))})
 	for group_id: String in ["reading", "storage"]:
 		var group := _find(tree, "group", group_id)
 		h.check("组%s位于顶层" % group_id, group.get_parent(), root)

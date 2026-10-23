@@ -15,6 +15,16 @@ const ObjectPreview := preload("res://addons/if_map_editor/map_object_preview.gd
 const AssetList := preload("res://addons/if_map_editor/map_asset_list.gd")
 const GeometryTransferDialog := preload("res://addons/if_map_editor/map_geometry_transfer_dialog.gd")
 const MapCreationDialog := preload("res://addons/if_map_editor/map_creation_dialog.gd")
+const SceneHierarchy := preload("res://addons/if_map_editor/map_scene_hierarchy.gd")
+const SceneTreeControl := preload("res://addons/if_map_editor/map_scene_tree.gd")
+const VisualInspector := preload("res://addons/if_map_editor/map_visual_inspector.gd")
+const TemplateInspector := preload("res://addons/if_map_editor/map_template_inspector.gd")
+const PreviewOptions := preload("res://addons/if_map_editor/map_preview_options.gd")
+const Shortcuts := preload("res://addons/if_map_editor/map_shortcuts.gd")
+const ReviewPanel := preload("res://addons/if_map_editor/map_review_panel.gd")
+const Validation := preload("res://addons/if_map_editor/map_validation.gd")
+const TriggerEditor := preload("res://addons/if_map_editor/map_trigger_editor.gd")
+const TemplateList := preload("res://addons/if_map_editor/map_template_list.gd")
 
 const EDITOR_STATE_PATH := "user://if_map_editor_scene_state.cfg"
 
@@ -65,8 +75,11 @@ var _asset_empty: Label
 var _group_button: Button
 var _ungroup_button: Button
 var _template_picker: OptionButton
+var _template_list: ItemList
+var _template_filter: LineEdit
 var _layout_popup: PopupMenu
 var _library = ObjectLibrary.new()
+var _shortcuts = Shortcuts.new()
 var _body_split: HSplitContainer
 var _workspace_split: HSplitContainer
 var _transfer_button: Button
@@ -134,7 +147,8 @@ func _build() -> void:
 	var scene_page := VBoxContainer.new()
 	scene_page.name = "场景"
 	scene_page.add_child(_text("场景层级（Ctrl / Shift 多选）"))
-	_object_tree = Tree.new()
+	_object_tree = SceneTreeControl.new()
+	_object_tree.hierarchy_drop.connect(_on_hierarchy_drop)
 	_object_tree.hide_root = true
 	_object_tree.select_mode = Tree.SELECT_MULTI
 	_object_tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -201,6 +215,9 @@ func _build() -> void:
 	_workspace_split.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_body_split.add_child(_workspace_split)
 	canvas = Canvas.new()
+	_shortcuts.load_settings()
+	canvas.shortcuts = _shortcuts
+	canvas.template_library = _library
 	_asset_list.canvas = canvas
 	canvas.custom_minimum_size = Vector2(300, 240)
 	canvas.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -229,6 +246,157 @@ func _build() -> void:
 
 	_refresh_templates()
 	_refresh_assets()
+	_build_scene_tools()
+	_build_template_browser()
+
+
+func _build_template_browser() -> void:
+	var page := VBoxContainer.new()
+	page.name = "模板"
+	_template_filter = LineEdit.new()
+	_template_filter.placeholder_text = "名称 / 分类 / 标签"
+	_template_filter.text_changed.connect(func(_query: String) -> void: _refresh_templates())
+	page.add_child(_template_filter)
+	_template_list = TemplateList.new()
+	_template_list.library = _library
+	_template_list.canvas = canvas
+	_template_list.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_template_list.item_activated.connect(func(index: int) -> void:
+		if not canvas.is_kind_editable(Kind.ACTOR):
+			return
+		var selected: Array[int] = _library.instantiate(str(_template_list.get_item_metadata(index)), model, model.map_size() * 0.5)
+		canvas.select_actors(selected)
+		_on_edited()
+		_refresh_selection())
+	page.add_child(_template_list)
+	var note := _text("拖到画布放置；双击放到地图中央。")
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	page.add_child(note)
+	_asset_tabs.add_child(page)
+	_refresh_templates()
+
+
+func _build_scene_tools() -> void:
+	var page := VBoxContainer.new()
+	page.name = "工具"
+	_asset_tabs.add_child(page)
+	var open := Button.new()
+	open.text = "场景检查 / 触发 / 试走设置…"
+	open.pressed.connect(_open_scene_tools)
+	page.add_child(open)
+	var grid := CheckBox.new()
+	grid.text = "显示吸附网格"
+	grid.toggled.connect(func(value: bool) -> void: canvas.show_grid = value)
+	page.add_child(grid)
+	var step := SpinBox.new()
+	step.prefix = "吸附步长 "
+	step.min_value = 0.1
+	step.max_value = 1024
+	step.step = 0.1
+	step.value = 1
+	step.value_changed.connect(func(value: float) -> void: canvas.snap_step = value)
+	page.add_child(step)
+	var isolation := OptionButton.new()
+	isolation.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE
+	for caption: String in ["显示全部层", "仅墙", "仅传送区", "仅物件", "仅出生点", "仅前景"]:
+		isolation.add_item(caption)
+	isolation.item_selected.connect(func(index: int) -> void:
+		canvas.configure_edit_layers(canvas.locked_layers, ["", "walls", "portals", "actors", "spawns", "overlay"][index]))
+	page.add_child(isolation)
+	for entry: Array in [["墙", "walls"], ["传送区", "portals"], ["物件", "actors"], ["出生点", "spawns"], ["前景", "overlay"]]:
+		var lock := CheckBox.new()
+		lock.text = "锁定" + str(entry[0])
+		lock.toggled.connect(func(value: bool) -> void:
+			var locks: Dictionary = canvas.locked_layers.duplicate()
+			locks[str(entry[1])] = value
+			canvas.configure_edit_layers(locks, canvas.isolated_layer)
+			_refresh_selection())
+		page.add_child(lock)
+
+
+func _open_preview(options: Dictionary) -> void:
+	var preview := ObjectPreview.new()
+	add_child(preview)
+	preview.configure(model.data.duplicate(true), options)
+	preview.popup_centered()
+
+
+func _open_scene_tools() -> void:
+	if model.map_id.is_empty():
+		return
+	var dialog := AcceptDialog.new()
+	dialog.title = "场景工具 · " + model.map_id
+	dialog.exclusive = false
+	var tabs := TabContainer.new()
+	tabs.custom_minimum_size = Vector2(720, 500)
+	dialog.add_child(tabs)
+	var review := ReviewPanel.new()
+	_add_tool_tab(tabs, "校验与迁移", review)
+	review.configure(model, _library)
+	review.edited.connect(_on_edited)
+	review.issue_selected.connect(_locate_issue)
+	review.review_requested.connect(func(report: Dictionary) -> void:
+		if report.get("action", "") == "save":
+			_on_save())
+	var triggers := TriggerEditor.new()
+	_add_tool_tab(tabs, "事件触发区域", triggers)
+	triggers.configure(model)
+	triggers.edited.connect(_on_edited)
+	triggers.selection_changed.connect(func(index: int) -> void: canvas.set_trigger_selection(index))
+	triggers.bounds_requested.connect(func(index: int) -> void:
+		if canvas.sel_kind < 0 or canvas.sel_index < 0:
+			_status.text = "先在画布选择一个矩形物件、墙或传送区，再取它的矩形。"
+			return
+		triggers.set_trigger_rect(index, model.rect_of(canvas.sel_kind, canvas.sel_index))
+		canvas.set_trigger_selection(index))
+	var options := PreviewOptions.new()
+	_add_tool_tab(tabs, "试走状态与地图比较", options)
+	options.configure(model)
+	options.preview_requested.connect(_open_preview)
+	options.compare_requested.connect(func(map_id: String, settings: Dictionary) -> void:
+		var comparison: HSplitContainer = options.create_comparison(map_id, settings)
+		if comparison == null:
+			return
+		var window := AcceptDialog.new()
+		window.title = "地图并排比较 · " + map_id
+		window.add_child(comparison)
+		window.confirmed.connect(window.queue_free)
+		window.canceled.connect(window.queue_free)
+		add_child(window)
+		window.popup_centered(Vector2i(1120, 650)))
+	var shortcuts := PreviewOptions.ShortcutsPanel.new()
+	_add_tool_tab(tabs, "快捷键", shortcuts)
+	shortcuts.configure(_shortcuts)
+	dialog.confirmed.connect(dialog.queue_free)
+	dialog.canceled.connect(dialog.queue_free)
+	add_child(dialog)
+	dialog.popup_centered(Vector2i(820, 620))
+
+
+func _add_tool_tab(tabs: TabContainer, title: String, content: Control) -> void:
+	var scroll := ScrollContainer.new()
+	scroll.name = title
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(content)
+	tabs.add_child(scroll)
+
+
+func _locate_issue(issue: Dictionary) -> void:
+	var kind: int = {"actor": Kind.ACTOR, "wall": Kind.WALL, "portal": Kind.PORTAL,
+		"spawn": Kind.SPAWN}.get(str(issue.get("kind", "")), -1)
+	var index := int(issue.get("index", -1))
+	if kind == Kind.ACTOR:
+		var selected: Array[int] = [index]
+		canvas.select_actors(selected)
+	elif kind >= 0:
+		canvas.sel_kind = kind
+		canvas.sel_index = index
+	elif str(issue.get("kind", "")) == "trigger":
+		canvas.set_trigger_selection(index)
+	canvas.frame_selection()
+	_refresh_selection()
+	_status.text = str(issue.get("message", ""))
 
 
 func _set_initial_panel_layout() -> void:
@@ -299,6 +467,11 @@ func _refresh_templates() -> void:
 	_template_picker.clear()
 	for name: String in _library.list_templates():
 		_template_picker.add_item(name)
+	if _template_list != null:
+		_template_list.clear()
+		for name: String in _library.list_templates("", [], _template_filter.text.strip_edges()):
+			_template_list.add_item(name)
+			_template_list.set_item_metadata(_template_list.item_count - 1, name)
 
 
 func _refresh_assets() -> void:
@@ -334,8 +507,8 @@ func _refresh_objects() -> void:
 		var group: Dictionary = raw_group
 		groups.append(group)
 		group_structure.append({"id": str(group.get("id", "")),
-			"members": group.get("members", [])})
-	var structure: Array = [model.map_id, actor_ids, group_structure]
+			"members": group.get("members", []), "parent": group.get("parent", "")})
+	var structure: Array = [model.map_id, actor_ids, group_structure, model.data.get("editor_tree_order", [])]
 	_hierarchy_syncing = true
 	if structure != _hierarchy_structure or _object_tree.get_root() == null:
 		var collapsed: Dictionary = {}
@@ -347,8 +520,9 @@ func _refresh_objects() -> void:
 		_hierarchy_group_items.clear()
 		var root := _object_tree.create_item()
 		root.set_selectable(0, false)
+		var group_items := {}
 		for group: Dictionary in groups:
-			var item := _object_tree.create_item(root)
+			var item := _create_group_item(group, root, group_items, {})
 			var group_id := str(group.get("id", ""))
 			item.set_metadata(0, {"kind": "group", "id": group_id,
 				"name": str(group.get("name", "组"))})
@@ -363,8 +537,9 @@ func _refresh_objects() -> void:
 						parent = _hierarchy_group_items[group_index]
 						break
 			var item := _object_tree.create_item(parent)
-			item.set_metadata(0, {"kind": "actor", "index": index})
+			item.set_metadata(0, {"kind": "actor", "index": index, "id": actor_id})
 			_hierarchy_actor_items[index] = item
+		_order_hierarchy_children(root)
 		_hierarchy_structure = structure.duplicate(true)
 		_hierarchy_map_id = model.map_id
 	var group_id_counts: Dictionary = {}
@@ -401,6 +576,69 @@ func _refresh_objects() -> void:
 	_hierarchy_syncing = false
 	_refresh_object_state_buttons()
 	_refresh_group_buttons()
+
+
+func _create_group_item(group: Dictionary, root: TreeItem, items: Dictionary, visiting: Dictionary) -> TreeItem:
+	var identity := str(group.get("id", ""))
+	if items.has(identity):
+		return items[identity]
+	visiting[identity] = true
+	var parent := root
+	var parent_id := str(group.get("parent", ""))
+	var parent_group := SceneHierarchy.find_group(model.data, parent_id)
+	if not parent_group.is_empty() and not visiting.has(parent_id):
+		parent = _create_group_item(parent_group, root, items, visiting)
+	var item := _object_tree.create_item(parent)
+	item.set_metadata(0, {"kind": "group", "id": identity})
+	items[identity] = item
+	return item
+
+
+func _order_hierarchy_children(parent: TreeItem) -> void:
+	var children: Array[TreeItem] = []
+	var child := parent.get_first_child()
+	while child != null:
+		children.append(child)
+		_order_hierarchy_children(child)
+		child = child.get_next()
+	var order: Array = model.data.get("editor_tree_order", [])
+	children.sort_custom(func(first: TreeItem, second: TreeItem) -> bool:
+		var first_index := order.find(_hierarchy_key(first.get_metadata(0)))
+		var second_index := order.find(_hierarchy_key(second.get_metadata(0)))
+		return (first_index if first_index >= 0 else 100000) < (second_index if second_index >= 0 else 100000))
+	for index: int in range(1, children.size()):
+		children[index].move_after(children[index - 1])
+
+
+func _hierarchy_key(metadata: Dictionary) -> String:
+	return str(metadata.get("kind", "")) + ":" + str(metadata.get("id", ""))
+
+
+func _on_hierarchy_drop(source: Dictionary, target: Dictionary, section: int) -> void:
+	var before: Dictionary = model.data.duplicate(true)
+	var identity := str(source.get("id", ""))
+	var kind := str(source.get("kind", ""))
+	var members: Array[String] = []
+	members.assign(SceneHierarchy.descendants(model.data, identity) if kind == "group" else [identity])
+	for index: int in model.count(Kind.ACTOR):
+		if members.has(str(model.actor_field(index, "id", ""))) and canvas.actor_is_locked(index):
+			_status.text = "请先解锁编组内的物件。"
+			return
+	var target_id := str(target.get("id", ""))
+	var target_kind := str(target.get("kind", ""))
+	var parent_id := target_id if target_kind == "group" and section == 0 else \
+		str(SceneHierarchy.find_group(model.data, target_id).get("parent", "")) if target_kind == "group" else \
+		SceneHierarchy.parent_of_actor(model.data, target_id)
+	if not SceneHierarchy.reparent(model.data, kind, identity, parent_id):
+		_status.text = "层级移动被拒绝：不能把编组放入自身或后代。"
+		return
+	SceneHierarchy.reorder(model.data, _hierarchy_key(source), _hierarchy_key(target) if section != 0 else "", section > 0)
+	if not SceneHierarchy.errors(model.data).is_empty():
+		model.data = before
+		return
+	model.dirty = true
+	_on_edited()
+	_status.text = "层级已调整；物件位置、碰撞和遮挡顺序保持原值。"
 
 
 func _sync_hierarchy_selection() -> void:
@@ -551,6 +789,9 @@ func _selection_has_locked_actor() -> bool:
 
 
 func _allow_selection_edit() -> bool:
+	if canvas.sel_kind >= 0 and not canvas.is_kind_editable(canvas.sel_kind):
+		_status.text = "当前图层已锁定或隔离，请先恢复该层编辑。"
+		return false
 	if not _selection_has_locked_actor():
 		return true
 	_status.text = "选区包含锁定物件，请先在场景列表中解锁。"
@@ -725,6 +966,12 @@ func _save_actor_editor_state() -> Error:
 
 
 func _object_command(command: String) -> void:
+	if command == "frame_selection":
+		_frame_selection()
+		return
+	if command == "delete":
+		_on_delete()
+		return
 	if (command == "group" or command == "ungroup") and not _allow_selection_edit():
 		return
 	if command == "group":
@@ -750,10 +997,7 @@ func _object_command(command: String) -> void:
 		if not errors.is_empty():
 			_status.text = "试走前请修正：\n" + "\n".join(errors)
 			return
-		var preview := ObjectPreview.new()
-		add_child(preview)
-		preview.configure(model.data.duplicate(true))
-		preview.popup_centered()
+		_open_preview({})
 		return
 	if command == "undo" or command == "redo":
 		var restored: bool = model.undo() if command == "undo" else model.redo()
@@ -1079,9 +1323,35 @@ func _load_selected() -> void:
 
 func _on_save() -> void:
 	var problems: Array[String] = model.validation_errors()
+	var review: Dictionary = Validation.validate(model.data, {}, _library)
+	for issue: Dictionary in review.get("errors", []):
+		if not problems.has(str(issue.get("message", ""))):
+			problems.append(str(issue.get("message", "")))
 	if not problems.is_empty():
 		_status.text = "保存前请修正：\n" + "\n".join(problems)
 		return
+	if not review.get("warnings", []).is_empty():
+		var messages: Array[String] = []
+		for issue: Dictionary in review["warnings"]:
+			messages.append(str(issue.get("message", "")))
+		var confirm := ConfirmationDialog.new()
+		confirm.title = "保存前检查提醒"
+		confirm.dialog_text = "\n".join(messages) + "\n仍然保存这份地图？"
+		var reviewed: Dictionary = model.data.duplicate(true)
+		confirm.confirmed.connect(func() -> void:
+			if model.data == reviewed:
+				_save_validated()
+			else:
+				_status.text = "地图在确认期间已变化，请重新保存并校验。"
+			confirm.queue_free())
+		confirm.canceled.connect(confirm.queue_free)
+		add_child(confirm)
+		confirm.popup_centered(Vector2i(660, 360))
+		return
+	_save_validated()
+
+
+func _save_validated() -> void:
 	var err := model.save_to()
 	if err == OK:
 		_refresh_dirty()
@@ -1192,7 +1462,9 @@ func _on_delete() -> void:
 	var was: String = model.label_of(canvas.sel_kind, canvas.sel_index)
 	var refs: Array[String] = []
 	if canvas.sel_kind == Kind.ACTOR:
-		refs = model.actor_references(canvas.sel_index)
+		for index: int in canvas.selected_actors():
+			for reference: String in model.actor_references(index):
+				refs.append(model.label_of(Kind.ACTOR, index) + "：" + reference)
 	elif canvas.sel_kind == Kind.PORTAL:
 		refs = model.portal_references(canvas.sel_index)
 	if refs.is_empty():
@@ -1211,8 +1483,16 @@ func _on_delete() -> void:
 		item.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		box.add_child(item)
 	dialog.add_child(_scrolled(box, Vector2(420, 180)))
+	var reviewed: Dictionary = model.data.duplicate(true)
+	var reviewed_selection: Array[int] = canvas.selected_actors()
+	var reviewed_kind: int = canvas.sel_kind
+	var reviewed_index: int = canvas.sel_index
 	dialog.confirmed.connect(func() -> void:
-		_do_delete(what, was)
+		if model.data == reviewed and canvas.sel_kind == reviewed_kind \
+				and canvas.sel_index == reviewed_index and canvas.selected_actors() == reviewed_selection:
+			_do_delete(what, was)
+		else:
+			_status.text = "选区或地图已变化，请重新确认删除。"
 		dialog.queue_free())
 	dialog.canceled.connect(func() -> void: dialog.queue_free())
 	add_child(dialog)
@@ -1222,7 +1502,15 @@ func _on_delete() -> void:
 func _do_delete(what: String, was: String) -> void:
 	if not _allow_selection_edit():
 		return
-	model.remove_at(canvas.sel_kind, canvas.sel_index)
+	if canvas.sel_kind == Kind.ACTOR:
+		var indices: Array[int] = canvas.selected_actors()
+		indices.sort()
+		indices.reverse()
+		for index: int in indices:
+			model.remove_at(Kind.ACTOR, index)
+		canvas.actor_selection.clear()
+	else:
+		model.remove_at(canvas.sel_kind, canvas.sel_index)
 	canvas.sel_kind = -1
 	canvas.sel_index = -1
 	_on_edited()
@@ -1416,7 +1704,7 @@ func _refresh_selection() -> void:
 		_spins[3].value = r.size.y
 		var is_spawn: bool = kind == Kind.SPAWN
 		var is_overlay: bool = kind == Kind.OVERLAY
-		var is_locked: bool = _selection_has_locked_actor()
+		var is_locked: bool = _selection_has_locked_actor() or not canvas.is_kind_editable(kind)
 		# 出生点没有宽高可改（它就是个坐标）；前景层整张拉伸，四个都不给改
 		_spins[0].editable = not is_overlay and not is_locked
 		_spins[1].editable = not is_overlay and not is_locked
@@ -1694,6 +1982,17 @@ func _build_actor_panel() -> void:
 	_base_spin = geometry.baseline_spin
 	_base_auto_button = geometry.baseline_auto
 	_actor_panel.add_child(geometry)
+	var visuals := VisualInspector.new()
+	visuals.configure(model, _panel_index, canvas.selected_actors())
+	visuals.edited.connect(_on_edited)
+	visuals.rebuild_requested.connect(_rebuild_object_inspector)
+	_actor_panel.add_child(visuals)
+	var template := TemplateInspector.new()
+	template.configure(model, _library, _panel_index)
+	template.set_selection(canvas.selected_actors())
+	template.edited.connect(_on_edited)
+	template.rebuild_requested.connect(_rebuild_object_inspector)
+	_actor_panel.add_child(template)
 	_transfer_button = Button.new()
 	_transfer_button.text = "归入地图墙…"
 	_transfer_button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
@@ -1702,6 +2001,9 @@ func _build_actor_panel() -> void:
 	_refresh_transfer_button()
 
 	_build_interaction_section()
+	_actor_panel.add_child(TriggerEditor.create_actor_event_selector(model, _panel_index, func() -> void:
+		_on_edited()
+		_rebuild_object_inspector()))
 	_actor_panel.add_child(_switch_row())
 	for child: Node in _actor_panel.get_children():
 		if child is Label:

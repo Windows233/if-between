@@ -13,6 +13,7 @@ extends RefCounted
 
 const MAP_DIR := "res://data/maps"
 const BackupStore := preload("res://addons/if_map_editor/map_backup_store.gd")
+const Hierarchy := preload("res://addons/if_map_editor/map_scene_hierarchy.gd")
 
 enum Kind { WALL, PORTAL, ACTOR, SPAWN, OVERLAY }
 enum ActorAlignment { LEFT, CENTER_X, RIGHT, TOP, CENTER_Y, BOTTOM }
@@ -150,23 +151,44 @@ func copy_actors(indices: Array[int]) -> void:
 				complete = false
 				break
 			offsets.append(int(clipboard_offsets[member_id]))
-		if complete and offsets.size() >= 2:
-			_clipboard_groups.append({"name": str(group.get("name", "组")), "offsets": offsets})
+		var descendants := Hierarchy.descendants(data, str(group.get("id", "")))
+		if complete and not descendants.is_empty() and descendants.all(func(member: String) -> bool: return clipboard_offsets.has(member)):
+			var copied: Dictionary = group.duplicate(true)
+			copied["offsets"] = offsets
+			_clipboard_groups.append(copied)
 
 
 func paste_actors() -> Array[int]:
 	_paste_serial += 1
 	var pasted := insert_actors(_clipboard, Vector2.ONE * 12.0 * _paste_serial)
+	var groups := editor_groups().duplicate(true)
+	var copied_ids := {}
 	for group: Dictionary in _clipboard_groups:
-		var members: Array[int] = []
+		var copied: Dictionary = group.duplicate(true)
+		var members: Array[String] = []
 		for offset: int in group.get("offsets", []):
 			if offset >= 0 and offset < pasted.size():
-				members.append(pasted[offset])
-		if members.size() >= 2:
-			var copied_name := str(group.get("name", "组")) + " 副本"
-			if _paste_serial > 1:
-				copied_name += " %d" % _paste_serial
-			group_actors(members, copied_name)
+				members.append(str(actor_field(pasted[offset], "id", "")))
+		copied["id"] = _next_group_id(groups)
+		copied_ids[str(group.get("id", ""))] = copied["id"]
+		copied["members"] = members
+		copied.erase("offsets")
+		var copied_name := str(group.get("name", "组")) + " 副本"
+		var suffix := 2
+		while _group_name_exists(groups, copied_name):
+			copied_name = str(group.get("name", "组")) + " 副本 %d" % suffix
+			suffix += 1
+		copied["name"] = copied_name
+		groups.append(copied)
+	for group: Dictionary in groups:
+		if copied_ids.values().has(str(group.get("id", ""))):
+			var old_parent := str(group.get("parent", ""))
+			if copied_ids.has(old_parent):
+				group["parent"] = copied_ids[old_parent]
+			else:
+				group.erase("parent")
+	if not _clipboard_groups.is_empty():
+		data["editor_groups"] = groups
 	return pasted
 
 
@@ -351,14 +373,13 @@ func group_members_for_actor(index: int) -> Array[int]:
 	var result: Array[int] = []
 	if actor_id.is_empty():
 		return result
-	for group: Variant in editor_groups():
-		if not group is Dictionary or not (group as Dictionary).get("members", []).has(actor_id):
-			continue
-		var member_ids: Array = (group as Dictionary).get("members", [])
-		for candidate: int in actors().size():
-			if member_ids.has(str(actor_field(candidate, "id", ""))):
-				result.append(candidate)
-		break
+	var parent := Hierarchy.parent_of_actor(data, actor_id)
+	if parent.is_empty():
+		return result
+	var member_ids := Hierarchy.descendants(data, Hierarchy.top_group(data, parent))
+	for candidate: int in actors().size():
+		if member_ids.has(str(actor_field(candidate, "id", ""))):
+			result.append(candidate)
 	return result
 
 
@@ -367,29 +388,10 @@ func expand_group_selection(indices: Array[int]) -> Array[int]:
 	for index: int in indices:
 		if index >= 0 and index < actors().size() and not result.has(index):
 			result.append(index)
-	var changed := true
-	while changed:
-		changed = false
-		var selected_ids: Dictionary = {}
-		for index: int in result:
-			var actor_id := str(actor_field(index, "id", ""))
-			if not actor_id.is_empty():
-				selected_ids[actor_id] = true
-		for group: Variant in editor_groups():
-			if not group is Dictionary:
-				continue
-			var members: Array = (group as Dictionary).get("members", [])
-			var intersects := false
-			for member: Variant in members:
-				if selected_ids.has(str(member)):
-					intersects = true
-					break
-			if not intersects:
-				continue
-			for index: int in actors().size():
-				if members.has(str(actor_field(index, "id", ""))) and not result.has(index):
-					result.append(index)
-					changed = true
+	for index: int in result.duplicate():
+		for member: int in group_members_for_actor(index):
+			if not result.has(member):
+				result.append(member)
 	return result
 
 
@@ -414,7 +416,7 @@ func group_actors(indices: Array[int], requested_name := "") -> String:
 		if not group is Dictionary:
 			continue
 		var intersects := false
-		for member: Variant in (group as Dictionary).get("members", []):
+		for member: String in Hierarchy.descendants(data, str(group.get("id", ""))):
 			if member_ids.has(str(member)):
 				intersects = true
 				break
@@ -430,6 +432,7 @@ func group_actors(indices: Array[int], requested_name := "") -> String:
 		suffix += 1
 	groups.append({"id": _next_group_id(groups), "name": name, "members": member_ids})
 	data["editor_groups"] = groups
+	Hierarchy.repair_parents(data)
 	dirty = true
 	return name
 
@@ -469,7 +472,7 @@ func ungroup_actors(indices: Array[int]) -> int:
 		if not group is Dictionary:
 			continue
 		var intersects := false
-		for member: Variant in (group as Dictionary).get("members", []):
+		for member: String in Hierarchy.descendants(data, str(group.get("id", ""))):
 			if selected_ids.has(str(member)):
 				intersects = true
 				break
@@ -482,6 +485,7 @@ func ungroup_actors(indices: Array[int]) -> int:
 			data.erase("editor_groups")
 		else:
 			data["editor_groups"] = groups
+		Hierarchy.repair_parents(data)
 		dirty = true
 	return removed
 
@@ -525,13 +529,20 @@ func _remove_actor_from_groups(actor_id: String) -> void:
 		var updated: Dictionary = (group as Dictionary).duplicate(true)
 		var members: Array = updated.get("members", []).duplicate()
 		members.erase(actor_id)
-		if members.size() >= 2:
-			updated["members"] = members
-			groups.append(updated)
+		updated["members"] = members
+		groups.append(updated)
+	var staged := {"editor_groups": groups}
+	var retained: Array = []
+	for group: Dictionary in groups:
+		var descendants := Hierarchy.descendants(staged, str(group.get("id", "")))
+		if descendants.size() >= 2 or (not str(group.get("parent", "")).is_empty() and not descendants.is_empty()):
+			retained.append(group)
+	groups = retained
 	if groups.is_empty():
 		data.erase("editor_groups")
 	else:
 		data["editor_groups"] = groups
+	Hierarchy.repair_parents(data)
 
 
 func count(kind: int) -> int:
@@ -821,7 +832,7 @@ func remove_at(kind: int, index: int) -> void:
 ##
 ## 拷的是**深拷贝**：之后改源不会连带改目标。
 static func copy_layout(source: Dictionary, target: Dictionary, with_spawns := false) -> void:
-	for key in ["walls", "portals", "actors", "editor_groups"]:
+	for key in ["walls", "portals", "actors", "editor_groups", "editor_tree_order"]:
 		if source.has(key):
 			target[key] = _normalize(source[key])
 		else:
@@ -872,6 +883,18 @@ func set_actor_field(index: int, key: String, value: Variant) -> void:
 	var d := actor_dict(index)
 	if d.is_empty():
 		return
+	if key == "id" and str(d.get("id", "")) != str(value):
+		var previous := str(d.get("id", ""))
+		for group: Variant in editor_groups():
+			if group is Dictionary and group.get("members", []) is Array:
+				var members: Array = group.get("members", [])
+				for member_index: int in members.size():
+					if str(members[member_index]) == previous:
+						members[member_index] = str(value)
+		var order: Array = data.get("editor_tree_order", [])
+		for order_index: int in order.size():
+			if order[order_index] == "actor:" + previous:
+				order[order_index] = "actor:" + str(value)
 	d[key] = value
 	dirty = true
 
@@ -1257,6 +1280,7 @@ func use_local_geometry(index: int) -> void:
 
 func validation_errors() -> Array[String]:
 	var result := MapDef.from_dictionary(data).validate()
+	result.append_array(Hierarchy.errors(data))
 	var seen: Dictionary = {}
 	for item: Variant in actors():
 		var actor_id := str(item.get("id", ""))
