@@ -27,6 +27,7 @@ func _run() -> void:
 	preload("res://tests/test_map_template_updates.gd").run(harness)
 	preload("res://tests/test_map_review.gd").run(harness)
 	preload("res://tests/test_map_validation.gd").run(harness)
+	preload("res://tests/test_map_navigation_regions.gd").run(harness)
 	preload("res://tests/test_map_trigger_editor.gd").run(harness)
 	await preload("res://tests/test_map_preview_options.gd").run(harness)
 	await preload("res://tests/test_map_inspector_ui.gd").run(harness)

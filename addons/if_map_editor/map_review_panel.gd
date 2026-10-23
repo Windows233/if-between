@@ -430,7 +430,8 @@ func _show_map_summary(index: int) -> void:
 	var lines: Array[String] = ["地图 %s\n%s" % [item.get("map_id", ""), item.get("path", "")]]
 	var navigation: Dictionary = item.get("validation", {}).get("navigation", {})
 	if not navigation.is_empty():
-		lines.append("导航连通分量：%d；校验%s完成。" % [navigation.get("components", []).size(),
+		lines.append("可站立区域：%d；出生点所在区域：%d；校验%s完成。" % [navigation.get("components", []).size(),
+			navigation.get("spawn_region_count", 0),
 			"已" if navigation.get("complete", false) else "未"])
 	for problem: Dictionary in item.get("issues", []):
 		lines.append("[%s] %s" % [problem["severity"], problem["message"]])
