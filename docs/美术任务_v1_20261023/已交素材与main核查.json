@@ -1,0 +1,114 @@
+[
+  {
+    "asset": "校门口公告栏.PNG",
+    "path": "art/props/ch2_notice_board.png",
+    "delivered_in_commit": "97a1d5f",
+    "main_exists": false,
+    "main_matches_delivered": false,
+    "note": "新图可读文字与ch2_notice一致；现有地图通知栏是背景中的物件及交互框，无独立sprite引用"
+  },
+  {
+    "asset": "黑板.PNG",
+    "path": "art/props/ch2_blackboard.png",
+    "delivered_in_commit": "97a1d5f",
+    "main_exists": false,
+    "main_matches_delivered": false,
+    "note": "可读的重复句与简笔画；教室目前没有黑板事件，后续接入时由文案确认文字"
+  },
+  {
+    "asset": "学生证.PNG",
+    "path": "art/item/student_id_half.png",
+    "delivered_in_commit": "97a1d5f",
+    "main_exists": true,
+    "main_matches_delivered": false,
+    "note": "ch2_sandbox 正在调用；姓名栏撕除，六年二班与对白一致"
+  },
+  {
+    "asset": "学生证.PNG",
+    "path": "art/item/student_id.png",
+    "delivered_in_commit": "97a1d5f",
+    "main_exists": true,
+    "main_matches_delivered": false,
+    "note": "背包按student_id物品ID动态加载；与剧情特写使用同一张交付图"
+  },
+  {
+    "asset": "猫玩偶.PNG",
+    "path": "art/item/cat_doll.png",
+    "delivered_in_commit": "97a1d5f",
+    "main_exists": true,
+    "main_matches_delivered": false,
+    "note": "破损耳、缝补与白尾尖可辨；当前物品已登记，尚无获取剧情"
+  },
+  {
+    "asset": "教学楼公告栏.PNG",
+    "path": "art/props/ch2_teaching_notice_board.png",
+    "delivered_in_commit": "97a1d5f",
+    "main_exists": false,
+    "main_matches_delivered": false,
+    "note": "公告栏特写，当前地图无对应独立贴图引用；接入时复核小字与文案"
+  },
+  {
+    "asset": "晶石.PNG",
+    "path": "art/item/night_tear.png",
+    "delivered_in_commit": "97a1d5f",
+    "main_exists": true,
+    "main_matches_delivered": false,
+    "note": "深色泪滴晶石；当前物品已登记，尚无获取剧情"
+  },
+  {
+    "asset": "沙坑.PNG",
+    "path": "art/props/ch2_sandbox_dug.png",
+    "delivered_in_commit": "97a1d5f",
+    "main_exists": false,
+    "main_matches_delivered": false,
+    "note": "沙坑与半张学生证特写；当前地图没有引用独立沙坑贴图，暂不覆盖底图"
+  },
+  {
+    "asset": "登记册.PNG",
+    "path": "art/props/ch2_register.png",
+    "delivered_in_commit": "97a1d5f",
+    "main_exists": false,
+    "main_matches_delivered": false,
+    "note": "画面未出现现有剧情要求的主角姓名；保留现有门卫室桌子贴图和对白，不接作最终剧情特写"
+  },
+  {
+    "asset": "童话书.PNG",
+    "path": "art/props/ch2_fairy_tale_book.png",
+    "delivered_in_commit": "97a1d5f",
+    "main_exists": false,
+    "main_matches_delivered": false,
+    "note": "书页与黑猫图案清楚；目前没有读取事件，后续接入时确认图上故事文字"
+  },
+  {
+    "asset": "操场.PNG",
+    "path": "art/map/candidates/school_yard_no_c.png",
+    "delivered_in_commit": "97a1d5f",
+    "main_exists": false,
+    "main_matches_delivered": false,
+    "note": "1535×1024，原图1264×843；非局部补地，旗杆基座、沙坑与围墙等视觉位置发生偏移。保持正式school_yard.png与地图数据不变，需在地图编辑器校准后另行接入"
+  },
+  {
+    "asset": "镜子.PNG",
+    "path": "art/props/ch2_mirror.png",
+    "delivered_in_commit": "97a1d5f",
+    "main_exists": false,
+    "main_matches_delivered": false,
+    "note": "猫是人类的好朋友等文字可读；教室目前没有镜子事件，后续接入时由文案确认文字"
+  },
+  {
+    "asset": "雕塑.PNG",
+    "path": "art/props/ch2_sculpture_inscription.png",
+    "delivered_in_commit": "97a1d5f",
+    "main_exists": false,
+    "main_matches_delivered": false,
+    "note": "实际是雕塑铭文牌特写，静候归期/但归期不至与现有对白一致；不是完整雕塑或喷泉贴图"
+  },
+  {
+    "asset": "御守.PNG",
+    "path": "art/item/charm.png",
+    "delivered_in_commit": "97a1d5f",
+    "main_exists": true,
+    "main_matches_delivered": true,
+    "note": "深蓝御守；当前物品已登记，尚无获取剧情"
+  }
+]
