@@ -114,6 +114,7 @@ func _ready() -> void:
 # ---------------------------------------------------------------- 界面
 
 func _build() -> void:
+	canvas = Canvas.new()
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_map_management = HFlowContainer.new()
@@ -230,7 +231,6 @@ func _build() -> void:
 	_workspace_split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_workspace_split.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_body_split.add_child(_workspace_split)
-	canvas = Canvas.new()
 	_shortcuts.load_settings()
 	canvas.shortcuts = _shortcuts
 	canvas.template_library = _library
@@ -530,9 +530,57 @@ static func _list_png_files(directory_path: String) -> Array[String]:
 
 
 func _load_imported_asset(path: String) -> Texture2D:
-	if not FileAccess.file_exists(path):
+	if not FileAccess.file_exists(path) or not FileAccess.file_exists(path + ".import"):
 		return null
-	return ResourceLoader.load(path) as Texture2D
+	# 源 PNG 已复制并不等于纹理已导入；提前 load 会在正常等待期间刷红报错。
+	var imported := ConfigFile.new()
+	if imported.load(path + ".import") != OK or not bool(imported.get_value("remap", "valid", true)):
+		return null
+	var remapped := str(imported.get_value("remap", "path", ""))
+	if remapped.is_empty() or not FileAccess.file_exists(remapped):
+		return null
+	return ResourceLoader.load(path, "Texture2D") as Texture2D
+
+
+func _asset_import_timeout_msec() -> int:
+	return 10000
+
+
+## scan 的忙碌标记可能先于新纹理可载入清零；以目标资源真正就绪为准。
+func _wait_for_imported_asset(path: String) -> Texture2D:
+	var deadline := Time.get_ticks_msec() + _asset_import_timeout_msec()
+	await _refresh_assets_after_scan()
+	if not is_inside_tree():
+		return null
+	var texture := _load_imported_asset(path)
+	if texture != null:
+		return texture
+	await _retry_asset_import(path, deadline)
+	while is_inside_tree():
+		texture = _load_imported_asset(path)
+		if texture != null:
+			return texture
+		if Time.get_ticks_msec() >= deadline:
+			break
+		await get_tree().process_frame
+	return null
+
+
+func _retry_asset_import(path: String, deadline: int) -> void:
+	if not Engine.is_editor_hint() or not is_inside_tree():
+		return
+	var filesystem := EditorInterface.get_resource_filesystem()
+	while is_inside_tree() and (filesystem.is_scanning() or filesystem.is_importing()):
+		if Time.get_ticks_msec() >= deadline:
+			return
+		await get_tree().process_frame
+	if not is_inside_tree() or Time.get_ticks_msec() >= deadline or not FileAccess.file_exists(path):
+		return
+	# 新文件先登记到编辑器文件系统，再显式导入一次。reimport_files 返回时导入已完成；
+	# 它内部会推进主循环，所以调用方仍须在等待结束后核对地图、选区与请求序号。
+	filesystem.update_file(path)
+	filesystem.reimport_files(PackedStringArray([path]))
+	await get_tree().process_frame
 
 
 func _refresh_assets_after_scan() -> void:
@@ -541,17 +589,22 @@ func _refresh_assets_after_scan() -> void:
 		return
 	if _asset_scan_in_progress:
 		_asset_scan_requested = true
-		await asset_scan_finished
+		var wait_deadline := Time.get_ticks_msec() + _asset_import_timeout_msec()
+		while is_inside_tree() and _asset_scan_in_progress and Time.get_ticks_msec() < wait_deadline:
+			await get_tree().process_frame
 		return
 	_asset_scan_in_progress = true
+	var deadline := Time.get_ticks_msec() + _asset_import_timeout_msec()
 	var filesystem := EditorInterface.get_resource_filesystem()
-	while is_inside_tree() and (filesystem.is_scanning() or filesystem.is_importing()):
+	while is_inside_tree() and (filesystem.is_scanning() or filesystem.is_importing()) \
+			and Time.get_ticks_msec() < deadline:
 		await get_tree().process_frame
-	while is_inside_tree():
+	while is_inside_tree() and Time.get_ticks_msec() < deadline:
 		_asset_scan_requested = false
 		filesystem.scan()
 		await get_tree().process_frame
-		while is_inside_tree() and (filesystem.is_scanning() or filesystem.is_importing()):
+		while is_inside_tree() and (filesystem.is_scanning() or filesystem.is_importing()) \
+				and Time.get_ticks_msec() < deadline:
 			await get_tree().process_frame
 		if not is_inside_tree():
 			break
@@ -1210,13 +1263,17 @@ func _row_layers() -> HFlowContainer:
 			["可走格", "show_walk"], ["脚底框（跟鼠标）", "show_foot"]]:
 		var cb := CheckBox.new()
 		cb.text = str(item[0])
-		cb.button_pressed = true
+		cb.button_pressed = bool(canvas.get(str(item[1])))
 		cb.tooltip_text = "取消勾选：这一类既不显示，也点不中（底下压着的东西就能选中了）"
+		if str(item[1]) == "show_walk":
+			cb.tooltip_text = "显示角色脚底能站稳的位置；会预留角色碰撞体积，编辑碰撞后自动刷新。"
+		elif str(item[1]) == "show_foot":
+			cb.tooltip_text = "鼠标处显示角色实际脚底框；绿色可站稳，红色表示会碰到实体。"
 		cb.toggled.connect(_on_layer.bind(str(item[1])))
 		row.add_child(cb)
 	var refresh := Button.new()
 	refresh.text = "重算可走格"
-	refresh.tooltip_text = "改完墙之后点它，重新跑一遍游戏那份 WalkGrid"
+	refresh.tooltip_text = "编辑碰撞后会自动刷新，也可点击立即按当前布局重算。"
 	refresh.pressed.connect(func() -> void:
 		_status.text = "正在算可走格……"
 		canvas.recompute_walk())
@@ -1551,7 +1608,9 @@ func _on_layer(on: bool, prop: String) -> void:
 	canvas.set_layer_visible(prop, on)
 	if prop == "show_walk":
 		if on:
-			_status.text = "正在算可走格……（用的是游戏同一份 WalkGrid）"
+			_status.text = "可走格已开启：绿=脚底能站稳，红=会碰撞；修改碰撞后自动刷新。"
+		else:
+			_status.text = "可走格已关闭。"
 	else:
 		_status.text = "「%s」%s —— 显示开关同时管能不能点中" % [prop, "开着" if on else "关掉了"]
 
@@ -2381,14 +2440,14 @@ func _apply_actor_texture(index: int, path: String, keep_rect := true) -> bool:
 
 func _set_actor_texture_after_scan(index: int, path: String, target_model, target_map: String,
 		target_id: String, keep_rect := true, request_serial := -1) -> void:
-	await _refresh_assets_after_scan()
+	var texture := await _wait_for_imported_asset(path)
 	if not is_inside_tree() or model != target_model or model.map_id != target_map \
 			or (request_serial >= 0 and request_serial != _texture_request_serial) \
 			or canvas.sel_kind != Kind.ACTOR or canvas.sel_index != index \
 			or str(model.actor_field(index, "id", "")) != target_id:
 		return
-	if _load_imported_asset(path) == null:
-		_status.text = "贴图仍无法载入：%s。请检查 Godot Import/Output 错误；地图数据未修改。" % path
+	if texture == null:
+		_status.text = "贴图尚未就绪，可能仍在导入：%s。地图数据未修改；请稍后刷新素材列表，使用已有文件。仍无法载入时检查 Godot Import/Output。" % path
 		return
 	_apply_actor_texture(index, path, keep_rect)
 
@@ -2431,14 +2490,14 @@ func _import_actor_texture(source: String, target_model, target_map: String,
 		_status.text = "导入失败：无法读取源文件或写入 art/props/。请确认 PNG 有效且项目目录可写。"
 		return
 	_status.text = "PNG 已复制，等待 Godot 完成纹理导入……"
-	await _refresh_assets_after_scan()
+	var texture := await _wait_for_imported_asset(imported)
 	if not is_inside_tree() or model != target_model or model.map_id != target_map \
 			or request_serial != _texture_request_serial or canvas.sel_kind != Kind.ACTOR \
 			or canvas.sel_index != target_index or _panel_index != target_index \
 			or str(model.actor_field(target_index, "id", "")) != target_id:
 		return
-	if _load_imported_asset(imported) == null:
-		_status.text = "PNG 已复制到 %s，但 Godot 未能导入纹理。请检查编辑器 Import/Output 错误；物件未修改。" % imported
+	if texture == null:
+		_status.text = "PNG 已复制到 %s，纹理尚未就绪，可能仍在导入；物件未修改。请稍后刷新素材列表，使用已有文件。仍无法载入时检查 Godot Import/Output。" % imported
 		return
 	_apply_actor_texture(target_index, imported)
 
@@ -2552,12 +2611,12 @@ func _import_overlay(source_path: String) -> void:
 		_status.text = "导入失败：无法读取 PNG 或写入 art/map/。请确认文件有效且项目目录可写。"
 		return
 	_status.text = "图片已复制，等待 Godot 完成纹理导入……"
-	await _refresh_assets_after_scan()
+	var texture := await _wait_for_imported_asset(res_path)
 	if not is_inside_tree() or model != target_model or model.map_id != target_map \
 			or request_serial != _texture_request_serial:
 		return
-	if _load_imported_asset(res_path) == null:
-		_status.text = "PNG 已复制到 %s，但 Godot 未能导入纹理。请检查编辑器 Import/Output 错误后点刷新。" % res_path
+	if texture == null:
+		_status.text = "PNG 已复制到 %s，纹理尚未就绪，可能仍在导入；前景层未修改。请稍后刷新素材列表，使用已有文件。仍无法载入时检查 Godot Import/Output。" % res_path
 		return
 	model.set_overlay_path(res_path)
 	canvas.set_overlay_texture(res_path)
@@ -2584,12 +2643,12 @@ func _import_and_create(source_path: String) -> void:
 		_status.text = "导入失败：无法读取 PNG 或写入 art/props/。请确认文件有效且项目目录可写。"
 		return
 	_status.text = "PNG 已复制，等待 Godot 完成纹理导入……"
-	await _refresh_assets_after_scan()
+	var texture := await _wait_for_imported_asset(res_path)
 	if not is_inside_tree() or model != target_model or model.map_id != target_map \
 			or request_serial != _texture_request_serial:
 		return
-	if _load_imported_asset(res_path) == null:
-		_status.text = "PNG 已复制到 %s，但 Godot 未能导入纹理。请检查编辑器 Import/Output 错误后点刷新。" % res_path
+	if texture == null:
+		_status.text = "PNG 已复制到 %s，纹理尚未就绪，可能仍在导入；尚未创建物件。请稍后刷新素材列表，使用已有文件。仍无法载入时检查 Godot Import/Output。" % res_path
 		return
 	var index := target_model.add_actor_with_sprite(res_path, true)
 	if index < 0:

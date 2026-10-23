@@ -32,4 +32,6 @@ func _run() -> void:
 	await preload("res://tests/test_map_inspector_ui.gd").run(harness)
 	await preload("res://tests/test_map_scene_tools_ui.gd").run(harness)
 	await preload("res://tests/test_map_texture_ui.gd").run(harness)
+	await preload("res://tests/test_map_walk_refresh.gd").run(harness)
+	await preload("res://tests/test_map_asset_import_wait.gd").run(harness)
 	quit(0 if harness.report() else 1)

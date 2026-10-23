@@ -124,6 +124,7 @@ var _drag_new_rect := Rect2()
 var _texture_rect_actor := -1
 var _texture_rect_source: Dictionary = {}
 var _walk_texture: ImageTexture = null
+var _walk_refresh_timer: Timer
 var _tex_cache := {}
 
 
@@ -140,11 +141,14 @@ func _ready() -> void:
 	mouse_exited.connect(func() -> void:
 		_mouse_inside = false
 		queue_redraw())
+	_schedule_walk_refresh()
 
 
 # ---------------------------------------------------------------- 载入
 
 func load_map(model_ref, bg_path: String, overlay_path: String, size: Vector2) -> void:
+	if is_instance_valid(_walk_refresh_timer):
+		_walk_refresh_timer.stop()
 	cancel_interaction()
 	_clear_collision_selection()
 	_drag_mode = 0
@@ -161,8 +165,7 @@ func load_map(model_ref, bg_path: String, overlay_path: String, size: Vector2) -
 	actor_selection.clear()
 	selected_trigger = -1
 	_view_touched = false
-	_walk_texture = null
-	_def = null
+	invalidate_def()
 	fit_to_view()
 	queue_redraw()
 	selection_changed.emit()
@@ -452,9 +455,26 @@ func overlay_game_rect() -> Rect2:
 	return Rect2(_overlay_used.position * scale, _overlay_used.size * scale)
 
 
-## 数据改过之后作废；下次问 `is_free` 时重建。
+## 数据改过之后作废；脚底框按需重建，可走格延迟合并刷新，不显示旧布局。
 func invalidate_def() -> void:
 	_def = null
+	_walk_texture = null
+	_schedule_walk_refresh()
+	queue_redraw()
+
+
+func _schedule_walk_refresh() -> void:
+	if not show_walk or model == null or not is_inside_tree():
+		return
+	if not is_instance_valid(_walk_refresh_timer):
+		_walk_refresh_timer = Timer.new()
+		_walk_refresh_timer.one_shot = true
+		_walk_refresh_timer.wait_time = 0.12
+		add_child(_walk_refresh_timer)
+		_walk_refresh_timer.timeout.connect(func() -> void:
+			if show_walk and _walk_texture == null:
+				recompute_walk())
+	_walk_refresh_timer.start()
 
 
 func _map_def() -> MapDef:
@@ -556,6 +576,8 @@ func _on_viewport_resized() -> void:
 
 
 func recompute_walk() -> void:
+	if is_instance_valid(_walk_refresh_timer):
+		_walk_refresh_timer.stop()
 	_walk_texture = null
 	if model == null:
 		return
@@ -582,6 +604,8 @@ func recompute_walk() -> void:
 
 func set_walk_visible(on: bool) -> void:
 	show_walk = on
+	if not on and is_instance_valid(_walk_refresh_timer):
+		_walk_refresh_timer.stop()
 	if on and _walk_texture == null:
 		recompute_walk()
 	queue_redraw()
