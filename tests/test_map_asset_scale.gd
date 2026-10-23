@@ -102,8 +102,8 @@ static func test_assignment(h: TestHarness, directory: String) -> void:
 	var properties: Dictionary = actor.duplicate(true)
 	properties.erase("rect")
 	h.check("已有物件可更换贴图", model.assign_actor_sprite(existing, source), true)
-	h.check("赋贴图保留小数位置并按背景换算尺寸", model.rect_of(Model.Kind.ACTOR, existing),
-		Rect2(18.25, 26.5, 30, 20))
+	h.check("赋贴图保留已经设置的小数位置与尺寸", model.rect_of(Model.Kind.ACTOR, existing),
+		Rect2(18.25, 26.5, 99, 75))
 	var after: Dictionary = model.actor_dict(existing).duplicate(true)
 	after.erase("rect")
 	after.erase("sprite")
@@ -216,6 +216,7 @@ static func test_fallback(h: TestHarness, directory: String) -> void:
 	h.check("拒绝添加不会留下半成品物件", model.count(Model.Kind.ACTOR), actor_count)
 	var existing: int = model.add_actor()
 	var before: Dictionary = model.data.duplicate(true)
-	h.check("无背景时给已有物件换贴图失败",
-		model.assign_actor_sprite(existing, directory.path_join("prop.png")), false)
-	h.check("换贴图失败不修改已有物件", model.data, before)
+	h.check("无背景也能给已有物件换贴图并保留范围",
+		model.assign_actor_sprite(existing, directory.path_join("prop.png")), true)
+	before["actors"][existing]["sprite"] = directory.path_join("prop.png")
+	h.check("换贴图仅修改 sprite 字段", model.data, before)

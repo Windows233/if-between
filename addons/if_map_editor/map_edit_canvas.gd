@@ -5,12 +5,12 @@
 ## 缩放/平移自己实现（不借 2D 编辑器），因为整个画布是自成一体的面板，
 ## 不依赖当前打开哪个场景。
 ##
-## 五种工具：选择 / 画墙 / 画传送区 / 拉基线 / 画物件碰撞箱。
+## 工具：选择 / 画墙 / 画传送区 / 拉基线 / 画物件碰撞箱 / 框选贴图范围。
 ## 纯绘制与交互，数据全部交给 `map_edit_model.gd`。
 @tool
 extends Control
 
-enum Tool { SELECT, WALL, PORTAL, BASELINE, COLLISION }
+enum Tool { SELECT, WALL, PORTAL, BASELINE, COLLISION, TEXTURE_RECT }
 
 const Kind := preload("res://addons/if_map_editor/map_edit_model.gd").Kind
 const ObjectTransform := preload("res://addons/if_map_editor/map_object_transform.gd")
@@ -49,6 +49,7 @@ var map_size := Vector2.ZERO
 var tool: int = Tool.SELECT:
 	set(value):
 		if tool != value:
+			cancel_interaction()
 			_clear_collision_selection()
 			if _drag_mode == 8:
 				_drag_mode = 0
@@ -120,7 +121,10 @@ var _drag_start_game := Vector2.ZERO
 var _drag_start_rect := Rect2()
 var _drag_handle := -1
 var _drag_new_rect := Rect2()
+var _texture_rect_actor := -1
+var _texture_rect_source: Dictionary = {}
 var _walk_texture: ImageTexture = null
+var _walk_refresh_timer: Timer
 var _tex_cache := {}
 
 
@@ -137,11 +141,15 @@ func _ready() -> void:
 	mouse_exited.connect(func() -> void:
 		_mouse_inside = false
 		queue_redraw())
+	_schedule_walk_refresh()
 
 
 # ---------------------------------------------------------------- 载入
 
 func load_map(model_ref, bg_path: String, overlay_path: String, size: Vector2) -> void:
+	if is_instance_valid(_walk_refresh_timer):
+		_walk_refresh_timer.stop()
+	cancel_interaction()
 	_clear_collision_selection()
 	_drag_mode = 0
 	_drag_actor_rects.clear()
@@ -157,14 +165,14 @@ func load_map(model_ref, bg_path: String, overlay_path: String, size: Vector2) -
 	actor_selection.clear()
 	selected_trigger = -1
 	_view_touched = false
-	_walk_texture = null
-	_def = null
+	invalidate_def()
 	fit_to_view()
 	queue_redraw()
 	selection_changed.emit()
 
 
 func set_actor_editor_state(hidden_ids: Dictionary, locked_ids: Dictionary) -> void:
+	cancel_interaction()
 	if _drag_mode == 1 or _drag_mode == 2 or _drag_mode == 4:
 		_drag_mode = 0
 		edited.emit()
@@ -202,6 +210,7 @@ func configure_grid(step := 1.0, visible := false) -> void:
 
 
 func configure_edit_layers(locks: Dictionary, isolation := "") -> void:
+	cancel_interaction()
 	if _drag_mode >= 5 and _drag_mode <= 7:
 		_clear_collision_selection()
 	elif _drag_mode == 1 or _drag_mode == 2 or _drag_mode == 4:
@@ -241,6 +250,7 @@ func selected_actors() -> Array[int]:
 
 
 func select_actors(indices: Array[int]) -> void:
+	cancel_interaction()
 	_clear_collision_selection()
 	selected_trigger = -1
 	actor_selection = model.expand_group_selection(indices) if model != null else indices.duplicate()
@@ -445,9 +455,26 @@ func overlay_game_rect() -> Rect2:
 	return Rect2(_overlay_used.position * scale, _overlay_used.size * scale)
 
 
-## 数据改过之后作废；下次问 `is_free` 时重建。
+## 数据改过之后作废；脚底框按需重建，可走格延迟合并刷新，不显示旧布局。
 func invalidate_def() -> void:
 	_def = null
+	_walk_texture = null
+	_schedule_walk_refresh()
+	queue_redraw()
+
+
+func _schedule_walk_refresh() -> void:
+	if not show_walk or model == null or not is_inside_tree():
+		return
+	if not is_instance_valid(_walk_refresh_timer):
+		_walk_refresh_timer = Timer.new()
+		_walk_refresh_timer.one_shot = true
+		_walk_refresh_timer.wait_time = 0.12
+		add_child(_walk_refresh_timer)
+		_walk_refresh_timer.timeout.connect(func() -> void:
+			if show_walk and _walk_texture == null:
+				recompute_walk())
+	_walk_refresh_timer.start()
 
 
 func _map_def() -> MapDef:
@@ -549,6 +576,8 @@ func _on_viewport_resized() -> void:
 
 
 func recompute_walk() -> void:
+	if is_instance_valid(_walk_refresh_timer):
+		_walk_refresh_timer.stop()
 	_walk_texture = null
 	if model == null:
 		return
@@ -575,6 +604,8 @@ func recompute_walk() -> void:
 
 func set_walk_visible(on: bool) -> void:
 	show_walk = on
+	if not on and is_instance_valid(_walk_refresh_timer):
+		_walk_refresh_timer.stop()
 	if on and _walk_texture == null:
 		recompute_walk()
 	queue_redraw()
@@ -719,8 +750,11 @@ func _draw() -> void:
 			draw_string(ThemeDB.fallback_font, p + Vector2(7, 4), model.label_of(Kind.SPAWN, i),
 				HORIZONTAL_ALIGNMENT_LEFT, -1, 12, SPAWN_COLOR)
 
-	if _drag_mode == 3 or _drag_mode == 7 or _drag_mode == 8:
+	if _drag_mode == 3 or _drag_mode == 7 or _drag_mode == 8 or _drag_mode == 10:
 		_draw_rect_game(_drag_new_rect, Color(1, 1, 1, 0.15), SELECT_COLOR)
+		if _drag_mode == 10:
+			_label(_drag_new_rect.position, "贴图范围 %.2f × %.2f" % [
+				_drag_new_rect.size.x, _drag_new_rect.size.y], SELECT_COLOR)
 
 	# 测试工具：鼠标处的脚底框（绿=站得住，红=站不住）
 	if show_foot and _mouse_inside and model != null:
@@ -871,17 +905,19 @@ func _handle_points(r: Rect2) -> Array[Vector2]:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_WINDOW_FOCUS_OUT or what == NOTIFICATION_EXIT_TREE \
 			or what == NOTIFICATION_FOCUS_EXIT:
+		cancel_interaction()
 		_clear_collision_selection()
 		if _drag_mode == 8:
 			_drag_mode = 0
 	elif what == NOTIFICATION_VISIBILITY_CHANGED and not is_visible_in_tree():
+		cancel_interaction()
 		_clear_collision_selection()
 		if _drag_mode == 8:
 			_drag_mode = 0
 
 
 func _input(event: InputEvent) -> void:
-	if _drag_mode < 1 or _drag_mode > 8:
+	if (_drag_mode < 1 or _drag_mode > 8) and _drag_mode != 10:
 		return
 	if event is InputEventMouseMotion:
 		_update_pointer_drag(get_global_transform_with_canvas().affine_inverse() * event.position)
@@ -893,6 +929,7 @@ func _input(event: InputEvent) -> void:
 	elif event is InputEventKey and shortcuts != null:
 		_route_shortcut(event)
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+		cancel_interaction()
 		_clear_collision_selection()
 		if _drag_mode == 8:
 			_drag_mode = 0
@@ -914,6 +951,7 @@ func _gui_input(event: InputEvent) -> void:
 			return
 		if mb.button_index == MOUSE_BUTTON_MIDDLE or mb.button_index == MOUSE_BUTTON_RIGHT:
 			if mb.pressed:
+				cancel_interaction()
 				_clear_collision_selection()
 				_drag_mode = 9
 				_drag_start_game = mb.position - pan
@@ -941,6 +979,7 @@ func _gui_input(event: InputEvent) -> void:
 			return
 		var key := event as InputEventKey
 		if key.pressed and key.keycode == KEY_ESCAPE:
+			cancel_interaction()
 			_clear_collision_selection()
 			if _drag_mode == 8:
 				_drag_mode = 0
@@ -979,6 +1018,8 @@ func _route_shortcut(event: InputEvent) -> void:
 	var command := str(shortcuts.action_for(event))
 	if command.is_empty():
 		return
+	if _drag_mode == 10:
+		cancel_interaction()
 	_clear_collision_selection()
 	if command == "cancel" and _drag_mode == 8:
 		_drag_mode = 0
@@ -1016,6 +1057,10 @@ func _update_pointer_drag(pos: Vector2) -> void:
 			var origin := _drag_start_game if _drag_mode == 8 else _snap(_drag_start_game)
 			_drag_new_rect = Rect2(origin.min(start), (start - origin).abs())
 			queue_redraw()
+		10:
+			var point := _texture_point(pos)
+			_drag_new_rect = Rect2(_drag_start_game.min(point), (point - _drag_start_game).abs())
+			queue_redraw()
 		4:
 			var baseline := _snap(to_game(pos)).y
 			model.set_actor_cover_y(sel_index, baseline)
@@ -1033,6 +1078,18 @@ func _press(pos: Vector2, additive := false, toggle := false, duplicate := false
 		return
 	_clear_collision_selection()
 	match tool:
+		Tool.TEXTURE_RECT:
+			if not _collision_editable():
+				status.emit("请单选一件可见且未锁定的独立物件，再框选贴图范围。")
+				return
+			if not Rect2(Vector2.ZERO, map_size).has_point(to_game(pos)):
+				return
+			_texture_rect_actor = sel_index
+			_texture_rect_source = model.actor_dict(sel_index).duplicate(true)
+			_drag_mode = 10
+			_drag_start_game = _texture_point(pos)
+			_drag_new_rect = Rect2(_drag_start_game, Vector2.ZERO)
+			queue_redraw()
 		Tool.COLLISION:
 			if sel_kind != Kind.ACTOR:
 				status.emit("先在左侧选中一个物件，再在图上拖出它的碰撞箱。")
@@ -1053,8 +1110,11 @@ func _press(pos: Vector2, additive := false, toggle := false, duplicate := false
 		Tool.BASELINE:
 			var index := _hit_cover_actor(pos)
 			if index >= 0:
-				sel_kind = Kind.ACTOR
-				sel_index = index
+				var selection: Array[int] = [index]
+				if model.expand_group_selection(selection).size() != 1:
+					status.emit("拉基线需要单选独立物件，请先解组。")
+					return
+				select_actors(selection)
 				_drag_mode = 4
 				selection_changed.emit()
 				status.emit("拖动中：上下移动鼠标改基线，松手写入 JSON")
@@ -1187,6 +1247,9 @@ func _duplicate_drag_selection() -> void:
 
 
 func _release() -> void:
+	if _drag_mode == 10:
+		_release_texture_rect()
+		return
 	if _drag_mode >= 5 and _drag_mode <= 7:
 		_release_collision_drag()
 		return
@@ -1214,6 +1277,36 @@ func _release() -> void:
 	_duplicate_on_drag = false
 	_drag_actor_sources.clear()
 	invalidate_def()
+	queue_redraw()
+
+
+## 框选只预览，松手时整步提交；取消、切图或切工具不写半成品。
+func cancel_interaction() -> void:
+	if _drag_mode == 10:
+		_drag_mode = 0
+		_texture_rect_actor = -1
+		_texture_rect_source.clear()
+		queue_redraw()
+
+
+func _texture_point(pos: Vector2) -> Vector2:
+	return _snap(to_game(pos)).clamp(Vector2.ZERO, map_size)
+
+
+func _release_texture_rect() -> void:
+	var valid: bool = _collision_editable() and sel_index == _texture_rect_actor \
+		and model.actor_dict(sel_index) == _texture_rect_source
+	var target := _drag_new_rect
+	var source := _texture_rect_source.duplicate(true)
+	cancel_interaction()
+	if not valid or minf(target.size.x, target.size.y) * zoom < 3.0:
+		return
+	if ObjectTransform.write_actor(model, sel_index, ObjectTransform.resized_actor(source, target)):
+		invalidate_def()
+		edited.emit()
+		selection_changed.emit()
+		status.emit("贴图已适配框选范围（%.2f × %.2f），可撤销；碰撞和交互区同步缩放。" % [
+			target.size.x, target.size.y])
 	queue_redraw()
 
 

@@ -463,12 +463,13 @@ static func test_import_prop(h: TestHarness) -> void:
 	h.check("导入建的物件默认会挡人", bool(m.actor_field(index, "cover", false)), true)
 	h.check("导入建物件采用原图像素尺寸", m.rect_of(Model.Kind.ACTOR, index).size, Vector2(2, 2))
 	var blank := m.add_actor()
+	var blank_size := m.rect_of(Model.Kind.ACTOR, blank).size
 	var position := m.rect_of(Model.Kind.ACTOR, blank).position
 	h.check("新建物件可赋贴图", m.assign_actor_sprite(blank, path), true)
-	h.check("新建物件赋贴图恢复原图尺寸", m.rect_of(Model.Kind.ACTOR, blank).size, Vector2(2, 2))
+	h.check("新建物件赋贴图沿用当前框的尺寸", m.rect_of(Model.Kind.ACTOR, blank).size, blank_size)
 	h.check("赋贴图保留物件位置", m.rect_of(Model.Kind.ACTOR, blank).position, position)
 	m.set_rect(Model.Kind.ACTOR, blank, Rect2(position, Vector2(80, 40)))
-	h.check("手动缩放后可恢复原图尺寸", m.assign_actor_sprite(blank, path), true)
+	h.check("手动缩放后可恢复原图尺寸", m.restore_original_size(blank), true)
 	h.check("恢复尺寸不会复用已缩放的实例", m.rect_of(Model.Kind.ACTOR, blank).size, Vector2(2, 2))
 	h.check("无效贴图不改物件", m.assign_actor_sprite(blank, "user://missing.png"), false)
 	h.check("无效贴图保留原贴图", m.actor_field(blank, "sprite"), path)
