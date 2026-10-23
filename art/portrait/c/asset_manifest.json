@@ -1,0 +1,45 @@
+{
+  "date": "2026-10-23",
+  "source_archive": "c 2.zip",
+  "archive_sha256": "e4a21e85d06f2af1dd10d1378dfe2c6ddbfb6c3706ec8e7dda9f698922a8bc30",
+  "source_pixels_unchanged": true,
+  "existing_c_base_preserved": true,
+  "assets": [
+    {
+      "source": "c/IMG_5100.PNG",
+      "path": "res://art/portrait/c/neutral.png",
+      "dialogue_portrait": "c/neutral",
+      "expression_description": "平静",
+      "size_px": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "sha256": "49f6d52948ffb053a046ab2dce7a7a678b412c1e2681134c30a1fb95251626d9"
+    },
+    {
+      "source": "c/IMG_5102.PNG",
+      "path": "res://art/portrait/c/serious.png",
+      "dialogue_portrait": "c/serious",
+      "expression_description": "严肃",
+      "size_px": [
+        2048,
+        2048
+      ],
+      "mode": "RGBA",
+      "sha256": "c1d23f7e126796effc9e07cba5907149149170addf909f90212ef55881867365"
+    },
+    {
+      "source": "c/IMG_5101.PNG",
+      "path": "res://art/portrait/c/smile.png",
+      "dialogue_portrait": "c/smile",
+      "expression_description": "微笑",
+      "size_px": [
+        2048,
+        2048
+      ],
+      "mode": "RGBA",
+      "sha256": "ef5f89305eb82117e980fabb1fa08bf1f52e0b539a506cb5167ae3fd8686d1ad"
+    }
+  ]
+}
