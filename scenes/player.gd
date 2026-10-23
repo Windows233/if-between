@@ -97,6 +97,11 @@ var walk_path: Array[Vector2] = []
 const ARRIVE := 1.0
 
 
+## 与地图共用最近邻采样，缩放时保留像素边缘；预览子类也继承这个默认值。
+func _init() -> void:
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+
+
 func _physics_process(_delta: float) -> void:
 	var direction := current_direction()
 	if direction != Vector2.ZERO:

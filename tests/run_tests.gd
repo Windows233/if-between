@@ -52,6 +52,7 @@ func _initialize() -> void:
 func _finish_with_triggers(h: TestHarness) -> void:
 	# 救援用例需要已入树的根节点；只在延迟入口执行一次。
 	await preload("res://tests/test_character_scale.gd").run(h)
+	preload("res://tests/test_map_render_quality.gd").run(h)
 	preload("res://tests/test_rescue_timing.gd").run(h)
 	await preload("res://tests/test_rescue_integration.gd").run(h)
 	await preload("res://tests/test_map_triggers.gd").run(h)

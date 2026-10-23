@@ -24,6 +24,7 @@ class PreviewPlayer:
 
 	func _init() -> void:
 		name = "Player"
+		texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		z_index = 10
 		var collision := CollisionShape2D.new()
 		var box := RectangleShape2D.new()

@@ -257,6 +257,8 @@ func boot() -> void:
 
 	stage_view = Node2D.new()
 	stage_view.name = "StageView"
+	# 世界人物共用像素采样；UI/立绘保留自己的显示方式。
+	stage_view.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	add_child(stage_view)
 
 	player = Player.create()

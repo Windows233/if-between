@@ -9,6 +9,8 @@
 class_name MapView
 extends Node2D
 
+const TextureSource := preload("res://scenes/map_texture_source.gd")
+
 const FLOOR_COLOR := Color("#1b1d23")
 const WALL_COLOR := Color("#3a3f4b")
 const PORTAL_COLOR := Color("#4e7a52")
@@ -118,6 +120,11 @@ var _detail: Label = null
 var _covers: Array[Dictionary] = []
 ## 这张地图有没有插画。有的话，家具、墙、门都不再画色块。
 var _has_picture := false
+
+
+## 地图插画、前景和物件共用像素采样；构造时设置也覆盖编辑器试走子类。
+func _init() -> void:
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
 
 ## 重建整个场景。切换场景、或者世界状态变了之后调用。
@@ -286,7 +293,7 @@ func _add_prop(path: String, rect: Rect2, z: int) -> Sprite2D:
 		push_warning("[地图] 物件贴图不是图片：%s" % path)
 		return null
 
-	var image: Texture2D = texture
+	var image: Texture2D = TextureSource.resolve(path, texture)
 	var sprite := Sprite2D.new()
 	sprite.texture = image
 	sprite.centered = false
@@ -442,7 +449,7 @@ func _add_overlay() -> void:
 		push_warning("[地图] 前景层不是图片：%s" % map_def.overlay)
 		return
 
-	var image: Texture2D = texture
+	var image: Texture2D = TextureSource.resolve(map_def.overlay, texture)
 	var sprite := Sprite2D.new()
 	sprite.name = "Overlay"
 	sprite.texture = image
