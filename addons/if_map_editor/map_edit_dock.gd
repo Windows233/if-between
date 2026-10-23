@@ -93,6 +93,10 @@ var _map_management: HFlowContainer
 var _toolbar_drawers: Array[Control] = []
 var _drawer_buttons: Array[Button] = []
 var _object_inspector: Control
+var _texture_rect_button: Button
+var _texture_request_serial := 0
+var _texture_selection_key: Array = []
+var _sprite_path_edit: LineEdit
 
 
 func _ready() -> void:
@@ -1056,6 +1060,10 @@ func _save_actor_editor_state() -> Error:
 
 
 func _object_command(command: String) -> void:
+	if command == "cancel":
+		canvas.cancel_interaction()
+		_on_tool(Canvas.Tool.SELECT)
+		return
 	if command == "frame_selection":
 		_frame_selection()
 		return
@@ -1509,16 +1517,21 @@ func _refresh_dirty() -> void:
 # ---------------------------------------------------------------- 交互
 
 func _on_tool(which: int) -> void:
-	if which in [Canvas.Tool.BASELINE, Canvas.Tool.COLLISION]:
+	if which in [Canvas.Tool.BASELINE, Canvas.Tool.COLLISION, Canvas.Tool.TEXTURE_RECT]:
 		if canvas.sel_kind != Kind.ACTOR or canvas.selected_actors().size() != 1 \
 				or not _allow_selection_edit():
 			_status.text = "请先单选一件未锁定物件，再使用属性卡里的工具。"
+			return
+		if which == Canvas.Tool.TEXTURE_RECT and not canvas._collision_editable():
+			_status.text = "请单选一件可见且未锁定的独立物件，再框选贴图范围。"
 			return
 	canvas.tool = which
 	for button: Button in _tool_buttons:
 		button.set_pressed_no_signal(int(button.get_meta("map_tool")) == which)
 	if is_instance_valid(_object_inspector):
 		_object_inspector.set_active_tool(which)
+	if is_instance_valid(_texture_rect_button):
+		_texture_rect_button.set_pressed_no_signal(which == Canvas.Tool.TEXTURE_RECT)
 	match which:
 		Canvas.Tool.SELECT:
 			_status.text = "选择：拖动物件；单选物件的碰撞框优先拾取，拖内部移动、八柄缩放；精确数值见「选择与尺寸」。"
@@ -1530,6 +1543,8 @@ func _on_tool(which: int) -> void:
 			_status.text = "拉基线：点一件遮挡物（身上有黄线），上下拖，松手写进它的 cover_y。"
 		Canvas.Tool.COLLISION:
 			_status.text = "先单选物件：空白处拖出碰撞，已有红框可移动和八柄缩放，Esc 取消；排序取参考碰撞上边缘。"
+		Canvas.Tool.TEXTURE_RECT:
+			_status.text = "框选贴图范围：在地图上按住左键拖框，松手将所选物件适配到框内；Esc 取消，可撤销。"
 
 
 func _on_layer(on: bool, prop: String) -> void:
@@ -1767,13 +1782,19 @@ func _on_base_auto() -> void:
 
 
 func _on_selection_changed() -> void:
-	if canvas.tool in [Canvas.Tool.BASELINE, Canvas.Tool.COLLISION] \
+	_texture_request_serial += 1
+	if canvas.tool in [Canvas.Tool.BASELINE, Canvas.Tool.COLLISION, Canvas.Tool.TEXTURE_RECT] \
 			and (canvas.sel_kind != Kind.ACTOR or canvas.selected_actors().size() != 1):
 		_on_tool(Canvas.Tool.SELECT)
 	_refresh_selection()
 
 
 func _refresh_selection() -> void:
+	var selection_key: Array = [model.get_instance_id(), model.map_id, canvas.sel_kind,
+		canvas.sel_index, canvas.selected_actors()]
+	if selection_key != _texture_selection_key:
+		_texture_request_serial += 1
+		_texture_selection_key = selection_key
 	_refresh_objects()
 	var kind: int = canvas.sel_kind
 	var index: int = canvas.sel_index
@@ -1821,6 +1842,9 @@ func _refresh_selection() -> void:
 			_base_spin.tooltip_text = "独立物件：碰撞箱上边缘；旧物件：贴图底边。橙线表示手动调整。"
 	_syncing = false
 	_sync_actor_panel()
+	if is_instance_valid(_texture_rect_button):
+		_texture_rect_button.disabled = not canvas._collision_editable()
+		_texture_rect_button.set_pressed_no_signal(canvas.tool == Canvas.Tool.TEXTURE_RECT)
 	if kind == Kind.ACTOR and is_instance_valid(_object_inspector):
 		for object_tool: int in _object_inspector._tool_buttons:
 			var button: Button = _object_inspector._tool_buttons[object_tool]
@@ -1910,7 +1934,8 @@ func _on_edited() -> void:
 
 func _on_canvas_edited() -> void:
 	_on_edited()
-	if canvas.sel_kind == Kind.ACTOR and (canvas.tool == Canvas.Tool.COLLISION or canvas._has_collision_selection()):
+	if canvas.sel_kind == Kind.ACTOR and (canvas.tool in [Canvas.Tool.COLLISION, Canvas.Tool.TEXTURE_RECT] \
+			or canvas._has_collision_selection()):
 		_build_actor_panel()
 	_refresh_selection()
 
@@ -2045,11 +2070,19 @@ func _build_actor_panel() -> void:
 	import_texture.text = "导入贴图…"
 	import_texture.pressed.connect(_open_actor_texture_import)
 	row2.add_child(import_texture)
+	_texture_rect_button = Button.new()
+	_texture_rect_button.text = "框选贴图范围"
+	_texture_rect_button.toggle_mode = true
+	_texture_rect_button.tooltip_text = "在地图上拖出目标范围，物件位置和宽高随框设置；碰撞与交互区同步缩放。"
+	_texture_rect_button.pressed.connect(func() -> void:
+		_on_tool(Canvas.Tool.SELECT if canvas.tool == Canvas.Tool.TEXTURE_RECT else Canvas.Tool.TEXTURE_RECT)
+		canvas.grab_focus())
+	row2.add_child(_texture_rect_button)
 	var native_size := Button.new()
 	native_size.text = "恢复原图尺寸"
 	native_size.tooltip_text = "按背景像素比例恢复物件尺寸，保持与地图背景一致。"
 	native_size.pressed.connect(func() -> void:
-		_set_actor_texture(_panel_index, str(model.actor_field(_panel_index, "sprite", ""))))
+		_set_actor_texture(_panel_index, str(model.actor_field(_panel_index, "sprite", "")), false))
 	row2.add_child(native_size)
 	_actor_panel.add_child(row2)
 
@@ -2296,11 +2329,12 @@ func _field(key: String, width: float) -> LineEdit:
 	edit.text = str(model.actor_field(_panel_index, key, ""))
 	edit.custom_minimum_size = Vector2(width, 0)
 	if key == "sprite":
+		_sprite_path_edit = edit
 		var apply_texture := func() -> void:
 			if edit.text != str(model.actor_field(_panel_index, "sprite", "")):
 				_set_actor_texture(_panel_index, edit.text.strip_edges())
 		edit.text_submitted.connect(func(_text: String) -> void: apply_texture.call())
-		edit.tooltip_text = "输入项目内贴图路径后按 Enter；自动采用原图像素尺寸。"
+		edit.tooltip_text = "输入项目内贴图路径后按 Enter；贴图适配当前框，位置和宽高保持不变。"
 		return edit
 	if key == "id" and canvas.actor_is_hidden(_panel_index):
 		edit.editable = false
@@ -2315,43 +2349,48 @@ func _field(key: String, width: float) -> LineEdit:
 	return edit
 
 
-func _set_actor_texture(index: int, path: String) -> bool:
+func _set_actor_texture(index: int, path: String, keep_rect := true) -> bool:
 	if not _allow_selection_edit():
 		return false
+	_texture_request_serial += 1
 	if path != "" and not FileAccess.file_exists(path):
 		_status.text = "贴图文件不存在：%s。请刷新素材列表并重新选择。" % path
 		return false
 	if path != "" and _load_imported_asset(path) == null:
 		_status.text = "贴图 PNG 尚未完成 Godot 导入，正在重新扫描；完成后会尝试应用。"
 		_set_actor_texture_after_scan(index, path, model, model.map_id,
-			str(model.actor_field(index, "id", "")))
+			str(model.actor_field(index, "id", "")), keep_rect, _texture_request_serial)
 		return false
-	return _apply_actor_texture(index, path)
+	return _apply_actor_texture(index, path, keep_rect)
 
 
-func _apply_actor_texture(index: int, path: String) -> bool:
+func _apply_actor_texture(index: int, path: String, keep_rect := true) -> bool:
 	if not _allow_selection_edit():
 		return false
-	if not model.assign_actor_sprite(index, path):
+	if not model.assign_actor_sprite(index, path, keep_rect):
 		_status.text = "贴图无法读取：%s。请确认文件是有效 PNG，且项目目录可写。" % path
 		return false
+	if is_instance_valid(_sprite_path_edit) and _panel_index == index:
+		_sprite_path_edit.text = path
 	_on_edited()
 	_refresh_selection()
-	_status.text = "贴图已更新，物件尺寸恢复为原图像素 1:1。"
+	_status.text = "贴图已更新，保留当前范围；可点「框选贴图范围」在地图上重新定大小。" if keep_rect \
+		else "物件已按背景像素比例恢复原图尺寸。"
 	return true
 
 
 func _set_actor_texture_after_scan(index: int, path: String, target_model, target_map: String,
-		target_id: String) -> void:
+		target_id: String, keep_rect := true, request_serial := -1) -> void:
 	await _refresh_assets_after_scan()
 	if not is_inside_tree() or model != target_model or model.map_id != target_map \
+			or (request_serial >= 0 and request_serial != _texture_request_serial) \
 			or canvas.sel_kind != Kind.ACTOR or canvas.sel_index != index \
 			or str(model.actor_field(index, "id", "")) != target_id:
 		return
 	if _load_imported_asset(path) == null:
 		_status.text = "贴图仍无法载入：%s。请检查 Godot Import/Output 错误；地图数据未修改。" % path
 		return
-	_apply_actor_texture(index, path)
+	_apply_actor_texture(index, path, keep_rect)
 
 
 func _open_actor_texture_import() -> void:
@@ -2366,7 +2405,7 @@ func _open_actor_texture_import() -> void:
 	dialog.access = FileDialog.ACCESS_FILESYSTEM
 	dialog.use_native_dialog = true
 	dialog.add_filter("*.png", "PNG 图片")
-	dialog.title = "为当前物件导入贴图（原图 1:1）"
+	dialog.title = "为当前物件导入贴图（适配当前范围）"
 	dialog.file_selected.connect(func(source: String) -> void:
 		_import_actor_texture(source, target_model, target_map, target_index, target_id)
 		dialog.queue_free())
@@ -2378,8 +2417,11 @@ func _open_actor_texture_import() -> void:
 func _import_actor_texture(source: String, target_model, target_map: String,
 		target_index: int, target_id: String) -> void:
 	if model != target_model or model.map_id != target_map or _panel_index != target_index \
+			or canvas.sel_kind != Kind.ACTOR or canvas.sel_index != target_index \
 			or str(model.actor_field(target_index, "id", "")) != target_id or not _allow_selection_edit():
 		return
+	_texture_request_serial += 1
+	var request_serial := _texture_request_serial
 	var image := Image.load_from_file(source)
 	if image == null or image.is_empty():
 		_status.text = "导入失败：所选文件无法解码为 PNG。"
@@ -2391,7 +2433,9 @@ func _import_actor_texture(source: String, target_model, target_map: String,
 	_status.text = "PNG 已复制，等待 Godot 完成纹理导入……"
 	await _refresh_assets_after_scan()
 	if not is_inside_tree() or model != target_model or model.map_id != target_map \
-			or _panel_index != target_index or str(model.actor_field(target_index, "id", "")) != target_id:
+			or request_serial != _texture_request_serial or canvas.sel_kind != Kind.ACTOR \
+			or canvas.sel_index != target_index or _panel_index != target_index \
+			or str(model.actor_field(target_index, "id", "")) != target_id:
 		return
 	if _load_imported_asset(imported) == null:
 		_status.text = "PNG 已复制到 %s，但 Godot 未能导入纹理。请检查编辑器 Import/Output 错误；物件未修改。" % imported
@@ -2497,6 +2541,8 @@ func _open_overlay_import_dialog() -> void:
 func _import_overlay(source_path: String) -> void:
 	var target_model = model
 	var target_map: String = model.map_id
+	_texture_request_serial += 1
+	var request_serial := _texture_request_serial
 	var image := Image.load_from_file(source_path)
 	if image == null or image.is_empty():
 		_status.text = "导入失败：图片无法解码，请选择完整的 PNG 文件。"
@@ -2507,7 +2553,8 @@ func _import_overlay(source_path: String) -> void:
 		return
 	_status.text = "图片已复制，等待 Godot 完成纹理导入……"
 	await _refresh_assets_after_scan()
-	if not is_inside_tree() or model != target_model or model.map_id != target_map:
+	if not is_inside_tree() or model != target_model or model.map_id != target_map \
+			or request_serial != _texture_request_serial:
 		return
 	if _load_imported_asset(res_path) == null:
 		_status.text = "PNG 已复制到 %s，但 Godot 未能导入纹理。请检查编辑器 Import/Output 错误后点刷新。" % res_path
@@ -2526,6 +2573,8 @@ func _import_overlay(source_path: String) -> void:
 func _import_and_create(source_path: String) -> void:
 	var target_model = model
 	var target_map: String = model.map_id
+	_texture_request_serial += 1
+	var request_serial := _texture_request_serial
 	var image := Image.load_from_file(source_path)
 	if image == null or image.is_empty():
 		_status.text = "导入失败：图片无法解码，请选择完整的 PNG 文件。"
@@ -2536,7 +2585,8 @@ func _import_and_create(source_path: String) -> void:
 		return
 	_status.text = "PNG 已复制，等待 Godot 完成纹理导入……"
 	await _refresh_assets_after_scan()
-	if not is_inside_tree() or model != target_model or model.map_id != target_map:
+	if not is_inside_tree() or model != target_model or model.map_id != target_map \
+			or request_serial != _texture_request_serial:
 		return
 	if _load_imported_asset(res_path) == null:
 		_status.text = "PNG 已复制到 %s，但 Godot 未能导入纹理。请检查编辑器 Import/Output 错误后点刷新。" % res_path
@@ -2551,4 +2601,6 @@ func _import_and_create(source_path: String) -> void:
 	_on_edited()
 	_refresh_selection()
 	canvas.queue_redraw()
-	_status.text = "导入成 %s，并建了一件遮挡物件。拖到位置上、拉它的黄线；名字在下面改。" % res_path
+	_on_tool(Canvas.Tool.TEXTURE_RECT)
+	canvas.grab_focus()
+	_status.text = "已导入 %s：直接在地图上拖框设置位置和大小，Esc 返回选择工具。" % res_path

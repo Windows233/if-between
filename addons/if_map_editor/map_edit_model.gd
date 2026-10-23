@@ -62,26 +62,29 @@ static func list_maps() -> Array[String]:
 ## 载入一张图。`prefer_draft` 为真（默认）时**优先吃草稿** ——
 ## 上次改到一半切走了，回来接着改，而不是把改动丢了。
 func load_map(id: String, prefer_draft := true) -> bool:
-	map_id = id
-	path = "%s/%s.json" % [MAP_DIR, id]
-	from_draft = false
+	# 读取失败时保留当前地图与历史，避免旧数据套上失败目标的路径后被误保存。
+	var next_path := "%s/%s.json" % [MAP_DIR, id]
+	var next_data: Variant = null
+	var next_from_draft := false
 	if prefer_draft and draft_exists(id):
 		var draft_text := FileAccess.get_file_as_string(_draft_path(id))
 		var draft_data: Variant = JSON.parse_string(draft_text)
 		if draft_data is Dictionary:
-			data = draft_data
-			dirty = true
-			from_draft = true
-			reset_history()
-			return true
-	if not FileAccess.file_exists(path):
-		return false
-	var text := FileAccess.get_file_as_string(path)
-	var parsed: Variant = JSON.parse_string(text)
-	if not (parsed is Dictionary):
-		return false
-	data = parsed
-	dirty = false
+			next_data = draft_data
+			next_from_draft = true
+	if next_data == null:
+		if not FileAccess.file_exists(next_path):
+			return false
+		var text := FileAccess.get_file_as_string(next_path)
+		var parsed: Variant = JSON.parse_string(text)
+		if not (parsed is Dictionary):
+			return false
+		next_data = parsed
+	map_id = id
+	path = next_path
+	data = next_data
+	from_draft = next_from_draft
+	dirty = next_from_draft
 	reset_history()
 	return true
 
@@ -1107,7 +1110,8 @@ func add_actor_with_sprite(sprite_path: String, cover := false) -> int:
 	return index
 
 
-func assign_actor_sprite(index: int, sprite_path: String) -> bool:
+## 换贴图默认沿用已框好的范围；只有显式恢复原图尺寸时才重新换算宽高。
+func assign_actor_sprite(index: int, sprite_path: String, keep_rect := true) -> bool:
 	if index < 0 or index >= count(Kind.ACTOR):
 		return false
 	if sprite_path == "":
@@ -1118,21 +1122,23 @@ func assign_actor_sprite(index: int, sprite_path: String) -> bool:
 	var image := Image.load_from_file(sprite_path)
 	if image == null or image.is_empty():
 		return false
-	var image_size := world_size_for_image(Vector2(image.get_size()))
-	if image_size.x <= 0.0 or image_size.y <= 0.0:
-		return false
 	var rect := rect_of(Kind.ACTOR, index)
-	rect.size = image_size
+	if not keep_rect:
+		var image_size := world_size_for_image(Vector2(image.get_size()))
+		if image_size.x <= 0.0 or image_size.y <= 0.0:
+			return false
+		rect.size = image_size
 	var actor := actor_dict(index)
 	actor["sprite"] = sprite_path
-	actor["rect"] = _normalize([rect.position.x, rect.position.y, rect.size.x, rect.size.y])
+	if not keep_rect:
+		actor["rect"] = _normalize([rect.position.x, rect.position.y, rect.size.x, rect.size.y])
 	dirty = true
 	return true
 
 
 func restore_original_size(index: int) -> bool:
 	var sprite_path := str(actor_field(index, "sprite", ""))
-	return sprite_path != "" and assign_actor_sprite(index, sprite_path)
+	return sprite_path != "" and assign_actor_sprite(index, sprite_path, false)
 
 
 ## 设/清前景层（`overlay`）。**一张图拉伸到整张地图**，所以不用管图的尺寸。
@@ -1173,14 +1179,25 @@ func import_image(source_path: String, target_dir := "res://art/props",
 		name = "%s_%d.png" % [base, n]
 		n += 1
 	var bytes := FileAccess.get_file_as_bytes(source_path)
-	if bytes.is_empty():
+	# 扩展名不足以证明它是图片；只把已成功解码的 PNG 字节放进资源目录。
+	var png_signature := PackedByteArray([137, 80, 78, 71, 13, 10, 26, 10])
+	if bytes.size() < png_signature.size() or bytes.slice(0, 8) != png_signature:
 		return ""
-	var out := FileAccess.open(target_dir + "/" + name, FileAccess.WRITE)
+	var image := Image.new()
+	if image.load_png_from_buffer(bytes) != OK or image.is_empty():
+		return ""
+	var target_path := target_dir + "/" + name
+	var out := FileAccess.open(target_path, FileAccess.WRITE)
 	if out == null:
 		return ""
 	out.store_buffer(bytes)
+	out.flush()
+	var write_error := out.get_error()
 	out.close()
-	return target_dir + "/" + name
+	if write_error != OK:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(target_path))
+		return ""
+	return target_path
 
 
 ## 图片名收拾：小写、碍事的符号换成下划线、去掉重复与首尾的下划线，
