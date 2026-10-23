@@ -115,6 +115,29 @@ func _initialize() -> void:
 				# hold 给一个大数，字就停在屏上不走（不 await，让它自己挂着）。
 				main.stage_curtain.snap_down()
 				_banner_at = 4
+			"rescue_scene":
+				main.enter_map(&"school_yard", &"from_gate")
+				main.stage_curtain.snap_up()
+				main.player.global_position = Vector2(158, 186)
+				main.cutscene.add_actor("c", "res://art/npc/c",
+					Vector2(186, 88), 32.0, 12, "side")
+			"rescue_panel":
+				main.enter_map(&"school_yard", &"from_gate")
+				main.stage_curtain.snap_up()
+				main.player.global_position = Vector2(158, 186)
+				main.cutscene.add_actor("c", "res://art/npc/c",
+					Vector2(186, 88), 32.0, 12, "side")
+				main.rescue_panel.allow_background_process = true
+				main.rescue_panel.open()
+			"rescue_portrait":
+				main.enter_map(&"school_yard", &"from_gate")
+				main.stage_curtain.snap_up()
+				main.player.global_position = Vector2(158, 186)
+				main.dialogue.play(Dialogue.from_array([{
+					"speaker": "C", "text": "这样子啊~ 在下C，白塔分部下的一名专案员。",
+					"side": "right", "portrait": "c_base",
+				}]))
+				main.dialogue.advance()
 			"ch1_hearts":
 				# 章标题之后浮出来的三句心声。**不走对话框** ——
 				# 那会儿没有人在说话，底下冒一块面板像有人在念旁白。

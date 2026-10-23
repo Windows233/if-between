@@ -1,0 +1,21 @@
+{
+  "id": "ch2_c_wait",
+  "entry": "wait",
+  "nodes": [
+    {
+      "id": "wait",
+      "stage": [{ "do": "say", "lines": [
+        { "speaker": "C", "portrait": "c_base", "side": "right", "text": "准备好和我一起前往二楼了吗？" }
+      ] }],
+      "choices": [
+        { "id": "later", "label": "我再逛逛", "next": "later" }
+      ]
+    },
+    {
+      "id": "later",
+      "stage": [{ "do": "say", "lines": [
+        { "speaker": "C", "portrait": "c_base", "side": "right", "text": "好吧，我会在这等你的哦。" }
+      ] }]
+    }
+  ]
+}

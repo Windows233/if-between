@@ -49,6 +49,7 @@ var player: Player
 var camera: GameCamera
 var dialogue: DialogueBox
 var choice_menu: ChoiceMenu
+var rescue_panel: RescuePanel
 var tooltip: MapTooltip
 
 ## IF 条件框。剧情里「观察」之后弹出来的那个。
@@ -277,6 +278,11 @@ func boot() -> void:
 	add_child(choice_menu)
 	choice_menu.setup()
 	choice_menu.chosen.connect(_on_choice_chosen)
+	rescue_panel = RescuePanel.new()
+	rescue_panel.name = "RescuePanel"
+	add_child(rescue_panel)
+	rescue_panel.setup()
+	rescue_panel.feedback.connect(_on_rescue_feedback)
 
 	tooltip = MapTooltip.new()
 	tooltip.name = "MapTooltip"
@@ -428,7 +434,7 @@ func _set_process_modes() -> void:
 	# 整个 main.gd 加载失败，游戏黑屏。2026-09-24 踩的）。
 	# 它的推进靠 `await`，要停得另想办法，见 `Cutscene` 里的 `_sleep`。
 	for node: Node in [map_view, stage_view, player, camera,
-			stage_overlay, stage_curtain, dialogue, choice_menu, tooltip]:
+			stage_overlay, stage_curtain, dialogue, choice_menu, tooltip, rescue_panel]:
 		if node != null:
 			node.process_mode = Node.PROCESS_MODE_PAUSABLE
 
@@ -832,6 +838,19 @@ func play_sound(path: String) -> void:
 		sfx.play()
 
 
+func _on_rescue_feedback(kind: StringName) -> void:
+	var path := ""
+	match kind:
+		&"success":
+			path = "res://audio/sfx/rescue_success.wav"
+		&"mistake":
+			path = "res://audio/sfx/rescue_mistake.wav"
+		&"complete":
+			path = "res://audio/sfx/rescue_complete.wav"
+	if path != "":
+		play_sound(path)
+
+
 ## 大地图上的鼠标悬停：提亮脚下那块地点，并弹出它的详细介绍。
 ##
 ## 地点常驻显示的只有名字，详情挂在这里 —— 地点挨得近，
@@ -987,6 +1006,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			if paused_key.pressed and not paused_key.echo:
 				ui_host.handle_key(paused_key.physical_keycode)
 		return
+
+	if rescue_panel != null and rescue_panel.is_open():
+		var escape_pressed := event is InputEventKey \
+				and InputUtil.keycode_of(event as InputEventKey) == KEY_ESCAPE
+		if not escape_pressed:
+			rescue_panel.handle_input(event)
+			return
 
 	# 全局快捷键放在最前面，免得被开着的界面先吃掉。
 	# F4 图鉴、F5 存档菜单、F9 读档菜单。

@@ -43,6 +43,7 @@ var _talk: Dictionary = {}
 var _recipes: Dictionary = {}
 ## 演过哪些指令，按顺序。测试与调试用 —— 动画被跳过时，这是唯一能查的痕迹。
 var _log: Array[String] = []
+var _generation: int = 0
 
 
 func setup(p_main: Node2D) -> void:
@@ -64,6 +65,9 @@ func consume_click() -> bool:
 
 ## 收干净。切场景、取消剧情时调用。
 func cancel() -> void:
+	_generation += 1
+	if main != null and main.get("rescue_panel") != null:
+		main.rescue_panel.close()
 	_waiting = false
 	clear_actors()
 
@@ -226,12 +230,15 @@ func history() -> Array[String]:
 ## 导演拿它记节点内的进度，存档要写进去 —— 这就是它存在的唯一理由。
 func run(steps: Array[StageStep], replay_to: int = 0,
 		on_step_done: Callable = Callable()) -> void:
+	var generation := _generation
 	for i: int in range(0, mini(replay_to, steps.size())):
 		await _replay(steps[i])
 	for i: int in range(replay_to, steps.size()):
-		if main == null:
+		if main == null or generation != _generation:
 			return
 		await _perform(steps[i])
+		if generation != _generation:
+			return
 		if on_step_done.is_valid():
 			on_step_done.call(i + 1)
 
@@ -251,7 +258,7 @@ func _perform(step: StageStep) -> void:
 ## - `wait` / `wait_click`：补演是瞬时的，等时间、等点击都说不通
 const REPLAY_SKIP: Array[StringName] = [
 	&"say", &"goto", &"place_player", &"play_sound", &"wait", &"wait_click",
-	&"save",
+	&"save", &"rescue",
 ]
 
 
@@ -326,6 +333,8 @@ func _apply(step: StageStep) -> void:
 			await _flash(step)
 		&"if_panel":
 			await _if_panel(step)
+		&"rescue":
+			await _rescue(step)
 		&"glass":
 			await _glass(step)
 		_:
@@ -579,6 +588,21 @@ func _if_panel(step: StageStep) -> void:
 ## 把「玩家改没改对」写进状态。剧本用 `next_when` 读它分下游。
 ##
 ## 不写 `flag` 字段就跳过 —— 不需要分下游的那种框（纯展示）不关心这个。
+func _rescue(step: StageStep) -> void:
+	if instant:
+		_write_verdict(step.text("flag"), true)
+		return
+	var panel: RescuePanel = main.rescue_panel
+	if panel == null or not main.is_inside_tree():
+		return
+	var generation := _generation
+	panel.open()
+	while panel.is_open() and generation == _generation:
+		await main.get_tree().process_frame
+	if generation == _generation:
+		_write_verdict(step.text("flag"), panel.success_result)
+
+
 func _write_verdict(flag: String, solved: bool) -> void:
 	if flag == "" or main == null or main.flags == null:
 		return

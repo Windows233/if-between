@@ -33,6 +33,9 @@ func _initialize() -> void:
 	h.section("演出指令与过场")
 	TestCutscene.run(h)
 	await preload("res://tests/test_ch2_integration.gd").run(h)
+	preload("res://tests/test_rescue_timing.gd").run(h)
+	await preload("res://tests/test_rescue_integration.gd").run(h)
+	preload("res://tests/test_library_access.gd").run(h)
 	h.section("背包")
 	TestInventory.run(h)
 	h.section("结局与存档")
@@ -49,6 +52,7 @@ func _initialize() -> void:
 
 
 func _finish_with_triggers(h: TestHarness) -> void:
+	await preload("res://tests/test_rescue_integration.gd").run(h)
 	await preload("res://tests/test_map_triggers.gd").run(h)
 
 	if h.report():
