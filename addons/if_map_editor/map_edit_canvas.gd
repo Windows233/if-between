@@ -458,14 +458,12 @@ func _map_def() -> MapDef:
 
 
 ## 脚底方块：**以落点为底、往上伸**（脚下一线为 0）。
-## 和 `WalkGrid` 里那套判据同一份常量 —— 所以画出来的框就是真机判定用的框。
+## 按当前地图主角比例取框，和真机碰撞、WalkGrid 判据一致。
 func foot_rect_at(point: Vector2) -> Rect2:
 	var WalkGrid := preload("res://core/walk_grid.gd")
-	return Rect2(
-		point.x - WalkGrid.FOOT_HALF,
-		point.y - WalkGrid.FOOT_UP,
-		WalkGrid.FOOT_HALF * 2.0,
-		WalkGrid.FOOT_UP - WalkGrid.FOOT_DOWN)
+	var def := _map_def()
+	var player_scale := def.player_scale if def != null else 1.0
+	return WalkGrid.foot_rect(point, player_scale)
 
 
 ## 这个落点站不站得住（调的是游戏同一份 `WalkGrid.is_free`）。
@@ -611,7 +609,9 @@ func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
 	var path := str(data.get("path", ""))
 	if not path.begins_with("res://art/props/") or path.get_extension().to_lower() != "png":
 		return false
-	return FileAccess.file_exists(path) and load(path) is Texture2D
+	if not FileAccess.file_exists(path) or not (load(path) is Texture2D):
+		return false
+	return model.world_size_for_image(Vector2.ONE) != Vector2.ZERO
 
 
 func _drop_data(at_position: Vector2, data: Variant) -> void:
@@ -632,6 +632,7 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 	var path := str(data["path"])
 	var index: int = model.add_actor_with_sprite(path)
 	if index < 0:
+		status.emit("无法读取素材或背景尺寸，未创建物件。请确认 PNG 和地图背景有效。")
 		return
 	var size: Vector2 = model.rect_of(Kind.ACTOR, index).size
 	var position := _snap(to_game(at_position) - size * 0.5)

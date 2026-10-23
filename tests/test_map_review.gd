@@ -141,7 +141,8 @@ static func _test_locations(h: TestHarness) -> void:
 	data["portals"].append(data["portals"][0].duplicate(true))
 	h.check("重复 portal ID 被发现", _has(Validation.validate(data, context), "portal", "id"), true)
 	data["portals"][1].erase("id")
-	h.check("缺 portal ID 被发现", _has(Validation.validate(data, context), "portal", "id"), true)
+	h.check("旧格式 portal ID 由运行时兼容，不阻止保存",
+		_has(Validation.validate(data, context), "portal", "id"), false)
 	context["events"]["review_event"] = {"id": "wrong", "nodes": []}
 	h.check("损坏事件不能冒充有效事件", _has(Validation.validate(data, context), "actor", "event"), true)
 	context["events"]["review_event"] = {"id": "review_event", "nodes": [null]}

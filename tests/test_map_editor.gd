@@ -10,6 +10,7 @@ extends RefCounted
 
 const Model := preload("res://addons/if_map_editor/map_edit_model.gd")
 const CanvasScript := preload("res://addons/if_map_editor/map_edit_canvas.gd")
+const Dock := preload("res://addons/if_map_editor/map_edit_dock.gd")
 const Kind := Model.Kind
 
 
@@ -21,6 +22,7 @@ static func run(h: TestHarness) -> void:
 	test_spawns_in_model(h)
 	test_actor_fields_in_model(h)
 	test_asset_lists(h)
+	test_fresh_asset_discovery(h)
 	test_reference_checks(h)
 	test_import_prop(h)
 	test_overlay_in_model(h)
@@ -353,6 +355,30 @@ static func test_asset_lists(h: TestHarness) -> void:
 	h.check("剧情文件列表非空", m.event_ids().size() > 0, true)
 
 
+static func test_fresh_asset_discovery(h: TestHarness) -> void:
+	var dir_path := "user://__map_editor_fresh_assets"
+	var absolute_dir := ProjectSettings.globalize_path(dir_path)
+	DirAccess.make_dir_recursive_absolute(absolute_dir)
+	var png_path := dir_path + "/swing_new.PNG"
+	var png_file := FileAccess.open(png_path, FileAccess.WRITE)
+	if png_file != null:
+		png_file.store_8(0)
+		png_file.close()
+	var sidecar := FileAccess.open(png_path + ".import", FileAccess.WRITE)
+	if sidecar != null:
+		sidecar.store_string("not a png resource")
+		sidecar.close()
+
+	var found := Dock._list_png_files(dir_path)
+	h.check("直接从磁盘发现刚加入的 PNG", found.has(png_path), true)
+	h.check("PNG 扩展名大小写不影响扫描", found.size(), 1)
+	h.check("不会把导入 sidecar 当作图片", found.has(png_path + ".import"), false)
+
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(png_path))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(png_path + ".import"))
+	DirAccess.remove_absolute(absolute_dir)
+
+
 ## 删东西之前的「关联检查」—— 删掉就断了入口，而这类错误 `check_data` 查不出来
 ## （它只查「引用存在不存在」，查不出「本来该有个人来触发」）。
 static func test_reference_checks(h: TestHarness) -> void:
@@ -402,6 +428,12 @@ static func test_import_prop(h: TestHarness) -> void:
 	img.fill(Color(1, 0, 0, 1))
 	img.save_png(src)
 	h.check("测试用的小图造出来了", FileAccess.file_exists(src), true)
+	var background := "user://__editor_import_background.png"
+	var background_image := Image.create(2, 2, false, Image.FORMAT_RGBA8)
+	background_image.fill(Color(0, 0, 0, 1))
+	background_image.save_png(background)
+	m.data = {"id": "import_test", "size": [2, 2], "background": background,
+		"walls": [], "portals": [], "actors": [], "spawns": {}}
 
 	var out_dir := "user://__editor_props"
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(out_dir))
@@ -442,6 +474,7 @@ static func test_import_prop(h: TestHarness) -> void:
 	h.check("无效贴图保留原贴图", m.actor_field(blank, "sprite"), path)
 
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(src))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(background))
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(odd))
 	var dir := DirAccess.open(out_dir)
 	if dir != null:
@@ -578,6 +611,13 @@ static func test_foot_box(h: TestHarness) -> void:
 	h.check("空地：站得住", canvas.foot_is_free(Vector2(300, 300)), true)
 	h.check("墙正上方（脚在墙顶之上）：站得住",
 		canvas.foot_is_free(Vector2(100, 170)), true)
+
+	m.data["player_scale"] = 0.5
+	canvas.invalidate_def()
+	h.check("地图缩放后编辑器显示对应脚底框",
+		canvas.foot_rect_at(Vector2(100, 200)), Rect2(96, 192, 8, 8))
+	h.check("编辑器脚底框和缩放后的 WalkGrid 判定一致",
+		canvas.foot_is_free(Vector2(85, 184)), true)
 
 	# 改数据之后判据要跟着变（缓存的 MapDef 得作废）
 	m.walls().clear()

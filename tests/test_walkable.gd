@@ -13,6 +13,8 @@ extends RefCounted
 
 static func run(h: TestHarness) -> void:
 	test_foot_model_matches_player(h)
+	test_player_scale_collision(h)
+	test_school_map_player_scale(h)
 	test_desk_shop_walkable(h)
 	test_bedroom_walkable(h)
 	test_market_walkable(h)
@@ -30,6 +32,47 @@ static func test_foot_model_matches_player(h: TestHarness) -> void:
 	h.check("半宽对得上", WalkGrid.FOOT_HALF, size.x * 0.5)
 	h.check("往上伸的对得上", WalkGrid.FOOT_UP, size.y * 0.5 - offset)
 	h.check("往下伸的对得上", WalkGrid.FOOT_DOWN, size.y * 0.5 + offset)
+
+
+static func test_player_scale_collision(h: TestHarness) -> void:
+	var scaled := MapDef.from_dictionary({
+		"id": "scaled_foot", "size": [100, 100], "player_scale": 0.5,
+		"walls": [[10, 0, 1, 8]],
+	})
+	var normal := MapDef.from_dictionary({
+		"id": "normal_foot", "size": [100, 100], "player_scale": 1.0,
+		"walls": [[10, 0, 1, 8]],
+	})
+	var point := Vector2(15, 8)
+	h.check("地图比例缩小脚底框", WalkGrid.foot_rect(point, scaled.player_scale).size,
+		Player.FOOT_SIZE * scaled.player_scale)
+	h.check("缩小后的脚底能通过对应窄缝", WalkGrid.is_free(scaled, point), true)
+	h.check("原比例脚底仍会被窄缝挡住", WalkGrid.is_free(normal, point), false)
+	h.check("零主角比例被地图校验拒绝",
+		MapDef.from_dictionary({"id": "zero_scale", "size": [100, 100],
+			"player_scale": 0.0}).validate().has(
+			"场景 zero_scale 的 player_scale 必须是大于 0 的有限数值"), true)
+
+	var player := Player.create()
+	player.scale = Vector2.ONE * scaled.player_scale
+	h.root.add_child(player)
+	var collision := player.get_child(0) as CollisionShape2D
+	var shape := collision.shape as RectangleShape2D
+	var world_foot := collision.global_transform * Rect2(-shape.size * 0.5, shape.size)
+	h.check("主角实体碰撞与寻路脚底框同步缩放", world_foot,
+		WalkGrid.foot_rect(Vector2.ZERO, scaled.player_scale))
+	player.free()
+
+
+static func test_school_map_player_scale(h: TestHarness) -> void:
+	var alley := DataLoader.load_map(&"dead_alley")
+	var yard := DataLoader.load_map(&"school_yard")
+	var gate := DataLoader.load_map(&"school_gate")
+	if alley == null or yard == null or gate == null:
+		h.check("学校地图都能读取", false, true)
+		return
+	h.check("后巷比例与学校大门一致", alley.player_scale, gate.player_scale)
+	h.check("操场比例与学校大门一致", yard.player_scale, gate.player_scale)
 
 
 static func test_desk_shop_walkable(h: TestHarness) -> void:

@@ -1,8 +1,8 @@
 ## 走得到吗、怎么走：把地图栅格化，用**玩家脚下的碰撞方块**去比划。
 ##
 ## 判定不是「这个点在不在墙里」，而是「以这个点为准的那个方块会不会蹭到墙」——
-## 原点在脚底，左右各宽 8，**只往上伸 16、不往下伸**。窄道、门缝、桌子缝
-## 这类地方，差这几像素就走不过去。
+## 原点在脚底，基础比例下左右各宽 8，**只往上伸 16、不往下伸**。
+## 地图的 `player_scale` 会同步缩放这份脚底框。
 ##
 ## 三个数是从 `Player.FOOT_SIZE` / `Player.FOOT_OFFSET` 算出来的
 ## （`size/2`、`size/2 - offset`、`size/2 + offset`），但**不能写成表达式** ——
@@ -32,22 +32,32 @@ const FOOT_DOWN := 0.0
 ## 少了后一类，玩家就会被判成「能走进书架里」。
 static func is_free(def: MapDef, point: Vector2) -> bool:
 	for wall: Rect2 in def.walls:
-		if foot_hits(wall, point):
+		if foot_hits(wall, point, def.player_scale):
 			return false
 	for actor: MapDef.Actor in def.actors:
 		if actor.has_local_collision:
 			for shape: Rect2 in actor.collision_rects():
-				if foot_hits(shape, point):
+				if foot_hits(shape, point, def.player_scale):
 					return false
-		elif actor.solid and foot_hits(actor.rect, point):
+		elif actor.solid and foot_hits(actor.rect, point, def.player_scale):
 			return false
 	return true
 
 
-## 脚底方块会不会蹭到 `wall`。方块是 [点-8, 点+8]（左右）、[点-16, 点]（上下）。
-static func foot_hits(wall: Rect2, point: Vector2) -> bool:
-	return point.x + FOOT_HALF > wall.position.x and point.x - FOOT_HALF < wall.end.x \
-		and point.y + FOOT_DOWN > wall.position.y and point.y - FOOT_UP < wall.end.y
+## 按地图比例取得脚底框；与 Player 根节点缩放后的实体碰撞保持一致。
+static func foot_rect(point: Vector2, player_scale: float = 1.0) -> Rect2:
+	var half_width := FOOT_HALF * player_scale
+	var foot_up := FOOT_UP * player_scale
+	var foot_down := FOOT_DOWN * player_scale
+	return Rect2(point.x - half_width, point.y - foot_up,
+		half_width * 2.0, foot_up + foot_down)
+
+
+## 脚底方块会不会蹭到 `wall`。基础比例下方块是 [点-8, 点+8]（左右）、[点-16, 点]（上下）。
+static func foot_hits(wall: Rect2, point: Vector2, player_scale: float = 1.0) -> bool:
+	var foot := foot_rect(point, player_scale)
+	return foot.end.x > wall.position.x and foot.position.x < wall.end.x \
+		and foot.end.y > wall.position.y and foot.position.y < wall.end.y
 
 
 ## 落脚时留的余量。**这不是碰撞判定**，只用在「挑落点」那一步。
@@ -63,14 +73,14 @@ const LANDING_MARGIN := 2.0
 ## 多要求余量会把窄道和门缝全堵死。
 static func has_landing_room(def: MapDef, point: Vector2) -> bool:
 	for wall: Rect2 in def.walls:
-		if foot_hits(wall.grow(LANDING_MARGIN), point):
+		if foot_hits(wall.grow(LANDING_MARGIN), point, def.player_scale):
 			return false
 	for actor: MapDef.Actor in def.actors:
 		if actor.has_local_collision:
 			for shape: Rect2 in actor.collision_rects():
-				if foot_hits(shape.grow(LANDING_MARGIN), point):
+				if foot_hits(shape.grow(LANDING_MARGIN), point, def.player_scale):
 					return false
-		elif actor.solid and foot_hits(actor.rect.grow(LANDING_MARGIN), point):
+		elif actor.solid and foot_hits(actor.rect.grow(LANDING_MARGIN), point, def.player_scale):
 			return false
 	return true
 
