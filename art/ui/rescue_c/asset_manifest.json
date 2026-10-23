@@ -1,0 +1,279 @@
+{
+  "schema_version": 1,
+  "title": "解救C时机按键小游戏美术素材",
+  "date": "2026-10-22",
+  "source_archive": "M01-M08.zip",
+  "source_archive_sha256": "c60ae1ae568a0c3f230811b19b306a5a19bba4a940995ee62375773a2791991e",
+  "integration_status": "已入素材库；未连接游戏逻辑",
+  "binding_representation": "递减整组状态图，非三根独立线层",
+  "binding_success_sequence": {
+    "0": "res://art/fx/rescue_c/rescue_bind_state_01.png",
+    "1": "res://art/fx/rescue_c/rescue_bind_state_02.png",
+    "2": "res://art/fx/rescue_c/rescue_bind_state_03.png",
+    "3": null
+  },
+  "binding_complete_action": "隐藏整个束缚层；状态04仍有残留斜线，不作为完成图",
+  "editable_sources_in_archive": false,
+  "assets": [
+    {
+      "id": "M07",
+      "role": "束缚递减状态1",
+      "path": "res://art/fx/rescue_c/rescue_bind_state_01.png",
+      "source_archive_entry": "sucai/rescue_bind_1.png.png",
+      "size_px": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "sha256": "3353e8670c133f1f1629680655f467bcf6eb1e1dbf591409894a8651daddafd4",
+      "status": "三次成功方案使用",
+      "state_index": 1
+    },
+    {
+      "id": "M07",
+      "role": "束缚递减状态2",
+      "path": "res://art/fx/rescue_c/rescue_bind_state_02.png",
+      "source_archive_entry": "sucai/rescue_bind_2.png.png",
+      "size_px": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "sha256": "6a2c8c3913a349fadfc81a0a7deee4688ede1fec3ccdda06e9ed08b2ed622ea6",
+      "status": "三次成功方案使用",
+      "state_index": 2
+    },
+    {
+      "id": "M07",
+      "role": "束缚递减状态3",
+      "path": "res://art/fx/rescue_c/rescue_bind_state_03.png",
+      "source_archive_entry": "sucai/rescue_bind_3.png.png",
+      "size_px": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "sha256": "9c7ae405a68d3342e2c0e1feeb789636fa98dc0482c6159078ca2ca0e7f44b24",
+      "status": "三次成功方案使用",
+      "state_index": 3
+    },
+    {
+      "id": "M07",
+      "role": "束缚递减状态4",
+      "path": "res://art/fx/rescue_c/rescue_bind_state_04.png",
+      "source_archive_entry": "sucai/rescue_bind_4.png.png",
+      "size_px": [
+        256,
+        256
+      ],
+      "mode": "RGBA",
+      "sha256": "c84c1396af9fda69034dee92343cbecbceb4a23df3b5993c1cfc503d957eba89",
+      "status": "备用残留斜线状态，不是解救完成状态",
+      "state_index": 4
+    },
+    {
+      "id": "M05",
+      "role": "确认按钮：悬停",
+      "path": "res://art/ui/rescue_c/rescue_confirm_hover.png",
+      "source_archive_entry": "sucai/rescue_confirm_hover.png",
+      "size_px": [
+        416,
+        64
+      ],
+      "mode": "RGBA",
+      "sha256": "abf715684cb098f6b2738b7fef95d1f5438fb411123ba916f4986e2def79d6cb",
+      "status": "可供接入",
+      "suggested_ui_size_at_quarter_scale": [
+        104.0,
+        16.0
+      ]
+    },
+    {
+      "id": "M05",
+      "role": "确认按钮：普通",
+      "path": "res://art/ui/rescue_c/rescue_confirm_normal.png",
+      "source_archive_entry": "sucai/rescue_confirm_normal.png",
+      "size_px": [
+        416,
+        64
+      ],
+      "mode": "RGBA",
+      "sha256": "a774194a3814406e81e5ab72170f5a5a153dcec8031e7c353d7e32d1d6f2c2ad",
+      "status": "可供接入",
+      "suggested_ui_size_at_quarter_scale": [
+        104.0,
+        16.0
+      ]
+    },
+    {
+      "id": "M05",
+      "role": "确认按钮：按下",
+      "path": "res://art/ui/rescue_c/rescue_confirm_pressed.png",
+      "source_archive_entry": "sucai/rescue_confirm_pressed.png",
+      "size_px": [
+        416,
+        64
+      ],
+      "mode": "RGBA",
+      "sha256": "a96d46856d9f068c570e2c3017f9b4c766c0f6712e25477f10e33122a5ea4fb7",
+      "status": "可供接入",
+      "suggested_ui_size_at_quarter_scale": [
+        104.0,
+        16.0
+      ]
+    },
+    {
+      "id": "M03",
+      "role": "独立移动菱形",
+      "path": "res://art/ui/rescue_c/rescue_cursor.png",
+      "source_archive_entry": "sucai/rescue_cursor.png",
+      "size_px": [
+        40,
+        64
+      ],
+      "mode": "RGBA",
+      "sha256": "9dd2dab96c3e1b42c8109a46f591b367a332391105723332be7eb0718c0a5269",
+      "status": "可供接入",
+      "suggested_ui_size_at_quarter_scale": [
+        10.0,
+        16.0
+      ]
+    },
+    {
+      "id": "M01",
+      "role": "救援界面背景面板",
+      "path": "res://art/ui/rescue_c/rescue_panel.png",
+      "source_archive_entry": "sucai/rescue_panel.png",
+      "size_px": [
+        1216,
+        248
+      ],
+      "mode": "RGBA",
+      "sha256": "c8ce9cf44942b279cdbd8255f98fafd9b5a65e966d99e959808fd1582db6c516",
+      "status": "可供接入",
+      "suggested_ui_size_at_quarter_scale": [
+        304.0,
+        62.0
+      ]
+    },
+    {
+      "id": "M08",
+      "role": "单次失误图形",
+      "path": "res://art/ui/rescue_c/rescue_result_fail.png",
+      "source_archive_entry": "sucai/rescue_result_fail.png",
+      "size_px": [
+        64,
+        64
+      ],
+      "mode": "RGBA",
+      "sha256": "cec6b3b410fda1c97c40d6b09f5771fd3906f12adb049d2275fb532e14cea4a0",
+      "status": "可供接入",
+      "suggested_ui_size_at_quarter_scale": [
+        16.0,
+        16.0
+      ]
+    },
+    {
+      "id": "M08",
+      "role": "单次成功图形",
+      "path": "res://art/ui/rescue_c/rescue_result_success.png",
+      "source_archive_entry": "sucai/rescue_result_success.png",
+      "size_px": [
+        64,
+        64
+      ],
+      "mode": "RGBA",
+      "sha256": "baaec2eefe3e491a6b4acf4a488baa455f14761d8fab08dcc67b6021568be00e",
+      "status": "可供接入",
+      "suggested_ui_size_at_quarter_scale": [
+        16.0,
+        16.0
+      ]
+    },
+    {
+      "id": "M04",
+      "role": "独立安全窗口",
+      "path": "res://art/ui/rescue_c/rescue_safe_zone.png",
+      "source_archive_entry": "sucai/rescue_safe_zone.png",
+      "size_px": [
+        288,
+        48
+      ],
+      "mode": "RGBA",
+      "sha256": "61eacb87db195665be6fb8bc5003dae7cbec6d4fc37c9bf3e7edc9d7873deac9",
+      "status": "可供接入",
+      "suggested_ui_size_at_quarter_scale": [
+        72.0,
+        12.0
+      ]
+    },
+    {
+      "id": "M06",
+      "role": "进度节点：当前",
+      "path": "res://art/ui/rescue_c/rescue_step_current.png",
+      "source_archive_entry": "sucai/rescue_step_current.png",
+      "size_px": [
+        48,
+        48
+      ],
+      "mode": "RGBA",
+      "sha256": "497bff5ca0dee77cfacca8ffe07ba44e240f21e37fbc425c610ec335e272b076",
+      "status": "可供接入",
+      "suggested_ui_size_at_quarter_scale": [
+        12.0,
+        12.0
+      ]
+    },
+    {
+      "id": "M06",
+      "role": "进度节点：完成",
+      "path": "res://art/ui/rescue_c/rescue_step_done.png",
+      "source_archive_entry": "sucai/rescue_step_done.png",
+      "size_px": [
+        48,
+        48
+      ],
+      "mode": "RGBA",
+      "sha256": "0c8ec369c11cfcf026905b53fbbea9ce7e7407ae31a3b3053f2045ad0165110c",
+      "status": "可供接入",
+      "suggested_ui_size_at_quarter_scale": [
+        12.0,
+        12.0
+      ]
+    },
+    {
+      "id": "M06",
+      "role": "进度节点：未处理",
+      "path": "res://art/ui/rescue_c/rescue_step_empty.png",
+      "source_archive_entry": "sucai/rescue_step_empty.png",
+      "size_px": [
+        48,
+        48
+      ],
+      "mode": "RGBA",
+      "sha256": "ca88ae401ef732f9384fd4735a2e04eab53b49dd6925d7b93c59d3d6a523a8c4",
+      "status": "可供接入",
+      "suggested_ui_size_at_quarter_scale": [
+        12.0,
+        12.0
+      ]
+    },
+    {
+      "id": "M02",
+      "role": "独立判定轨道",
+      "path": "res://art/ui/rescue_c/rescue_track.png",
+      "source_archive_entry": "sucai/rescue_track.png",
+      "size_px": [
+        1072,
+        48
+      ],
+      "mode": "RGBA",
+      "sha256": "99ed0b977f09b80f06ef1574de72399e62883d1e2c9b2ee39115bc85e74bdfa8",
+      "status": "可供接入",
+      "suggested_ui_size_at_quarter_scale": [
+        268.0,
+        12.0
+      ]
+    }
+  ]
+}
