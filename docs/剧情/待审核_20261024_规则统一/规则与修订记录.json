@@ -1,0 +1,53 @@
+{
+  "date": "2026-10-24",
+  "review_status": "approved_by_user",
+  "publication_status": "approved_for_git_sync",
+  "git_sync_requires": "用户审核通过",
+  "approved_rules": {
+    "item": "C交给主角并带有定位作用的道具，剧情显示统一叫决策币；拿到、背包、回忆、识破定位、扔出窗外和失去提示均为同一物品。",
+    "concealment": "第一次黑猫追逐没有夜幕之泪，不使用隐蔽。后段主角先凭防备躲刀，掀翻书架脱身，再在逃离C的途中主动驱动夜幕之泪；不是闪避被动触发。",
+    "rewind": "沿用首次入馆的个人锚点，恢复主角自身及随身物品的锚点状态，主角记忆保留。身体/衣物上仍附着的血迹随个人表现重置；已经溅到地图上的血迹离开了主角，不随个人回溯重置。不使用整图清空替代个人恢复。",
+    "cat": "猫的对白、身份、时间锚解释、净化和玩偶真相保持上一版，未新增猫的动机或过去循环。",
+    "approval": "上述规则由用户明确指定；本文件R2整段演出编排已于2026-10-24获用户审核通过，获准同步GitHub。"
+  },
+  "story_changed_paragraphs": [
+    "P474",
+    "P490",
+    "P503",
+    "P504",
+    "P506",
+    "P507",
+    "P509",
+    "P510",
+    "P511",
+    "P583",
+    "P678",
+    "P708",
+    "P720",
+    "P726"
+  ],
+  "full_nodes": 53,
+  "full_cues": 199,
+  "ready_chase_nodes": 8,
+  "dialogue_cat_unchanged": true,
+  "source_original_unchanged": true,
+  "output": "学校至首次入馆_剧情与演出审核稿.txt",
+  "revision": "20261024-art-staging-r2",
+  "art_review": {
+    "source_commit": "25d2ce4",
+    "status": "assets_verified_not_runtime_integrated",
+    "scope": "学校至首次入馆；第一遍童话书、合照、背刺、End6/7、教室躲藏留给后段，不在本段提前出现。",
+    "excluded_diary": "ch2_diary_written.png含旧版转学/固定日期，不作当前正文。",
+    "excluded_map": "library_no_cat_20261024.jpg是尺寸和布局不同的候选，不自动替换正式图书馆。",
+    "remaining": "独立走廊、决策币圆币图、教室调查与家具碰撞绑定仍缺；日记底图和End4/5 CG不再列缺图。"
+  },
+  "diary_p467_recovered": true,
+  "scope": "学校起至首次入馆；完整规则同步但后半章不扩写演出",
+  "approval": {
+    "date": "2026-10-24",
+    "authority": "user_message",
+    "text": "可以，推送到github上吧",
+    "scope": "上一轮审核的R2规则统一剧情与学校至首次入馆演出",
+    "target": "origin/main"
+  }
+}
