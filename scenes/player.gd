@@ -205,6 +205,12 @@ static func create() -> Player:
 	return p
 
 
+## 主角与试走共用环境材质；换图后重建，避免携带上一场景的色温。
+func configure_environment(definition: MapDef) -> void:
+	if _sprite != null:
+		preload("res://scenes/world_look.gd").style_actor(_sprite, definition)
+
+
 ## 从按下的键算出移动方向。纯函数，测试走这个。
 ##
 ## 斜向会被归一化，所以斜着走不会比直着快 —— 这类地方不加处理，

@@ -144,6 +144,7 @@ func build(p_map_def: MapDef, flags: WorldState = null) -> void:
 		return
 
 	_build_room()
+	preload("res://scenes/world_look.gd").style_map(_built, map_def)
 
 
 ## 室内：背景图 + 连接标记 + 角色，并且建碰撞。

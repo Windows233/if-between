@@ -474,6 +474,7 @@ func enter_map(map_id: StringName, spawn_name: StringName,
 	player.global_position = def.spawn_point(spawn_name)
 	# 保留地图坐标中的美术标尺及碰撞；相机以倒数投影，屏幕上的主角始终等高。
 	player.scale = Vector2(def.player_scale, def.player_scale)
+	player.configure_environment(def)
 	player.velocity = Vector2.ZERO
 	# 脚步的锚点跟着落地重置：不重置的话，从上一个场景攒下来的那一段距离
 	# 会在进门的头一帧就凑够一次脚步（人刚站定就踩了一脚）。
