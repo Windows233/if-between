@@ -1,0 +1,54 @@
+{
+  "date": "2026-10-24",
+  "assets": [
+    {
+      "source_name": "rescue_mistake.wav",
+      "target": "res://audio/sfx/rescue_mistake.wav",
+      "sha256": "f4236e97d8334f092e726d8f21037d87cce385127a288457ddb74357e142fc38",
+      "previous_sha256": "1d5372efe8c8e0a1019d3e2e7fc3a4d1fc24dce6c11817643694a075ebcf3e4c",
+      "duration_seconds": 0.372,
+      "channels": 2,
+      "sample_rate": 44100,
+      "bits": 16,
+      "action": "审核替换旧版，保留既有引用路径",
+      "loop": false
+    },
+    {
+      "source_name": "rescue_success.wav",
+      "target": "res://audio/sfx/rescue_success.wav",
+      "sha256": "6fb684980de2466ea7b4aba84599a91a321277901b365e8ab8f82c2eb427e5f9",
+      "previous_sha256": "7fd30ea7434f78450ad86e4ac56c9d1722d475ba471dffd3644e22b1e23a0c19",
+      "duration_seconds": 0.441,
+      "channels": 2,
+      "sample_rate": 44100,
+      "bits": 16,
+      "action": "审核替换旧版，保留既有引用路径",
+      "loop": false
+    },
+    {
+      "source_name": "rescue_complete(1).wav",
+      "target": "res://audio/sfx/rescue_complete.wav",
+      "sha256": "20476fad5eca7f532d08128d42c7c3aa5f418ca69aac22710da9159d47628424",
+      "previous_sha256": "d757adf8ef5cd22371bccbd2329bfd367ec2f800856b5bff2c6a8c54c0f3e183",
+      "duration_seconds": 1.254,
+      "channels": 2,
+      "sample_rate": 44100,
+      "bits": 16,
+      "action": "审核替换旧版，保留既有引用路径",
+      "loop": false
+    }
+  ],
+  "normalization": "保留用户原始音频，不做重采样/响度处理；44.1kHz双声道16bit，无削波",
+  "usage": {
+    "rescue_mistake": "一次正式失误反馈；不循环",
+    "rescue_success": "一次成功判定；不循环",
+    "rescue_complete": "救援最终完成；不循环，避免与最后一次success重复叠响"
+  },
+  "runtime_status": "资源已更新；完整救援剧情与新音效的游玩验收待程序完成",
+  "verification": {
+    "godot_import": 0,
+    "runtime_resource_load": "成功",
+    "game_regression": "4373/4373",
+    "scope": "素材加载与回归，不表示完整救援/追逐游玩验收"
+  }
+}

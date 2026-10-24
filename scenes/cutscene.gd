@@ -757,9 +757,11 @@ func _add_c_rescue_binding(actor: Node2D, height: float) -> Sprite2D:
 	binding.name = "RescueBinding"
 	binding.call("set_state", 0)
 	var binding_size: Vector2 = binding.texture.get_size()
-	var binding_scale := height / maxf(binding_size.y, 1.0)
+	# 束缚是 C 的子节点，地图/角色缩放会由父节点统一带下去。
+	# 这里只把两张源画布对齐，不能再除 actor.scale 抵消地图比例。
+	var binding_scale := frame.get_size().y / maxf(binding_size.y, 1.0)
 	binding.position = Vector2(0.0, -frame.get_size().y * 0.5)
-	binding.scale = Vector2(binding_scale / animated.scale.x, binding_scale / animated.scale.y)
+	binding.scale = Vector2.ONE * binding_scale
 	binding.z_index = 1
 	animated.add_child(binding)
 	return binding

@@ -29,11 +29,9 @@
     ]
   },
   "checked_versions": {
-    "main": "e7ddfff",
-    "origin_main_at_local_check": "e7ddfff",
-    "primary_work_branch": "codex/pixel-map-clarity",
-    "primary_work_commit": "f948474",
-    "remote_freshness": "本轮开工为本地远端跟踪引用；收工推送前再核对"
+    "main_baseline": "eb2dc4a",
+    "primary_branch": "codex/world-pixel-cohesion",
+    "scope": "隔离工作树核查，不包含主工作区未提交演出/画面改动"
   },
   "counts": {
     "maps": 14,
@@ -57,6 +55,19 @@
       "affected_ids": [
         "DIARY-ART"
       ]
+    },
+    {
+      "date": "2026-10-24",
+      "report": "前两天程序未完成；图书馆仍独立未接剧情；解救C小游戏与剧情未做；救援音效完成；指定校门两点QTE追逐",
+      "affected_ids": [
+        "C-BIND",
+        "C-GAME",
+        "LIB-MAP",
+        "LIB-STORY",
+        "CHASE",
+        "RESCUE-AUDIO"
+      ],
+      "supersedes": "同日早前已做完但未交GitHub的整体完成报告"
     }
   ],
   "items": [
@@ -64,33 +75,41 @@
       "id": "C-BIND",
       "name": "C束缚线最新版",
       "owner": "程序",
-      "production": "用户确认完成",
-      "delivery": "待提交GitHub",
-      "integration": "待合入核验",
-      "acceptance": "待验收",
+      "production": "用户最新反馈：救援整体未完成",
+      "delivery": "main有基础版及eb2dc4a线层联动提交，非完整交付通过",
+      "integration": "需补齐秋千剧情→判定→成败→御守闭环",
+      "acceptance": "待程序实机验收",
       "evidence": [
         {
           "date": "2026-10-24",
           "reference": "用户本轮明确报告；main已有art/fx/rescue_c/素材，不等于已收到个人绑定版本"
+        },
+        {
+          "date": "2026-10-24",
+          "reference": "本轮用户更正进度；远端eb2dc4a只证明部分联动代码已提交"
         }
       ],
-      "next_action": "补交已有代码、提交号与操作说明；不重新实现"
+      "next_action": "先运行并复用已有救援/束缚代码，查实际阻断并补齐，不从零造第二套"
     },
     {
       "id": "C-GAME",
       "name": "救援时机小游戏最新版",
       "owner": "程序",
-      "production": "用户确认完成",
-      "delivery": "待提交GitHub",
-      "integration": "待合入核验",
-      "acceptance": "待验收",
+      "production": "用户最新反馈：救援整体未完成",
+      "delivery": "main有基础版及eb2dc4a线层联动提交，非完整交付通过",
+      "integration": "需补齐秋千剧情→判定→成败→御守闭环",
+      "acceptance": "待程序实机验收",
       "evidence": [
         {
           "date": "2026-10-24",
           "reference": "用户本轮明确报告；main另有ui/rescue_panel.gd与data/events/ch2_swing.json基础版"
+        },
+        {
+          "date": "2026-10-24",
+          "reference": "本轮用户更正进度；远端eb2dc4a只证明部分联动代码已提交"
         }
       ],
-      "next_action": "对照差异提交合入，复核练习/成败/重试/御守；不重写"
+      "next_action": "先运行并复用已有救援/束缚代码，查实际阻断并补齐，不从零造第二套"
     },
     {
       "id": "C-ART",
@@ -224,17 +243,17 @@
       "id": "LIB-MAP",
       "name": "图书馆地图与往返",
       "owner": "程序",
-      "production": "地图及返回口已有",
+      "production": "独立地图已有",
       "delivery": "已提交",
-      "integration": "已入main但正式开放链未闭环",
-      "acceptance": "入口可达性待验收",
+      "integration": "用户确认尚未接入正式剧情",
+      "acceptance": "独立区域不算主线可达验收",
       "evidence": [
         {
           "date": "2026-10-24",
           "reference": "data/maps/library.json已有14个actors；school_gate读取ch2/library_open，main无赋值"
         }
       ],
-      "next_action": "核对个人最新版是否补标志；没有则随日记完成后补正式开放，不重新搭图书馆"
+      "next_action": "教室日记完成后启动校门追逐；两QTE通过并到达图书馆接近区才写开放与切图"
     },
     {
       "id": "LIB-STORY",
@@ -272,17 +291,17 @@
       "id": "CHASE",
       "name": "两段追逐与闪避",
       "owner": "程序/策划",
-      "production": "尚未接入本章",
-      "delivery": "规则待最终锁定",
-      "integration": "未入游戏",
-      "acceptance": "待验收",
+      "production": "校门两点QTE方案已按用户本轮要求具体化",
+      "delivery": "规则/路线/触发与黑雾图交付",
+      "integration": "追逐控制器和圈式QTE尚待程序实现",
+      "acceptance": "路线静态通过；玩法未实机实现",
       "evidence": [
         {
           "date": "2026-10-24",
           "reference": "救援小游戏不能代表追逐已做；正文要求猫追逐及C追逐/隐蔽/抛御守"
         }
       ],
-      "next_action": "先复用能力验证；最小表现方案单列提案，不能承诺新自由追逐系统"
+      "next_action": "先独立原型验证两点、实时倒计时和清理，再串入日记→图书馆"
     },
     {
       "id": "ENDING",
@@ -384,17 +403,17 @@
       "id": "RESCUE-AUDIO",
       "name": "三条救援音效",
       "owner": "音效音乐",
-      "production": "已完成交付",
-      "delivery": "已提交",
-      "integration": "main已绑定",
-      "acceptance": "最新版重试与状态切换待联验",
+      "production": "用户交付新三音完成",
+      "delivery": "本轮审核更新正式3路径",
+      "integration": "保留main现有路径绑定；完整流程接入待程序验",
+      "acceptance": "格式/峰值与加载已检；触发听感待联验",
       "evidence": [
         {
           "date": "2026-10-24",
           "reference": "audio/sfx/rescue_success.wav/mistake.wav/complete.wav；scenes/main.gd已调用"
         }
       ],
-      "next_action": "不重制音效；核对个人新版触发一次且不叠音"
+      "next_action": "成功/失误/最终完成分别只响一次；不把救援音直接作为整段追逐配乐"
     },
     {
       "id": "TOOLS",
@@ -436,14 +455,16 @@
     "C出场时序矛盾及两次追逐最小规则待最终确认"
   ],
   "verification": {
-    "scope": "策划/技能提交所在隔离工作树，未含主工作区并行技术改动",
-    "baseline": "e7ddfff",
-    "data_check": "14/19/5/7；通过，三条既有提示保留",
-    "game_tests": "2647/2647；exit0",
+    "scope": "本轮资源与路线静态核查，不表示救援/追逐正式剧情已可玩",
+    "route": "校门5段WalkGrid静态通路全通过",
+    "assets": "三音与透明黑雾猫均加载成功",
+    "game_tests": "4373/4373通过；先发现既有束缚缩放回归，修正后全过",
     "smoke_run": "真实窗口烟测通过；exit0",
-    "daily_budget": "5名制作成员各120分钟；校验通过",
-    "skill_structure": "仓库及个人安装副本均通过quick_validate.py",
-    "skill_trial": "独立代理完成真实类型前向试用；修正先本地验收过闸门再推送的顺序",
-    "diagnostics": "游戏负例与引擎诊断不视为日志全净"
-  }
+    "data_check": "14图/19事件/5结局/7物品；保留三条既有提醒",
+    "stage": "6节点结构稿ready_for_implementation校验通过；不是已实现",
+    "daily_budget": "5人各120分钟通过",
+    "doc": "7页Word已渲染并逐页检查",
+    "diagnostics": "既有负面测试与引擎诊断保留，不宣称日志全净"
+  },
+  "active_daily_plan": "docs/每日策划/2026-10-24_D3_追赶版/"
 }

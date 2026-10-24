@@ -1,0 +1,246 @@
+{
+  "date": "2026-10-24",
+  "day": "D3追赶版",
+  "tasks": [
+    {
+      "id": "R1",
+      "owner": "程序",
+      "minutes": 10,
+      "work": "确认最新main、现有救援代码及新资源",
+      "deliverable": "基线与阻断路径",
+      "acceptance": "按程序验收清单逐项记录；不写已经完成的空结论",
+      "depends_on": [],
+      "fallback": "救援阻断时R4预算转R2；先通过测试再推送。"
+    },
+    {
+      "id": "R2",
+      "owner": "程序",
+      "minutes": 45,
+      "work": "补齐正常秋千→判定→成败重试→御守→恢复控制",
+      "deliverable": "完整救援最小链",
+      "acceptance": "按程序验收清单逐项记录；不写已经完成的空结论",
+      "depends_on": [],
+      "fallback": "救援阻断时R4预算转R2；先通过测试再推送。"
+    },
+    {
+      "id": "R3",
+      "owner": "程序",
+      "minutes": 15,
+      "work": "接三条新音并核对正式次数、重试和奖励",
+      "deliverable": "触发记录",
+      "acceptance": "按程序验收清单逐项记录；不写已经完成的空结论",
+      "depends_on": [],
+      "fallback": "救援阻断时R4预算转R2；先通过测试再推送。"
+    },
+    {
+      "id": "R4",
+      "owner": "程序",
+      "minutes": 30,
+      "work": "两点圈式QTE独立开发原型",
+      "deliverable": "Q/E、实时圈、成败出口；不等于正式剧情",
+      "acceptance": "按程序验收清单逐项记录；不写已经完成的空结论",
+      "depends_on": [],
+      "fallback": "救援阻断时R4预算转R2；先通过测试再推送。"
+    },
+    {
+      "id": "R5",
+      "owner": "程序",
+      "minutes": 20,
+      "work": "定向验收和仓库验证，通过后推送",
+      "deliverable": "提交号、录屏和剩余问题",
+      "acceptance": "按程序验收清单逐项记录；不写已经完成的空结论",
+      "depends_on": [],
+      "fallback": "救援阻断时R4预算转R2；先通过测试再推送。"
+    },
+    {
+      "id": "A1",
+      "owner": "主美术",
+      "minutes": 10,
+      "work": "对齐校园失败CG构图",
+      "deliverable": "构图确认",
+      "acceptance": "不重画校门底图",
+      "depends_on": [],
+      "fallback": "超时交可验证最小版与问题清单，不延长120分钟预算。"
+    },
+    {
+      "id": "A2",
+      "owner": "主美术",
+      "minutes": 65,
+      "work": "制作或返修被猫追上CG首版",
+      "deliverable": "1672x941首版",
+      "acceptance": "校园空间、人物、黑雾外观一致",
+      "depends_on": [],
+      "fallback": "超时交可验证最小版与问题清单，不延长120分钟预算。"
+    },
+    {
+      "id": "A3",
+      "owner": "主美术",
+      "minutes": 25,
+      "work": "检查人物与文字留白",
+      "deliverable": "修正稿",
+      "acceptance": "下方文字区域可读",
+      "depends_on": [],
+      "fallback": "超时交可验证最小版与问题清单，不延长120分钟预算。"
+    },
+    {
+      "id": "A4",
+      "owner": "主美术",
+      "minutes": 20,
+      "work": "交源文件与选用说明",
+      "deliverable": "交付包",
+      "acceptance": "首版未通过就保留待验收",
+      "depends_on": [],
+      "fallback": "超时交可验证最小版与问题清单，不延长120分钟预算。"
+    },
+    {
+      "id": "B1",
+      "owner": "第二美术兼整合验收",
+      "minutes": 10,
+      "work": "对齐当日资源",
+      "deliverable": "素材选用表",
+      "acceptance": "已有不重画",
+      "depends_on": [],
+      "fallback": "超时交可验证最小版与问题清单，不延长120分钟预算。"
+    },
+    {
+      "id": "B2",
+      "owner": "第二美术兼整合验收",
+      "minutes": 35,
+      "work": "核对校门路线和两个QTE的小尺寸可见性",
+      "deliverable": "状态预览",
+      "acceptance": "Q/E及圈清楚、路径有引导",
+      "depends_on": [],
+      "fallback": "超时交可验证最小版与问题清单，不延长120分钟预算。"
+    },
+    {
+      "id": "B3",
+      "owner": "第二美术兼整合验收",
+      "minutes": 30,
+      "work": "C和束缚对位检查",
+      "deliverable": "对位问题表",
+      "acceptance": "有运行版验运行版，无则标静态预检",
+      "depends_on": [],
+      "fallback": "超时交可验证最小版与问题清单，不延长120分钟预算。"
+    },
+    {
+      "id": "B4",
+      "owner": "第二美术兼整合验收",
+      "minutes": 25,
+      "work": "新CG/黑雾命名透明边和路径核验",
+      "deliverable": "素材核验表",
+      "acceptance": "原图保留、比例正确",
+      "depends_on": [],
+      "fallback": "超时交可验证最小版与问题清单，不延长120分钟预算。"
+    },
+    {
+      "id": "B5",
+      "owner": "第二美术兼整合验收",
+      "minutes": 20,
+      "work": "交接复现问题",
+      "deliverable": "问题清单",
+      "acceptance": "不与其他碰撞工作叠加",
+      "depends_on": [],
+      "fallback": "超时交可验证最小版与问题清单，不延长120分钟预算。"
+    },
+    {
+      "id": "W1",
+      "owner": "文案",
+      "minutes": 10,
+      "work": "锁定救援与追逐口径",
+      "deliverable": "节点目录",
+      "acceptance": "以本轮规则覆盖旧强制失败段",
+      "depends_on": [],
+      "fallback": "超时交可验证最小版与问题清单，不延长120分钟预算。"
+    },
+    {
+      "id": "W2",
+      "owner": "文案",
+      "minutes": 40,
+      "work": "C救援全节点整理",
+      "deliverable": "正文与分支包",
+      "acceptance": "含重试、重复调查及御守只发一次",
+      "depends_on": [],
+      "fallback": "超时交可验证最小版与问题清单，不延长120分钟预算。"
+    },
+    {
+      "id": "W3",
+      "owner": "文案",
+      "minutes": 25,
+      "work": "QTE说明及End5失败字幕",
+      "deliverable": "短句与结果表",
+      "acceptance": "Q/E与操作屏一致",
+      "depends_on": [],
+      "fallback": "超时交可验证最小版与问题清单，不延长120分钟预算。"
+    },
+    {
+      "id": "W4",
+      "owner": "文案",
+      "minutes": 30,
+      "work": "图书馆入口与首遍三调查",
+      "deliverable": "触发/正文/结果包",
+      "acceptance": "保留日记前置，不提前领晶石",
+      "depends_on": [],
+      "fallback": "超时交可验证最小版与问题清单，不延长120分钟预算。"
+    },
+    {
+      "id": "W5",
+      "owner": "文案",
+      "minutes": 15,
+      "work": "与程序交接",
+      "deliverable": "可录入稿",
+      "acceptance": "待定点单列",
+      "depends_on": [],
+      "fallback": "超时交可验证最小版与问题清单，不延长120分钟预算。"
+    },
+    {
+      "id": "S1",
+      "owner": "音效音乐",
+      "minutes": 10,
+      "work": "确认三条新救援版本",
+      "deliverable": "选用表",
+      "acceptance": "不再制作同三音",
+      "depends_on": [],
+      "fallback": "超时交可验证最小版与问题清单，不延长120分钟预算。"
+    },
+    {
+      "id": "S2",
+      "owner": "音效音乐",
+      "minutes": 25,
+      "work": "核对救援触发",
+      "deliverable": "触发记录",
+      "acceptance": "成功失误完成不叠响",
+      "depends_on": [],
+      "fallback": "超时交可验证最小版与问题清单，不延长120分钟预算。"
+    },
+    {
+      "id": "S3",
+      "owner": "音效音乐",
+      "minutes": 30,
+      "work": "追逐预警闪避被追上选用或短音首版",
+      "deliverable": "追逐声音包",
+      "acceptance": "有合格声音则复用",
+      "depends_on": [],
+      "fallback": "超时交可验证最小版与问题清单，不延长120分钟预算。"
+    },
+    {
+      "id": "S4",
+      "owner": "音效音乐",
+      "minutes": 35,
+      "work": "试听与声音暂停停止条件表",
+      "deliverable": "声音挂载表",
+      "acceptance": "无残留循环与响度突变",
+      "depends_on": [],
+      "fallback": "超时交可验证最小版与问题清单，不延长120分钟预算。"
+    },
+    {
+      "id": "S5",
+      "owner": "音效音乐",
+      "minutes": 20,
+      "work": "导出与交接",
+      "deliverable": "版本和来源说明",
+      "acceptance": "缺项明确标记",
+      "depends_on": [],
+      "fallback": "超时交可验证最小版与问题清单，不延长120分钟预算。"
+    }
+  ]
+}
