@@ -435,24 +435,28 @@
       "id": "SCALE",
       "name": "统一人物标尺及像素清晰度",
       "owner": "并行程序工作",
-      "production": "标尺有分支提交；清晰度进行中",
-      "delivery": "分支f948474；主工作区另有改动",
-      "integration": "本次核查main尚未合入标尺",
-      "acceptance": "依对应分支记录",
+      "production": "统一标尺与高清像素采样已合入main；进一步人物环境融合在并行分支",
+      "delivery": "main基线72626e0已含标尺与清晰度；并行工作另见codex/world-pixel-cohesion",
+      "integration": "本轮核查基线eb2dc4a已包含统一标尺与高清采样",
+      "acceptance": "本轮4373/4373仅针对交付快照；并行分支另行验收",
       "evidence": [
         {
           "date": "2026-10-24",
           "reference": "codex/unified-character-scale=f948474；当前codex/pixel-map-clarity工作中"
+        },
+        {
+          "date": "2026-10-24",
+          "reference": "校正早前未合入记录：eb2dc4a包含72626e0及其标尺/清晰度合并；当前主工作区分支另有画面调整"
         }
       ],
-      "next_action": "策划记录为并行技术交付，不混入当前提交、不用分支通过数冒充main基线"
+      "next_action": "直接沿用main人物与地图标尺；并行画面改动不夹带本轮提交"
     }
   ],
   "pending_inputs": [
     "程序交付最新版提交号及运行入口",
     "昨日走廊/盒子等是否已有未上传成品",
     "日记后续补包，本轮跳过",
-    "C出场时序矛盾及两次追逐最小规则待最终确认"
+    "C出场时序仍需文案核对；首段猫追逐按本轮双QTE执行，后段C追逐另行接入"
   ],
   "verification": {
     "scope": "本轮资源与路线静态核查，不表示救援/追逐正式剧情已可玩",
