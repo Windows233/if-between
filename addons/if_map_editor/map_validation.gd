@@ -165,6 +165,15 @@ static func _check_resources(item: Dictionary, issues: Array[Dictionary], kind: 
 					"visual_parts.%d.sprite" % part_index, map_id)
 				problem["resource"] = sprite
 				issues.append(problem)
+	var variants: Variant = item.get("sprite_variants", {})
+	if variants is Dictionary:
+		for variant_id: Variant in variants:
+			var sprite := str(variants[variant_id])
+			if sprite.is_empty() or not sprite.begins_with("res://") or not FileAccess.file_exists(sprite):
+				var problem := issue("error", "缺少贴图变体资源：%s" % sprite, kind, index,
+					"sprite_variants.%s" % str(variant_id), map_id)
+				problem["resource"] = sprite
+				issues.append(problem)
 
 
 static func _check_event(item: Dictionary, field: String, context: Dictionary,

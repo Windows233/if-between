@@ -38,6 +38,7 @@ signal selection_changed
 signal edited
 signal status(text)
 signal command_requested(command: String)
+signal zoom_changed(value: float)
 
 var model = null
 var template_library: RefCounted = null
@@ -509,6 +510,12 @@ func fit_to_view() -> void:
 	zoom = maxf(0.01, minf((size.x - 24.0) / map_size.x, (size.y - 24.0) / map_size.y))
 	pan = (size - map_size * zoom) * 0.5
 	queue_redraw()
+	zoom_changed.emit(zoom)
+
+
+## 设置画布倍率，并以视口中心为锚点，避免地图跳位。
+func set_zoom(value: float) -> void:
+	_set_zoom_at(size * 0.5, value)
 
 
 func frame_selection() -> bool:
@@ -551,6 +558,7 @@ func _frame_bounds(bounds: Rect2) -> bool:
 	pan = size * 0.5 - bounds.get_center() * zoom
 	_view_touched = true
 	queue_redraw()
+	zoom_changed.emit(zoom)
 	return true
 
 
@@ -839,7 +847,10 @@ func actor_visual_items(index: int) -> Array[Dictionary]:
 				"layer": layer if layer in ["back", "auto", "front"] else "auto",
 				"sort_offset": float(part.get("sort_offset", 0.0))})
 	else:
-		result.append({"actor_index": index, "sprite": str(actor.get("sprite", "")),
+		var definition := MapDef._actor_from(actor)
+		var sprites := definition.visual_sprites()
+		var sprite := sprites[0] if not sprites.is_empty() else str(actor.get("sprite", ""))
+		result.append({"actor_index": index, "sprite": sprite,
 			"rect": rect, "layer": "front" if bool(actor.get("over", false)) else "auto",
 			"sort_offset": 0.0})
 	return result
@@ -1311,11 +1322,16 @@ func _release_texture_rect() -> void:
 
 
 func _zoom_at(pos: Vector2, factor: float) -> void:
+	_set_zoom_at(pos, zoom * factor)
+
+
+func _set_zoom_at(pos: Vector2, value: float) -> void:
 	var before := to_game(pos)
 	_view_touched = true
-	zoom = clampf(zoom * factor, 0.01, 12.0)
+	zoom = clampf(value, 0.01, 12.0)
 	pan = pos - before * zoom
 	queue_redraw()
+	zoom_changed.emit(zoom)
 
 
 func _resize_to(pos: Vector2) -> void:

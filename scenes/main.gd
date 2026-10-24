@@ -531,6 +531,12 @@ func current_music() -> String:
 	return _bgm_path
 
 
+## 切换当前地图中一个 Actor 的命名贴图变体。
+## 变体只替换主贴图，不改变物件位置、碰撞、交互或遮挡。
+func set_actor_sprite_variant(actor_id: StringName, variant_id: StringName) -> bool:
+	return map_view != null and map_view.set_actor_sprite_variant(actor_id, variant_id)
+
+
 ## 换场景时切背景音乐。曲子在 `data/maps/*.json` 的 `music` 字段里。
 ##
 ## **留空就是没有音乐** —— 卧室白天黑夜都没有，是策划定的，不是漏了。

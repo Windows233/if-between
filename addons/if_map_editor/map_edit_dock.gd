@@ -37,6 +37,7 @@ var model = Model.new()
 var canvas: Control = null
 
 var _map_picker: OptionButton
+var _zoom_spin: SpinBox
 var _save_button: Button
 var _drop_draft_button: Button
 var _tool_buttons: Array[Button] = []
@@ -1229,6 +1230,18 @@ func _row_title() -> HFlowContainer:
 	fit.tooltip_text = "把整张地图缩放并居中到当前画布区域"
 	fit.pressed.connect(func() -> void: canvas.fit_to_view())
 	row.add_child(fit)
+	row.add_child(_text("倍率"))
+	_zoom_spin = SpinBox.new()
+	_zoom_spin.min_value = 0.01
+	_zoom_spin.max_value = 12.0
+	_zoom_spin.step = 0.01
+	_zoom_spin.value = canvas.zoom
+	_zoom_spin.suffix = "×"
+	_zoom_spin.custom_minimum_size.x = 92
+	_zoom_spin.tooltip_text = "显示当前画布缩放倍率；可直接输入数值调整。"
+	_zoom_spin.value_changed.connect(canvas.set_zoom)
+	canvas.zoom_changed.connect(func(value: float) -> void: _zoom_spin.set_value_no_signal(value))
+	row.add_child(_zoom_spin)
 	_drop_draft_button = Button.new()
 	_drop_draft_button.text = "丢弃草稿"
 	_drop_draft_button.tooltip_text = "把这张图的未保存草稿删掉（改动就此消失）"

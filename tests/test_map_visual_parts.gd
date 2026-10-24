@@ -21,6 +21,7 @@ static func fixture() -> Dictionary:
 
 static func run(h: TestHarness) -> void:
 	test_parts(h)
+	test_sprite_variants(h)
 	test_cover(h)
 	test_texture_geometry(h)
 	test_legacy(h)
@@ -50,6 +51,29 @@ static func test_parts(h: TestHarness) -> void:
 	h.check("真实 MapView 只画 parts，不叠旧 sprite", _sprites(view).size(), 4)
 	var body := view.get("_built").get_node("Actors") as StaticBody2D
 	h.check("parts 只建一个 Actor 碰撞", body.get_child_count(), 1)
+	view.free()
+
+
+static func test_sprite_variants(h: TestHarness) -> void:
+	var raw := fixture()
+	raw["actors"][0].erase("visual_parts")
+	raw["actors"][0]["sprite_variants"] = {
+		"closed": "res://art/props/gatehouse_desk.png",
+		"open": "res://art/props/desk.png"}
+	raw["actors"][0]["sprite_variant"] = "closed"
+	var definition := MapDef.from_dictionary(raw)
+	var actor: MapDef.Actor = definition.actors[0]
+	h.check("贴图变体数据合法", definition.validate(), [])
+	h.check("默认变体解析", actor.visual_sprites(), PackedStringArray(["res://art/props/gatehouse_desk.png"]))
+	var view := MapView.new()
+	h.root.add_child(view)
+	view.build(definition)
+	h.check("MapView 按 Actor ID 切换贴图", view.set_actor_sprite_variant(&"desk", &"open"), true)
+	h.check("成功切换后记录当前变体", actor.sprite_variant, "open")
+	h.check("MapView 拒绝不存在的变体", view.set_actor_sprite_variant(&"desk", &"missing"), false)
+	h.check("无效请求不改变当前变体", actor.sprite_variant, "open")
+	h.check("MapView 切回基础贴图", view.set_actor_sprite_variant(&"desk", &""), true)
+	h.check("基础贴图状态为空变体", actor.sprite_variant, "")
 	view.free()
 
 
@@ -156,6 +180,15 @@ static func test_legacy(h: TestHarness) -> void:
 
 
 static func test_validation(h: TestHarness) -> void:
+	var variants := fixture()
+	variants["actors"][0].erase("visual_parts")
+	variants["actors"][0]["sprite_variants"] = {"closed": "res://art/props/gatehouse_desk.png"}
+	variants["actors"][0]["sprite_variant"] = "missing"
+	h.check("不存在的默认贴图变体被校验", not MapDef.from_dictionary(variants).validate().is_empty(), true)
+	variants["actors"][0]["sprite_variant"] = "closed"
+	variants["actors"][0]["visual_parts"] = [{"id": "part", "sprite": "res://art/props/gatehouse_desk.png",
+		"rect": [0, 0, 10, 10], "layer": "auto"}]
+	h.check("贴图变体不能和多部件绘制混用", not MapDef.from_dictionary(variants).validate().is_empty(), true)
 	var bad_parts: Array = [null, {}, [null], [4], [{"sprite": 7}],
 		[{"sprite": "x", "rect": [0, 0, 3, 4], "layer": "side"}],
 		[{"sprite": "x", "rect": [0, 0, 3, 4]}]]
