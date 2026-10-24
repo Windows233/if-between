@@ -412,7 +412,7 @@ func _add_background() -> bool:
 		push_warning("[地图] 背景不是图片：%s" % map_def.background)
 		return false
 
-	var image: Texture2D = texture
+	var image: Texture2D = TextureSource.resolve(map_def.background, texture)
 	var sprite := Sprite2D.new()
 	sprite.name = "Background"
 	sprite.texture = image

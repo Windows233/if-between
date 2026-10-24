@@ -41,6 +41,7 @@ static func run(h: TestHarness) -> void:
 	h.check("自定义材质不残留自动阴影", body.get_node_or_null("Environment"), null)
 	main.queue_free()
 	_check_terrain(h)
+	_check_pixel_repaint(h)
 	_check_lighting(h)
 	_check_preview(h)
 
@@ -63,6 +64,35 @@ static func _check_terrain(h: TestHarness) -> void:
 		Look.style_map(sprite, definition)
 		h.check("地图预设材质保留", sprite.material, custom)
 		sprite.free()
+
+
+static func _check_pixel_repaint(h: TestHarness) -> void:
+	var source := preload("res://scenes/map_texture_source.gd")
+	var path := "res://art/background/chapter2_dead_alley.png"
+	var original: Texture2D = load(path)
+	var resolved := source.resolve(path, original)
+	var entry: Dictionary = source.PIXEL_REPAINTS[path]
+	h.check("后巷使用像素重绘资源", resolved.resource_path, str(entry.source_path))
+	h.check("像素重绘使用原生1536×1024", resolved.get_size(), Vector2(1536, 1024))
+	h.check("新旧图保持相同比例", resolved.get_width() * original.get_height(), original.get_width() * resolved.get_height())
+	var changed := ImageTexture.create_from_image(Image.create(4, 4, false, Image.FORMAT_RGBA8))
+	h.check("用户换了不同尺寸原图时保留其纹理", source.resolve(path, changed), changed)
+	var missing := entry.duplicate(true)
+	missing.source_path = "res://art/background/missing_pixel_repaint.png"
+	h.check("像素重绘缺失时可回退", source._load_source(missing), null)
+	var canvas := preload("res://addons/if_map_editor/map_edit_canvas.gd").new()
+	h.check("编辑画布与试走共用重绘背景", canvas._load_tex(path), resolved)
+	canvas.free()
+	var main := h.new_main()
+	main.enter_map(&"dead_alley", &"from_overworld")
+	var background := main.map_view._built.get_node("Background") as Sprite2D
+	h.check("游戏背景使用实际重绘纹理", background.texture, resolved)
+	h.check("重绘保留地图384×256世界范围", background.texture.get_size() * background.scale, Vector2(384, 256))
+	var sample := Look._background_sample(path)
+	var expected := resolved.get_image()
+	expected.resize(sample.get_width(), sample.get_height(), Image.INTERPOLATE_LANCZOS)
+	h.check("人物环境色从重绘而不是旧图取样", sample.get_data(), expected.get_data())
+	main.queue_free()
 
 
 static func _check_lighting(h: TestHarness) -> void:

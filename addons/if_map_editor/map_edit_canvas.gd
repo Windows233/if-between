@@ -421,6 +421,10 @@ func _load_tex(path: String) -> Texture2D:
 				texture = load(path) as Texture2D
 		_tex_cache[path] = texture
 	var tex: Variant = _tex_cache[path]
+	# 画布和真实试走显示同一张重绘；不改变模型按原素材计算的坐标标尺。
+	var source := preload("res://scenes/map_texture_source.gd")
+	if tex is Texture2D and source.PIXEL_REPAINTS.has(path):
+		return source.resolve(path, tex)
 	return tex if tex is Texture2D else null
 
 

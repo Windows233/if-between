@@ -139,10 +139,20 @@ func _run() -> void:
 	root.add_child(panel)
 	panel.size = Vector2(1100, 720)
 	panel.auto_step = false
+	var native_background := panel.view._built.get_node("Background") as Sprite2D
+	_h.check("试走实际加载后巷像素重绘", native_background.texture.resource_path,
+		"res://art/background/chapter2_dead_alley_pixel_20261024.png")
 	var preview_frame := await _capture()
 	_h.check("试走截图保存", preview_frame.save_png(_output.path_join("dead_alley_preview.png")), OK)
 	_h.check("试走背景可渲染", panel.view._built.get_node("Background").material is ShaderMaterial, true)
 	_h.check("试走人物环境节点可运行", panel.player.get_node("Body/Environment").is_processing(), true)
+	panel.set_options({"show_ranges": true})
+	var collision_frame := await _capture()
+	_h.check("重绘的现有碰撞/交互区截图保存", collision_frame.save_png(_output.path_join("dead_alley_collision_review.png")), OK)
+	panel.player.position = Vector2(191, 65)
+	panel.advance(0.0)
+	var gate_frame := await _capture()
+	_h.check("重绘铁门的现有碰撞/交互区截图保存", gate_frame.save_png(_output.path_join("dead_alley_gate_review.png")), OK)
 	panel.free()
 	var report := FileAccess.open(_output.path_join("gpu_report.json"), FileAccess.WRITE)
 	report.store_string(JSON.stringify({"passed": _h.passed, "failed": _h.failed,

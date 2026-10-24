@@ -82,6 +82,8 @@ static func _background_sample(path: String) -> Image:
 	var texture := load(path) as Texture2D
 	if texture == null:
 		return null
+	# 使用实际显示的像素重绘计算色温与曝光，避免仍从旧图取色。
+	texture = preload("res://scenes/map_texture_source.gd").resolve(path, texture)
 	var image := texture.get_image()
 	if image == null or image.is_empty():
 		return null
