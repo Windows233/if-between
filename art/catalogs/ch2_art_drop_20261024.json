@@ -1,0 +1,293 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-24",
+  "source_archives": [
+    {
+      "filename": "2.zip",
+      "sha256": "10a04536e9a1d7e6945e1cf0a2f64cda715c06e554ccd1ba3803aa5bd14d8d34"
+    },
+    {
+      "filename": "3.zip",
+      "sha256": "f40d653fd16ffe4a8fea9421a3ad08ce2f7fd024adc9b73c601334675f02a084"
+    }
+  ],
+  "source_image_count": 15,
+  "target_image_count": 15,
+  "ignored_macos_metadata_count": 15,
+  "filename_encoding_fix": "ZIP名按CP437误解码的UTF-8还原；原图字节未改",
+  "image_bytes_preserved": true,
+  "existing_image_overwritten": false,
+  "map_data_modified": false,
+  "story_or_code_modified": false,
+  "review_pending_story": "本批美术入库不代表用户已审核通过待审核_20261024_规则统一剧情稿；该稿仍不提交或推送。",
+  "assets": [
+    {
+      "source_archive": "2.zip",
+      "source_name": "2/校门口公告栏空白.PNG",
+      "target": "res://art/props/ch2_notice_board_blank.png",
+      "label": "校门公告栏空白版",
+      "status": "可供程序排规则文字",
+      "sha256": "4002019be7b1ba97475c0ce4f44002e5df498a136ccfbb69a956ef93f5a6b50f",
+      "bytes": 3240454,
+      "size_px": [
+        1632,
+        2608
+      ],
+      "mode": "RGBA",
+      "format": "PNG",
+      "review_note": "保留旧公告栏；本版两块空白告示区可承载最新规则，不把原有旧24h文字图覆盖回来。",
+      "game_reference": "新增库资源，尚未绑定剧情或地图"
+    },
+    {
+      "source_archive": "2.zip",
+      "source_name": "2/日记空白.PNG",
+      "target": "res://art/props/ch2_diary_blank.png",
+      "label": "日记空白版",
+      "status": "可供程序排最新日记",
+      "sha256": "d288888fb80b826cea6b1235eb953a67d3e799946810b31a540a512869d6e6a3",
+      "bytes": 2361955,
+      "size_px": [
+        2762,
+        1536
+      ],
+      "mode": "RGBA",
+      "format": "PNG",
+      "review_note": "只有一个展开跨页底图，不是已经交付三张逐页成图。保留透明留边；按原比例显示并由UI叠三段当前正文。",
+      "game_reference": "新增库资源，尚未绑定剧情或地图"
+    },
+    {
+      "source_archive": "2.zip",
+      "source_name": "2/童话书空白.PNG",
+      "target": "res://art/props/ch2_fairy_tale_book_blank.png",
+      "label": "童话书无字底页",
+      "status": "可供动态排字",
+      "sha256": "a1388efc349c847e754960712d47d868e452e44c728332be2ba5c5478cbdcd05",
+      "bytes": 5655053,
+      "size_px": [
+        2528,
+        1686
+      ],
+      "mode": "RGBA",
+      "format": "PNG",
+      "review_note": "仍有猫和月夜插图，空白指无正文。画布2528×1686，与带字首遍图尺寸不同，不按同画布动画硬切。",
+      "game_reference": "新增库资源，尚未绑定剧情或地图"
+    },
+    {
+      "source_archive": "2.zip",
+      "source_name": "2/童话书.PNG",
+      "target": "res://art/props/ch2_fairy_tale_book_first.png",
+      "label": "童话书第一遍带字版",
+      "status": "首遍书页可调用",
+      "sha256": "469f18ded24c93a53b3dc7a7a228d155b2fb4291ad4763c54a6ad4568f11e51b",
+      "bytes": 2272224,
+      "size_px": [
+        1535,
+        1024
+      ],
+      "mode": "RGBA",
+      "format": "PNG",
+      "review_note": "与既有ch2_fairy_tale_book.png视觉相近但文件和像素不同，作为本批独立首遍版保存，不覆盖旧图。文字为从前有一只猫、主人走了、猫一直在等。",
+      "game_reference": "新增库资源，尚未绑定剧情或地图"
+    },
+    {
+      "source_archive": "2.zip",
+      "source_name": "2/日记.PNG",
+      "target": "res://art/props/ch2_diary_written.png",
+      "label": "日记带字版",
+      "status": "待按最新文稿统一文字",
+      "sha256": "b8c4cb76e0201928bf614a793fe8c1bf9e4c209463c0b8ac821fadbf455d0200",
+      "bytes": 1396628,
+      "size_px": [
+        1683,
+        935
+      ],
+      "mode": "RGBA",
+      "format": "PNG",
+      "review_note": "图内为10月3/12/13日、我捡了一只猫、我要转学了等旧版内容，与1.2日记新文字不一致。保留原图作参考，当前剧情优先用空白版叠字；不宣称三张日记页已齐。",
+      "game_reference": "新增库资源，尚未绑定剧情或地图"
+    },
+    {
+      "source_archive": "3.zip",
+      "source_name": "3/end7_未到的明天.PNG",
+      "target": "res://art/cg/ch2_epilogue.png",
+      "label": "End7 未到的明天",
+      "status": "尾声可选插图",
+      "sha256": "9a051d5c314abb0a3cb25e16c3b15ae5430c65e4a476fde6999669c6de74c26d",
+      "bytes": 1861786,
+      "size_px": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "format": "PNG",
+      "review_note": "按包内正式名称归类；不因素材入库就新增End7登记、提前显示结晶吸收者或自动绑定结局。",
+      "game_reference": "新增库资源，尚未绑定剧情或地图"
+    },
+    {
+      "source_archive": "3.zip",
+      "source_name": "3/end6_罪过.PNG",
+      "target": "res://art/cg/ch2_end6_guilt.png",
+      "label": "End6 罪过",
+      "status": "第二遍C攻击失败CG",
+      "sha256": "a4730f422a4498bf3db1af0624cc782e28fda49859ea00f41e057091467f74dd",
+      "bytes": 2341074,
+      "size_px": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "format": "PNG",
+      "review_note": "用于后段躲刀失败候选，不用于首段猫追逐。End6当前没有正式剧情登记，不因文件存在当已接通。",
+      "game_reference": "新增库资源，尚未绑定剧情或地图"
+    },
+    {
+      "source_archive": "3.zip",
+      "source_name": "3/cg_背刺01.JPG",
+      "target": "res://art/cg/ch2_betrayal_01.jpg",
+      "label": "背刺01",
+      "status": "背刺画面01候选",
+      "sha256": "ce72584a9bf30a85071810125954309a886e02e2f00b06196f171ca50ea6b688",
+      "bytes": 446403,
+      "size_px": [
+        2752,
+        1536
+      ],
+      "mode": "RGB",
+      "format": "JPEG",
+      "review_note": "暖色背刺版本；保持JPEG原字节。01/02只是源文件编号，不擅定连续播放或先后剧情时机。",
+      "game_reference": "新增库资源，尚未绑定剧情或地图"
+    },
+    {
+      "source_archive": "3.zip",
+      "source_name": "3/end5_不可违的铁律.PNG",
+      "target": "res://art/cg/ch2_chase_failure.png",
+      "label": "End5 不可违的铁律",
+      "status": "校门猫追逐失败CG",
+      "sha256": "8cb2c57034725d70674f399171b1ba46595c88903812f8987889096394a79956",
+      "bytes": 2589293,
+      "size_px": [
+        1671,
+        941
+      ],
+      "mode": "RGB",
+      "format": "PNG",
+      "review_note": "主角黑发红围巾、黑猫逼近校园画面；与此前双QTE计划预留路径一致。显示编号End5，当前内部结局ID为end4_iron，不因文件改成End4。原图1671×941保留，不拉伸补一像素。",
+      "game_reference": "新增库资源，尚未绑定剧情或地图"
+    },
+    {
+      "source_archive": "3.zip",
+      "source_name": "3/cg_背刺02.JPG",
+      "target": "res://art/cg/ch2_betrayal_02.jpg",
+      "label": "背刺02",
+      "status": "背刺画面02候选",
+      "sha256": "772e68e1fae4e65fd1f8daf9097d3d753e7786fb55cd9cbde5a8578598799c54",
+      "bytes": 408028,
+      "size_px": [
+        2752,
+        1536
+      ],
+      "mode": "RGB",
+      "format": "JPEG",
+      "review_note": "冷色背刺版本；保持JPEG原字节。由后续演出选择一张或明确编排两张，不把编号自动当攻击两次。",
+      "game_reference": "新增库资源，尚未绑定剧情或地图"
+    },
+    {
+      "source_archive": "3.zip",
+      "source_name": "3/cg_合照.PNG",
+      "target": "res://art/item/group_photo.png",
+      "label": "C与模糊人物合照",
+      "status": "图书馆证据特写可调用",
+      "sha256": "b3e314220b9be3399826dbe7eeca4069c8c0b72b870c0a522abdf5ff027aec52",
+      "bytes": 2516285,
+      "size_px": [
+        1448,
+        1086
+      ],
+      "mode": "RGBA",
+      "format": "PNG",
+      "review_note": "白发C可辨、其他人模糊；不是第一章cat_photo.png。只入素材库，不擅自登记/授予合照道具。",
+      "game_reference": "新增库资源，尚未绑定剧情或地图"
+    },
+    {
+      "source_archive": "3.zip",
+      "source_name": "3/cg_教室躲藏.PNG",
+      "target": "res://art/cg/ch2_classroom_hide.png",
+      "label": "教室躲藏CG",
+      "status": "后段逃C躲藏候选",
+      "sha256": "407ded299f86eeccf26ad124c4ade3a0d8be84b29e0c7f1b7f384d989b3b040b",
+      "bytes": 2123039,
+      "size_px": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "format": "PNG",
+      "review_note": "主角藏在窗边，与后段教室躲藏用途对应；不是首次进入教室的地图背景。",
+      "game_reference": "新增库资源，尚未绑定剧情或地图"
+    },
+    {
+      "source_archive": "3.zip",
+      "source_name": "3/IMG_5273.JPG",
+      "target": "res://art/map/candidates/library_no_cat_20261024.jpg",
+      "label": "去猫图书馆背景候选",
+      "status": "候选，待对位",
+      "sha256": "7502e0a40ea43d92ddb9d09b668ab882046c10f9ca7daab75c1fb0195e1a3eeb",
+      "bytes": 445920,
+      "size_px": [
+        2400,
+        1792
+      ],
+      "mode": "RGB",
+      "format": "JPEG",
+      "review_note": "由IMG_5273.JPG内容辨认：中央地毯无猫，适合补地参考。2400×1792，正式library背景5608×4488；比例和边框布局不同，不直接替换背景及现有书架/墙体/碰撞。",
+      "game_reference": "新增库资源，尚未绑定剧情或地图",
+      "identified_by": "本轮打开图片核对画面/正文，与剧情1.2对应；非仅凭文件名"
+    },
+    {
+      "source_archive": "3.zip",
+      "source_name": "3/end4_自以为是的到来.PNG",
+      "target": "res://art/cg/ch2_rescue_injury.png",
+      "label": "End4 自以为是的到来",
+      "status": "救C失败受伤CG",
+      "sha256": "d51a3554aeddf8780fc29d3a1165d34d5a09acab044cf2341dbda51d425cb19b",
+      "bytes": 1693234,
+      "size_px": [
+        1672,
+        941
+      ],
+      "mode": "RGB",
+      "format": "PNG",
+      "review_note": "对应救援三次失误失败的校园受伤画面，与此前预留路径一致；当前内部结局ID为end4_arrogant。",
+      "game_reference": "新增库资源，尚未绑定剧情或地图"
+    },
+    {
+      "source_archive": "3.zip",
+      "source_name": "3/IMG_5274.PNG",
+      "target": "res://art/props/ch2_fairy_tale_book_second.png",
+      "label": "童话书第二遍新增页",
+      "status": "第二遍书页可调用",
+      "sha256": "8ddfe61e46b8188fbfe44faec91adba455aca1621dd39b29edf77f476cb9e8c6",
+      "bytes": 5045851,
+      "size_px": [
+        2528,
+        1696
+      ],
+      "mode": "RGBA",
+      "format": "PNG",
+      "review_note": "由IMG_5274.PNG文字与画面辨认。正文为“你看，你等的人终会背叛你”，对应图书馆第二遍新增信息；与首遍图画布不同，保持比例逐页展示。",
+      "game_reference": "新增库资源，尚未绑定剧情或地图",
+      "identified_by": "本轮打开图片核对画面/正文，与剧情1.2对应；非仅凭文件名"
+    }
+  ],
+  "verification": {
+    "pillow_decode": "15/15成功",
+    "copy_sha256": "压缩包解出图/主工作区/隔离交付工作树逐文件一致",
+    "godot_import": "exit0",
+    "godot_texture_load": "15/15，尺寸与原图一致",
+    "data_check": "14图/19事件/5结局/7物品；保留cat_doll/night_tear未用及end4_iron无可达三条既有提醒",
+    "game_tests": "4373/4373通过；仅隔离main交付基线",
+    "smoke": "真实窗口烟测通过，exit0",
+    "diagnostics": "保留既有负面测试与引擎诊断，不宣称日志全净",
+    "scope": "素材加载与既有流程回归；未新增剧情/改地图，不代表新CG已在游戏触发"
+  }
+}
