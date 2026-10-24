@@ -7,7 +7,9 @@
 @tool
 extends Node2D
 
-const PIXEL := 0.5
+## 背景和人物统一用细基格；阴影的尺寸与阶梯密度独立于细节设置。
+const PIXEL := 0.25
+const SHADOW_PIXEL := 0.5
 const PIXEL_SHADER := preload("res://scenes/world_pixel.gdshader")
 static var _samples: Dictionary = {}
 
@@ -50,9 +52,8 @@ static func style_actor(sprite: Node2D, definition: MapDef) -> void:
 	look._image = _background_sample(definition.background)
 	look._material = _make_material(texture, definition.player_scale)
 	look._material.set_shader_parameter("actor", true)
-	# 人物保留原画的一像素描边；背景用两倍格子收拢细碎纹理。
-	# 二者落在同一 0.25 逻辑像素基格上，不再强切眼睛和衣服细线。
-	look._material.set_shader_parameter("cell_size", PIXEL * 0.5 * definition.player_scale)
+	# 背景与人物共用细基格，保留原画描边、五官和场景纹理。
+	look._material.set_shader_parameter("cell_size", PIXEL * definition.player_scale)
 	look._material.set_shader_parameter("saturation", 0.88)
 	sprite.material = look._material
 	sprite.set_meta("world_look_material", look._material)
@@ -129,5 +130,5 @@ func _draw() -> void:
 		for x: int in range(-16, 17):
 			var distance := pow(float(x) / 16.0, 2.0) + pow(float(y) / 5.0, 2.0)
 			if distance < 1.0:
-				draw_rect(Rect2(Vector2(x, y) * PIXEL + Vector2(0.0, -0.5), Vector2.ONE * PIXEL),
+				draw_rect(Rect2(Vector2(x, y) * SHADOW_PIXEL + Vector2(0.0, -0.5), Vector2.ONE * SHADOW_PIXEL),
 					Color(0.025, 0.02, 0.035, (1.0 - distance) * 0.32))

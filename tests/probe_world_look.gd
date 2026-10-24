@@ -54,13 +54,14 @@ func _run() -> void:
 		container.add_child(sprite)
 		Look.style_map(sprite, definition)
 		var frame := await _capture()
-		var equal_blocks := true
-		for y: int in range(8, 70, 2):
-			for x: int in range(8, 70, 2):
-				var color := frame.get_pixel(x, y)
-				equal_blocks = equal_blocks and color == frame.get_pixel(x + 1, y) \
-					and color == frame.get_pixel(x, y + 1) and color == frame.get_pixel(x + 1, y + 1)
-		_h.check("标尺%s GPU像素严格为2×2" % ratio, equal_blocks, true)
+		var fine_details := true
+		for y: int in range(64):
+			for x: int in range(64):
+				var actual := frame.get_pixel(x + 8, y + 8)
+				var expected := texture_image.get_pixel(x, y)
+				fine_details = fine_details and absf(actual.r - expected.r) <= 1.0 / 255.0 \
+					and absf(actual.g - expected.g) <= 1.0 / 255.0
+		_h.check("标尺%s GPU保留逐像素细节" % ratio, fine_details, true)
 		# 同源半透明前景叠回底图必须逐像素无差，含透明边界。
 		var overlay_image: Image = texture_image.duplicate()
 		for y: int in 64:

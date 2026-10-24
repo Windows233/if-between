@@ -55,8 +55,8 @@ static func _check_terrain(h: TestHarness) -> void:
 		sprite.scale = Vector2(-0.5, 0.75)
 		var original := sprite.transform
 		Look.style_map(sprite, definition)
-		h.check_float("标尺%s投影后地图颗粒恒为0.5" % ratio,
-			sprite.material.get_shader_parameter("cell_size") / ratio, 0.5)
+		h.check_float("标尺%s投影后地图颗粒恒为0.25" % ratio,
+			sprite.material.get_shader_parameter("cell_size") / ratio, 0.25)
 		h.check("标尺%s不改变旋转翻转" % ratio, sprite.transform, original)
 		var custom := CanvasItemMaterial.new()
 		sprite.material = custom
@@ -111,5 +111,5 @@ static func _check_preview(h: TestHarness) -> void:
 		panel.view._built.get_node("Background").material.get_shader_parameter("cell_size"),
 		Look.PIXEL * panel.definition.player_scale)
 	h.check_float("试走人物颗粒与游戏一致", body.material.get_shader_parameter("cell_size"),
-		Look.PIXEL * 0.5 * panel.definition.player_scale)
+		Look.PIXEL * panel.definition.player_scale)
 	panel.free()

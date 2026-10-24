@@ -3,7 +3,7 @@
 // 染色只用于人物，保留节点原有的淡入淡出及透明轮廓。
 shader_type canvas_item;
 
-uniform float cell_size = 0.5;
+uniform float cell_size = 0.25;
 uniform bool actor = false;
 uniform vec4 uv_bounds = vec4(0.0, 0.0, 1.0, 1.0);
 uniform vec3 ambient = vec3(1.0);
