@@ -10,13 +10,9 @@ extends RefCounted
 const MARKET_DAY := "res://art/map/market_overlay.png"
 const MARKET_NIGHT := "res://art/map/market_night_overlay.png"
 const MARKET_SIZE := Vector2i(6688, 3764)
-## 像素重绘保留旧图作回退；世界尺寸仍由地图决定，绝不改动交互或碰撞坐标。
-const PIXEL_REPAINTS := {
-	"res://art/background/chapter2_dead_alley.png": {
-		"source_path": "res://art/background/chapter2_dead_alley_pixel_20261024.png",
-		"old_size": Vector2i(4608, 3072), "source_size": Vector2i(1536, 1024),
-		"region": Rect2i(0, 0, 1536, 1024)},
-}
+## 用户否决上一版后巷重绘的色调；当前保留原图，不启用任何重绘替换。
+## 保留解析入口供后续经过视觉验收的候选使用。
+const PIXEL_REPAINTS: Dictionary = {}
 ## region 均为高清原图像素；旧切片来自 1672×941 透明图的精确裁切，坐标乘 4。
 const MANIFEST := {
 	"res://art/props/market_day_building_left.png": {"source_path": MARKET_DAY,

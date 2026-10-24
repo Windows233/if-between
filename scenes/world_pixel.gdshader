@@ -1,10 +1,11 @@
 // 世界画面共用的像素标尺。格子随地图标尺投影，人物格子随自身移动。
 // 用 UV 导数逆推取样点，支持旋转、翻转和高清 AtlasTexture；不处理 UI。
-// 染色只用于人物，保留节点原有的淡入淡出及透明轮廓。
+// 染色只用于人物；可选局部细节仅按亮度等比缩放 RGB，保留色相与透明轮廓。
 shader_type canvas_item;
 
 uniform float cell_size = 0.25;
 uniform bool actor = false;
+uniform float detail_strength = 0.0;
 uniform vec4 uv_bounds = vec4(0.0, 0.0, 1.0, 1.0);
 uniform vec3 ambient = vec3(1.0);
 uniform float exposure = 1.0;
@@ -34,6 +35,24 @@ void fragment() {
 		uv_bounds.zw - TEXTURE_PIXEL_SIZE * 0.5);
 	vec4 pixel = texture(TEXTURE, uv);
 	float luminance = dot(pixel.rgb, vec3(0.2126, 0.7152, 0.0722));
+	if (detail_strength > 0.0) {
+		vec2 low = uv_bounds.xy + TEXTURE_PIXEL_SIZE * 0.5;
+		vec2 high = uv_bounds.zw - TEXTURE_PIXEL_SIZE * 0.5;
+		vec2 step_x = dFdx(UV);
+		vec2 step_y = dFdy(UV);
+		vec3 neighbors = texture(TEXTURE, clamp(uv + step_x, low, high)).rgb;
+		neighbors += texture(TEXTURE, clamp(uv - step_x, low, high)).rgb;
+		neighbors += texture(TEXTURE, clamp(uv + step_y, low, high)).rgb;
+		neighbors += texture(TEXTURE, clamp(uv - step_y, low, high)).rgb;
+		float detail = luminance - dot(neighbors * 0.25, vec3(0.2126, 0.7152, 0.0722));
+		float adjustment = clamp(detail * detail_strength, -0.025, 0.025)
+			* smoothstep(0.004, 0.018, abs(detail));
+		float brightest = max(max(pixel.r, pixel.g), pixel.b);
+		float gain = clamp((luminance + adjustment) / max(luminance, 0.001),
+			0.8, min(1.2, 1.0 / max(brightest, 0.001)));
+		pixel.rgb *= gain;
+		luminance = dot(pixel.rgb, vec3(0.2126, 0.7152, 0.0722));
+	}
 	pixel.rgb = mix(vec3(luminance), pixel.rgb, saturation) * ambient * exposure;
 	COLOR = pixel * item_color;
 }

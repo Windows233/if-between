@@ -130,6 +130,27 @@ func _run() -> void:
 	var faded := (await _capture()).get_pixel(16, 16)
 	_h.check("人物完全淡出后无残留", faded, blank.get_pixel(16, 16))
 	actor.free()
+	# 背景细节整理不能给整张图调色：平坦区域逐色不变，边缘增强且保留 RGB 比例。
+	var steps := Image.create(32, 16, false, Image.FORMAT_RGB8)
+	steps.fill(Color(0.2, 0.3, 0.4))
+	steps.fill_rect(Rect2i(16, 0, 16, 16), Color(0.1, 0.15, 0.2))
+	var detail_sprite := Sprite2D.new()
+	detail_sprite.texture = ImageTexture.create_from_image(steps)
+	detail_sprite.centered = false
+	detail_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	detail_sprite.material = Look._make_material(detail_sprite.texture, 1.0)
+	root.add_child(detail_sprite)
+	var unprocessed := await _capture()
+	detail_sprite.material.set_shader_parameter("detail_strength", 0.6)
+	var processed := await _capture()
+	_h.check("边缘整理保留平坦区域原色", processed.get_pixel(8, 8), unprocessed.get_pixel(8, 8))
+	_h.check("边缘整理强化已有明暗边界", processed.get_pixel(15, 8).b > unprocessed.get_pixel(15, 8).b
+		and processed.get_pixel(16, 8).b < unprocessed.get_pixel(16, 8).b, true)
+	var edge := processed.get_pixel(15, 8)
+	var original_edge := unprocessed.get_pixel(15, 8)
+	_h.check("边缘整理保留原色RGB比例", absf(edge.r / edge.b - original_edge.r / original_edge.b) < 0.015
+		and absf(edge.g / edge.b - original_edge.g / original_edge.b) < 0.015, true)
+	detail_sprite.free()
 	# 真实编辑器独立物理视口，确认工具模式共用材质且最终画面非空。
 	root.canvas_transform = Transform2D.IDENTITY
 	root.size = Vector2i(1100, 720)
@@ -140,8 +161,7 @@ func _run() -> void:
 	panel.size = Vector2(1100, 720)
 	panel.auto_step = false
 	var native_background := panel.view._built.get_node("Background") as Sprite2D
-	_h.check("试走实际加载后巷像素重绘", native_background.texture.resource_path,
-		"res://art/background/chapter2_dead_alley_pixel_20261024.png")
+	_h.check("试走实际保留后巷原图", native_background.texture.resource_path, str(data.background))
 	var preview_frame := await _capture()
 	_h.check("试走截图保存", preview_frame.save_png(_output.path_join("dead_alley_preview.png")), OK)
 	_h.check("试走背景可渲染", panel.view._built.get_node("Background").material is ShaderMaterial, true)

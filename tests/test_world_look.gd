@@ -41,7 +41,7 @@ static func run(h: TestHarness) -> void:
 	h.check("自定义材质不残留自动阴影", body.get_node_or_null("Environment"), null)
 	main.queue_free()
 	_check_terrain(h)
-	_check_pixel_repaint(h)
+	_check_original_style(h)
 	_check_lighting(h)
 	_check_preview(h)
 
@@ -66,32 +66,32 @@ static func _check_terrain(h: TestHarness) -> void:
 		sprite.free()
 
 
-static func _check_pixel_repaint(h: TestHarness) -> void:
+static func _check_original_style(h: TestHarness) -> void:
 	var source := preload("res://scenes/map_texture_source.gd")
 	var path := "res://art/background/chapter2_dead_alley.png"
 	var original: Texture2D = load(path)
 	var resolved := source.resolve(path, original)
-	var entry: Dictionary = source.PIXEL_REPAINTS[path]
-	h.check("后巷使用像素重绘资源", resolved.resource_path, str(entry.source_path))
-	h.check("像素重绘使用原生1536×1024", resolved.get_size(), Vector2(1536, 1024))
-	h.check("新旧图保持相同比例", resolved.get_width() * original.get_height(), original.get_width() * resolved.get_height())
+	h.check("后巷撤下改变色调的重绘替换", source.PIXEL_REPAINTS.has(path), false)
+	h.check("后巷直接保留原画资源", resolved, original)
 	var changed := ImageTexture.create_from_image(Image.create(4, 4, false, Image.FORMAT_RGBA8))
 	h.check("用户换了不同尺寸原图时保留其纹理", source.resolve(path, changed), changed)
-	var missing := entry.duplicate(true)
-	missing.source_path = "res://art/background/missing_pixel_repaint.png"
+	var missing := {"source_path": "res://art/background/missing_pixel_repaint.png"}
 	h.check("像素重绘缺失时可回退", source._load_source(missing), null)
 	var canvas := preload("res://addons/if_map_editor/map_edit_canvas.gd").new()
-	h.check("编辑画布与试走共用重绘背景", canvas._load_tex(path), resolved)
+	h.check("编辑画布保留原画", canvas._load_tex(path), original)
 	canvas.free()
 	var main := h.new_main()
 	main.enter_map(&"dead_alley", &"from_overworld")
 	var background := main.map_view._built.get_node("Background") as Sprite2D
-	h.check("游戏背景使用实际重绘纹理", background.texture, resolved)
-	h.check("重绘保留地图384×256世界范围", background.texture.get_size() * background.scale, Vector2(384, 256))
+	h.check("游戏背景保留原画", background.texture, original)
+	h.check("显示整理保留地图世界范围", background.texture.get_size() * background.scale, Vector2(main.current_map.size))
+	h.check("后巷原画启用有限边缘整理", float(background.material.get_shader_parameter("detail_strength")) > 0.0, true)
+	h.check("主角不套背景边缘整理", Look._make_material(load("res://art/player/down1.png"), 1.0).get_shader_parameter("detail_strength"), 0.0)
+	h.check("其他地图不套背景边缘整理", Look._make_material(load(source.MARKET_DAY), 1.0).get_shader_parameter("detail_strength"), 0.0)
 	var sample := Look._background_sample(path)
 	var expected := resolved.get_image()
 	expected.resize(sample.get_width(), sample.get_height(), Image.INTERPOLATE_LANCZOS)
-	h.check("人物环境色从重绘而不是旧图取样", sample.get_data(), expected.get_data())
+	h.check("人物环境色继续来自原画", sample.get_data(), expected.get_data())
 	main.queue_free()
 
 

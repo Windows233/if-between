@@ -26,6 +26,9 @@ static func style_map(node: Node, definition: MapDef) -> void:
 	if node is Sprite2D and node.material == null:
 		var sprite := node as Sprite2D
 		var material := _make_material(sprite.texture, definition.player_scale)
+		# 保留后巷原画的色调和密集材质，只轻微增强显示层的局部明暗边缘。
+		if sprite.texture != null and sprite.texture.resource_path == "res://art/background/chapter2_dead_alley.png":
+			material.set_shader_parameter("detail_strength", 0.6)
 		sprite.material = material
 	for child: Node in node.get_children():
 		style_map(child, definition)
@@ -66,6 +69,7 @@ static func _make_material(texture: Texture2D, map_scale: float) -> ShaderMateri
 	var material := ShaderMaterial.new()
 	material.shader = PIXEL_SHADER
 	material.set_shader_parameter("cell_size", PIXEL * map_scale)
+	material.set_shader_parameter("detail_strength", 0.0)
 	if texture is AtlasTexture:
 		var size: Vector2 = texture.atlas.get_size()
 		var region: Rect2 = texture.region
