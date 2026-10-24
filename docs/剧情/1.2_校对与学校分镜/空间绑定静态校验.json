@@ -1,0 +1,101 @@
+{
+  "results": [
+    {
+      "clear": true,
+      "from": [
+        62,
+        114
+      ],
+      "map": "school_gate",
+      "to": [
+        62,
+        164
+      ]
+    },
+    {
+      "clear": true,
+      "from": [
+        62,
+        164
+      ],
+      "map": "school_gate",
+      "to": [
+        145,
+        164
+      ]
+    },
+    {
+      "clear": true,
+      "from": [
+        145,
+        164
+      ],
+      "map": "school_gate",
+      "to": [
+        286,
+        164
+      ]
+    },
+    {
+      "clear": true,
+      "from": [
+        286,
+        164
+      ],
+      "map": "school_gate",
+      "to": [
+        353,
+        164
+      ]
+    },
+    {
+      "clear": true,
+      "from": [
+        353,
+        164
+      ],
+      "map": "school_gate",
+      "to": [
+        353,
+        150
+      ]
+    },
+    {
+      "clear": true,
+      "from": [
+        233,
+        296
+      ],
+      "map": "library",
+      "to": [
+        233,
+        280
+      ]
+    },
+    {
+      "actor_feet": [
+        365,
+        164
+      ],
+      "clear": true,
+      "map": "school_gate"
+    },
+    {
+      "actor_feet": [
+        251,
+        296
+      ],
+      "clear": true,
+      "map": "library"
+    },
+    {
+      "actor_feet": [
+        186,
+        88
+      ],
+      "clear": true,
+      "map": "school_yard"
+    }
+  ],
+  "scope": "current static WalkGrid only; no added NPC body simulation"
+}
