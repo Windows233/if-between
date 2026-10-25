@@ -52,6 +52,19 @@ game_context:
       camera_notes: "沿用当前地图相机；逻辑视口320x180。"
       scene_notes: "ch2_market进入market_night并接A，不是B结尾接应事件。"
       integration: "1.2结尾B传送点接应尚未绑定。"
+    - id: market_night
+      map_file: data/maps/market_night.json
+      background: art/map/market_night.png
+      map_size: [557, 314]
+      inspection:
+        data: verified
+        visual: verified
+        runtime: not_run
+        notes: "核对夜市地图、from_overworld出生点[278,279]并查看实际底图；地图当前没有B actor，未运行尾声事件。"
+      objects: []
+      camera_notes: "沿用现有市场地图相机；逻辑视口320x180。"
+      scene_notes: "B由本段尾声事件在from_overworld出生点附近接应；准确站位/交互框需实机与地图编辑器核实。"
+      integration: "接收离开蚀界后的剧情传送；新增独立B接应事件，不复用ch2_market或旧meet_b交易开场。"
     - id: desk_shop
       map_file: data/maps/desk_shop.json
       background: art/map/desk_shop.png
@@ -88,6 +101,9 @@ entities:
   - id: c
     name: C
     kind: character
+  - id: b
+    name: B
+    kind: character
   - id: cat_monster
     name: 小猫怪兽
     kind: character
@@ -96,6 +112,9 @@ entities:
     kind: prop
   - id: night_tear
     name: 夜幕之泪
+    kind: prop
+  - id: pendant
+    name: 吊坠
     kind: prop
   - id: box
     name: 宝箱
@@ -148,6 +167,11 @@ assets:
     status: verified
     path: art/cg/ch2_end6_guilt.png
     spec: "已存在的End6 CG候选，程序接入前需核实它与原文失败节点匹配。"
+  - id: pendant_art
+    kind: prop
+    status: verified
+    path: art/item/pendant.png
+    spec: "B在P747交给主角留作纪念的吊坠图；沿用item/pendant登记，不与夜幕之泪混为一件道具。"
 variables:
   - id: library_anchor_saved
     type: bool
@@ -183,23 +207,44 @@ variables:
     type: bool
     initial: false
     persistence: chapter
-    description: "离开蚀界结尾交接是否完成；真实出口待确认。"
+    description: "是否已从蚀界转入夜间集市；出口地图与出生点已由用户确认。"
+  - id: night_tear_transferred
+    type: bool
+    initial: false
+    persistence: chapter
+    description: "夜幕之泪是否已在集市对话中交给B并从背包移除。"
+  - id: ending_tear_absorbed
+    type: bool
+    initial: false
+    persistence: chapter
+    description: "结尾文字状态‘夜幕之泪：已吸收’是否已经展示。"
+  - id: pendant_received
+    type: bool
+    initial: false
+    persistence: chapter
+    binding: "item/pendant"
+    description: "B在P747将吊坠留给主角；若此前已持有，不重复增加数量。"
 decisions:
   - id: end6_c_line
     question: "End6躲避失败后C的‘还不错嘛，有点警惕心’是否属于成功分支？"
-    blocking: true
+    blocking: false
     affects: [L10]
-    resolution: null
+    resolution: "保留在第二次物理闪避失败、进入End6的分支；用户于2026-10-25确认。"
   - id: veil_exit_map
     question: "P734后离开蚀界具体进入哪个地图和出生点？"
-    blocking: true
+    blocking: false
     affects: [L08, L09, L11]
-    resolution: null
+    resolution: "回到夜间集市market_night的from_overworld出生点[278,279]；B在该处附近接应。集市地图、出生点由工程核实，B准确生成点待程序验收。用户于2026-10-25确认。"
   - id: b_trigger_and_tear
     question: "B的触发点/ch2_market用途是什么；夜幕之泪何时被收走并变为已吸收？"
-    blocking: true
+    blocking: false
     affects: [L09, L11]
-    resolution: null
+    resolution: "B在夜间集市market_night的from_overworld出生点附近接应；与B对话时从背包移除夜幕之泪，按交付给B记录。不要复用旧meet_b交易开场。结尾‘已吸收’文字状态在该对话完成后记录；具体B站位和事件触发由程序验证。用户于2026-10-25确认。"
+  - id: p747_reward
+    question: "P747的获得提示对应什么物品？"
+    blocking: false
+    affects: [L09]
+    resolution: "吊坠；复用已有item/pendant及art/item/pendant.png。用户于2026-10-25确认。若此前已经持有则不重复加数量。"
 entry: L01
 nodes:
   - id: L01
@@ -521,23 +566,38 @@ nodes:
   - id: L09
     title: 离开蚀界并在集市遇到B
     sources: [story12]
-    scene: market
+    scene: market_night
     trigger:
       type: flow
       target: "窗边抛币完成后的剧情交接"
     control: cutscene
     repeat: once
     setup:
-      camera: "真实外部地图确定后再配置。"
-      characters: "B与老人只在触发点确认后出现。"
-      environment: "不得将library/to_school_gate当成离开蚀界出口；ch2_market现有入口接A，不接B。"
+      camera: "切入market_night后沿用该图相机；出生点为from_overworld[278,279]。"
+      characters: "主角从夜市出生点进入；B在对应集市传送点旁接应，准确人物脚点由程序按可走区域核实。老人不在本节点出现。"
+      environment: "从蚀界直接交接到market_night/from_overworld；不得经旧走廊或library/to_school_gate。已有ch2_market入口接A，尾声使用独立B接应事件。"
       audio: "结尾音乐路径待音效组交付核对。"
     cues:
-      - id: L09_handoff
+      - id: L09_enter_market
+        kind: transition
+        origin: source
+        sources: [story12]
+        description: "蚀界结束后直接切入夜间集市，主角落在已有from_overworld出生点。"
+        completion: finished
+        params:
+          operation: change_scene
+          target: market_night
+          spawn: from_overworld
+        engine:
+          status: existing
+          steps:
+            - {do: goto, map: market_night, spawn: from_overworld}
+          notes: "market_night与spawn均已存在于origin/main。"
+      - id: L09_mark_left_veil
         kind: state
         origin: staging
         sources: [story12]
-        description: "按确认后的地图和道具状态交接到蚀界外；B触发、夜幕之泪被收与吸收顺序待决定。"
+        description: "抵达夜间集市后标记已离开蚀界。"
         completion: immediate
         params:
           changes:
@@ -545,10 +605,174 @@ nodes:
               op: set
               value: true
         engine:
-          status: unresolved
+          status: requires_work
           steps: []
-          notes: "受veil_exit_map与b_trigger_and_tear阻断，待确认后补真实出口和状态。"
-        decision_ids: [veil_exit_map, b_trigger_and_tear]
+          notes: "此状态属于离界切图节点，不应延迟到老人尾声。"
+          plan: "在成功离开蚀界并切入market_night时写入一次性结尾交接状态。"
+      - id: L09_handoff
+        kind: actor
+        origin: staging
+        sources: [story12]
+        description: "切入夜间集市from_overworld出生点[278,279]；B的小人站在对应集市传送点旁等待主角。"
+        completion: finished
+        target: b
+        assets: []
+        params:
+          operation: show
+          position: {space: anchor, name: market_entrance_portal, binding: null}
+        engine:
+          status: requires_work
+          steps: []
+          notes: "目标地图和出生点已确认；market_night没有B actor。按地图编辑器/演出NPC流程绑定传送点旁脚点，验证主角可到达且不挡出生通道。"
+          plan: "新增本章尾声B接应，不复用ch2_market或旧meet_b交易开场。"
+      - id: L09_b_arrival
+        kind: dialogue
+        origin: source
+        sources: [story12]
+        description: "主角抵达后自动进入不可操作剧情，按1.2原文与B交谈。"
+        completion: confirm
+        target: b
+        params:
+          speaker: protagonist
+          mode: spoken
+          text: "终于出来了"
+          side: left
+          portrait: null
+        engine:
+          status: requires_work
+          steps: []
+          notes: "对应P740-P749；逐句录入原文，不触发重复入场对话。"
+          plan: "绑定本章尾声B事件并锁定玩家输入，完成后才恢复/切入委托屋尾声。"
+      - id: L09_b_reply
+        kind: dialogue
+        origin: source
+        sources: [story12]
+        description: "B回应主角已经回来，并说自己没有坑她。"
+        completion: confirm
+        params:
+          speaker: b
+          mode: spoken
+          text: "回来了？我就说不会坑你的吧"
+          side: right
+          portrait: null
+        engine: {status: requires_work, steps: [], notes: "按1.2 P742。", plan: "录入尾声B逐句对白。"}
+      - id: L09_protagonist_reacts
+        kind: dialogue
+        origin: source
+        sources: [story12]
+        description: "主角质问B为何没有说明蚀界允许多人进入，自己差点死在里面。"
+        completion: confirm
+        params:
+          speaker: protagonist
+          mode: spoken
+          text: "你还敢说？！怎么没告诉我蚀界还允许多人进入，我差点死在里面"
+          side: left
+          portrait: null
+        engine: {status: requires_work, steps: [], notes: "按1.2 P743。", plan: "录入尾声主角逐句对白。"}
+      - id: L09_b_surprised
+        kind: dialogue
+        origin: source
+        sources: [story12]
+        description: "B惊讶地追问还有谁进入了蚀界。"
+        completion: confirm
+        params:
+          speaker: b
+          mode: spoken
+          text: "什 么！谁来了"
+          side: right
+          portrait: null
+        engine: {status: requires_work, steps: [], notes: "按1.2 P744。", plan: "录入尾声B逐句对白。"}
+      - id: L09_protagonist_names_c
+        kind: dialogue
+        origin: source
+        sources: [story12]
+        description: "主角告知B来者是C，但不确定名字是否真实。"
+        completion: confirm
+        params:
+          speaker: protagonist
+          mode: spoken
+          text: "C，也不知道是不是真叫这个名"
+          side: left
+          portrait: null
+        engine: {status: requires_work, steps: [], notes: "按1.2 P744。", plan: "录入尾声主角逐句对白。"}
+      - id: L09_b_realizes
+        kind: dialogue
+        origin: source
+        sources: [story12]
+        description: "B小声意识到C也进入蚀界，并说‘看来……’。"
+        completion: confirm
+        params:
+          speaker: b
+          mode: spoken
+          text: "（小声）怎么他会来，看来...."
+          side: right
+          portrait: null
+        engine: {status: requires_work, steps: [], notes: "按1.2 P745，保留未说完的悬念。", plan: "录入尾声B逐句对白。"}
+      - id: L09_b_requests_tear
+        kind: dialogue
+        origin: source
+        sources: [story12]
+        description: "B要求主角把东西交给他，并说吊坠留给主角作纪念。"
+        completion: confirm
+        params:
+          speaker: b
+          mode: spoken
+          text: "算了，你先把东西给我，吊坠就留给你做纪念吧"
+          side: right
+          portrait: null
+        engine: {status: requires_work, steps: [], notes: "按1.2 P746；道具状态紧随该台词。", plan: "录入尾声B逐句对白并连接道具交付提示。"}
+      - id: L09_b_gives_pendant
+        kind: state
+        origin: source
+        sources: [story12]
+        description: "P747显示获得吊坠提示；沿用既有item/pendant与pendant图。若道具已在背包，不重复增加数量。"
+        completion: immediate
+        assets: [pendant_art]
+        params:
+          changes:
+            - var: pendant_received
+              op: set
+              value: true
+        engine:
+          status: requires_work
+          steps: []
+          notes: "剧情文本确认获得的是吊坠，不是夜幕之泪。"
+          plan: "在B的P746对白后显示吊坠获得提示；复用item/pendant和art/item/pendant.png，库存以持有状态幂等设置，不能叠加重复奖励。"
+      - id: L09_b_receives_tear
+        kind: state
+        origin: source
+        sources: [story12]
+        description: "B说‘你先把东西给我’后，显示失去夜幕之泪提示并从背包移除；按用户确认记录为交给B。"
+        completion: immediate
+        params:
+          changes:
+            - var: night_tear_transferred
+              op: set
+              value: true
+        engine:
+          status: requires_work
+          steps: []
+          notes: "P748失去提示只移除夜幕之泪；吊坠留在背包。道具移除只发生一次，不提前到达集市时执行。"
+          plan: "新增夜幕之泪交付状态与一次性背包移除，覆盖读档和重复交互。"
+        decision_ids: [b_trigger_and_tear]
+      - id: L09_b_closes
+        kind: dialogue
+        origin: source
+        sources: [story12]
+        description: "道具交付后B说‘行，我们还会再见的’，随后转委托屋。"
+        completion: confirm
+        target: b
+        params:
+          speaker: b
+          mode: spoken
+          text: "行，我们还会再见的"
+          side: right
+          portrait: null
+        engine:
+          status: requires_work
+          steps: []
+          notes: "按P749在失去夜幕之泪提示后播放。"
+          plan: "将道具状态设置夹在B索取台词与告别台词之间。"
     exit:
       type: next
       next: L11
@@ -564,7 +788,7 @@ nodes:
     repeat: once
     setup:
       camera: inherit
-      characters: "复用End6 CG候选；C台词待策划确认是否放在失败分支。"
+      characters: "复用End6 CG候选；失败台词按用户确认保留在本分支。"
       environment: "第二次背刺失败后收束，不接成功逃跑线。"
       audio: inherit
     cues:
@@ -587,7 +811,7 @@ nodes:
         kind: dialogue
         origin: source
         sources: [story12]
-        description: "原文失败分支C台词语义疑似写反，确认后才录入。"
+        description: "按用户确认，物理闪避失败后保留原文C台词‘还不错嘛，有点警惕心’，随后继续失败分支并进入End6。"
         completion: confirm
         params:
           speaker: c
@@ -596,13 +820,76 @@ nodes:
           side: left
           portrait: null
         engine:
-          status: unresolved
+          status: requires_work
           steps: []
-          notes: "受blocking decision end6_c_line阻断。"
-        decision_ids: [end6_c_line]
+          notes: "台词分支已由用户确认；程序按失败分支原文录入。"
+          plan: "按当前稳定结局ID写入End6结果，并确认不会进入成功逃跑线。"
+      - id: L10_c_line_2
+        kind: dialogue
+        origin: source
+        sources: [story12]
+        description: "End6失败线C继续嘲讽主角。"
+        completion: confirm
+        params:
+          speaker: c
+          mode: spoken
+          text: "不过，你还是太年轻了啊"
+          side: left
+          portrait: null
+        engine: {status: requires_work, steps: [], notes: "按1.2失败分支原文。", plan: "接在L10_c_line之后。"}
+      - id: L10_c_line_3
+        kind: dialogue
+        origin: source
+        sources: [story12]
+        description: "End6失败线C告别并收束威胁。"
+        completion: confirm
+        params:
+          speaker: c
+          mode: spoken
+          text: "这下彻底再见咯，yn"
+          side: left
+          portrait: null
+        engine: {status: requires_work, steps: [], notes: "保留原文yn占位。", plan: "接在L10_c_line_2之后。"}
+      - id: L10_protagonist_reacts
+        kind: dialogue
+        origin: source
+        sources: [story12]
+        description: "主角意识到失败线即将结束。"
+        completion: confirm
+        params:
+          speaker: protagonist
+          mode: thought
+          text: "就。。这么结束了........."
+          side: left
+          portrait: null
+        engine: {status: requires_work, steps: [], notes: "按1.2失败分支原文心声。", plan: "接在C失败对白之后。"}
+      - id: L10_protagonist_last_line
+        kind: dialogue
+        origin: source
+        sources: [story12]
+        description: "主角发出最后的疑问。"
+        completion: confirm
+        params:
+          speaker: protagonist
+          mode: spoken
+          text: "为·什么。"
+          side: left
+          portrait: null
+        engine: {status: requires_work, steps: [], notes: "按1.2失败分支原文。", plan: "接在主角心声之后。"}
+      - id: L10_end6_caption
+        kind: caption
+        origin: source
+        sources: [story12]
+        description: "黑屏显示End6原文结局文字。"
+        completion: confirm
+        params:
+          text: "贪心与实力不匹配，本就是一种罪过啊，说拜拜吧"
+          position: center
+          operation: show
+        engine: {status: requires_work, steps: [], notes: "End6稳定ID由程序核对。", plan: "在失败对白后显示结局文字并登记End6，不进入成功追逐线。"}
     exit:
       type: return_control
-      handoff: "策划确认台词归属后映射End6结局并收束。"
+      handoff: "按已确认台词归属映射End6结局并收束。"
   - id: L11
     title: B收取夜幕之泪与老人收下猫玩偶
     sources: [story12]
@@ -622,18 +909,17 @@ nodes:
         kind: state
         origin: source
         sources: [story12]
-        description: "按原文顺序处理失去夜幕之泪、失去猫玩偶、获得银币及End7状态；夜幕之泪已吸收时机待确认。"
+        description: "按P751后切委托屋，继续老人收取猫玩偶、发放10银币；End7黑屏文字依原文显示‘夜幕之泪：已吸收’。夜幕之泪已在集市对话中交给B并移除。"
         completion: immediate
         params:
           changes:
-            - var: left_veil_realm
+            - var: ending_tear_absorbed
               op: set
               value: true
         engine:
           status: unresolved
           steps: []
-          notes: "夜幕之泪被B收走与结尾‘已吸收’的状态顺序需先确认。"
-        decision_ids: [b_trigger_and_tear]
+          notes: "按P751-P781完成地图切换、老人交付、银币提示和结尾黑屏文字；夜幕之泪背包移除已在L09完成。"
     exit:
       type: return_control
       handoff: "待完成B/老人逐句对白、结尾状态、End7 CG与结局界面绑定。"
@@ -646,7 +932,7 @@ coverage:
     note: "库内调查actor未完成绑定，台词需逐句回到1.2校对稿核对。"
   - from: "背刺、End6、回溯与二次躲避"
     nodes: [L03, L04, L05, L06, L07, L10]
-    note: "失败C台词归属为blocking decision。"
+    note: "失败C台词按用户确认保留在End6分支；End6结局ID映射仍由程序核对。"
   - from: "主动隐蔽、窗外扔决策币、离开蚀界"
     nodes: [L07, L08, L09, L11]
-    note: "窗边/外部地图与B触发未确认，不宣称可执行通关。"
+    note: "剧情路线已确认；猫/血迹/决策币素材、窗边位置、B准确站位和新接应事件仍待制作与实机验收。"

@@ -88,6 +88,14 @@
       "affected_ids": [
         "CLUE-ART"
       ]
+    },
+    {
+      "date": "2026-10-25",
+      "report": "用户确认End6失败台词保留在失败分支；离开蚀界返回market_night/from_overworld[278,279]；B在集市接应；P747获得吊坠，P748移除夜幕之泪并视为交给B。工程已登记item/pendant且有art/item/pendant.png，已写入图书馆后段演出稿与程序任务。",
+      "affected_ids": [
+        "LIB-STORY",
+        "ENDING"
+      ]
     }
   ],
   "items": [
@@ -301,7 +309,7 @@
           "reference": "新增图书馆后段程序/美术任务与11节点stage草案；library中心猫烘焙底图，后段事件仍未接入；策划稿draft"
         }
       ],
-      "next_action": "按R2规则先接日记介入、首次背刺回溯、二次线索/合照、第二次闪避分支；未确认的窗边和结尾路线停在交接点"
+      "next_action": "按程序任务接日记介入、首次背刺回溯、二次线索/合照、第二次闪避分支及已确认的夜市B尾声；猫/血迹/决策币/窗边素材与场景绑定仍待补齐和验收"
     },
     {
       "id": "REWIND",
@@ -353,7 +361,7 @@
           "reference": "正文End6闪避失败、End7未到的明天；main只有5个结局登记，end4_iron对应正文End5"
         }
       ],
-      "next_action": "交晶石给B、玩偶给老人、10银币文字和End7闭环；内部旧ID不随便改名"
+      "next_action": "按已确认时序实现P747吊坠、P748夜幕之泪交给B、老人收玩偶、10银币及End7闭环；核对End6稳定ID，不随意改名"
     },
     {
       "id": "CORRIDOR",
@@ -401,7 +409,7 @@
           "reference": "学校/图书馆/独立猫及图书馆2血迹已存在；正式library烘焙中央猫"
         }
       ],
-      "next_action": "只补地、分层和对齐，不重画猫/血或整馆"
+      "next_action": "交猫可淡隐透明层/无猫底图与可跨回溯保留的血迹透明层，附原图坐标及对位预览；不重画猫或整馆"
     },
     {
       "id": "WINDOW",
@@ -417,7 +425,7 @@
           "reference": "art/map/classroom.png右侧为镜子，窗边新图未见"
         }
       ],
-      "next_action": "补固定近景承接抛御守，不重画全教室"
+      "next_action": "确认现有候选窗位是否能落在classroom真实画面；补窗框局部、主角抛决策币层与独立币层的对位预览，不重画全教室"
     },
     {
       "id": "LOCAL-PROPS",
@@ -509,20 +517,19 @@
     }
   ],
   "pending_inputs": [
-    "昨天报告所说的实际运行构建/启动入口仍未提供；今天先复现当前GitHub工作区的构建并记录版本/提交",
-    "用户已确认今日同步范围是当前工作区的教室日记与黑板摆放JSON；程序提交前仍须审阅classroom.json差异并隔离卧室/图书馆/操场改动",
-    "日记后续补包，本轮跳过；当前已交日记底图可先接文本调查",
-    "开门音效、教室与图书馆BGM、追逐音频的已交版本和文件路径待音效组核对；不重复制作已交素材",
-    "双QTE首段追逐按已审核R2执行；后段C追逐另行接入"
+    "图书馆猫层/无猫底图、血迹层、正式决策币图、教室窗边抛币分层需美术交付或完成候选对位验收",
+    "图书馆调查点/宝箱和夜市B接应脚点、触发范围需在地图编辑器绑定并实走",
+    "P741-P749程序录入前逐段对照1.2校对稿；吊坠ID和图已确认复用item/pendant及art/item/pendant.png",
+    "图书馆后段事件链、回溯与存档闭环尚未实现；当前游戏测试和烟测没有有效用例统计，不能视为通过"
   ],
   "verification": {
-    "scope": "2026-10-25根据剧情修改1.2、R2审核稿、当前工程地图/事件/素材与用户补交crowbar.png制定图书馆后段程序/美术任务；策划稿不是代码实现或完整通关验收",
+    "scope": "2026-10-25根据剧情修改1.2、R2审核稿、当前工程地图/事件/素材及用户对End6、离界地图、B交付时序和P747吊坠的确认，更新图书馆后段程序/美术任务与stage稿；策划稿不是代码实现或完整通关验收",
     "route": "当前school_yard出口action=overworld会返回大地图；school_gate有直通classroom portal且无门actor，钥匙门控未接；路线实测待做",
     "assets": "crowbar.png复制为art/props/ch2_crowbar.png，尺寸128x128 RGBA、SHA-256已登记；Godot 4.7.2 headless editor导入通过，游戏载入和剧情绑定待验",
-    "game_tests": "本隔离交付分支按仓库命令运行run_tests.gd仅输出Godot版本并退出0，没有用例统计；不能认定全量测试通过",
-    "smoke_run": "smoke_run.gd按仓库命令也仅输出Godot版本；尚无真实窗口剧情运行证据",
+    "game_tests": "当前执行环境不存在交接文档指定的Godot 4.7.2可执行文件，无法运行run_tests.gd；此前相同命令也未产生用例统计，不能认定全量测试通过",
+    "smoke_run": "当前执行环境找不到Godot可执行文件，无法运行smoke_run.gd；尚无本轮真实窗口剧情运行证据",
     "data_check": "本隔离交付分支Godot 4.7.2 headless editor导入后，check_data.py退出0，统计14图/19事件/5结局/7物品；仅保留cat_doll、night_tear图鉴未登记及end4_iron无剧情可达三条既有提醒",
-    "stage": "11节点图书馆后段稿为draft；script-to-stage结构与当前origin/main地图绑定校验通过，不代表场景运行或结尾路线验证",
+    "stage": "图书馆后段stage稿为draft；End6失败台词、market_night/from_overworld[278,279]、P747吊坠和P748夜幕之泪交付时序已确认；猫/血迹/决策币/窗边素材及地图对象绑定未完成，不代表场景运行或通关验证",
     "daily_budget": "本日按用户要求拆为程序与美术两个任务文件，不按时间安排工作量",
     "doc": "按用户要求提供程序任务与美术任务两个Markdown文件，不按时间安排；未生成Word或day_plan.json",
     "diagnostics": "既有负面测试与引擎诊断保留，不宣称日志全净"
