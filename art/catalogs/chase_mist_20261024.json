@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-24",
+  "asset": "res://art/npc/shadow_cat/chase_mist_right.png",
+  "source": "用户授权本次新生成黑雾猫；内置imagegen",
+  "source_filename": "exec-82f8cba5-023c-4b62-92e5-077e2e68ed8d.png",
+  "size": [
+    1536,
+    1024
+  ],
+  "mode": "RGBA",
+  "alpha_range": [
+    0,
+    254
+  ],
+  "sha256": "21b9fc0905ea697a9ed96690f97ff0bb5ec6089713c520ff223a2888737bdebd",
+  "direction": "右向；向左逃跑时可水平翻转",
+  "frames": 1,
+  "usage": "校门追逐角色；先用单张图位移/轻微伸缩/透明变化；不是已做逐帧动画",
+  "suggested_display": "与执行策划案统一：约32x21逻辑像素起调；保留原图字节，按人物基准比例核验",
+  "status": "已生成入库，待程序接入实机核对",
+  "verification": {
+    "godot_import": 0,
+    "runtime_resource_load": "成功",
+    "game_regression": "4373/4373",
+    "scope": "素材加载与回归，不表示完整救援/追逐游玩验收"
+  }
+}

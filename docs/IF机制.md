@@ -45,24 +45,24 @@
 
 ```
 玩家走到 A 旁边按交互
-      ↓
+	  ↓
 剧本节点演到 if_panel 指令
-      ↓
+	  ↓
 IfPanel.open(condition, then_block, if_block)     ← 摆两个块位
   + set_slot_block(i, …) × 4                      ← 摆四个候选格
   + set_read_only(disabled)                       ← 纯展示的话锁上
   + remember_layout()                             ← 记下开局那套（复位要用）
-      ↓
+	  ↓
 玩家拖块（_begin_drag → _end_drag → _swap_slots）
-      ↓
+	  ↓
 玩家按「确定」（IfPanel.confirmed 信号）
-      ↓
+	  ↓
 IfPanel.judge(solve) → SOLVED / UNTOUCHED / WRONG
-      ↓
+	  ↓
   SOLVED     → 写 flag=true，往下演
   UNTOUCHED  → 写 flag=false，往下演（或配了 wrong 就直接跳）
   WRONG      → IfPanel.reset_blocks()，让玩家重排
-      ↓
+	  ↓
 下游节点用 next_when 读那个 flag 决定去哪
 ```
 
@@ -119,8 +119,8 @@ IfPanel.judge(solve) → SOLVED / UNTOUCHED / WRONG
   "id": "again_day",
   "next": "again_dusk",
   "next_when": {
-    "if": { "var": "gate/saved_a", "op": "==", "value": false },
-    "next": "market_dusk"
+	"if": { "var": "gate/saved_a", "op": "==", "value": false },
+	"next": "market_dusk"
   }
 }
 ```
@@ -184,28 +184,28 @@ IF 这边的"重演"是**回溯** —— 复用同一个节点，别复制。
    子节点之下**，而框底是子节点，于是按钮被半透明地压住。
    **用真子节点**（`Panel` + `StyleBoxFlat` + `Label`）。
 10. **`draw_string()` 从基线画** —— 拿 `get_string_size()` 估偏移会偏，
-    字顶着框的上边缘。**要居中就用 `Label`。**
+	字顶着框的上边缘。**要居中就用 `Label`。**
 11. **确定按钮的 y 贴框底** —— 而四格是垂直居中的，差了一截。
-    两处用同一个 y。
+	两处用同一个 y。
 12. **确定按钮贴着右边框** —— 框底那张素材自己带一圈外留白，
-    按 `PAD.x` 摆看着还是贴边。往里收（`CONFIRM_RIGHT_PAD`）。
+	按 `PAD.x` 摆看着还是贴边。往里收（`CONFIRM_RIGHT_PAD`）。
 13. **面板收鼠标之后关不掉** —— `mouse_filter` 从 `IGNORE` 改成 `STOP`
-    才能拖，但收进来之后背后那套「点一下继续」就够不着面板了 → 卡关。
-    **收尾只能靠「确定」按钮。**
+	才能拖，但收进来之后背后那套「点一下继续」就够不着面板了 → 卡关。
+	**收尾只能靠「确定」按钮。**
 14. **只拦了下面四格，没拦两个块位** —— `_begin_drag` 只看了 `_states`，
-    而 `if` / `then` 那两格不在四格里，照样能拽。
-    **`set_read_only()` 两条路都要拦**（`_begin_drag` + `move_to_slot`）。
+	而 `if` / `then` 那两格不在四格里，照样能拽。
+	**`set_read_only()` 两条路都要拦**（`_begin_drag` + `move_to_slot`）。
 15. **只判了 `then` 位** —— 把答案拖到 `if` 上、`then` 没动就蒙混过关。
-    **「玩家摆得对不对」要把所有能拖的位置都算进去。**
+	**「玩家摆得对不对」要把所有能拖的位置都算进去。**
 16. **布局第一次算不准** —— 症状是「进来时文字偏位，出去再进一次就正」。
-    首次算宽度时字体还没就绪。**`call_deferred` 补一遍**，
-    用一个标记挡住第二次（不然 `_refresh` 自调就是死循环）。
+	首次算宽度时字体还没就绪。**`call_deferred` 补一遍**，
+	用一个标记挡住第二次（不然 `_refresh` 自调就是死循环）。
 17. **出口接错，卡死在框里** —— 两条出口都该往下走，结果一条绕回了自己。
-    **测试抓不到这个**：数据上完全合法。改完跳转跑
-    `python tools/show_story_chain.py <事件名>` 看一眼。
+	**测试抓不到这个**：数据上完全合法。改完跳转跑
+	`python tools/show_story_chain.py <事件名>` 看一眼。
 18. **把"重演"做成了复刻** —— 见第四节，策划连着纠正两回。
 19. **给节点加了新字段忘了加白名单** —— `check_data.py` 的 `NODE_KEYS`
-    会报「不认识的字段」。**加字段时两边一起加。**
+	会报「不认识的字段」。**加字段时两边一起加。**
 
 ---
 

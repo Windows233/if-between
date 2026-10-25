@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://bli0dgmcleoln"
+
+[deps]
+
+files=["res://docs/美术交付包_20261022/02_美术制作清单.资源.translation", "res://docs/美术交付包_20261022/02_美术制作清单.核查状态.translation", "res://docs/美术交付包_20261022/02_美术制作清单.数量.translation", "res://docs/美术交付包_20261022/02_美术制作清单.需要做什么.translation", "res://docs/美术交付包_20261022/02_美术制作清单.建议源图尺寸.translation", "res://docs/美术交付包_20261022/02_美术制作清单.阶段.translation", "res://docs/美术交付包_20261022/02_美术制作清单.责任.translation", "res://docs/美术交付包_20261022/02_美术制作清单.建议文件名.translation"]
+
+source_file="res://docs/美术交付包_20261022/02_美术制作清单.csv"
+dest_files=["res://docs/美术交付包_20261022/02_美术制作清单.资源.translation", "res://docs/美术交付包_20261022/02_美术制作清单.核查状态.translation", "res://docs/美术交付包_20261022/02_美术制作清单.数量.translation", "res://docs/美术交付包_20261022/02_美术制作清单.需要做什么.translation", "res://docs/美术交付包_20261022/02_美术制作清单.建议源图尺寸.translation", "res://docs/美术交付包_20261022/02_美术制作清单.阶段.translation", "res://docs/美术交付包_20261022/02_美术制作清单.责任.translation", "res://docs/美术交付包_20261022/02_美术制作清单.建议文件名.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true

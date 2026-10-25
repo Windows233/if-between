@@ -1,0 +1,143 @@
+format: stage-script/v2
+title: 操场秋千·接触因果线前的演出片段
+status: draft
+project: {name: 'IF：如果之间', engine: Godot, adapter: if-between}
+game_context:
+  viewport: [320, 180]
+  coordinate_system: 地图逻辑坐标，左上为原点，x右y下，人物脚底锚点。
+  scenes:
+    - id: school_yard
+      map_file: data/maps/school_yard.json
+      background: art/map/school_yard.png
+      map_size: [316, 211]
+      inspection:
+        data: verified
+        visual: verified
+        runtime: not_run
+        notes: 已读地图、ch2_swing和相关相机/角色帧加载代码，已查看操场底图与C的down1.png；未启动游戏，未验证站位或通行。
+      objects:
+        - id: swing
+          rect: [190, 38, 58, 42]
+          reach: [184, 35, 70, 52]
+          representation: baked
+          notes: 秋千和旁边站着的C已画入背景；交互actor只有秋千，C不是这个actor的独立可动部分。
+      camera_notes: 横向地图316小于视口320，依现有相机算法横向中心固定为158；纵向相机中心受90至121约束。保持1倍比例，不编排横向追镜或缩放特写。
+      scene_notes: 南侧入口from_gate=[158,186]，旗杆在左上偏中，沙坑在右下，秋千在右上；C底图形象在秋千左侧。秋千下方墙体与玩家16像素宽脚底需要一起核对。
+      entry_points: {from_gate: [158, 186]}
+      route_checks: {status: unverified, reason: 现有交互前站位及清理底图后C落点尚未实机验证；不生成虚构的可走路径。}
+      integration:
+        map_action: actors[id=swing].actions[id=check].event
+        existing_event: ch2_swing
+        event_file: data/events/ch2_swing.json
+        changes: 沿用秋千check动作的once=true，但完整救援需有结果/重试状态后才能接入。替换当前直接在[220,85]生成C的指令，不能保留底图C再叠一人。
+sources:
+  - {id: script_swing, path: 学校/第二章.txt, locator: 第56至61行，受困C与首次接触因果线, role: script, authority: selected}
+  - {id: map_yard, path: data/maps/school_yard.json, locator: swing与墙体/遮挡/入口, role: implementation, authority: observed}
+  - {id: current_swing, path: data/events/ch2_swing.json, locator: 当前仅存档/生成C/两句对白, role: implementation, authority: observed}
+  - {id: actual_yard_image, path: art/map/school_yard.png, locator: 实际查看底图，C站在秋千左侧, role: implementation, authority: observed}
+entities:
+  - {id: protagonist, name: 主角, kind: character}
+  - {id: c, name: C, kind: character}
+  - {id: swing, name: 秋千, kind: prop}
+assets:
+  - id: c_down_frame
+    kind: sprite_frame
+    status: verified
+    path: art/npc/c/down1.png
+    spec: 已查看的朝下站姿帧；同目录有down/up/side各4帧，并非受困或伸手动画。
+  - id: clean_yard
+    kind: map_background
+    status: planned
+    path: null
+    spec: 操场底图清除原C，保持原画布尺寸、秋千、地砖和遮挡对齐；修图后才能挂独立C。
+  - id: c_bound_visual
+    kind: restrained_character
+    status: planned
+    path: null
+    spec: C处于秋千架下被黑线缠住的可见状态。可采用独立C站姿与因果线覆盖表达受限，但具体脚底位置、遮挡及图层要在清理底图后核对。
+variables: []
+decisions:
+  - id: c_placement
+    question: 清理底图后，C的最终脚底位置、与秋千的遮挡及主角可交互站位需要核对。
+    blocking: true
+    affects: [swing_contact]
+    resolution: null
+  - id: rescue_interface
+    question: 此片段原稿只写“可引进小游戏”，需按本次采用的玩法稿确定实际交互、结果和重试接口，不能默认为已实现。
+    blocking: true
+    affects: [swing_contact]
+    resolution: null
+entry: swing_contact
+nodes:
+  - id: swing_contact
+    title: 由秋千调查进入救援前对白
+    sources: [script_swing, map_yard, current_swing, actual_yard_image]
+    scene: school_yard
+    trigger: {type: interact, target: swing}
+    control: cutscene
+    repeat: guarded
+    repeat_notes: 现有动作once=true只保证此动作不重复，不等于救援成功/失败重试已完成；完整事件接入前必须补结果状态，不能失败后把入口永久用掉。
+    setup:
+      camera: 继承地图跟随和原比例；横向中心固定158，纵向受边界约束，不做没有原生支持的电影式推近。
+      characters: 主角保留自行走到秋千附近的实际站位，不瞬移到reach中心；C必须先清除底图重复形象，再在已核实位置出现。
+      environment: 使用school_yard的现有地面、灯光、秋千与上横梁遮挡，不新增一张假想救援房间。
+      audio: 沿用入场实际音乐状态，不强制从曲库选一首未查过的紧张配乐。
+    cues:
+      - id: prepare_bound_c
+        kind: actor
+        origin: source
+        sources: [script_swing, actual_yard_image, current_swing]
+        target: c
+        assets: [c_down_frame, clean_yard, c_bound_visual]
+        description: 玩家在原操场右上方秋千附近看见一个被因果线限制的C；全画面只能有一个C，不保留背景站姿再叠第二个小人。
+        completion: finished
+        decision_ids: [c_placement]
+        engine:
+          status: requires_work
+          steps: []
+          plan: 清理底图C；在原画布对齐独立C与黑线，验证脚底/碰撞/秋千遮挡后用现有npc生成。当前[220,85]只记录为旧事件坐标，不当作最终已验证落点。
+          notes: 当前底图与事件呈现不满足受困且不重复的画面要求；不要直接执行旧npc指令就标完成。
+        params: {operation: show_restrained, position: {space: anchor, name: under_swing, binding: null}}
+      - id: c_warning
+        kind: dialogue
+        origin: source
+        sources: [script_swing]
+        description: 主角与C均不走位，在原操场画面上弹对话框，C说出警告；C的地图形象仍受线限制。
+        completion: confirm
+        engine:
+          status: existing
+          steps:
+            - {do: say, lines: [{speaker: C, text: 别碰线。碰了会——, side: right}]}
+          notes: 复用当前事件第一句，不要求新口型、挥手或受困动画播放。
+        params: {speaker: c, mode: spoken, text: 别碰线。碰了会——, side: right, portrait: null}
+      - id: protagonist_response
+        kind: dialogue
+        origin: source
+        sources: [script_swing]
+        description: 保持人物地图位置，左侧对话框显示主角的“嗯？”，等待玩家确认。
+        completion: confirm
+        engine:
+          status: existing
+          steps:
+            - {do: say, lines: [{speaker: 我, text: 嗯？, side: left}]}
+          notes: 本例不额外依赖未查看的表情立绘；如采用当前puzzled立绘需先查看该图再绑定。
+        params: {speaker: protagonist, mode: spoken, text: 嗯？, side: left, portrait: null}
+      - id: contact_line
+        kind: interaction
+        origin: source
+        sources: [script_swing]
+        description: 接触因果线后进入采用版本确定的救援交互；具体按键、线的反馈、成功失败和重试都不能在此伪装成现有功能。
+        completion: interaction_result
+        decision_ids: [rescue_interface]
+        engine:
+          status: unresolved
+          steps: []
+          notes: 未确认接口前不可编do=rescue或把现有if_panel强行当救援小游戏；先完成前两句场景演出也不代表救援已完成。
+        params: {requirement_status: unresolved, input: null, result_variable: null}
+    exit:
+      type: return_control
+      handoff: 本文件仅为draft片段说明，不可直接作为完整救援事件结束并归还地图；必须先确定救援返回结果，再接成功/失败/重试出口和C后续解释节点。
+coverage:
+  - from: script_swing，第56至61行
+    nodes: [swing_contact]
+    note: 覆盖受困状态、两句原台词、接触因果线入口；刻意不扩写未选定的小游戏规则。本片段不代表整段秋千剧情完成。

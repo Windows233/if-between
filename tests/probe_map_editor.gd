@@ -49,6 +49,18 @@ func _initialize() -> void:
 	dock._load_selected()
 	dock.canvas.fit_to_view()
 	await process_frame
+	assert(dock._zoom_spin is SpinBox)
+	var fitted_zoom: float = dock.canvas.zoom
+	var requested_zoom: float = clampf(fitted_zoom * 1.25, 0.01, 12.0)
+	dock.canvas.set_zoom(requested_zoom)
+	await process_frame
+	var applied_zoom: float = float(dock._zoom_spin.value)
+	print("   缩放探针：目标 %.4f / 画布 %.4f / 控件 %.4f" % [requested_zoom, dock.canvas.zoom, applied_zoom])
+	assert(is_equal_approx(snappedf(dock.canvas.zoom, 0.01), applied_zoom))
+	var restored_zoom: float = snappedf(fitted_zoom, 0.01)
+	dock.canvas.set_zoom(restored_zoom)
+	await process_frame
+	assert(is_equal_approx(float(dock._zoom_spin.value), restored_zoom))
 	print("② 载入 %s：尺寸 %s" % [dock.model.map_id, dock.model.map_size()])
 	print("   墙 %d / 传送区 %d / 物件 %d" % [
 		dock.model.count(Model.Kind.WALL),

@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-24",
+  "source_archive": "素材.zip",
+  "source_archive_sha256": "ee9bdcc879d5e3fd7609949440b08f3172f0310e7c0bf45e7675382e02c46376",
+  "source_archive_path": "C:/Users/admin/Documents/WeChat Files/wxid_u7qymtfxqhw822/FileStorage/File/2026-10/素材.zip",
+  "assets": [
+    {
+      "source_name": "ch2_box_closed.png",
+      "target": "res://art/props/ch2_box_closed.png",
+      "status": "official_library_asset",
+      "bytes": 45938,
+      "sha256": "890d00b664c2d9e09ac70e63cad5b1135f436c084099629956cc9a24786ab21d",
+      "size_px": [256, 256],
+      "mode": "RGBA",
+      "note": "关闭木盒；与打开态同画布、同角度和同锚点，可用于图书馆第二遍取合照前后的状态切换。尚未绑定事件或地图物件。"
+    },
+    {
+      "source_name": "ch2_box_open.png",
+      "target": "res://art/props/ch2_box_open.png",
+      "status": "official_library_asset",
+      "bytes": 54212,
+      "sha256": "a7e044e48f99e7a1d7fd6ddba65019110f3da276a4f7391791aeae231cc1c03e",
+      "size_px": [256, 256],
+      "mode": "RGBA",
+      "note": "打开木盒；可承接取出C与模糊人物合照的演出。尚未绑定事件或地图物件。"
+    },
+    {
+      "source_name": "ch2_classroom_window.png.png",
+      "target": "res://art/map/candidates/classroom_with_window_20261024.png",
+      "status": "candidate_unbound",
+      "bytes": 1163757,
+      "sha256": "b6010c7d281c4b0ea1b2780a486a1bbae8e8493d9f11ebcf1cd97807c8eb6175",
+      "size_px": [1152, 922],
+      "mode": "RGB",
+      "note": "含窗教室完整构图候选，不是透明窗边局部；会改变现有classroom.png的家具、黑板、镜子和入口布局。暂不替换正式地图，需先确认是否采用整图。"
+    },
+    {
+      "source_name": "ch2_register.png",
+      "target": "res://art/props/ch2_register_candidate_20261024.png",
+      "status": "candidate_unbound",
+      "bytes": 1723066,
+      "sha256": "07a382e0c4fc9c5f0044c67d820252d11a180269db23159eb81f508afd5179fa",
+      "size_px": [1298, 1212],
+      "mode": "RGBA",
+      "note": "新版登记册候选；现用art/props/ch2_register.png已存在且未覆盖。需确认文字、遮挡姓名和画面比例后再替换或绑定。"
+    }
+  ],
+  "map_data_modified": false,
+  "story_or_code_modified": false,
+  "godot_binding": "未绑定；素材导入后需由程序/地图编辑器按确认结果接入。"
+}

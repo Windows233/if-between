@@ -1,0 +1,710 @@
+{
+  "format": "stage-script/v2",
+  "title": "校门双QTE追逐演出需求",
+  "status": "ready_for_implementation",
+  "project": {
+    "name": "IF：如果之间",
+    "engine": "Godot 4.7.2",
+    "adapter": "if-between"
+  },
+  "game_context": {
+    "viewport": [
+      320,
+      180
+    ],
+    "coordinate_system": "地图左上原点，x右y下，人物脚底；非PNG原像素",
+    "scenes": [
+      {
+        "id": "school_gate",
+        "map_file": "data/maps/school_gate.json",
+        "background": "art/map/school_gate.png",
+        "map_size": [
+          421,
+          281
+        ],
+        "inspection": {
+          "data": "verified",
+          "visual": "verified",
+          "runtime": "not_run",
+          "notes": "已看当前原图；WalkGrid以2像素采样确认5段静态通路；追逐尚未实现，未验证玩家操控/镜头手感。"
+        },
+        "objects": [
+          {
+            "id": "sculpture",
+            "rect": [
+              166,
+              55,
+              84,
+              100
+            ],
+            "reach": [
+              158,
+              54,
+              101,
+              107
+            ],
+            "representation": "baked",
+            "notes": "雕像及喷泉挡住直线，绕其南侧通路。"
+          }
+        ],
+        "camera_notes": "基准由player_scale=0.5得到；跑动乘1.05，QTE乘1.15，退出复原；shake现有但缩放叠层需接。",
+        "scene_notes": "左上教学楼出口、右上图书馆；白线只作路线引导，不自动走全程。",
+        "route_checks": {
+          "status": "verified",
+          "reference": "路线静态校验.json",
+          "points": [
+            [
+              62,
+              114
+            ],
+            [
+              62,
+              164
+            ],
+            [
+              145,
+              164
+            ],
+            [
+              286,
+              164
+            ],
+            [
+              353,
+              164
+            ],
+            [
+              353,
+              150
+            ]
+          ],
+          "scope": "仅静态脚底通行，5段通过；地图变更后重查"
+        },
+        "integration": {
+          "map_action": "从classroom日记后选择图书馆的剧情出口进入school_gate near_classroom",
+          "existing_event": null,
+          "event_file": null,
+          "changes": "新增追逐控制器与圈式QTE，成功终点才写library_open并goto；现有to_library/to_library_locked暂时由追逐控制器拦截。"
+        }
+      }
+    ]
+  },
+  "sources": [
+    {
+      "id": "request",
+      "path": "user_message",
+      "locator": "2026-10-24本轮：校门两点QTE、可控跑动、慢动作收缩圈、按键躲避、超时被猫追上",
+      "role": "script",
+      "authority": "selected"
+    },
+    {
+      "id": "map",
+      "path": "data/maps/school_gate.json",
+      "locator": "near_classroom、to_library及中央雕像；实际PNG与WalkGrid静态核查",
+      "role": "implementation",
+      "authority": "observed"
+    }
+  ],
+  "entities": [
+    {
+      "id": "protagonist",
+      "name": "主角",
+      "kind": "character"
+    },
+    {
+      "id": "shadow_cat",
+      "name": "黑雾猫",
+      "kind": "character"
+    }
+  ],
+  "assets": [
+    {
+      "id": "mist",
+      "kind": "sprite",
+      "status": "verified",
+      "path": "art/npc/shadow_cat/chase_mist_right.png",
+      "spec": "透明右向单帧，游戏按约32x21逻辑像素起调，不用原始1536x1024铺地图"
+    },
+    {
+      "id": "failure_cg",
+      "kind": "cg",
+      "status": "planned",
+      "path": null,
+      "spec": "校园被黑雾猫追上近景，建议1672x941；主美术今日首版",
+      "fallback": "当前school_gate背景+同一黑雾定格，明确临时图，不使用梦境猫CG"
+    }
+  ],
+  "variables": [
+    {
+      "id": "q1_ok",
+      "type": "bool",
+      "initial": false,
+      "persistence": "chapter",
+      "description": "本次会话QTE1结果；重试清零"
+    },
+    {
+      "id": "q2_ok",
+      "type": "bool",
+      "initial": false,
+      "persistence": "chapter",
+      "description": "本次会话QTE2结果；重试清零"
+    },
+    {
+      "id": "arrived",
+      "type": "bool",
+      "initial": false,
+      "persistence": "chapter",
+      "description": "两QTE后进入终点接近区"
+    },
+    {
+      "id": "chase_clear",
+      "type": "bool",
+      "initial": false,
+      "persistence": "save",
+      "binding": "ch2/chase1_clear",
+      "description": "到达终点才写"
+    },
+    {
+      "id": "library_open",
+      "type": "bool",
+      "initial": false,
+      "persistence": "save",
+      "binding": "ch2/library_open",
+      "description": "本流程成功到馆后写入，不在救C后提前写"
+    }
+  ],
+  "decisions": [],
+  "entry": "prepare",
+  "nodes": [
+    {
+      "id": "prepare",
+      "title": "教学楼门外准备",
+      "sources": [
+        "request",
+        "map"
+      ],
+      "scene": "school_gate",
+      "trigger": {
+        "type": "flow"
+      },
+      "control": "cutscene",
+      "repeat": "guarded",
+      "repeat_notes": "仅剧情前置完成进入；重试恢复检查点及临时状态，正式成功后不重复启动。",
+      "setup": {
+        "camera": "继承并保存进入前镜头；临时效果退出时恢复",
+        "characters": "主角脚底位于当前阶段安全位置，独立黑雾从后方出现；不加第二个主角",
+        "environment": "复用school_gate底图及遮挡",
+        "audio": "继承进入前音乐并保存；临时声音退出停止"
+      },
+      "cues": [
+        {
+          "id": "instructions",
+          "kind": "caption",
+          "origin": "source",
+          "sources": [
+            "request",
+            "map"
+          ],
+          "description": "无倒计时说明，玩家确认后开跑",
+          "completion": "confirm",
+          "params": {
+            "text": "向右跑到图书馆。出现字母时，在圆圈收完前按下它。"
+          },
+          "engine": {
+            "status": "existing",
+            "steps": [
+              {
+                "do": "caption",
+                "lines": [
+                  {
+                    "text": "向右跑到图书馆。出现字母时，在圆圈收完前按下它。"
+                  }
+                ]
+              }
+            ],
+            "notes": "已有原生能力按steps接；未有能力按plan实现，不把结构稿当可直接运行的事件。"
+          }
+        },
+        {
+          "id": "checkpoint",
+          "kind": "state",
+          "origin": "staging",
+          "sources": [
+            "request",
+            "map"
+          ],
+          "description": "存追逐前快照，清两个临时QTE结果并创建黑雾",
+          "completion": "immediate",
+          "params": {
+            "changes": [
+              {
+                "var": "q1_ok",
+                "op": "set",
+                "value": false
+              },
+              {
+                "var": "q2_ok",
+                "op": "set",
+                "value": false
+              }
+            ]
+          },
+          "engine": {
+            "status": "requires_work",
+            "steps": [],
+            "notes": "已有原生能力按steps接；未有能力按plan实现，不把结构稿当可直接运行的事件。",
+            "plan": "新增追逐会话初始化与检查点恢复；保存时间、镜头、输入、音乐和背包前态；禁止其他门和普通调查，保留暂停。"
+          }
+        }
+      ],
+      "exit": {
+        "type": "next",
+        "next": "run_q1"
+      }
+    },
+    {
+      "id": "run_q1",
+      "title": "可控跑动与第1次QTE",
+      "sources": [
+        "request",
+        "map"
+      ],
+      "scene": "school_gate",
+      "trigger": {
+        "type": "flow"
+      },
+      "control": "minigame",
+      "repeat": "guarded",
+      "repeat_notes": "仅剧情前置完成进入；重试恢复检查点及临时状态，正式成功后不重复启动。",
+      "setup": {
+        "camera": "继承并保存进入前镜头；临时效果退出时恢复",
+        "characters": "主角脚底位于当前阶段安全位置，独立黑雾从后方出现；不加第二个主角",
+        "environment": "复用school_gate底图及遮挡",
+        "audio": "继承进入前音乐并保存；临时声音退出停止"
+      },
+      "cues": [
+        {
+          "id": "qte_1",
+          "kind": "interaction",
+          "origin": "source",
+          "sources": [
+            "request",
+            "map"
+          ],
+          "description": "玩家移动到进度线后，黑猫扑近、慢动作和圈式按键判定",
+          "completion": "interaction_result",
+          "params": {
+            "requirement_status": "planned",
+            "input": "Q",
+            "trigger_x": 145,
+            "time_limit_real_seconds": 1.4,
+            "world_time_scale": 0.2,
+            "prompt_screen": [
+              160,
+              58
+            ],
+            "ring_radius": [
+              28,
+              16
+            ],
+            "result_var": "q1_ok",
+            "success": "新按下正确键，闪避约0.2秒并拉开距离；恢复可控跑动",
+            "failure": "时限结束无正确输入，返回失败一次",
+            "wrong_key": "红闪但不续时；仍可补按",
+            "pause": "ESC/失焦冻结剩余时间；恢复不补算",
+            "repeat": "已过点不重触发，绕路跨x线也不能跳点"
+          },
+          "engine": {
+            "status": "requires_work",
+            "steps": [],
+            "notes": "已有原生能力按steps接；未有能力按plan实现，不把结构稿当可直接运行的事件。",
+            "plan": "新增可控追逐会话和圈式QTE；真实时间计时不受慢动作影响，屏幕UI不震动；忽略旧按住与重复事件；触发依次且一次。"
+          }
+        }
+      ],
+      "exit": {
+        "type": "branch",
+        "cases": [
+          {
+            "condition": {
+              "var": "q1_ok",
+              "op": "eq",
+              "value": true
+            },
+            "next": "run_q2"
+          }
+        ],
+        "default": "caught"
+      }
+    },
+    {
+      "id": "run_q2",
+      "title": "可控跑动与第2次QTE",
+      "sources": [
+        "request",
+        "map"
+      ],
+      "scene": "school_gate",
+      "trigger": {
+        "type": "flow"
+      },
+      "control": "minigame",
+      "repeat": "guarded",
+      "repeat_notes": "仅剧情前置完成进入；重试恢复检查点及临时状态，正式成功后不重复启动。",
+      "setup": {
+        "camera": "继承并保存进入前镜头；临时效果退出时恢复",
+        "characters": "主角脚底位于当前阶段安全位置，独立黑雾从后方出现；不加第二个主角",
+        "environment": "复用school_gate底图及遮挡",
+        "audio": "继承进入前音乐并保存；临时声音退出停止"
+      },
+      "cues": [
+        {
+          "id": "qte_2",
+          "kind": "interaction",
+          "origin": "source",
+          "sources": [
+            "request",
+            "map"
+          ],
+          "description": "玩家移动到进度线后，黑猫扑近、慢动作和圈式按键判定",
+          "completion": "interaction_result",
+          "params": {
+            "requirement_status": "planned",
+            "input": "E",
+            "trigger_x": 286,
+            "time_limit_real_seconds": 1.2,
+            "world_time_scale": 0.2,
+            "prompt_screen": [
+              160,
+              58
+            ],
+            "ring_radius": [
+              28,
+              16
+            ],
+            "result_var": "q2_ok",
+            "success": "新按下正确键，闪避约0.2秒并拉开距离；恢复可控跑动",
+            "failure": "时限结束无正确输入，返回失败一次",
+            "wrong_key": "红闪但不续时；仍可补按",
+            "pause": "ESC/失焦冻结剩余时间；恢复不补算",
+            "repeat": "已过点不重触发，绕路跨x线也不能跳点"
+          },
+          "engine": {
+            "status": "requires_work",
+            "steps": [],
+            "notes": "已有原生能力按steps接；未有能力按plan实现，不把结构稿当可直接运行的事件。",
+            "plan": "新增可控追逐会话和圈式QTE；真实时间计时不受慢动作影响，屏幕UI不震动；忽略旧按住与重复事件；触发依次且一次。"
+          }
+        }
+      ],
+      "exit": {
+        "type": "branch",
+        "cases": [
+          {
+            "condition": {
+              "var": "q2_ok",
+              "op": "eq",
+              "value": true
+            },
+            "next": "arrive"
+          }
+        ],
+        "default": "caught"
+      }
+    },
+    {
+      "id": "arrive",
+      "title": "玩家到图书馆门前才成功",
+      "sources": [
+        "request",
+        "map"
+      ],
+      "scene": "school_gate",
+      "trigger": {
+        "type": "flow"
+      },
+      "control": "minigame",
+      "repeat": "guarded",
+      "repeat_notes": "仅剧情前置完成进入；重试恢复检查点及临时状态，正式成功后不重复启动。",
+      "setup": {
+        "camera": "继承并保存进入前镜头；临时效果退出时恢复",
+        "characters": "主角脚底位于当前阶段安全位置，独立黑雾从后方出现；不加第二个主角",
+        "environment": "复用school_gate底图及遮挡",
+        "audio": "继承进入前音乐并保存；临时声音退出停止"
+      },
+      "cues": [
+        {
+          "id": "reach_door",
+          "kind": "interaction",
+          "origin": "staging",
+          "sources": [
+            "request",
+            "map"
+          ],
+          "description": "两次成功后继续由玩家跑到门前接近区",
+          "completion": "interaction_result",
+          "params": {
+            "requirement_status": "planned",
+            "input": "WASD或方向键",
+            "goal_rect": [
+              338,
+              148,
+              30,
+              30
+            ],
+            "goal_reference": [
+              353,
+              164
+            ],
+            "condition": "两点均成功且进入接近区",
+            "result_var": "arrived"
+          },
+          "engine": {
+            "status": "requires_work",
+            "steps": [],
+            "notes": "已有原生能力按steps接；未有能力按plan实现，不把结构稿当可直接运行的事件。",
+            "plan": "终点区域由追逐控制器判断；不改普通portal rect，不提前触发locked事件；到门才交接成功。"
+          }
+        },
+        {
+          "id": "restore_win",
+          "kind": "ui",
+          "origin": "staging",
+          "sources": [
+            "request",
+            "map"
+          ],
+          "description": "撤黑雾/圆圈/计时，恢复时间镜头输入与音频前态",
+          "completion": "finished",
+          "params": {
+            "operation": "cleanup",
+            "reason": "success"
+          },
+          "engine": {
+            "status": "requires_work",
+            "steps": [],
+            "notes": "已有原生能力按steps接；未有能力按plan实现，不把结构稿当可直接运行的事件。",
+            "plan": "所有出口共用清理函数；解除普通门与调查临时拦截，清定时器及输入事件。"
+          }
+        },
+        {
+          "id": "open_library",
+          "kind": "state",
+          "origin": "staging",
+          "sources": [
+            "request",
+            "map"
+          ],
+          "description": "成功抵达后才开放图书馆",
+          "completion": "immediate",
+          "params": {
+            "changes": [
+              {
+                "var": "chase_clear",
+                "op": "set",
+                "value": true
+              },
+              {
+                "var": "library_open",
+                "op": "set",
+                "value": true
+              }
+            ]
+          },
+          "engine": {
+            "status": "existing",
+            "steps": [],
+            "notes": "拆在抵达后独立成功节点，不能提前放在追逐入口；这是待接的flag写入。",
+            "node_set": {
+              "ch2/chase1_clear": true,
+              "ch2/library_open": true
+            }
+          }
+        },
+        {
+          "id": "enter_library",
+          "kind": "transition",
+          "origin": "staging",
+          "sources": [
+            "request",
+            "map"
+          ],
+          "description": "沿用真实图书馆入口切图",
+          "completion": "finished",
+          "params": {
+            "operation": "goto",
+            "map": "library",
+            "spawn": "from_school_gate"
+          },
+          "engine": {
+            "status": "existing",
+            "steps": [
+              {
+                "do": "goto",
+                "map": "library",
+                "spawn": "from_school_gate"
+              }
+            ],
+            "notes": "已有原生能力按steps接；未有能力按plan实现，不把结构稿当可直接运行的事件。"
+          }
+        }
+      ],
+      "exit": {
+        "type": "return_control",
+        "handoff": "图书馆from_school_gate，时间与镜头恢复，控制交给馆内首段剧情；未接馆内时只算入口完成。"
+      }
+    },
+    {
+      "id": "caught",
+      "title": "黑猫追上与失败CG",
+      "sources": [
+        "request",
+        "map"
+      ],
+      "scene": "school_gate",
+      "trigger": {
+        "type": "flow"
+      },
+      "control": "cutscene",
+      "repeat": "guarded",
+      "repeat_notes": "仅剧情前置完成进入；重试恢复检查点及临时状态，正式成功后不重复启动。",
+      "setup": {
+        "camera": "继承并保存进入前镜头；临时效果退出时恢复",
+        "characters": "主角脚底位于当前阶段安全位置，独立黑雾从后方出现；不加第二个主角",
+        "environment": "复用school_gate底图及遮挡",
+        "audio": "继承进入前音乐并保存；临时声音退出停止"
+      },
+      "cues": [
+        {
+          "id": "restore_fail",
+          "kind": "ui",
+          "origin": "staging",
+          "sources": [
+            "request",
+            "map"
+          ],
+          "description": "判负一次，恢复时间镜头后短扑近压黑",
+          "completion": "finished",
+          "params": {
+            "operation": "cleanup",
+            "reason": "failure"
+          },
+          "engine": {
+            "status": "requires_work",
+            "steps": [],
+            "notes": "已有原生能力按steps接；未有能力按plan实现，不把结构稿当可直接运行的事件。",
+            "plan": "先清计时和临时输入，恢复原倍率；0.4秒扑近/压黑不会再次触发QTE。"
+          }
+        },
+        {
+          "id": "failure_image",
+          "kind": "image",
+          "origin": "staging",
+          "sources": [
+            "request",
+            "map"
+          ],
+          "description": "显示校园失败近景；正式CG未交时用校门加黑雾定格",
+          "completion": "confirm",
+          "params": {
+            "operation": "show",
+            "asset": "failure_cg"
+          },
+          "engine": {
+            "status": "requires_work",
+            "steps": [],
+            "notes": "已有原生能力按steps接；未有能力按plan实现，不把结构稿当可直接运行的事件。",
+            "plan": "接最终校园CG；未交图时明确临时合成定格，不能调用梦境卧室猫图冒充正式校园CG。"
+          }
+        },
+        {
+          "id": "failure_caption",
+          "kind": "caption",
+          "origin": "staging",
+          "sources": [
+            "request",
+            "map"
+          ],
+          "description": "显示End5字卡，不新增错位结局编号",
+          "completion": "confirm",
+          "params": {
+            "text": "end 5 不可违的铁律"
+          },
+          "engine": {
+            "status": "existing",
+            "steps": [
+              {
+                "do": "caption",
+                "lines": [
+                  {
+                    "text": "end 5 不可违的铁律"
+                  }
+                ]
+              }
+            ],
+            "notes": "已有原生能力按steps接；未有能力按plan实现，不把结构稿当可直接运行的事件。"
+          }
+        }
+      ],
+      "exit": {
+        "type": "choice",
+        "prompt": null,
+        "cancel": "disabled",
+        "options": [
+          {
+            "id": "retry",
+            "label": "重试追逐",
+            "next": "prepare"
+          },
+          {
+            "id": "title",
+            "label": "返回标题",
+            "next": "ending"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ending",
+      "title": "正式失败结局",
+      "sources": [
+        "request",
+        "map"
+      ],
+      "scene": "school_gate",
+      "trigger": {
+        "type": "flow"
+      },
+      "control": "cutscene",
+      "repeat": "guarded",
+      "repeat_notes": "仅剧情前置完成进入；重试恢复检查点及临时状态，正式成功后不重复启动。",
+      "setup": {
+        "camera": "继承并保存进入前镜头；临时效果退出时恢复",
+        "characters": "主角脚底位于当前阶段安全位置，独立黑雾从后方出现；不加第二个主角",
+        "environment": "复用school_gate底图及遮挡",
+        "audio": "继承进入前音乐并保存；临时声音退出停止"
+      },
+      "cues": [],
+      "exit": {
+        "type": "end",
+        "ending_id": "end4_iron",
+        "ending_number": 5,
+        "handoff": "按现有结局流程登记与返回标题；进入前先清全部追逐状态，时间/相机不残留。"
+      }
+    }
+  ],
+  "coverage": [
+    {
+      "from": "本轮用户指定教学楼出口、可控跑动、两个QTE、慢动作收缩圈、成功闪避与失败CG",
+      "nodes": [
+        "prepare",
+        "run_q1",
+        "run_q2",
+        "arrive",
+        "caught",
+        "ending"
+      ],
+      "note": "核心规则来源为用户；Q/E、1.4/1.2秒、0.2慢动作与具体触发线为首版起调参数，正式手感待实测。"
+    }
+  ]
+}

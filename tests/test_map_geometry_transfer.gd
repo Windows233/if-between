@@ -483,7 +483,10 @@ static func _test_real_maps(h: TestHarness) -> void:
 					route_errors.append(point)
 					break
 			h.check(map_id + "喷泉东侧贴边窄道连续可通行", route_errors, [])
-			var edge := Vector2(324, 180)
+			# 贴边落点跟随所迁移墙体和当前脚底宽度，不能钉死旧主角比例下的坐标。
+			var edge_wall := MapDef._to_rect(source["walls"][selected.back()])
+			var foot := WalkGrid.foot_rect(Vector2.ZERO, before.player_scale)
+			var edge := Vector2(edge_wall.end.x + foot.size.x * 0.5, edge_wall.get_center().y)
 			h.check(map_id + "窄道站立和导航落点余量区别保持",
 				[WalkGrid.is_free(before, edge), WalkGrid.has_landing_room(before, edge),
 				WalkGrid.is_free(after, edge), WalkGrid.has_landing_room(after, edge)],

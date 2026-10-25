@@ -1,0 +1,69 @@
+{
+  "date": "2026-10-24",
+  "base_commit": "d174cea",
+  "mode": "isolated staged snapshot; no parallel dirty edits",
+  "final_approach": "Original 4608x3072 background, 0.25 logical grid and bounded luma edge enhancement; all AI redraws rejected.",
+  "game": {
+    "passed": 4394,
+    "failed": 0
+  },
+  "plugin": {
+    "passed": 4507,
+    "failed": 0
+  },
+  "data": {
+    "maps": 14,
+    "events": 19,
+    "endings": 5,
+    "items": 7,
+    "existing_notices": [
+      "cat_doll gallery",
+      "night_tear gallery",
+      "end4_iron unreachable"
+    ]
+  },
+  "all_maps_gpu": {
+    "passed": 157,
+    "failed": 0
+  },
+  "world_trial_gpu": {
+    "adapter": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "failed": 0,
+    "passed": 31
+  },
+  "smoke_exit": 0,
+  "source_sha256": "b1d73117ccc9072cc963d9256f2a7f602ac8ae9d5d70c3ef7c5c19c352bd596a",
+  "same_camera_capture_metrics": {
+    "before": {
+      "mean_luma": 0.124854,
+      "mean_rgb": [
+        0.132084,
+        0.119965,
+        0.151989
+      ]
+    },
+    "after": {
+      "mean_luma": 0.124427,
+      "mean_rgb": [
+        0.13164,
+        0.119575,
+        0.151248
+      ]
+    },
+    "method": "1280x720 whole-frame mean; weighted sRGB Rec.709; not perceptual equivalence."
+  },
+  "visual_checks": [
+    "original vs current same-camera context",
+    "lamp crop nearest 2x",
+    "original vs rejected vs current source comparison",
+    "existing entrance collision overlay",
+    "existing gate interaction overlay"
+  ],
+  "gpu_behavior_checks": [
+    "flat source colors unchanged",
+    "RGB hue ratios preserved at sharpened edge",
+    "edge contrast increases"
+  ],
+  "limitation": "Mild display sharpening cannot turn painterly source into hand-drawn pixel art. It preserves source style and avoids generated palette/geometry drift.",
+  "existing_diagnostics": "Negative test diagnostics and engine resource/RID cleanup warnings retained."
+}

@@ -1,13 +1,172 @@
 {
+  "actors": [
+    {
+      "cover": true,
+      "cover_y": 153,
+      "id": "new_actor",
+      "label": "翻开书的书桌",
+      "rect": [
+        257,
+        136,
+        41,
+        39
+      ],
+      "sprite": "res://art/props/翻开书的课桌.png"
+    },
+    {
+      "cover": true,
+      "cover_y": 152,
+      "id": "new_actor_2",
+      "label": "书桌1",
+      "rect": [
+        84,
+        136,
+        42,
+        38
+      ],
+      "sprite": "res://art/props/没翻开书的课桌.png"
+    },
+    {
+      "cover": true,
+      "cover_y": 152,
+      "id": "new_actor_2_2",
+      "label": "书桌2",
+      "rect": [
+        131,
+        136,
+        42,
+        38
+      ],
+      "sprite": "res://art/props/没翻开书的课桌.png"
+    },
+    {
+      "cover": true,
+      "cover_y": 152,
+      "id": "new_actor_2_2_2",
+      "label": "书桌3",
+      "rect": [
+        211,
+        136,
+        42,
+        38
+      ],
+      "sprite": "res://art/props/没翻开书的课桌.png"
+    },
+    {
+      "cover": true,
+      "cover_y": 194,
+      "id": "new_actor_2_2_2_2",
+      "label": "书桌4",
+      "rect": [
+        84,
+        178,
+        42,
+        38
+      ],
+      "sprite": "res://art/props/没翻开书的课桌.png"
+    },
+    {
+      "cover": true,
+      "cover_y": 194,
+      "id": "new_actor_2_2_2_2_2",
+      "label": "书桌5",
+      "rect": [
+        131,
+        178,
+        42,
+        38
+      ],
+      "sprite": "res://art/props/没翻开书的课桌.png"
+    },
+    {
+      "cover": true,
+      "cover_y": 194,
+      "id": "new_actor_2_2_2_2_2_2",
+      "label": "书桌6",
+      "rect": [
+        211,
+        178,
+        42,
+        38
+      ],
+      "sprite": "res://art/props/没翻开书的课桌.png"
+    },
+    {
+      "cover": true,
+      "cover_y": 194,
+      "id": "new_actor_2_2_2_2_2_2_2",
+      "label": "书桌7",
+      "rect": [
+        257,
+        178,
+        42,
+        38
+      ],
+      "sprite": "res://art/props/没翻开书的课桌.png"
+    },
+    {
+      "cover": true,
+      "cover_y": 179,
+      "id": "new_actor_3",
+      "label": "新物件",
+      "rect": [
+        3,
+        2,
+        384,
+        307
+      ],
+      "sprite": "res://art/props/墙壁_2.png"
+    },
+    {
+      "cover": true,
+      "cover_y": 153,
+      "id": "日记0",
+      "label": "日记",
+      "rect": [
+        260,
+        137,
+        38,
+        26
+      ],
+      "sprite": "res://art/props/ch2_diary_blank.png"
+    },
+    {
+      "decor": false,
+      "id": "blackboard",
+      "label": "黑板",
+      "rect": [
+        104,
+        -3,
+        177,
+        124
+      ],
+      "sprite": "res://art/props/ch2_blackboard_2.png"
+    }
+  ],
+  "background": "res://art/map/classroom.png",
   "id": "classroom",
+  "indoor": true,
+  "music": "res://audio/bgm/reclamation.mp3",
   "name": "教室",
+  "player_scale": 1,
+  "portals": [
+    {
+      "id": "back_gate",
+      "label": "学校大门",
+      "rect": [
+        172,
+        263,
+        40,
+        22
+      ],
+      "spawn": "near_classroom",
+      "to": "school_gate"
+    }
+  ],
   "size": [
     384,
     307
   ],
-  "background": "res://art/map/classroom.png",
-  "indoor": true,
-  "music": "res://audio/bgm/reclamation.mp3",
   "spawns": {
     "from_gate": [
       192,
@@ -38,21 +197,132 @@
       285,
       384,
       22
+    ],
+    [
+      37,
+      249,
+      135,
+      36
+    ],
+    [
+      213,
+      249,
+      132,
+      36
+    ],
+    [
+      34,
+      24,
+      21,
+      233
+    ],
+    [
+      328,
+      25,
+      17,
+      232
+    ],
+    [
+      55,
+      64,
+      273,
+      21
+    ],
+    [
+      163,
+      107,
+      56,
+      19
+    ],
+    [
+      89,
+      152,
+      31,
+      19
+    ],
+    [
+      136,
+      152,
+      31,
+      19
+    ],
+    [
+      216,
+      152,
+      31,
+      19
+    ],
+    [
+      262,
+      153,
+      32,
+      18
+    ],
+    [
+      90,
+      194,
+      31,
+      17
+    ],
+    [
+      136,
+      194,
+      31,
+      17
+    ],
+    [
+      216,
+      193,
+      31,
+      18
+    ],
+    [
+      263,
+      194,
+      31,
+      17
+    ],
+    [
+      55,
+      85,
+      40,
+      19
+    ],
+    [
+      55,
+      104,
+      12,
+      16
+    ],
+    [
+      95,
+      85,
+      24,
+      14
+    ],
+    [
+      54,
+      210,
+      27,
+      47
+    ],
+    [
+      315,
+      199,
+      13,
+      58
+    ],
+    [
+      254,
+      84,
+      74,
+      16
+    ],
+    [
+      295,
+      100,
+      33,
+      30
     ]
-  ],
-  "portals": [
-    {
-      "id": "back_gate",
-      "rect": [
-        172,
-        285,
-        40,
-        22
-      ],
-      "label": "学校大门",
-      "to": "school_gate",
-      "spawn": "near_classroom"
-    }
-  ],
-  "player_scale": 0.5
+  ]
 }

@@ -1,0 +1,34 @@
+{
+  "revision": "20261024-art-staging-r2",
+  "review_status": "approved_by_user",
+  "full_stage": "53节点／199cue；结构及场景绑定检查通过；整体draft，走廊与教室绑定待落地",
+  "chase_stage": "独立8节点require-ready结构检查通过；需求可实施，未声称游戏已实现",
+  "txt": "从同一结构生成；53节点与全部精确对白均覆盖，不含JSON代码块",
+  "source": "785段与上轮已统一规则审核版逐段一致；本轮仅更新演出与资源绑定，恢复遗漏P467原句",
+  "dialogue_coverage": "覆盖表内原文直接对白和引号正文无缺项；日记三屏P467/468/469齐全",
+  "art": "9种本段近景/CG资产路径已核；日记、End4、End5状态由缺失改为已核实；旧带字日记不调用",
+  "lifecycle": "近景持图与收图成对；四条失败路径淡黑先于收图；接应保留冻结黑雾到退场；重复日记无赠物或追逐",
+  "spatial": "在发布main基线重新运行WalkGrid，六段通路、三个脚点通过；未验新增NPC动态碰撞、QTE手感或整段运行",
+  "git": "用户已明确审核通过并授权推送；本包为文档提交，不包含地图/事件/素材修改。",
+  "sha256": "69c473caf60cb378e0035ecb199b0ef208699e9818cf94e24d7b3d201328684f",
+  "approval": {
+    "date": "2026-10-24",
+    "authority": "user_message",
+    "text": "可以，推送到github上吧",
+    "scope": "上一轮审核的R2规则统一剧情与学校至首次入馆演出",
+    "target": "origin/main"
+  },
+  "publication": "用户已审核通过，纳入本次文档提交；实际推送结果以Git记录为准",
+  "release_validation": {
+    "baseline": "25d2ce4",
+    "stage_full": "PASS 53 nodes draft",
+    "stage_chase": "PASS 8 nodes require-ready",
+    "data": "PASS 14 maps / 19 events / 5 endings / 7 items",
+    "game_tests": "PASS 4373/4373; exit 0",
+    "smoke": "PASS real rendering window, isolated APPDATA; exit 0",
+    "walkgrid": "PASS 6 route legs / 3 feet points",
+    "approved_dialogue_unchanged": true,
+    "approved_full_story_unchanged": true,
+    "known_diagnostics": "保留物品cat_doll/night_tear未用、end4_iron不可达提示及测试中既有诊断，不当作新增剧情已运行"
+  }
+}

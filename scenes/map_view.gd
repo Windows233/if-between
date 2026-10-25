@@ -9,6 +9,8 @@
 class_name MapView
 extends Node2D
 
+const TextureSource := preload("res://scenes/map_texture_source.gd")
+
 const FLOOR_COLOR := Color("#1b1d23")
 const WALL_COLOR := Color("#3a3f4b")
 const PORTAL_COLOR := Color("#4e7a52")
@@ -116,8 +118,14 @@ var _detail: Label = null
 ## 会挡人的家具：`[{"node": Sprite2D, "cover_y": float}]`。
 ## 它们的层级随角色站的位置变，见 `set_player_y()`。
 var _covers: Array[Dictionary] = []
+var _actor_variant_nodes: Dictionary = {}
 ## 这张地图有没有插画。有的话，家具、墙、门都不再画色块。
 var _has_picture := false
+
+
+## 地图插画、前景和物件共用像素采样；构造时设置也覆盖编辑器试走子类。
+func _init() -> void:
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
 
 ## 重建整个场景。切换场景、或者世界状态变了之后调用。
@@ -137,6 +145,7 @@ func build(p_map_def: MapDef, flags: WorldState = null) -> void:
 		return
 
 	_build_room()
+	preload("res://scenes/world_look.gd").style_map(_built, map_def)
 
 
 ## 室内：背景图 + 连接标记 + 角色，并且建碰撞。
@@ -205,6 +214,8 @@ func _add_actor(actor: MapDef.Actor) -> void:
 		var node := _add_prop(sprites[index], rectangles[index], PROP_Z)
 		if node == null:
 			continue
+		if actor.visual_parts.is_empty():
+			_actor_variant_nodes[actor.id] = node
 		drawn = true
 		node.transform = actor.visual_texture_transform(index, node.texture.get_size())
 		if layers[index] == "front":
@@ -225,6 +236,40 @@ func _add_actor(actor: MapDef.Actor) -> void:
 	if poly != null:
 		_add_outline(actor.rect)
 	_add_actor_label(actor.rect, actor.label)
+
+
+## 按 Actor ID 切换同一物件的主贴图变体；返回 false 表示物件或变体无效。
+## 变体共享原物件矩形、碰撞、交互和遮挡设置。
+func set_actor_sprite_variant(actor_id: StringName, variant_id: StringName) -> bool:
+	if map_def == null:
+		return false
+	var actor: MapDef.Actor = null
+	for candidate: MapDef.Actor in map_def.actors:
+		if candidate.id == actor_id:
+			actor = candidate
+			break
+	if actor == null or not actor.visual_parts.is_empty():
+		return false
+	var path := actor.sprite_for_variant(str(variant_id))
+	if not str(variant_id).is_empty() and path.is_empty():
+		return false
+	var texture: Texture2D = null
+	if not path.is_empty():
+		if not ResourceLoader.exists(path):
+			return false
+		var loaded := load(path) as Texture2D
+		if loaded == null:
+			return false
+		texture = TextureSource.resolve(path, loaded)
+	actor.sprite_variant = str(variant_id)
+	var node := _actor_variant_nodes.get(actor_id) as Sprite2D
+	if is_instance_valid(node):
+		node.texture = texture
+		if texture != null:
+			node.transform = actor.visual_texture_transform(0, texture.get_size())
+	else:
+		build(map_def, _flags)
+	return true
 
 
 ## 角色站到哪儿了。会挡人的家具靠它决定画在角色上面还是下面。
@@ -286,7 +331,7 @@ func _add_prop(path: String, rect: Rect2, z: int) -> Sprite2D:
 		push_warning("[地图] 物件贴图不是图片：%s" % path)
 		return null
 
-	var image: Texture2D = texture
+	var image: Texture2D = TextureSource.resolve(path, texture)
 	var sprite := Sprite2D.new()
 	sprite.texture = image
 	sprite.centered = false
@@ -404,7 +449,7 @@ func _add_background() -> bool:
 		push_warning("[地图] 背景不是图片：%s" % map_def.background)
 		return false
 
-	var image: Texture2D = texture
+	var image: Texture2D = TextureSource.resolve(map_def.background, texture)
 	var sprite := Sprite2D.new()
 	sprite.name = "Background"
 	sprite.texture = image
@@ -442,7 +487,7 @@ func _add_overlay() -> void:
 		push_warning("[地图] 前景层不是图片：%s" % map_def.overlay)
 		return
 
-	var image: Texture2D = texture
+	var image: Texture2D = TextureSource.resolve(map_def.overlay, texture)
 	var sprite := Sprite2D.new()
 	sprite.name = "Overlay"
 	sprite.texture = image
@@ -622,6 +667,7 @@ func clear() -> void:
 	_detail_for = &""
 	_detail = null
 	_covers.clear()
+	_actor_variant_nodes.clear()
 	_hovered = &""
 	# **旧的 `Built` 要真的扔掉。**
 	#

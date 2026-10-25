@@ -1,0 +1,10 @@
+{
+  "selected_version": "1.2",
+  "source": "C:\\Users\\admin\\Documents\\WeChat Files\\wxid_u7qymtfxqhw822\\FileStorage\\File\\2026-10\\剧情修改1.2版.docx",
+  "original_sha256": "e306bed989ccdde9fe4236d58b06c038cc722b5041787d3af646a10845bd1b12",
+  "archive_sha256": "e306bed989ccdde9fe4236d58b06c038cc722b5041787d3af646a10845bd1b12",
+  "correction_count": 27,
+  "paragraphs": 785,
+  "scope": "仅错别字、漏字、重字、明确语序笔误和引号；剧情冲突单列，不改角色动机、分支、故意重复或未知日期。",
+  "previous": "docs/剧情/剧情修改1.0版.docx"
+}

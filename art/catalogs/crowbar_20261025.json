@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-25",
+  "source": "C:/Users/admin/Documents/WeChat Files/wxid_u7qymtfxqhw822/FileStorage/File/2026-10/crowbar.png",
+  "target": "res://art/props/ch2_crowbar.png",
+  "sha256": "fc382cd2e54b631263dc699e632c492193961657b346818e2b3d8228a4d97989",
+  "size_px": [128, 128],
+  "mode": "RGBA",
+  "status": "imported_story_binding_pending",
+  "note": "用户补交的撬棍透明PNG。原图字节复制入库，Godot 4.7.2 headless editor导入通过；尚未做游戏运行时显示检查或绑定地图/事件，不代表互动或剧情已接通。"
+}

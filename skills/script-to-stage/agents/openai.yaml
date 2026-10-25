@@ -1,0 +1,4 @@
+interface:
+  display_name: "游戏场景演出编排"
+  short_description: "结合实际地图画面、人物素材和现有游戏指令，把剧本编排为可接入的演出说明"
+  default_prompt: "使用 $script-to-stage，先查看这个游戏的实际地图、角色素材和演出实现，再为我提供的剧本生成绑定具体场景、走位、触发点和原生指令的演出文件。"

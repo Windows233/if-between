@@ -1,0 +1,70 @@
+[
+  {
+    "target": "art/map/classroom.png",
+    "source": "学校/学校/教室/教室_upscayl_4x_upscayl-standard-4x.png",
+    "old_size": [
+      1152,
+      922
+    ],
+    "new_size": [
+      4608,
+      3688
+    ],
+    "old_sha256": "b5db0da64c9923bda8f56407bb63bc214c472f5233b131ee0bf633472b400d00",
+    "source_sha256": "8074fed3e44030796905f10cd0f765585f21b090f0eebee9a91cb659d6aa2122",
+    "integrated_sha256": "8074fed3e44030796905f10cd0f765585f21b090f0eebee9a91cb659d6aa2122",
+    "lanczos_roundtrip_rgba_extrema": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ]
+    ],
+    "same_source_verified": true
+  },
+  {
+    "target": "art/map/school_gate.png",
+    "source": "学校/学校/校门/学校大门_upscayl_4x_upscayl-standard-4x.png",
+    "old_size": [
+      1264,
+      843
+    ],
+    "new_size": [
+      6144,
+      4096
+    ],
+    "old_sha256": "aaf7c945a3c24e089f3b0826385f26ef2801202ed6cfca90c24550a6dfb84b97",
+    "source_sha256": "56c93259a08187e0e687f025f546c92396b4ff1245fa858f060ea53c7b7cad33",
+    "integrated_sha256": "56c93259a08187e0e687f025f546c92396b4ff1245fa858f060ea53c7b7cad33",
+    "lanczos_roundtrip_rgba_extrema": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ]
+    ],
+    "same_source_verified": true
+  }
+]

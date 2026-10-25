@@ -1,0 +1,852 @@
+{
+  "backend_and_weights_are_portable_temporary_only": true,
+  "input_git_commit": "f948474a7c95a8e9cd310f333b684dcb0f2d99e5",
+  "accepted_count": 8,
+  "color_preservation_note": "Pretrained standard x4 neural superresolution, followed by six original RGB residual back-projections. Alpha copied from original mask with exact x4 nearest sampling; RGB is not nearest enlargement.",
+  "images": [
+    {
+      "source": "art/background/chapter2_dead_alley.png",
+      "candidate": "art/map/candidates/chapter2_dead_alley_upscayl_standard_4x_color_locked.png",
+      "source_sha256": "55c8bcc8c52c356ed9ecbe3b106a4bcb30109d5c009d48f8a177b547d376f396",
+      "raw_model_output": "C:\\Users\\admin\\Documents\\GitHub\\if-between\\art\\map\\candidates\\chapter2_dead_alley_upscayl_standard_4x.png",
+      "raw_model_sha256": "bd541d7349a68f08603897b66357dd9719eff7cc8e8fc6ff97ccb6c673563671",
+      "output_sha256": "b1d73117ccc9072cc963d9256f2a7f602ac8ae9d5d70c3ef7c5c19c352bd596a",
+      "source_size": [
+        1152,
+        768
+      ],
+      "output_size": [
+        4608,
+        3072
+      ],
+      "provenance": {
+        "model_name": "upscayl-standard-4x",
+        "models": [
+          {
+            "name": "upscayl-standard-4x.bin",
+            "url": "https://raw.githubusercontent.com/upscayl/upscayl/main/resources/models/upscayl-standard-4x.bin",
+            "bytes": 33424520,
+            "sha256": "713ee713b0353afaa27976f0563a64a5043bd70b9bd8936c2e26e25ebcdbcddf"
+          },
+          {
+            "name": "upscayl-standard-4x.param",
+            "url": "https://raw.githubusercontent.com/upscayl/upscayl/main/resources/models/upscayl-standard-4x.param",
+            "bytes": 116029,
+            "sha256": "35330ececcea33b6c397a72548e788d5d53becee4734c50b7fada36e89f10a86"
+          }
+        ],
+        "backend_release": "20251207-174704",
+        "backend_sha256": "294d31be8f29d047c0d91a8dcd5e739616ece56bce3188ac688f9a52d70abe60",
+        "backend_official_url": "https://github.com/upscayl/upscayl-ncnn/releases/download/20251207-174704/upscayl-bin-20251207-174704-windows.zip",
+        "model_command": "-n upscayl-standard-4x -s 4 -z 4 -t 256 -j 1:1:1 -f png"
+      },
+      "color_policy": "six source-color residual back-projections: high += Lanczos(original - LanczosDownsample(high)); clamp/round RGB to uint8 each pass",
+      "metrics_raw_then_6_passes": [
+        {
+          "mae_rgb_0_255": 5.8923726081848145,
+          "rmse_rgb_0_255": 7.990955352783203,
+          "luminance_ratio": 0.7803173751456834,
+          "ssim_nonoverlapping_8x8_luminance": 0.8346306085586548
+        },
+        {
+          "mae_rgb_0_255": 0.45851758122444153,
+          "rmse_rgb_0_255": 0.778883159160614,
+          "luminance_ratio": 1.0003063673444044,
+          "ssim_nonoverlapping_8x8_luminance": 0.9979252219200134
+        },
+        {
+          "mae_rgb_0_255": 0.19087840616703033,
+          "rmse_rgb_0_255": 0.4482576251029968,
+          "luminance_ratio": 1.0002155701390838,
+          "ssim_nonoverlapping_8x8_luminance": 0.9993502497673035
+        },
+        {
+          "mae_rgb_0_255": 0.07846558839082718,
+          "rmse_rgb_0_255": 0.28181472420692444,
+          "luminance_ratio": 1.0001576607694231,
+          "ssim_nonoverlapping_8x8_luminance": 0.9997668862342834
+        },
+        {
+          "mae_rgb_0_255": 0.029571909457445145,
+          "rmse_rgb_0_255": 0.17262741923332214,
+          "luminance_ratio": 1.0000685372453064,
+          "ssim_nonoverlapping_8x8_luminance": 0.9999200105667114
+        },
+        {
+          "mae_rgb_0_255": 0.010357138700783253,
+          "rmse_rgb_0_255": 0.10227964073419571,
+          "luminance_ratio": 1.0000515493810853,
+          "ssim_nonoverlapping_8x8_luminance": 0.999973714351654
+        },
+        {
+          "mae_rgb_0_255": 0.0036756726913154125,
+          "rmse_rgb_0_255": 0.06110395863652229,
+          "luminance_ratio": 1.0000335573081416,
+          "ssim_nonoverlapping_8x8_luminance": 0.9999908804893494
+        }
+      ],
+      "metrics_final": {
+        "mae_rgb_0_255": 0.0036756726913154125,
+        "rmse_rgb_0_255": 0.06110395863652229,
+        "luminance_ratio": 1.0000335573081416,
+        "ssim_nonoverlapping_8x8_luminance": 0.9999908804893494
+      },
+      "alpha": {
+        "present": false
+      },
+      "detail_evidence": {
+        "mean_within_4x4_source_block_channel_std": 4.0214524269104,
+        "mae_versus_pure_nearest_x4": 3.484992027282715
+      },
+      "accepted_for_integration": true,
+      "integrated_path": "art/background/chapter2_dead_alley.png",
+      "input_git_commit": "f948474a7c95a8e9cd310f333b684dcb0f2d99e5",
+      "input_backup": "C:\\Users\\admin\\AppData\\Local\\Temp\\if-between-superres-tools\\source-backups\\art\\background\\chapter2_dead_alley.png",
+      "qa": "Independent map_audit source downsample/alpha/landmark checks passed; dead native detail visually reviewed by root; no map/data/layout changes"
+    },
+    {
+      "source": "art/map/bedroom_night_sleep.png",
+      "candidate": "art/map/candidates/bedroom_night_sleep_upscayl_standard_4x_color_locked.png",
+      "source_sha256": "d65568301d65744f59ad3ca9a7125adf9f8349243982e370f0bf7dfdacd089d8",
+      "raw_model_output": "C:\\Users\\admin\\AppData\\Local\\Temp\\if-between-superres-tools\\batch-output\\bedroom_night_sleep.png",
+      "raw_model_sha256": "118ab963a920a2cce1a29bef83831dce779c36e5426e6e492cf41d38dc9913eb",
+      "output_sha256": "2cf20b13036f84493214d962f239e52c8093059d1aaf7c050a096e25db219a9d",
+      "source_size": [
+        1388,
+        1133
+      ],
+      "output_size": [
+        5552,
+        4532
+      ],
+      "provenance": {
+        "model_name": "upscayl-standard-4x",
+        "models": [
+          {
+            "name": "upscayl-standard-4x.bin",
+            "url": "https://raw.githubusercontent.com/upscayl/upscayl/main/resources/models/upscayl-standard-4x.bin",
+            "bytes": 33424520,
+            "sha256": "713ee713b0353afaa27976f0563a64a5043bd70b9bd8936c2e26e25ebcdbcddf"
+          },
+          {
+            "name": "upscayl-standard-4x.param",
+            "url": "https://raw.githubusercontent.com/upscayl/upscayl/main/resources/models/upscayl-standard-4x.param",
+            "bytes": 116029,
+            "sha256": "35330ececcea33b6c397a72548e788d5d53becee4734c50b7fada36e89f10a86"
+          }
+        ],
+        "backend_release": "20251207-174704",
+        "backend_sha256": "294d31be8f29d047c0d91a8dcd5e739616ece56bce3188ac688f9a52d70abe60",
+        "backend_official_url": "https://github.com/upscayl/upscayl-ncnn/releases/download/20251207-174704/upscayl-bin-20251207-174704-windows.zip",
+        "model_command": "-n upscayl-standard-4x -s 4 -z 4 -t 256 -j 1:1:1 -f png"
+      },
+      "color_policy": "six source-color residual back-projections: high += Lanczos(original - LanczosDownsample(high)); clamp/round RGB to uint8 each pass",
+      "metrics_raw_then_6_passes": [
+        {
+          "mae_rgb_0_255": 2.687018394470215,
+          "rmse_rgb_0_255": 4.52578067779541,
+          "luminance_ratio": 0.9954351785566289,
+          "ssim_nonoverlapping_8x8_luminance": 0.9750387668609619
+        },
+        {
+          "mae_rgb_0_255": 0.4001072943210602,
+          "rmse_rgb_0_255": 0.9086124300956726,
+          "luminance_ratio": 0.9999828463770942,
+          "ssim_nonoverlapping_8x8_luminance": 0.9983355402946472
+        },
+        {
+          "mae_rgb_0_255": 0.160393625497818,
+          "rmse_rgb_0_255": 0.4539310038089752,
+          "luminance_ratio": 1.0000103481094704,
+          "ssim_nonoverlapping_8x8_luminance": 0.9995598793029785
+        },
+        {
+          "mae_rgb_0_255": 0.0640801265835762,
+          "rmse_rgb_0_255": 0.26381903886795044,
+          "luminance_ratio": 1.0000139839317166,
+          "ssim_nonoverlapping_8x8_luminance": 0.9998726844787598
+        },
+        {
+          "mae_rgb_0_255": 0.0245558749884367,
+          "rmse_rgb_0_255": 0.1597985178232193,
+          "luminance_ratio": 1.0000137974792938,
+          "ssim_nonoverlapping_8x8_luminance": 0.9999635815620422
+        },
+        {
+          "mae_rgb_0_255": 0.009357091970741749,
+          "rmse_rgb_0_255": 0.09857486933469772,
+          "luminance_ratio": 1.0000128652171794,
+          "ssim_nonoverlapping_8x8_luminance": 0.9999890923500061
+        },
+        {
+          "mae_rgb_0_255": 0.003733298508450389,
+          "rmse_rgb_0_255": 0.06276404857635498,
+          "luminance_ratio": 1.0000082971328186,
+          "ssim_nonoverlapping_8x8_luminance": 0.9999960064888
+        }
+      ],
+      "metrics_final": {
+        "mae_rgb_0_255": 0.003733298508450389,
+        "rmse_rgb_0_255": 0.06276404857635498,
+        "luminance_ratio": 1.0000082971328186,
+        "ssim_nonoverlapping_8x8_luminance": 0.9999960064888
+      },
+      "alpha": {
+        "present": false
+      },
+      "detail_evidence": {
+        "mean_within_4x4_source_block_channel_std": 2.693721055984497,
+        "mae_versus_pure_nearest_x4": 2.3808822631835938
+      },
+      "accepted_for_integration": true,
+      "integrated_path": "art/map/bedroom_night_sleep.png",
+      "input_git_commit": "f948474a7c95a8e9cd310f333b684dcb0f2d99e5",
+      "input_backup": "C:\\Users\\admin\\AppData\\Local\\Temp\\if-between-superres-tools\\source-backups\\art\\map\\bedroom_night_sleep.png",
+      "qa": "Independent map_audit source downsample/alpha/landmark checks passed; dead native detail visually reviewed by root; no map/data/layout changes"
+    },
+    {
+      "source": "art/map/school_yard.png",
+      "candidate": "art/map/candidates/school_yard_upscayl_standard_4x_color_locked.png",
+      "source_sha256": "459d34657f913e053a2ca5fb5c3bf49d357cb39a1738304094d520e565adbc9f",
+      "raw_model_output": "C:\\Users\\admin\\AppData\\Local\\Temp\\if-between-superres-tools\\batch-output\\school_yard.png",
+      "raw_model_sha256": "20d9581c732a79ba342e998469bb22274247a1016e41b0c1ddbe24d77d29def3",
+      "output_sha256": "09c4a5c19cf7ad59f1a4580b6cb32ff05ff0a9803d0f2fc9c11b02b3cdf340e3",
+      "source_size": [
+        1264,
+        843
+      ],
+      "output_size": [
+        5056,
+        3372
+      ],
+      "provenance": {
+        "model_name": "upscayl-standard-4x",
+        "models": [
+          {
+            "name": "upscayl-standard-4x.bin",
+            "url": "https://raw.githubusercontent.com/upscayl/upscayl/main/resources/models/upscayl-standard-4x.bin",
+            "bytes": 33424520,
+            "sha256": "713ee713b0353afaa27976f0563a64a5043bd70b9bd8936c2e26e25ebcdbcddf"
+          },
+          {
+            "name": "upscayl-standard-4x.param",
+            "url": "https://raw.githubusercontent.com/upscayl/upscayl/main/resources/models/upscayl-standard-4x.param",
+            "bytes": 116029,
+            "sha256": "35330ececcea33b6c397a72548e788d5d53becee4734c50b7fada36e89f10a86"
+          }
+        ],
+        "backend_release": "20251207-174704",
+        "backend_sha256": "294d31be8f29d047c0d91a8dcd5e739616ece56bce3188ac688f9a52d70abe60",
+        "backend_official_url": "https://github.com/upscayl/upscayl-ncnn/releases/download/20251207-174704/upscayl-bin-20251207-174704-windows.zip",
+        "model_command": "-n upscayl-standard-4x -s 4 -z 4 -t 256 -j 1:1:1 -f png"
+      },
+      "color_policy": "six source-color residual back-projections: high += Lanczos(original - LanczosDownsample(high)); clamp/round RGB to uint8 each pass",
+      "metrics_raw_then_6_passes": [
+        {
+          "mae_rgb_0_255": 4.685709476470947,
+          "rmse_rgb_0_255": 6.63437557220459,
+          "luminance_ratio": 0.9203907545805466,
+          "ssim_nonoverlapping_8x8_luminance": 0.9071618914604187
+        },
+        {
+          "mae_rgb_0_255": 0.5960922837257385,
+          "rmse_rgb_0_255": 1.0812662839889526,
+          "luminance_ratio": 1.0001937572819908,
+          "ssim_nonoverlapping_8x8_luminance": 0.9975877404212952
+        },
+        {
+          "mae_rgb_0_255": 0.2498842477798462,
+          "rmse_rgb_0_255": 0.5657258033752441,
+          "luminance_ratio": 1.0001181211337054,
+          "ssim_nonoverlapping_8x8_luminance": 0.9993720054626465
+        },
+        {
+          "mae_rgb_0_255": 0.10559597611427307,
+          "rmse_rgb_0_255": 0.3421245217323303,
+          "luminance_ratio": 1.0000778891399364,
+          "ssim_nonoverlapping_8x8_luminance": 0.9998006820678711
+        },
+        {
+          "mae_rgb_0_255": 0.04295394942164421,
+          "rmse_rgb_0_255": 0.21358953416347504,
+          "luminance_ratio": 1.0000466691127718,
+          "ssim_nonoverlapping_8x8_luminance": 0.9999377131462097
+        },
+        {
+          "mae_rgb_0_255": 0.017453864216804504,
+          "rmse_rgb_0_255": 0.13623057305812836,
+          "luminance_ratio": 1.0000384081433846,
+          "ssim_nonoverlapping_8x8_luminance": 0.9999802112579346
+        },
+        {
+          "mae_rgb_0_255": 0.0074759372510015965,
+          "rmse_rgb_0_255": 0.08983837813138962,
+          "luminance_ratio": 1.0000231736284109,
+          "ssim_nonoverlapping_8x8_luminance": 0.9999927282333374
+        }
+      ],
+      "metrics_final": {
+        "mae_rgb_0_255": 0.0074759372510015965,
+        "rmse_rgb_0_255": 0.08983837813138962,
+        "luminance_ratio": 1.0000231736284109,
+        "ssim_nonoverlapping_8x8_luminance": 0.9999927282333374
+      },
+      "alpha": {
+        "present": true,
+        "policy": "source alpha mask nearest-neighbor x4; RGB is neural superresolution plus source-color residual anchoring",
+        "roundtrip_max_error": 0,
+        "roundtrip_mae": 0.0,
+        "source_alpha_extrema": [
+          255,
+          255
+        ]
+      },
+      "detail_evidence": {
+        "mean_within_4x4_source_block_channel_std": 4.7085771560668945,
+        "mae_versus_pure_nearest_x4": 4.172773838043213
+      },
+      "accepted_for_integration": true,
+      "integrated_path": "art/map/school_yard.png",
+      "input_git_commit": "f948474a7c95a8e9cd310f333b684dcb0f2d99e5",
+      "input_backup": "C:\\Users\\admin\\AppData\\Local\\Temp\\if-between-superres-tools\\source-backups\\art\\map\\school_yard.png",
+      "qa": "Independent map_audit source downsample/alpha/landmark checks passed; dead native detail visually reviewed by root; no map/data/layout changes"
+    },
+    {
+      "source": "art/map/desk_shop_wall.png",
+      "candidate": "art/map/candidates/desk_shop_wall_upscayl_standard_4x_color_locked.png",
+      "source_sha256": "6540e421f0774302347bb748166d3ca4f06ef2e29f608c79633bb99bd7b674ed",
+      "raw_model_output": "C:\\Users\\admin\\AppData\\Local\\Temp\\if-between-superres-tools\\batch-output\\desk_shop_wall.png",
+      "raw_model_sha256": "d5a44fa82b77946fd671afff495d2cc3b728fb0c326560e3b6043a202d314d22",
+      "output_sha256": "51fd41f344dc27161f2ef7846ceea4f1e65477996697a1d0c1d2c47295809001",
+      "source_size": [
+        1388,
+        1133
+      ],
+      "output_size": [
+        5552,
+        4532
+      ],
+      "provenance": {
+        "model_name": "upscayl-standard-4x",
+        "models": [
+          {
+            "name": "upscayl-standard-4x.bin",
+            "url": "https://raw.githubusercontent.com/upscayl/upscayl/main/resources/models/upscayl-standard-4x.bin",
+            "bytes": 33424520,
+            "sha256": "713ee713b0353afaa27976f0563a64a5043bd70b9bd8936c2e26e25ebcdbcddf"
+          },
+          {
+            "name": "upscayl-standard-4x.param",
+            "url": "https://raw.githubusercontent.com/upscayl/upscayl/main/resources/models/upscayl-standard-4x.param",
+            "bytes": 116029,
+            "sha256": "35330ececcea33b6c397a72548e788d5d53becee4734c50b7fada36e89f10a86"
+          }
+        ],
+        "backend_release": "20251207-174704",
+        "backend_sha256": "294d31be8f29d047c0d91a8dcd5e739616ece56bce3188ac688f9a52d70abe60",
+        "backend_official_url": "https://github.com/upscayl/upscayl-ncnn/releases/download/20251207-174704/upscayl-bin-20251207-174704-windows.zip",
+        "model_command": "-n upscayl-standard-4x -s 4 -z 4 -t 256 -j 1:1:1 -f png"
+      },
+      "color_policy": "six source-color residual back-projections: high += Lanczos(original - LanczosDownsample(high)); clamp/round RGB to uint8 each pass",
+      "metrics_raw_then_6_passes": [
+        {
+          "mae_rgb_0_255": 3.3473739624023438,
+          "rmse_rgb_0_255": 5.333560943603516,
+          "luminance_ratio": 0.9832730024313958,
+          "ssim_nonoverlapping_8x8_luminance": 0.9953283071517944
+        },
+        {
+          "mae_rgb_0_255": 0.6975110173225403,
+          "rmse_rgb_0_255": 1.2799599170684814,
+          "luminance_ratio": 1.0000929927315816,
+          "ssim_nonoverlapping_8x8_luminance": 0.9993301630020142
+        },
+        {
+          "mae_rgb_0_255": 0.3002069294452667,
+          "rmse_rgb_0_255": 0.688018262386322,
+          "luminance_ratio": 1.0001445308719763,
+          "ssim_nonoverlapping_8x8_luminance": 0.999463677406311
+        },
+        {
+          "mae_rgb_0_255": 0.132144957780838,
+          "rmse_rgb_0_255": 0.4673573970794678,
+          "luminance_ratio": 1.0001506930409365,
+          "ssim_nonoverlapping_8x8_luminance": 0.999528706073761
+        },
+        {
+          "mae_rgb_0_255": 0.05911101773381233,
+          "rmse_rgb_0_255": 0.3599824011325836,
+          "luminance_ratio": 1.0001450210445073,
+          "ssim_nonoverlapping_8x8_luminance": 0.9995543360710144
+        },
+        {
+          "mae_rgb_0_255": 0.029975099489092827,
+          "rmse_rgb_0_255": 0.30542105436325073,
+          "luminance_ratio": 1.0001310161150523,
+          "ssim_nonoverlapping_8x8_luminance": 0.9994750618934631
+        },
+        {
+          "mae_rgb_0_255": 0.018519632518291473,
+          "rmse_rgb_0_255": 0.2766965925693512,
+          "luminance_ratio": 1.0001329768051759,
+          "ssim_nonoverlapping_8x8_luminance": 0.999468207359314
+        }
+      ],
+      "metrics_final": {
+        "mae_rgb_0_255": 0.019398894160985947,
+        "rmse_rgb_0_255": 0.2968445420265198,
+        "luminance_ratio": 1.000145441192391,
+        "ssim_nonoverlapping_8x8_luminance": 0.9996840357780457
+      },
+      "alpha": {
+        "present": true,
+        "policy": "source alpha mask nearest-neighbor x4; RGB is neural superresolution plus source-color residual anchoring",
+        "roundtrip_max_error": 0,
+        "roundtrip_mae": 0.0,
+        "source_alpha_extrema": [
+          0,
+          255
+        ]
+      },
+      "detail_evidence": {
+        "mean_within_4x4_source_block_channel_std": 0.4131828546524048,
+        "mae_versus_pure_nearest_x4": 0.3698025345802307
+      },
+      "accepted_for_integration": true,
+      "integrated_path": "art/map/desk_shop_wall.png",
+      "input_git_commit": "f948474a7c95a8e9cd310f333b684dcb0f2d99e5",
+      "input_backup": "C:\\Users\\admin\\AppData\\Local\\Temp\\if-between-superres-tools\\source-backups\\art\\map\\desk_shop_wall.png",
+      "qa": "Independent map_audit source downsample/alpha/landmark checks passed; dead native detail visually reviewed by root; no map/data/layout changes"
+    },
+    {
+      "source": "art/props/school_gate_fountain.png",
+      "candidate": "art/map/candidates/school_gate_fountain_upscayl_standard_4x_color_locked.png",
+      "source_sha256": "1c191d4712dc681bacd1aa2d96c0ba64c97556afe9fa1f618943f1a72d4076ca",
+      "raw_model_output": "C:\\Users\\admin\\AppData\\Local\\Temp\\if-between-superres-tools\\batch-output\\school_gate_fountain.png",
+      "raw_model_sha256": "60f5452d409f7e24eba57ec69a685fe033737ab8b2c489a119a6b0a23d10ad9b",
+      "output_sha256": "145d399df57d2cd7ec4bae1db05c0d5611bdfa71b8278f1b2ab38a8ab4d26dac",
+      "source_size": [
+        266,
+        286
+      ],
+      "output_size": [
+        1064,
+        1144
+      ],
+      "provenance": {
+        "model_name": "upscayl-standard-4x",
+        "models": [
+          {
+            "name": "upscayl-standard-4x.bin",
+            "url": "https://raw.githubusercontent.com/upscayl/upscayl/main/resources/models/upscayl-standard-4x.bin",
+            "bytes": 33424520,
+            "sha256": "713ee713b0353afaa27976f0563a64a5043bd70b9bd8936c2e26e25ebcdbcddf"
+          },
+          {
+            "name": "upscayl-standard-4x.param",
+            "url": "https://raw.githubusercontent.com/upscayl/upscayl/main/resources/models/upscayl-standard-4x.param",
+            "bytes": 116029,
+            "sha256": "35330ececcea33b6c397a72548e788d5d53becee4734c50b7fada36e89f10a86"
+          }
+        ],
+        "backend_release": "20251207-174704",
+        "backend_sha256": "294d31be8f29d047c0d91a8dcd5e739616ece56bce3188ac688f9a52d70abe60",
+        "backend_official_url": "https://github.com/upscayl/upscayl-ncnn/releases/download/20251207-174704/upscayl-bin-20251207-174704-windows.zip",
+        "model_command": "-n upscayl-standard-4x -s 4 -z 4 -t 256 -j 1:1:1 -f png"
+      },
+      "color_policy": "six source-color residual back-projections: high += Lanczos(original - LanczosDownsample(high)); clamp/round RGB to uint8 each pass",
+      "metrics_raw_then_6_passes": [
+        {
+          "mae_rgb_0_255": 5.448641777038574,
+          "rmse_rgb_0_255": 7.828269004821777,
+          "luminance_ratio": 0.9625015207623016,
+          "ssim_nonoverlapping_8x8_luminance": 0.9424796104431152
+        },
+        {
+          "mae_rgb_0_255": 1.000738501548767,
+          "rmse_rgb_0_255": 1.7521307468414307,
+          "luminance_ratio": 1.001851894677114,
+          "ssim_nonoverlapping_8x8_luminance": 0.9923500418663025
+        },
+        {
+          "mae_rgb_0_255": 0.5147030353546143,
+          "rmse_rgb_0_255": 1.210788369178772,
+          "luminance_ratio": 1.0015991046019692,
+          "ssim_nonoverlapping_8x8_luminance": 0.9942877292633057
+        },
+        {
+          "mae_rgb_0_255": 0.3144104778766632,
+          "rmse_rgb_0_255": 1.0207195281982422,
+          "luminance_ratio": 1.0016411664573628,
+          "ssim_nonoverlapping_8x8_luminance": 0.9949808716773987
+        },
+        {
+          "mae_rgb_0_255": 0.21490596234798431,
+          "rmse_rgb_0_255": 0.9232024550437927,
+          "luminance_ratio": 1.001612091828236,
+          "ssim_nonoverlapping_8x8_luminance": 0.9953969717025757
+        },
+        {
+          "mae_rgb_0_255": 0.16533654928207397,
+          "rmse_rgb_0_255": 0.8679699897766113,
+          "luminance_ratio": 1.0016082375546342,
+          "ssim_nonoverlapping_8x8_luminance": 0.995721697807312
+        },
+        {
+          "mae_rgb_0_255": 0.13830390572547913,
+          "rmse_rgb_0_255": 0.8350528478622437,
+          "luminance_ratio": 1.0016511372955936,
+          "ssim_nonoverlapping_8x8_luminance": 0.9959540367126465
+        }
+      ],
+      "metrics_final": {
+        "mae_rgb_0_255": 0.1405124068260193,
+        "rmse_rgb_0_255": 0.8462268114089966,
+        "luminance_ratio": 1.0017296471730914,
+        "ssim_nonoverlapping_8x8_luminance": 0.9968331456184387
+      },
+      "alpha": {
+        "present": true,
+        "policy": "source alpha mask nearest-neighbor x4; RGB is neural superresolution plus source-color residual anchoring",
+        "roundtrip_max_error": 0,
+        "roundtrip_mae": 0.0,
+        "source_alpha_extrema": [
+          0,
+          255
+        ]
+      },
+      "detail_evidence": {
+        "mean_within_4x4_source_block_channel_std": 6.128833770751953,
+        "mae_versus_pure_nearest_x4": 5.336533069610596
+      },
+      "accepted_for_integration": true,
+      "integrated_path": "art/props/school_gate_fountain.png",
+      "input_git_commit": "f948474a7c95a8e9cd310f333b684dcb0f2d99e5",
+      "input_backup": "C:\\Users\\admin\\AppData\\Local\\Temp\\if-between-superres-tools\\source-backups\\art\\props\\school_gate_fountain.png",
+      "qa": "Independent map_audit source downsample/alpha/landmark checks passed; dead native detail visually reviewed by root; no map/data/layout changes"
+    },
+    {
+      "source": "art/props/school_gate_occlude_1.png",
+      "candidate": "art/map/candidates/school_gate_occlude_1_upscayl_standard_4x_color_locked.png",
+      "source_sha256": "eec2ab599b24e2caf7f0a73e0a24645e84d9ff5b3385a726801eaa9e4167907b",
+      "raw_model_output": "C:\\Users\\admin\\AppData\\Local\\Temp\\if-between-superres-tools\\batch-output\\school_gate_occlude_1.png",
+      "raw_model_sha256": "8f39ebf3dc1b30c36a9a100d84ffd835b0599b252538b69889cd42963888c546",
+      "output_sha256": "7a144b36423a7b70b0650ad6717ef7d2adf2b030963b8ddcbf3dd6ebdf258328",
+      "source_size": [
+        516,
+        116
+      ],
+      "output_size": [
+        2064,
+        464
+      ],
+      "provenance": {
+        "model_name": "upscayl-standard-4x",
+        "models": [
+          {
+            "name": "upscayl-standard-4x.bin",
+            "url": "https://raw.githubusercontent.com/upscayl/upscayl/main/resources/models/upscayl-standard-4x.bin",
+            "bytes": 33424520,
+            "sha256": "713ee713b0353afaa27976f0563a64a5043bd70b9bd8936c2e26e25ebcdbcddf"
+          },
+          {
+            "name": "upscayl-standard-4x.param",
+            "url": "https://raw.githubusercontent.com/upscayl/upscayl/main/resources/models/upscayl-standard-4x.param",
+            "bytes": 116029,
+            "sha256": "35330ececcea33b6c397a72548e788d5d53becee4734c50b7fada36e89f10a86"
+          }
+        ],
+        "backend_release": "20251207-174704",
+        "backend_sha256": "294d31be8f29d047c0d91a8dcd5e739616ece56bce3188ac688f9a52d70abe60",
+        "backend_official_url": "https://github.com/upscayl/upscayl-ncnn/releases/download/20251207-174704/upscayl-bin-20251207-174704-windows.zip",
+        "model_command": "-n upscayl-standard-4x -s 4 -z 4 -t 256 -j 1:1:1 -f png"
+      },
+      "color_policy": "six source-color residual back-projections: high += Lanczos(original - LanczosDownsample(high)); clamp/round RGB to uint8 each pass",
+      "metrics_raw_then_6_passes": [
+        {
+          "mae_rgb_0_255": 8.447548866271973,
+          "rmse_rgb_0_255": 11.039665222167969,
+          "luminance_ratio": 0.8482986914446352,
+          "ssim_nonoverlapping_8x8_luminance": 0.925722599029541
+        },
+        {
+          "mae_rgb_0_255": 1.3430181741714478,
+          "rmse_rgb_0_255": 1.9591156244277954,
+          "luminance_ratio": 1.0019537566547254,
+          "ssim_nonoverlapping_8x8_luminance": 0.9944590330123901
+        },
+        {
+          "mae_rgb_0_255": 0.6423745155334473,
+          "rmse_rgb_0_255": 1.0457215309143066,
+          "luminance_ratio": 1.0018745568699157,
+          "ssim_nonoverlapping_8x8_luminance": 0.9961124658584595
+        },
+        {
+          "mae_rgb_0_255": 0.34146997332572937,
+          "rmse_rgb_0_255": 0.6866008639335632,
+          "luminance_ratio": 1.001411505367316,
+          "ssim_nonoverlapping_8x8_luminance": 0.996621310710907
+        },
+        {
+          "mae_rgb_0_255": 0.19105558097362518,
+          "rmse_rgb_0_255": 0.4991304576396942,
+          "luminance_ratio": 1.001133577288106,
+          "ssim_nonoverlapping_8x8_luminance": 0.9968239665031433
+        },
+        {
+          "mae_rgb_0_255": 0.1143253818154335,
+          "rmse_rgb_0_255": 0.38571181893348694,
+          "luminance_ratio": 1.0009173570166927,
+          "ssim_nonoverlapping_8x8_luminance": 0.9970151782035828
+        },
+        {
+          "mae_rgb_0_255": 0.07094955444335938,
+          "rmse_rgb_0_255": 0.30401134490966797,
+          "luminance_ratio": 1.0007287351979004,
+          "ssim_nonoverlapping_8x8_luminance": 0.9971385598182678
+        }
+      ],
+      "metrics_final": {
+        "mae_rgb_0_255": 0.07525768876075745,
+        "rmse_rgb_0_255": 0.32511645555496216,
+        "luminance_ratio": 1.0007424372465608,
+        "ssim_nonoverlapping_8x8_luminance": 0.9978446364402771
+      },
+      "alpha": {
+        "present": true,
+        "policy": "source alpha mask nearest-neighbor x4; RGB is neural superresolution plus source-color residual anchoring",
+        "roundtrip_max_error": 0,
+        "roundtrip_mae": 0.0,
+        "source_alpha_extrema": [
+          0,
+          255
+        ]
+      },
+      "detail_evidence": {
+        "mean_within_4x4_source_block_channel_std": 7.845455646514893,
+        "mae_versus_pure_nearest_x4": 6.945905685424805
+      },
+      "accepted_for_integration": true,
+      "integrated_path": "art/props/school_gate_occlude_1.png",
+      "input_git_commit": "f948474a7c95a8e9cd310f333b684dcb0f2d99e5",
+      "input_backup": "C:\\Users\\admin\\AppData\\Local\\Temp\\if-between-superres-tools\\source-backups\\art\\props\\school_gate_occlude_1.png",
+      "qa": "Independent map_audit source downsample/alpha/landmark checks passed; dead native detail visually reviewed by root; no map/data/layout changes"
+    },
+    {
+      "source": "art/props/school_gate_occlude_2.png",
+      "candidate": "art/map/candidates/school_gate_occlude_2_upscayl_standard_4x_color_locked.png",
+      "source_sha256": "ab60aa5c950d38482469c4a2fda0fa02024627bb06f936d41ec1cf952987e944",
+      "raw_model_output": "C:\\Users\\admin\\AppData\\Local\\Temp\\if-between-superres-tools\\batch-output\\school_gate_occlude_2.png",
+      "raw_model_sha256": "51c66ee4c9ad0e83a50487febb62bf9d37e1ddfe4bf514bd68d559cbfc3ac18d",
+      "output_sha256": "d8afa63913f53687078af908a3f94bae12c05c96f326eda40d6014980969d850",
+      "source_size": [
+        646,
+        120
+      ],
+      "output_size": [
+        2584,
+        480
+      ],
+      "provenance": {
+        "model_name": "upscayl-standard-4x",
+        "models": [
+          {
+            "name": "upscayl-standard-4x.bin",
+            "url": "https://raw.githubusercontent.com/upscayl/upscayl/main/resources/models/upscayl-standard-4x.bin",
+            "bytes": 33424520,
+            "sha256": "713ee713b0353afaa27976f0563a64a5043bd70b9bd8936c2e26e25ebcdbcddf"
+          },
+          {
+            "name": "upscayl-standard-4x.param",
+            "url": "https://raw.githubusercontent.com/upscayl/upscayl/main/resources/models/upscayl-standard-4x.param",
+            "bytes": 116029,
+            "sha256": "35330ececcea33b6c397a72548e788d5d53becee4734c50b7fada36e89f10a86"
+          }
+        ],
+        "backend_release": "20251207-174704",
+        "backend_sha256": "294d31be8f29d047c0d91a8dcd5e739616ece56bce3188ac688f9a52d70abe60",
+        "backend_official_url": "https://github.com/upscayl/upscayl-ncnn/releases/download/20251207-174704/upscayl-bin-20251207-174704-windows.zip",
+        "model_command": "-n upscayl-standard-4x -s 4 -z 4 -t 256 -j 1:1:1 -f png"
+      },
+      "color_policy": "six source-color residual back-projections: high += Lanczos(original - LanczosDownsample(high)); clamp/round RGB to uint8 each pass",
+      "metrics_raw_then_6_passes": [
+        {
+          "mae_rgb_0_255": 8.986536026000977,
+          "rmse_rgb_0_255": 11.90799331665039,
+          "luminance_ratio": 0.8563579501536993,
+          "ssim_nonoverlapping_8x8_luminance": 0.9520789384841919
+        },
+        {
+          "mae_rgb_0_255": 1.5529969930648804,
+          "rmse_rgb_0_255": 2.1633589267730713,
+          "luminance_ratio": 1.0008686982485082,
+          "ssim_nonoverlapping_8x8_luminance": 0.9955195188522339
+        },
+        {
+          "mae_rgb_0_255": 0.7418482303619385,
+          "rmse_rgb_0_255": 1.1344984769821167,
+          "luminance_ratio": 1.001106332973913,
+          "ssim_nonoverlapping_8x8_luminance": 0.9968001246452332
+        },
+        {
+          "mae_rgb_0_255": 0.3990078866481781,
+          "rmse_rgb_0_255": 0.7394179105758667,
+          "luminance_ratio": 1.0009579172817438,
+          "ssim_nonoverlapping_8x8_luminance": 0.997174859046936
+        },
+        {
+          "mae_rgb_0_255": 0.22640971839427948,
+          "rmse_rgb_0_255": 0.5400393605232239,
+          "luminance_ratio": 1.0007780374628346,
+          "ssim_nonoverlapping_8x8_luminance": 0.9973962306976318
+        },
+        {
+          "mae_rgb_0_255": 0.13298729062080383,
+          "rmse_rgb_0_255": 0.4144735038280487,
+          "luminance_ratio": 1.000534805345611,
+          "ssim_nonoverlapping_8x8_luminance": 0.9975506663322449
+        },
+        {
+          "mae_rgb_0_255": 0.08161462098360062,
+          "rmse_rgb_0_255": 0.32794731855392456,
+          "luminance_ratio": 1.000462972150601,
+          "ssim_nonoverlapping_8x8_luminance": 0.9976527690887451
+        }
+      ],
+      "metrics_final": {
+        "mae_rgb_0_255": 0.0855352133512497,
+        "rmse_rgb_0_255": 0.34980952739715576,
+        "luminance_ratio": 1.0004719619010982,
+        "ssim_nonoverlapping_8x8_luminance": 0.9982242584228516
+      },
+      "alpha": {
+        "present": true,
+        "policy": "source alpha mask nearest-neighbor x4; RGB is neural superresolution plus source-color residual anchoring",
+        "roundtrip_max_error": 0,
+        "roundtrip_mae": 0.0,
+        "source_alpha_extrema": [
+          0,
+          255
+        ]
+      },
+      "detail_evidence": {
+        "mean_within_4x4_source_block_channel_std": 7.455519676208496,
+        "mae_versus_pure_nearest_x4": 6.575695514678955
+      },
+      "accepted_for_integration": true,
+      "integrated_path": "art/props/school_gate_occlude_2.png",
+      "input_git_commit": "f948474a7c95a8e9cd310f333b684dcb0f2d99e5",
+      "input_backup": "C:\\Users\\admin\\AppData\\Local\\Temp\\if-between-superres-tools\\source-backups\\art\\props\\school_gate_occlude_2.png",
+      "qa": "Independent map_audit source downsample/alpha/landmark checks passed; dead native detail visually reviewed by root; no map/data/layout changes"
+    },
+    {
+      "source": "art/map/shop.png",
+      "candidate": "art/map/candidates/shop_upscayl_standard_4x_color_locked.png",
+      "source_sha256": "a11568c3b6262141f9d070f80ea210973eccf441c3afd44cc817ee2488157cda",
+      "raw_model_output": "C:\\Users\\admin\\AppData\\Local\\Temp\\if-between-superres-tools\\batch-output\\shop.png",
+      "raw_model_sha256": "316b9f83c0391ace757e680aa07b45feeb750a1a25ac9be0e28286b701219d97",
+      "output_sha256": "b58919069a268c8c42b12437619cab748f8ae3ffae6bfaf88756fcd86c9db10e",
+      "source_size": [
+        320,
+        180
+      ],
+      "output_size": [
+        1280,
+        720
+      ],
+      "provenance": {
+        "model_name": "upscayl-standard-4x",
+        "models": [
+          {
+            "name": "upscayl-standard-4x.bin",
+            "url": "https://raw.githubusercontent.com/upscayl/upscayl/main/resources/models/upscayl-standard-4x.bin",
+            "bytes": 33424520,
+            "sha256": "713ee713b0353afaa27976f0563a64a5043bd70b9bd8936c2e26e25ebcdbcddf"
+          },
+          {
+            "name": "upscayl-standard-4x.param",
+            "url": "https://raw.githubusercontent.com/upscayl/upscayl/main/resources/models/upscayl-standard-4x.param",
+            "bytes": 116029,
+            "sha256": "35330ececcea33b6c397a72548e788d5d53becee4734c50b7fada36e89f10a86"
+          }
+        ],
+        "backend_release": "20251207-174704",
+        "backend_sha256": "294d31be8f29d047c0d91a8dcd5e739616ece56bce3188ac688f9a52d70abe60",
+        "backend_official_url": "https://github.com/upscayl/upscayl-ncnn/releases/download/20251207-174704/upscayl-bin-20251207-174704-windows.zip",
+        "model_command": "-n upscayl-standard-4x -s 4 -z 4 -t 256 -j 1:1:1 -f png"
+      },
+      "color_policy": "six source-color residual back-projections: high += Lanczos(original - LanczosDownsample(high)); clamp/round RGB to uint8 each pass",
+      "metrics_raw_then_6_passes": [
+        {
+          "mae_rgb_0_255": 2.6829283237457275,
+          "rmse_rgb_0_255": 3.8506147861480713,
+          "luminance_ratio": 1.0448141226150565,
+          "ssim_nonoverlapping_8x8_luminance": 0.9833276867866516
+        },
+        {
+          "mae_rgb_0_255": 0.3003689646720886,
+          "rmse_rgb_0_255": 1.1341050863265991,
+          "luminance_ratio": 1.000888005892526,
+          "ssim_nonoverlapping_8x8_luminance": 0.9985312819480896
+        },
+        {
+          "mae_rgb_0_255": 0.13237924873828888,
+          "rmse_rgb_0_255": 0.468496710062027,
+          "luminance_ratio": 0.9999610622913591,
+          "ssim_nonoverlapping_8x8_luminance": 0.999518871307373
+        },
+        {
+          "mae_rgb_0_255": 0.0618167370557785,
+          "rmse_rgb_0_255": 0.2851462662220001,
+          "luminance_ratio": 0.9998340024000044,
+          "ssim_nonoverlapping_8x8_luminance": 0.9997963905334473
+        },
+        {
+          "mae_rgb_0_255": 0.03029964305460453,
+          "rmse_rgb_0_255": 0.19401448965072632,
+          "luminance_ratio": 0.9999033270682018,
+          "ssim_nonoverlapping_8x8_luminance": 0.9998858571052551
+        },
+        {
+          "mae_rgb_0_255": 0.01589519903063774,
+          "rmse_rgb_0_255": 0.13788896799087524,
+          "luminance_ratio": 0.9999449501360593,
+          "ssim_nonoverlapping_8x8_luminance": 0.9999300837516785
+        },
+        {
+          "mae_rgb_0_255": 0.009994285181164742,
+          "rmse_rgb_0_255": 0.1063537523150444,
+          "luminance_ratio": 0.9999431127850165,
+          "ssim_nonoverlapping_8x8_luminance": 0.9999530911445618
+        }
+      ],
+      "metrics_final": {
+        "mae_rgb_0_255": 0.015597048215568066,
+        "rmse_rgb_0_255": 0.13005338609218597,
+        "luminance_ratio": 0.9998755548005142,
+        "ssim_nonoverlapping_8x8_luminance": 0.9999486207962036
+      },
+      "alpha": {
+        "present": true,
+        "policy": "source alpha mask nearest-neighbor x4; RGB is neural superresolution plus source-color residual anchoring",
+        "roundtrip_max_error": 0,
+        "roundtrip_mae": 0.0,
+        "source_alpha_extrema": [
+          0,
+          255
+        ]
+      },
+      "detail_evidence": {
+        "mean_within_4x4_source_block_channel_std": 1.4630327224731445,
+        "mae_versus_pure_nearest_x4": 1.3745490312576294
+      },
+      "accepted_for_integration": true,
+      "integrated_path": "art/map/shop.png",
+      "input_git_commit": "f948474a7c95a8e9cd310f333b684dcb0f2d99e5",
+      "input_backup": "C:\\Users\\admin\\AppData\\Local\\Temp\\if-between-superres-tools\\source-backups\\art\\map\\shop.png",
+      "qa": "Independent map_audit source downsample/alpha/landmark checks passed; dead native detail visually reviewed by root; no map/data/layout changes"
+    }
+  ],
+  "intermediate_candidates_are_not_runtime_dependencies": true,
+  "intermediate_candidates_note": "Intermediate candidates are archived outside art/; integrated runtime images are listed in images[].source."
+}

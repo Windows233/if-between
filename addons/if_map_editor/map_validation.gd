@@ -165,6 +165,15 @@ static func _check_resources(item: Dictionary, issues: Array[Dictionary], kind: 
 					"visual_parts.%d.sprite" % part_index, map_id)
 				problem["resource"] = sprite
 				issues.append(problem)
+	var variants: Variant = item.get("sprite_variants", {})
+	if variants is Dictionary:
+		for variant_id: Variant in variants:
+			var sprite := str(variants[variant_id])
+			if sprite.is_empty() or not sprite.begins_with("res://") or not FileAccess.file_exists(sprite):
+				var problem := issue("error", "缺少贴图变体资源：%s" % sprite, kind, index,
+					"sprite_variants.%s" % str(variant_id), map_id)
+				problem["resource"] = sprite
+				issues.append(problem)
 
 
 static func _check_event(item: Dictionary, field: String, context: Dictionary,
@@ -300,7 +309,8 @@ static func _check_portals(data: Dictionary, context: Dictionary, issues: Array[
 
 
 static func _navigation(definition: MapDef, issues: Array[Dictionary]) -> Dictionary:
-	var result := {"complete": true, "components": [], "spawn_components": {}, "portal_components": {}, "cells": 0}
+	var result := {"complete": true, "components": [], "spawn_components": {},
+		"spawn_region_count": 0, "unseeded_components": [], "portal_components": {}, "cells": 0}
 	if definition.kind == MapDef.Kind.OVERWORLD:
 		return result
 	var bounds := WalkGrid.bounds(definition)
@@ -334,6 +344,7 @@ static func _navigation(definition: MapDef, issues: Array[Dictionary]) -> Dictio
 		result["components"].append({"id": component, "cells": queue.size()})
 	result["cells"] = cells.size()
 	var spawn_index := 0
+	var spawn_regions: Array[int] = []
 	for name: String in definition.spawns:
 		var point: Vector2 = definition.spawns[name]
 		var component: int = cells.get(WalkGrid.key(point), -1)
@@ -341,10 +352,26 @@ static func _navigation(definition: MapDef, issues: Array[Dictionary]) -> Dictio
 		if not WalkGrid.is_free(definition, point) or component < 0:
 			issues.append(issue("error", "出生点被阻挡或无法进入导航格：%s" % name,
 				"spawn", spawn_index, name, str(definition.id)))
+		elif not spawn_regions.has(component):
+			spawn_regions.append(component)
 		spawn_index += 1
+	# 地图边缘、空心家具内部等也可能站得下脚底框；分量多不等于实际路线被切断。
+	# 保留全域统计，按有效出生点区分需要确认的入口断路与仅供参考的独立空地。
+	result["spawn_region_count"] = spawn_regions.size()
+	for component: Dictionary in result["components"]:
+		if not spawn_regions.has(int(component["id"])):
+			result["unseeded_components"].append(component["id"])
 	if result["components"].size() > 1:
-		issues.append(issue("warning", "导航分成 %d 个不连通区域。" % result["components"].size(),
-			"map", -1, "navigation", str(definition.id)))
+		if spawn_regions.size() == 1:
+			issues.append(issue("info", "检测到 %d 个可站立区域；出生点均在同一区域，另有 %d 处未放置出生点的独立空地。" % [
+				result["components"].size(), result["unseeded_components"].size()],
+				"map", -1, "navigation", str(definition.id)))
+		elif spawn_regions.is_empty():
+			issues.append(issue("warning", "导航分成 %d 个区域，但没有有效出生点可核对通路。" % result["components"].size(),
+				"map", -1, "navigation", str(definition.id)))
+		else:
+			issues.append(issue("warning", "出生点分布在 %d 个互不连通的可走区域，请核对入口与出口路线。" % spawn_regions.size(),
+				"map", -1, "navigation", str(definition.id)))
 	for index: int in definition.portals.size():
 		var portal := definition.portals[index]
 		if portal.outcome == MapDef.Portal.Outcome.NONE:
@@ -368,16 +395,19 @@ static func issue(severity: String, message: String, kind := "map", index := -1,
 		"field": field, "map_id": map_id}
 
 
-## errors 阻止保存；warnings 必须由调用方显式展示并确认。
+## errors 阻止保存；warnings 必须显式确认；info 保留在审阅结果，不触发保存弹窗。
 static func summarize(issues: Array[Dictionary]) -> Dictionary:
 	var errors: Array[Dictionary] = []
 	var warnings: Array[Dictionary] = []
+	var infos: Array[Dictionary] = []
 	for problem: Dictionary in issues:
 		if problem.get("severity") == "error":
 			errors.append(problem.duplicate(true))
+		elif problem.get("severity") == "info":
+			infos.append(problem.duplicate(true))
 		else:
 			warnings.append(problem.duplicate(true))
-	return {"issues": issues.duplicate(true), "errors": errors, "warnings": warnings,
+	return {"issues": issues.duplicate(true), "errors": errors, "warnings": warnings, "infos": infos,
 		"can_save": errors.is_empty(), "ok": errors.is_empty()}
 
 

@@ -1,0 +1,1314 @@
+[
+  {
+    "path": "art/background/chapter2_dead_alley.png",
+    "width": 1152,
+    "height": 768,
+    "mode": "RGB",
+    "sha256": "55c8bcc8c52c356ed9ecbe3b106a4bcb30109d5c009d48f8a177b547d376f396",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/cg/end1平静即死亡.png",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "sha256": "c9287850eb0f32a2649ddf804f88112bcbd97a9ca49209a67ca549aaeaa9e008",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/cg/end2甜蜜咬痕.png",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "sha256": "7aba36c2480706007b87e1e32a39abb346f85af0967e4c73a0564c5837083ec7",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/cg/end3碌碌无为.png",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "sha256": "cf7b6343f373af3d06c6ad0bb0e8e856ced7e1c8576edb1872946015735a4a32",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/cg/梦中死亡.png",
+    "width": 1374,
+    "height": 773,
+    "mode": "RGB",
+    "sha256": "d0a419ed6fa8cc747c47c3938f917265b27cff21e9d58c8c7b4896a96045488b",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/cg/梦境.png",
+    "width": 1279,
+    "height": 1907,
+    "mode": "RGBA",
+    "sha256": "1e9764f189d4f43f735780c21b821296408992db9ed12aa836e944cc1c9bd5ec",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/cg/梦境破碎.png",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "sha256": "dca73ada669ffe012eb3996f4b93dd91dc843a4a399b843811efba2a6b6dc55c",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/cg/猫闪过.png",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "sha256": "293419a14fe003bf25eb909aa665ee284f0809cf0b8de416be2b29c5d03e17c5",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/cg/黑猫闪过cg.png",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "sha256": "293419a14fe003bf25eb909aa665ee284f0809cf0b8de416be2b29c5d03e17c5",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/fx/screen_shatter.png",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "sha256": "259bbabb86ffa496f892cec6901aa59e636b0d9aea8890c0a231991e8c150d1a",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/item/cat_doll.png",
+    "width": 128,
+    "height": 128,
+    "mode": "RGBA",
+    "sha256": "53af91fa4f3c4e429a3b925bafc6fb896e5f4cf94da441bc54098431e2e120f3",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/item/cat_photo.png",
+    "width": 1312,
+    "height": 1199,
+    "mode": "RGBA",
+    "sha256": "ee006630545fbac5d3b975eff7a80b32b7cd3721caeee6b13ac38bc18fe83d2f",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/item/charm.png",
+    "width": 128,
+    "height": 128,
+    "mode": "RGBA",
+    "sha256": "6fdda9db5df663a9d4c6a8576016e9632469f666533bcb88cb1dfef843725317",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/item/key.png",
+    "width": 512,
+    "height": 484,
+    "mode": "RGBA",
+    "sha256": "e9e3cd1a6d0e97c34d1b5d8643f2a7f25e70e514782eec21ef9a8d8062c0b19c",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/item/night_tear.png",
+    "width": 128,
+    "height": 128,
+    "mode": "RGBA",
+    "sha256": "6765e87c983a6ed8c035ad5655f9e659688e24f795e6fa1fcbfea1d000d58376",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/item/pendant.png",
+    "width": 1230,
+    "height": 1278,
+    "mode": "RGBA",
+    "sha256": "73342968b9f3f351d28d80a829990f27bf7e6f0c9659c38caa6044d31b8ece73",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/item/student_id.png",
+    "width": 128,
+    "height": 128,
+    "mode": "RGBA",
+    "sha256": "de2a493f382810fa6b5ccae8b26189b27783e7e292906561754f3f2ba74ead86",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/item/student_id_half.png",
+    "width": 1254,
+    "height": 1254,
+    "mode": "RGBA",
+    "sha256": "c66e6a77060e1130518cc8d3848c31cdee2dfe9eedffa91c6feb0f6c6ce94a2e",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/map/bedroom.png",
+    "width": 5552,
+    "height": 4532,
+    "mode": "RGB",
+    "sha256": "4bf357004458bfc40593cc6a9ca66ba3b549121e9a89155f6f60f347e6d6956d",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/map/bedroom_night.png",
+    "width": 5552,
+    "height": 4532,
+    "mode": "RGB",
+    "sha256": "ffb236132e6e0456c2a108ae976b2f8108bf553518a6dd8128dbd8915f25b4af",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/map/bedroom_night_sleep.png",
+    "width": 1388,
+    "height": 1133,
+    "mode": "RGB",
+    "sha256": "d65568301d65744f59ad3ca9a7125adf9f8349243982e370f0bf7dfdacd089d8",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/map/bedroom_night_wall.png",
+    "width": 5552,
+    "height": 4532,
+    "mode": "RGBA",
+    "sha256": "e5f5a3de4db5e68f4b69811aedbcb2ff2e10dbc4b5e1815b942ebb61913620cd",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/map/bedroom_wall.png",
+    "width": 5552,
+    "height": 4532,
+    "mode": "RGBA",
+    "sha256": "847880da3ac1304a53d53d4979546d1bb13dfa01b7c4982161dc558c1f9f9e42",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/map/building.png",
+    "width": 320,
+    "height": 180,
+    "mode": "RGBA",
+    "sha256": "0cacf4dd34f45e5df8f71d9dbc8fe0d2e5a884f451d00243f986fa7b4b238ffe",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/map/classroom.png",
+    "width": 1152,
+    "height": 922,
+    "mode": "RGB",
+    "sha256": "b5db0da64c9923bda8f56407bb63bc214c472f5233b131ee0bf633472b400d00",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/map/desk_shop.png",
+    "width": 5552,
+    "height": 4532,
+    "mode": "RGB",
+    "sha256": "0d9d0655c099245e88934f069a04c6e39f0f39e9342df3c25d8d55df084024a3",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/map/desk_shop_wall.png",
+    "width": 1388,
+    "height": 1133,
+    "mode": "RGBA",
+    "sha256": "6540e421f0774302347bb748166d3ca4f06ef2e29f608c79633bb99bd7b674ed",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/map/gatehouse.png",
+    "width": 4608,
+    "height": 3688,
+    "mode": "RGB",
+    "sha256": "580628a156399cc2fd1c9dea172aed4b229212c29adcb3016dad32486e452815",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/map/gatehouse_wall.png",
+    "width": 4608,
+    "height": 3688,
+    "mode": "RGBA",
+    "sha256": "c49137b17d6efc278d9d3676720b02a7a5acc37fa9a92311bf47b533da76b2a1",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/map/library.png",
+    "width": 320,
+    "height": 180,
+    "mode": "RGBA",
+    "sha256": "ca994450d1ccb2e3795f27f5701e0aa247b9d3d15a00a1fb5d037bd12372132c",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/map/market.png",
+    "width": 6688,
+    "height": 3764,
+    "mode": "RGB",
+    "sha256": "b998f120fadda45da667fbb27a57fa658578fa3bdf6f09a0c055898cf286abd1",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/map/market_night.png",
+    "width": 6688,
+    "height": 3764,
+    "mode": "RGB",
+    "sha256": "e97cf443b7f6392e66e149256f1c2b6d413c98be1966c7449ea3aee9aed17711",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/map/market_night_overlay.png",
+    "width": 6688,
+    "height": 3764,
+    "mode": "RGBA",
+    "sha256": "8d9e10605f68b53968e7b7c54c0af0ab3d7afac9adc0f75859698653f1c5afa6",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/map/market_overlay.png",
+    "width": 6688,
+    "height": 3764,
+    "mode": "RGBA",
+    "sha256": "db2ca220c47cfc948062b3ba13acb1bbdb913493ab5be190dcab106d13ab0c45",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/map/overworld.png",
+    "width": 2560,
+    "height": 1440,
+    "mode": "RGB",
+    "sha256": "b379e665a9d385834c356f9edbcf877a5b9b054b1f92b46709eb9526f4ca4941",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/map/playground.png",
+    "width": 320,
+    "height": 180,
+    "mode": "RGBA",
+    "sha256": "6d8ab19bdb57d9b3229a2ce5573354925acc9ee9da2bd960f1266c86920419db",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/map/school_gate.png",
+    "width": 1264,
+    "height": 843,
+    "mode": "RGB",
+    "sha256": "aaf7c945a3c24e089f3b0826385f26ef2801202ed6cfca90c24550a6dfb84b97",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/map/school_yard.png",
+    "width": 1264,
+    "height": 843,
+    "mode": "RGBA",
+    "sha256": "5d8a228a74c87a26223b13f78042639fa0b2f002bc4fc22df924dea7c3c6d204",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/map/shop.png",
+    "width": 320,
+    "height": 180,
+    "mode": "RGBA",
+    "sha256": "a11568c3b6262141f9d070f80ea210973eccf441c3afd44cc817ee2488157cda",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/map/white_tower.png",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGB",
+    "sha256": "00fad43f458a0e65c343340d78f8d6a2b4d750ef12b7964b9dd46a3101802d8b",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/map/white_tower_detail.png",
+    "width": 1536,
+    "height": 1024,
+    "mode": "RGB",
+    "sha256": "0828d48206cf297ed13d8326afd05ddae7a94b6097ca708ba0eb4635e3862ec9",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/npc/a/crouch1.png",
+    "width": 202,
+    "height": 360,
+    "mode": "RGBA",
+    "sha256": "cbdc62d666d14a5bfcd607efaf8b023f7bc562b1b4244b1f9294cb295a27a6ba",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/npc/a/side1.png",
+    "width": 202,
+    "height": 360,
+    "mode": "RGBA",
+    "sha256": "70f87f6868a7a2e520735c685a0f2d1400b0656e2505efae340c48045bac2046",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/npc/b/down1.png",
+    "width": 220,
+    "height": 360,
+    "mode": "RGBA",
+    "sha256": "a454401648a1de981159e5a296094036e34ba8aaf0eccdb6a51c02313c65ac9e",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/npc/b/up1.png",
+    "width": 220,
+    "height": 360,
+    "mode": "RGBA",
+    "sha256": "cc6bc1162b2493ff84fd7864753e2ab60c3c423cde2183a51b9518c9ff4973fc",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/npc/c/c.png",
+    "width": 256,
+    "height": 256,
+    "mode": "RGBA",
+    "sha256": "1ceda6d84c29f9c782b5e87f45f17c500f0c9a568a1b6329165af083c7d17d8c",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/npc/c/c小人.png",
+    "width": 832,
+    "height": 1584,
+    "mode": "RGBA",
+    "sha256": "2cf1ef6f834d73469c782de0fe65811e017b387aae25d647f8348eb8a7d43436",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/npc/c/down1.png",
+    "width": 64,
+    "height": 64,
+    "mode": "RGBA",
+    "sha256": "83671630a04de1fa1c446e900f43af0d452f8bf79b132a79af44887de7958b92",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/npc/c/down2.png",
+    "width": 64,
+    "height": 64,
+    "mode": "RGBA",
+    "sha256": "680402b5afa21bb7e4cba8b423caf7e03991650bc02484969d03cc3a24447c8c",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/npc/c/down3.png",
+    "width": 64,
+    "height": 64,
+    "mode": "RGBA",
+    "sha256": "b2fb64c335c1e29d70e4fb376cd1f5ead83485db12ce440c66421893244a5836",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/npc/c/down4.png",
+    "width": 64,
+    "height": 64,
+    "mode": "RGBA",
+    "sha256": "fb30871b46a6a55dcd6ae8dc36c1300df05532fea3d4633fd650552d41bf5af1",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/npc/c/side1.png",
+    "width": 64,
+    "height": 64,
+    "mode": "RGBA",
+    "sha256": "4321a49a8309dd9c4945071a9750577f704af8a7b73914814d003b63037816e3",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/npc/c/side2.png",
+    "width": 64,
+    "height": 64,
+    "mode": "RGBA",
+    "sha256": "8a84ce99fac8ca6e98dd59185826b64dc7da031d743f94f0eae1dfa83ff858b5",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/npc/c/side3.png",
+    "width": 64,
+    "height": 64,
+    "mode": "RGBA",
+    "sha256": "3e6d4ba3df8e5325dff74d772cc52ae183a83e2eac889e713c3aaccc3a6c2677",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/npc/c/side4.png",
+    "width": 64,
+    "height": 64,
+    "mode": "RGBA",
+    "sha256": "e39ad384b4e6e24d12d764bb0f3626cba72fd0913919fc08fc1f865910667d10",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/npc/c/up1.png",
+    "width": 64,
+    "height": 64,
+    "mode": "RGBA",
+    "sha256": "5b42627791c8f1e619aa73e35f937889f3854937b59386e63c4a666bd59e8475",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/npc/c/up2.png",
+    "width": 64,
+    "height": 64,
+    "mode": "RGBA",
+    "sha256": "25ba8bcd583e8a25f139da4bd6f53d8f0fa94cc6a27cbc5fe2f5ca160650c4ca",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/npc/c/up3.png",
+    "width": 64,
+    "height": 64,
+    "mode": "RGBA",
+    "sha256": "e190fd2990b5756dfa94893f0eb82ffe9a733905fdb04d3d53f5f4d8b08a0f75",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/npc/c/up4.png",
+    "width": 64,
+    "height": 64,
+    "mode": "RGBA",
+    "sha256": "9d415e2261c0f8a4a0fb07ef331b428c71495a4e0a65574781025fc95a281c0c",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/npc/elder/down1.png",
+    "width": 178,
+    "height": 360,
+    "mode": "RGBA",
+    "sha256": "4eb0505ff721fda8069058b93afbad85c77008872e83d068af29a1585651ab95",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/npc/elder/down2.png",
+    "width": 178,
+    "height": 360,
+    "mode": "RGBA",
+    "sha256": "843d674b0fa93ab0e185cceb18bcb61ffd87f7455def7fa12b569f01aedc92fc",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/npc/elder/down3.png",
+    "width": 178,
+    "height": 360,
+    "mode": "RGBA",
+    "sha256": "4eb0505ff721fda8069058b93afbad85c77008872e83d068af29a1585651ab95",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/npc/elder/down4.png",
+    "width": 178,
+    "height": 360,
+    "mode": "RGBA",
+    "sha256": "cb7f810961a0526fd777aac28ddef5d90252a7cddb626f664afb56613139f01e",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/npc/elder/up1.png",
+    "width": 178,
+    "height": 360,
+    "mode": "RGBA",
+    "sha256": "22ab2ff99bee472e8da630e8e5f2461754bff6c920a98cf73afb7a8262a9e67e",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/player/down1.png",
+    "width": 258,
+    "height": 360,
+    "mode": "RGBA",
+    "sha256": "69c1b2c5a80485a014ac9735d8d1a18439c0e0b6a227b3aac835327f4937f551",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/player/down2.png",
+    "width": 258,
+    "height": 360,
+    "mode": "RGBA",
+    "sha256": "13a87d360dafc212205b123f8e4c4d65a550d0f465325ceea9c36c1f6ec614f4",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/player/down3.png",
+    "width": 258,
+    "height": 360,
+    "mode": "RGBA",
+    "sha256": "69c1b2c5a80485a014ac9735d8d1a18439c0e0b6a227b3aac835327f4937f551",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/player/down4.png",
+    "width": 258,
+    "height": 360,
+    "mode": "RGBA",
+    "sha256": "77ea8317014249c0f28df441691ebd8d9e4dc85125de4abaa954f86d0bfb9e79",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/player/side1.png",
+    "width": 258,
+    "height": 360,
+    "mode": "RGBA",
+    "sha256": "67ad6184cffa82253957562484439438fe78aeddd44cacedda09bdb86c42b935",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/player/side2.png",
+    "width": 258,
+    "height": 360,
+    "mode": "RGBA",
+    "sha256": "2e945932812f0de632f6e3670eb9c29361d03a51cd504ef1cf577b41447f0014",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/player/side3.png",
+    "width": 258,
+    "height": 360,
+    "mode": "RGBA",
+    "sha256": "67ad6184cffa82253957562484439438fe78aeddd44cacedda09bdb86c42b935",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/player/side4.png",
+    "width": 258,
+    "height": 360,
+    "mode": "RGBA",
+    "sha256": "bdc17b7cd93e5458c527057b1340349022b0e687f14590a56c14969349f7d9fb",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/player/up1.png",
+    "width": 258,
+    "height": 360,
+    "mode": "RGBA",
+    "sha256": "0f99eb5e57a4865e97ccb6e11c7d6f81f160270e21208a32c21036bc5355c669",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/player/up2.png",
+    "width": 258,
+    "height": 360,
+    "mode": "RGBA",
+    "sha256": "43a13a925ce86edad988a5b8edcc06aa451425cb37936677715fa89b11ca679e",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/player/up3.png",
+    "width": 258,
+    "height": 360,
+    "mode": "RGBA",
+    "sha256": "a141d3878d804443e65f7d5584c85d63b624977f12c191f9d380d5ccaad4824a",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/portrait/a.png",
+    "width": 1246,
+    "height": 1263,
+    "mode": "RGBA",
+    "sha256": "f8f68787704fdeba2bfa501ad398875c340263e86c69c43a5a86b1100688a233",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/portrait/c.png",
+    "width": 256,
+    "height": 256,
+    "mode": "RGBA",
+    "sha256": "a910383da67c751b2fb0772f22386e5fa40d8de03030d68037220daadbee0820",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/portrait/elder.png",
+    "width": 1145,
+    "height": 1374,
+    "mode": "RGBA",
+    "sha256": "cdd916b92440836e68cb1339bc77400f98269d0fdef8bbd273133746359ca763",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/portrait/mysterious.png",
+    "width": 1024,
+    "height": 1536,
+    "mode": "RGBA",
+    "sha256": "0d35a01142b59260522e1facc05885b08f18af30bdd5fc8cadbb5e8f1caf1fca",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/portrait/passerby.png",
+    "width": 1145,
+    "height": 1374,
+    "mode": "RGBA",
+    "sha256": "67b6689bf03c94fb8aac735930b11fb5d8d0dbb4c52c8798289a202585991a84",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/portrait/protagonist/agony.png",
+    "width": 1143,
+    "height": 1376,
+    "mode": "RGBA",
+    "sha256": "dfe795acbec1ba96ec742ed3b2a2f7cb7a5cb296e0e036ab7ee0d167d97bdf53",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/portrait/protagonist/dread.png",
+    "width": 1182,
+    "height": 1330,
+    "mode": "RGBA",
+    "sha256": "84b277d126f8ac13b207dc0abce48bb21bb3acc09ba4cf5a1e23b11f497f9bf0",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/portrait/protagonist/guarded.png",
+    "width": 1145,
+    "height": 1374,
+    "mode": "RGBA",
+    "sha256": "ae986077c100d7bc0f23e59214454dc219fb59865011f9759498c0bbf92c9840",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/portrait/protagonist/nervous.png",
+    "width": 1374,
+    "height": 1145,
+    "mode": "RGBA",
+    "sha256": "b209eb42c9eab6f0eb7957cfd8013b1ce489a326a95fa6555e16e3991b7719fa",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/portrait/protagonist/puzzled.png",
+    "width": 1303,
+    "height": 1207,
+    "mode": "RGBA",
+    "sha256": "e8df929449879dfa6d2fd006d48bb9999ca657bdf5745586c4eb3fb8eabe191b",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/portrait/protagonist/quiet.png",
+    "width": 1145,
+    "height": 1374,
+    "mode": "RGBA",
+    "sha256": "8159492d9072786e42f0572217cc6458c9c905f9c7f0f24f6618b52cdb583c80",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/portrait/protagonist/reading.png",
+    "width": 1254,
+    "height": 1254,
+    "mode": "RGBA",
+    "sha256": "2f791bf61dbe5459095b3b656a05e77d31afbf87222848ed6d0ba91d631bbf5c",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/portrait/protagonist/relief.png",
+    "width": 1159,
+    "height": 1358,
+    "mode": "RGBA",
+    "sha256": "01245a841bd03cf15c85f00aed3bd7cc047eba3cfdfcd6da68e2bd6c67edb24f",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/portrait/protagonist/resolve.png",
+    "width": 1024,
+    "height": 1536,
+    "mode": "RGBA",
+    "sha256": "905ec47aee0553a5690feacbda73a5704d4c2397ce505b2b1fba406bc3305c97",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/portrait/protagonist/shocked.png",
+    "width": 1177,
+    "height": 1337,
+    "mode": "RGBA",
+    "sha256": "2249b701642c19e58a6590bdf9d273586a5dcabdb22c79719e7a2f632b1f570d",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/portrait/protagonist/smile.png",
+    "width": 1312,
+    "height": 1199,
+    "mode": "RGBA",
+    "sha256": "58f381236126e17a98ea329005c3667b4b71774e27f36bc21f4b26b0ded407e4",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/portrait/protagonist/startled.png",
+    "width": 1312,
+    "height": 1199,
+    "mode": "RGBA",
+    "sha256": "ff22841787aa56cefd4675cadc417dab6df961b1354cdc031c8866acfd15e23c",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/portrait/protagonist/tender.png",
+    "width": 1312,
+    "height": 1199,
+    "mode": "RGBA",
+    "sha256": "a41758d20a4afce154c3c2dc4a0a0c1c7afb8e979b2928354da4bc04d31e3464",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/portrait/protagonist/thinking.png",
+    "width": 1402,
+    "height": 1122,
+    "mode": "RGBA",
+    "sha256": "0349594b80bc9e0600970aa1c6df7e992dc8132da2426513b773afc6e978070d",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/portrait/protagonist/tired.png",
+    "width": 1024,
+    "height": 1536,
+    "mode": "RGBA",
+    "sha256": "fed73f5f9abc8846ec4f55ef22d1f46e97a3e05a48a59a90ef0fcef82ab7e0a3",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/portrait/protagonist/wary.png",
+    "width": 1024,
+    "height": 1536,
+    "mode": "RGBA",
+    "sha256": "7e1917d9b33eaf78bb169124376a872cf6d49aeac1bf026558932e79ca7c3914",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/props/ch2_flagpole.png",
+    "width": 5056,
+    "height": 3372,
+    "mode": "RGBA",
+    "sha256": "cd0983dd6bf762ac497f7747d807fbc35adb3a61fd765aa3c815d9867f4accaa",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/props/ch2_notice_board.png",
+    "width": 2560,
+    "height": 4096,
+    "mode": "RGBA",
+    "sha256": "4ff6c65b80d0043f1b49c92a4137a9c2de4fe35bb60697c208c589da2fb20e84",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/props/ch2_sandbox_dug.png",
+    "width": 361,
+    "height": 286,
+    "mode": "RGBA",
+    "sha256": "455ef0e17bae1101bf9dcd0102b42617ce2110f738dfb1ef47bd8bb0226b859e",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/props/ch2_swing.png",
+    "width": 5056,
+    "height": 3372,
+    "mode": "RGBA",
+    "sha256": "55b2c8652c87bcf8e97582d4f337fbd7b53c6cffdc674117184899106253e44c",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/props/desk.png",
+    "width": 1032,
+    "height": 574,
+    "mode": "RGBA",
+    "sha256": "f35243918110a62e87d1958f0188916973aa47423b27f3781b7f2e021f4db1f0",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/props/gatehouse_desk.png",
+    "width": 915,
+    "height": 658,
+    "mode": "RGBA",
+    "sha256": "dd0702377e90d441da6c4cc194077de9a420723f7be9828cb60f57ab8d5114f4",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/props/market_day_bottom_wall.png",
+    "width": 1672,
+    "height": 241,
+    "mode": "RGBA",
+    "sha256": "86cc62bcf0b924b7183d80977012c013c05963f11ea468b6db53450311ef9923",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/props/market_day_building_left.png",
+    "width": 786,
+    "height": 426,
+    "mode": "RGBA",
+    "sha256": "16d21dd90f326ac81369fbe042057dbeae809ff8bb493e9b3619e5bbf770f369",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/props/market_day_building_right.png",
+    "width": 774,
+    "height": 382,
+    "mode": "RGBA",
+    "sha256": "194e8e55de17b7b4427ced48f3ba227261d595ff908706db7a7ae0c069cac7c2",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/props/market_day_fountain.png",
+    "width": 254,
+    "height": 222,
+    "mode": "RGBA",
+    "sha256": "9f91c0d6dc3312d7feeedb2417d79d2fd2707d377a6c08f63edcb40cab8dcb86",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/props/market_day_stall_purple.png",
+    "width": 289,
+    "height": 234,
+    "mode": "RGBA",
+    "sha256": "95fd15ddf9752a6576697c8ce57a7136ea11182abfac72cb605121600c9c4c44",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/props/market_day_stall_red.png",
+    "width": 260,
+    "height": 215,
+    "mode": "RGBA",
+    "sha256": "5ecc1384026d1a37f07083f3c732b484784c36025bf5264f7946c732788b2bdd",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/props/market_day_stall_white.png",
+    "width": 310,
+    "height": 231,
+    "mode": "RGBA",
+    "sha256": "5c9e381d2871fe06ee99107028c8fe92995b65f4c2a9d02c743c64b943c56de2",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/props/market_night_bottom_wall.png",
+    "width": 1672,
+    "height": 241,
+    "mode": "RGBA",
+    "sha256": "754e5a31808d2cfb1f98bb73d3db41dc3fa2d6c04711f819b90efe272ed270c6",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/props/market_night_building_left.png",
+    "width": 786,
+    "height": 426,
+    "mode": "RGBA",
+    "sha256": "ebc592abfabcdfca35afe41f079dbf00a0c4af6826a307d3fecee58c6400e39c",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/props/market_night_building_right.png",
+    "width": 774,
+    "height": 382,
+    "mode": "RGBA",
+    "sha256": "4551a95a5c9c576e62ed792f0c58bf5566c81442e8c85d504aba2f301fcb49e7",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/props/market_night_fountain.png",
+    "width": 254,
+    "height": 222,
+    "mode": "RGBA",
+    "sha256": "5f7e1887728b33ace7cf8047862e68fc02bf435a20b7e01313ee7e14b30a81bd",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/props/market_night_stall_purple.png",
+    "width": 289,
+    "height": 234,
+    "mode": "RGBA",
+    "sha256": "0bd51e205802bea8eb1e1eb10acc3d81c5121fc04ef9a342b37fbdd5ce18fa58",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/props/market_night_stall_red.png",
+    "width": 260,
+    "height": 215,
+    "mode": "RGBA",
+    "sha256": "631681704f90dba86cda443a519442064b2eabfdc4e5e159f85146f958cdc5e8",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/props/market_night_stall_white.png",
+    "width": 310,
+    "height": 231,
+    "mode": "RGBA",
+    "sha256": "e41e5d409255bf13fc52fdb1efb218d3b6fc4f07335deb731fa8dd99621d7878",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/props/room_lamp.png",
+    "width": 156,
+    "height": 336,
+    "mode": "RGB",
+    "sha256": "069ba63fc8facf6e5b7cdc3a36c20326a4f4ebfd279d2f297f2c3bc864eac830",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/props/school_gate_arch.png",
+    "width": 181,
+    "height": 118,
+    "mode": "RGBA",
+    "sha256": "2888362367f33e815c1c9ad6ef46da6e50f0a607e244e7ee7276213403b49634",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/props/school_gate_fence_left.png",
+    "width": 550,
+    "height": 231,
+    "mode": "RGBA",
+    "sha256": "3922a295c05de3abaec056dea1fb9687bbe3a62d9de2656705f49af7b2be83d9",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/props/school_gate_fence_right.png",
+    "width": 533,
+    "height": 231,
+    "mode": "RGBA",
+    "sha256": "b782798b5d2c77dfd77d63a078de91562c85f0dccaea1031008ba3c8511348a1",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/props/school_gate_fountain.png",
+    "width": 266,
+    "height": 286,
+    "mode": "RGBA",
+    "sha256": "1c191d4712dc681bacd1aa2d96c0ba64c97556afe9fa1f618943f1a72d4076ca",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/props/school_gate_occlude_1.png",
+    "width": 516,
+    "height": 116,
+    "mode": "RGBA",
+    "sha256": "eec2ab599b24e2caf7f0a73e0a24645e84d9ff5b3385a726801eaa9e4167907b",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/props/school_gate_occlude_2.png",
+    "width": 646,
+    "height": 120,
+    "mode": "RGBA",
+    "sha256": "ab60aa5c950d38482469c4a2fda0fa02024627bb06f936d41ec1cf952987e944",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/ui/dialog_frame_left.png",
+    "width": 1584,
+    "height": 435,
+    "mode": "RGBA",
+    "sha256": "6d99b391fbf52d43d328ac6809460990a7a8f42e8b5433d285333abebb4df884",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/ui/dialog_frame_right.png",
+    "width": 1584,
+    "height": 435,
+    "mode": "RGBA",
+    "sha256": "f6714d50d66c6749ac335f23ad0b2d77004d70775d834f3abdfbfbdb462be3df",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/ui/info_panel.png",
+    "width": 1048,
+    "height": 568,
+    "mode": "RGBA",
+    "sha256": "610d720ea2764790e76246604f5daeb78a269dad87bc53272a64d462f1d23fed",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/ui/place_active.png",
+    "width": 214,
+    "height": 214,
+    "mode": "RGBA",
+    "sha256": "8b2d99bb6460570db45fc8acc0198acef00d078ce419a3f777bb4dc6908e1479",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/ui/place_hover.png",
+    "width": 214,
+    "height": 214,
+    "mode": "RGBA",
+    "sha256": "a4bd50a1c87ac5c898a1418161209a8f5d656dad799f503498aa89295c1ed324",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/ui/place_locked.png",
+    "width": 214,
+    "height": 214,
+    "mode": "RGBA",
+    "sha256": "e5159e1c18a479e30a8cf425b6819705e953760c46579a00a398ac5223fe7a43",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/ui/place_normal.png",
+    "width": 214,
+    "height": 214,
+    "mode": "RGBA",
+    "sha256": "275c28940918dffae638dda0ba8f5da27f5629d180823da00d2e443fead8bf8a",
+    "same_as_20261021": true
+  },
+  {
+    "path": "art/ui/title_bg.png",
+    "width": 1527,
+    "height": 859,
+    "mode": "RGB",
+    "sha256": "f4d1149ef538180a970057dc8ab8ba9ad010307d0aeffb654f2e4a45c72143e5",
+    "same_as_20261021": true
+  },
+  {
+    "path": "学校/学校/保安室_upscayl_4x_upscayl-standard-4x.png",
+    "width": 5608,
+    "height": 4488,
+    "mode": "RGB",
+    "sha256": "fa77e9f231a51cfac650d3a8d63779e60a0d5b5293a2cef4a38b0957a91737bb",
+    "same_as_20261021": true
+  },
+  {
+    "path": "学校/学校/图_已对齐/书桌_来自教室_IMG_4044.png",
+    "width": 701,
+    "height": 469,
+    "mode": "RGBA",
+    "sha256": "0c3a910b172fc4953eb2b569a3d97f7d6c6f7eede9c98f7fe84b032cad2bcb3e",
+    "same_as_20261021": true
+  },
+  {
+    "path": "学校/学校/图_已对齐/镜子斜_来自教室_IMG_4042.png",
+    "width": 420,
+    "height": 865,
+    "mode": "RGBA",
+    "sha256": "48aad142f8cef18d4ef504daba857fb50198dbb163f012adc059edf72b95b895",
+    "same_as_20261021": true
+  },
+  {
+    "path": "学校/学校/图_已对齐/黑板_来自教室_IMG_4041.png",
+    "width": 1210,
+    "height": 569,
+    "mode": "RGBA",
+    "sha256": "fc104e8a99d942661bcc088ef42886213a8932e65b902298671e49640be19a50",
+    "same_as_20261021": true
+  },
+  {
+    "path": "学校/学校/操场/半张学生证.png",
+    "width": 1254,
+    "height": 1254,
+    "mode": "RGBA",
+    "sha256": "c66e6a77060e1130518cc8d3848c31cdee2dfe9eedffa91c6feb0f6c6ce94a2e",
+    "same_as_20261021": true
+  },
+  {
+    "path": "学校/学校/操场/操场.png",
+    "width": 6144,
+    "height": 4096,
+    "mode": "RGB",
+    "sha256": "2f94f140675150c7ed6baf419389f6d213afc8a0b9f472a4ee99df831c66d60f",
+    "same_as_20261021": true
+  },
+  {
+    "path": "学校/学校/操场/操场抠图_upscayl_4x_upscayl-standard-4x.png",
+    "width": 5056,
+    "height": 3372,
+    "mode": "RGBA",
+    "sha256": "01c50d8773e2fe9b00b6dd2d7417315d62f31d31d2379accac610804b054df67",
+    "same_as_20261021": true
+  },
+  {
+    "path": "学校/学校/操场/旗杆.png",
+    "width": 5056,
+    "height": 3372,
+    "mode": "RGBA",
+    "sha256": "cd0983dd6bf762ac497f7747d807fbc35adb3a61fd765aa3c815d9867f4accaa",
+    "same_as_20261021": true
+  },
+  {
+    "path": "学校/学校/操场/沙地挖开.png",
+    "width": 361,
+    "height": 286,
+    "mode": "RGBA",
+    "sha256": "455ef0e17bae1101bf9dcd0102b42617ce2110f738dfb1ef47bd8bb0226b859e",
+    "same_as_20261021": true
+  },
+  {
+    "path": "学校/学校/操场/沙地未挖开.png",
+    "width": 368,
+    "height": 276,
+    "mode": "RGBA",
+    "sha256": "6e2788507237ab55b0f86afb25ecb460ee07e7b18823f9f8f89403f6c1051c01",
+    "same_as_20261021": true
+  },
+  {
+    "path": "学校/学校/操场/秋千.png",
+    "width": 5056,
+    "height": 3372,
+    "mode": "RGBA",
+    "sha256": "55b2c8652c87bcf8e97582d4f337fbd7b53c6cffdc674117184899106253e44c",
+    "same_as_20261021": true
+  },
+  {
+    "path": "学校/学校/操场.png",
+    "width": 1264,
+    "height": 843,
+    "mode": "RGBA",
+    "sha256": "5d8a228a74c87a26223b13f78042639fa0b2f002bc4fc22df924dea7c3c6d204",
+    "same_as_20261021": true
+  },
+  {
+    "path": "学校/学校/教室/墙壁.png",
+    "width": 4608,
+    "height": 3688,
+    "mode": "RGBA",
+    "sha256": "81bd870f5ffa18580f28ed06559d7e49d5769e5846a4aed2bff5f2db90ca85bd",
+    "same_as_20261021": true
+  },
+  {
+    "path": "学校/学校/教室/教室_upscayl_4x_upscayl-standard-4x.png",
+    "width": 4608,
+    "height": 3688,
+    "mode": "RGBA",
+    "sha256": "8074fed3e44030796905f10cd0f765585f21b090f0eebee9a91cb659d6aa2122",
+    "same_as_20261021": true
+  },
+  {
+    "path": "学校/学校/教室/课桌.png",
+    "width": 4608,
+    "height": 2560,
+    "mode": "RGBA",
+    "sha256": "f4f63e78d11625689f63cedc4cc600f41f1c4f12ba55988dc3596a92acdb646a",
+    "same_as_20261021": true
+  },
+  {
+    "path": "学校/学校/校门/喷泉_upscayl_4x_upscayl-standard-4x.png",
+    "width": 4164,
+    "height": 4032,
+    "mode": "RGBA",
+    "sha256": "215c5f60ad514a6449d8fee80127a0a4922a40a7d8ed4b193efd7bfb63f57d67",
+    "same_as_20261021": true
+  },
+  {
+    "path": "学校/学校/校门/学校大门_upscayl_4x_upscayl-standard-4x.png",
+    "width": 6144,
+    "height": 4096,
+    "mode": "RGB",
+    "sha256": "56c93259a08187e0e687f025f546c92396b4ff1245fa858f060ea53c7b7cad33",
+    "same_as_20261021": true
+  },
+  {
+    "path": "学校/学校/校门/学校大门碰撞.png",
+    "width": 6144,
+    "height": 4096,
+    "mode": "RGBA",
+    "sha256": "5452864967a2db01543a5d19430cd53e1135204d686a4b5fac4da04c2b9001b5",
+    "same_as_20261021": true
+  },
+  {
+    "path": "学校/学校/校门/教学楼公告栏.png",
+    "width": 3272,
+    "height": 4096,
+    "mode": "RGBA",
+    "sha256": "a16eecaf426690145b3daea96414c208b6a65aa6d48fd0675bcf3b80904304b8",
+    "same_as_20261021": true
+  },
+  {
+    "path": "学校/学校/校门/易拉罐.PNG",
+    "width": 1149,
+    "height": 928,
+    "mode": "RGBA",
+    "sha256": "e962e99de4dadde1752bcce8db0cbf35ff9598f6654de7eabb684c8d36912332",
+    "same_as_20261021": true
+  },
+  {
+    "path": "学校/学校/校门/校门扣图.PNG",
+    "width": 1264,
+    "height": 843,
+    "mode": "RGBA",
+    "sha256": "0b1465464a305a388526159b2d493c0a429646c9b02183263d6412e5c3e3ab21",
+    "same_as_20261021": true
+  },
+  {
+    "path": "学校/学校/校门/钥匙.PNG",
+    "width": 1071,
+    "height": 1012,
+    "mode": "RGBA",
+    "sha256": "aa431c2177dd7bf181214c89ce1ac8875a6c0723e27726bd03b331057809e225",
+    "same_as_20261021": true
+  },
+  {
+    "path": "学校/学校/校门/门口公告栏.png",
+    "width": 2560,
+    "height": 4096,
+    "mode": "RGBA",
+    "sha256": "4ff6c65b80d0043f1b49c92a4137a9c2de4fe35bb60697c208c589da2fb20e84",
+    "same_as_20261021": true
+  },
+  {
+    "path": "学校/学校/校门/雕塑框.png",
+    "width": 5360,
+    "height": 3200,
+    "mode": "RGBA",
+    "sha256": "6ac31e90e1698b08f2ecbc74822ab04d86f56c2795a24aebb983063efeae7665",
+    "same_as_20261021": true
+  },
+  {
+    "path": "学校/学校/死巷 + 铁门.png",
+    "width": 1152,
+    "height": 768,
+    "mode": "RGB",
+    "sha256": "55c8bcc8c52c356ed9ecbe3b106a4bcb30109d5c009d48f8a177b547d376f396",
+    "same_as_20261021": true
+  },
+  {
+    "path": "学校/学校/死巷 + 铁门碰撞.png",
+    "width": 1152,
+    "height": 768,
+    "mode": "RGBA",
+    "sha256": "0f1d06ca7870dfae8ca6df875302822e55f00cf911f0a9589bcce8bcb45c2ef0",
+    "same_as_20261021": true
+  },
+  {
+    "path": "对话框/文字框右.png",
+    "width": 1785,
+    "height": 881,
+    "mode": "RGBA",
+    "sha256": "674eff7fe237be223ba89597e0a3b0c5e39f39e01925500e70a097d63990d80e",
+    "same_as_20261021": true
+  },
+  {
+    "path": "对话框/文字框左.PNG",
+    "width": 1785,
+    "height": 881,
+    "mode": "RGB",
+    "sha256": "a11e4eec57dcd5fd3f38b285f797932e02eb265d0f0c226658a42e7af97be4a5",
+    "same_as_20261021": true
+  },
+  {
+    "path": "集市/集市夜晚扣图_upscayl_4x_upscayl-standard-4x.png",
+    "width": 6688,
+    "height": 3764,
+    "mode": "RGBA",
+    "sha256": "8d9e10605f68b53968e7b7c54c0af0ab3d7afac9adc0f75859698653f1c5afa6",
+    "same_as_20261021": true
+  },
+  {
+    "path": "集市/集市夜间_upscayl_4x_upscayl-standard-4x.png",
+    "width": 6688,
+    "height": 3764,
+    "mode": "RGB",
+    "sha256": "e97cf443b7f6392e66e149256f1c2b6d413c98be1966c7449ea3aee9aed17711",
+    "same_as_20261021": true
+  },
+  {
+    "path": "集市/集市白天_upscayl_4x_upscayl-standard-4x.png",
+    "width": 6688,
+    "height": 3764,
+    "mode": "RGB",
+    "sha256": "b998f120fadda45da667fbb27a57fa658578fa3bdf6f09a0c055898cf286abd1",
+    "same_as_20261021": true
+  },
+  {
+    "path": "集市/集市白天扣图_upscayl_4x_upscayl-standard-4x.png",
+    "width": 6688,
+    "height": 3764,
+    "mode": "RGBA",
+    "sha256": "db2ca220c47cfc948062b3ba13acb1bbdb913493ab5be190dcab106d13ab0c45",
+    "same_as_20261021": true
+  },
+  {
+    "path": "集市/集市碰撞箱.png",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGBA",
+    "sha256": "610a466ed241087ab181102889ae57abacf4215320cf609d06d741a3681b3c28",
+    "same_as_20261021": true
+  }
+]

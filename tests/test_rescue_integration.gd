@@ -61,10 +61,13 @@ static func run(h: TestHarness) -> void:
 	var binding: Sprite2D = c_actor.get_node_or_null("RescueBinding") as Sprite2D
 	h.check("救援复用场上唯一的 C", main.cutscene.actor_ids(), ["c"])
 	h.check("受困 C 使用正面静止动画", (c_actor as AnimatedSprite2D).animation, &"idle_down")
-	h.check("束缚与角色共用 32 像素画布",
-		binding.scale, Vector2(0.25, 0.25))
+	var animated_c := c_actor as AnimatedSprite2D
+	var c_frame_size := animated_c.sprite_frames.get_frame_texture(
+		animated_c.animation, animated_c.frame).get_size()
+	h.check("束缚与 C 的源帧画布等大，父节点统一缩放",
+		binding.texture.get_size() * binding.scale, c_frame_size)
 	h.check("束缚中心按 C 帧画布对齐",
-		binding.position, Vector2(0, -32))
+		binding.position, Vector2(0, -c_frame_size.y * 0.5))
 	h.check("初始束缚使用完整状态图", binding.texture.resource_path,
 		"res://art/fx/rescue_c/rescue_bind_state_01.png")
 	var actor_snapshot: Array = main.cutscene.snapshot_actors()

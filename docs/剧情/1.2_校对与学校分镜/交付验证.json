@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-24",
+  "baseline": "d746d28",
+  "scope": "仅文稿、审阅、分镜和文档入口；未修改游戏/地图/原生事件，不代表新增剧情已通关",
+  "source_archive": "原稿与微信来源sha256相同",
+  "corrections": "27处局部修改；785段结构保留；27条批注及首尾锚点完整",
+  "coverage": "学校P299–519共181个非空段落覆盖；原对白逐句存在，P510旧无组队后悔台词按已确认正常强制组队流程移出执行稿",
+  "docx_visual": {
+    "corrected_pages": 19,
+    "report_pages": 7,
+    "review": "两份Word全部页面已渲染并逐页查看，原稿样式保留，说明无溢出"
+  },
+  "stage_full": "52节点/162cue，结构校验通过，状态draft；走廊/教室空间绑定未落地",
+  "stage_chase": "8节点，--require-ready通过；不是已实现",
+  "spatial": "当前WalkGrid 6段通路、3个C脚点均通过；只静态通行，不是QTE手感验证",
+  "data_check": "14图/19事件/5结局/7物品；保留cat_doll、night_tear未用和end4_iron无可达三条提醒",
+  "game_tests": "4373/4373；exit0",
+  "smoke": "真实窗口烟测exit0；仅基线既有流程",
+  "diagnostics": "保留既有负面测试与引擎诊断，不宣称日志全净",
+  "primary_workspace": "并行画面代码与未提交操场布局未纳入本轮提交；全学校空间校验以隔离main基线为准"
+}

@@ -1,0 +1,67 @@
+{
+  "date": "2026-10-24",
+  "baseline_commit": "4867ea6",
+  "final_approach": "Native pixel-art repaint of dead_alley. No experimental global palette or sharpening filter shipped.",
+  "scope": "dead_alley only; all other scene art retained",
+  "generator": "built-in image_gen",
+  "source_asset": "res://art/background/chapter2_dead_alley_pixel_20261024.png",
+  "source_size": [
+    1536,
+    1024
+  ],
+  "map_size": [
+    384,
+    256
+  ],
+  "comparison": {
+    "region": [
+      240,
+      272,
+      496,
+      528
+    ],
+    "capture": [
+      1280,
+      720
+    ],
+    "zoom": 2,
+    "zoom_filter": "nearest on both screenshots; no screenshot sharpening"
+  },
+  "gpu": {
+    "adapter": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "failed": 0,
+    "passed": 28
+  },
+  "all_map_gpu": {
+    "passed": 157,
+    "failed": 0,
+    "maps": 14
+  },
+  "snapshot": {
+    "game": [
+      4392,
+      4392
+    ],
+    "plugin": [
+      4507,
+      4507
+    ],
+    "data_exit": 0,
+    "data_counts": [
+      14,
+      19,
+      5,
+      7
+    ],
+    "smoke_exit": 0
+  },
+  "worktree": {
+    "game": [
+      4394,
+      4394
+    ],
+    "data_note": "Parallel unimported chase art excluded from publishing snapshot."
+  },
+  "geometry": "Old map JSON, world extent, spawns, collision and interaction data retained. Visual review at lower entrance and upper gate recorded in collision screenshots.",
+  "diagnostics": "Existing negative-case/data notices/engine cleanup diagnostics retained; no script errors in final run."
+}

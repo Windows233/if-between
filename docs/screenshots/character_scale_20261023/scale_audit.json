@@ -1,0 +1,413 @@
+{
+	"display": "Windows",
+	"failed": 0,
+	"maps": [
+		{
+			"camera": [
+				160.0,
+				288.0
+			],
+			"camera_zoom": [
+				1.0,
+				1.0
+			],
+			"far_camera": [
+				303.0,
+				288.0
+			],
+			"kind": "room",
+			"map": "bedroom",
+			"map_size": [
+				463,
+				378
+			],
+			"player_scale": 1.0,
+			"player_visible": true,
+			"position": [
+				96.0,
+				313.0
+			],
+			"screen_character_height": 45.0,
+			"screenshot": "C:/Users/admin/.codex/visualizations/2026/10/23/01a1695d-bd4e-75a0-8dda-d72055d219b4/character-scale/bedroom_spawn.png",
+			"spawn": "from_desk"
+		},
+		{
+			"camera": [
+				160.0,
+				288.0
+			],
+			"camera_zoom": [
+				1.0,
+				1.0
+			],
+			"far_camera": [
+				303.0,
+				288.0
+			],
+			"kind": "room",
+			"map": "bedroom_night",
+			"map_size": [
+				463,
+				378
+			],
+			"player_scale": 1.0,
+			"player_visible": true,
+			"position": [
+				96.0,
+				313.0
+			],
+			"screen_character_height": 45.0,
+			"screenshot": "C:/Users/admin/.codex/visualizations/2026/10/23/01a1695d-bd4e-75a0-8dda-d72055d219b4/character-scale/bedroom_night_spawn.png",
+			"spawn": "from_desk"
+		},
+		{
+			"camera": [
+				160.0,
+				288.0
+			],
+			"camera_zoom": [
+				1.0,
+				1.0
+			],
+			"far_camera": [
+				303.0,
+				288.0
+			],
+			"kind": "room",
+			"map": "bedroom_night_sleep",
+			"map_size": [
+				463,
+				378
+			],
+			"player_scale": 1.0,
+			"player_visible": true,
+			"position": [
+				95.0,
+				306.0
+			],
+			"screen_character_height": 45.0,
+			"screenshot": "C:/Users/admin/.codex/visualizations/2026/10/23/01a1695d-bd4e-75a0-8dda-d72055d219b4/character-scale/bedroom_night_sleep_spawn.png",
+			"spawn": "from_desk"
+		},
+		{
+			"camera": [
+				192.0,
+				262.0
+			],
+			"camera_zoom": [
+				2.0,
+				2.0
+			],
+			"far_camera": [
+				304.0,
+				262.0
+			],
+			"kind": "room",
+			"map": "classroom",
+			"map_size": [
+				384,
+				307
+			],
+			"player_scale": 0.5,
+			"player_visible": true,
+			"position": [
+				192.0,
+				277.0
+			],
+			"screen_character_height": 45.0,
+			"screenshot": "C:/Users/admin/.codex/visualizations/2026/10/23/01a1695d-bd4e-75a0-8dda-d72055d219b4/character-scale/classroom_spawn.png",
+			"spawn": "from_gate"
+		},
+		{
+			"camera": [
+				191.0,
+				211.0
+			],
+			"camera_zoom": [
+				2.0,
+				2.0
+			],
+			"far_camera": [
+				304.0,
+				211.0
+			],
+			"kind": "room",
+			"map": "dead_alley",
+			"map_size": [
+				384,
+				256
+			],
+			"player_scale": 0.5,
+			"player_visible": true,
+			"position": [
+				191.0,
+				232.0
+			],
+			"screen_character_height": 45.0,
+			"screenshot": "C:/Users/admin/.codex/visualizations/2026/10/23/01a1695d-bd4e-75a0-8dda-d72055d219b4/character-scale/dead_alley_spawn.png",
+			"spawn": "from_overworld"
+		},
+		{
+			"camera": [
+				223.0,
+				121.0
+			],
+			"camera_zoom": [
+				1.0,
+				1.0
+			],
+			"far_camera": [
+				303.0,
+				288.0
+			],
+			"kind": "room",
+			"map": "desk_shop",
+			"map_size": [
+				463,
+				378
+			],
+			"player_scale": 1.0,
+			"player_visible": true,
+			"position": [
+				223.0,
+				121.0
+			],
+			"screen_character_height": 45.0,
+			"screenshot": "C:/Users/admin/.codex/visualizations/2026/10/23/01a1695d-bd4e-75a0-8dda-d72055d219b4/character-scale/desk_shop_spawn.png",
+			"spawn": "start"
+		},
+		{
+			"camera": [
+				224.0,
+				217.0
+			],
+			"camera_zoom": [
+				1.0,
+				1.0
+			],
+			"far_camera": [
+				224.0,
+				217.0
+			],
+			"kind": "room",
+			"map": "gatehouse",
+			"map_size": [
+				384,
+				307
+			],
+			"player_scale": 1.0,
+			"player_visible": true,
+			"position": [
+				269.0,
+				252.0
+			],
+			"screen_character_height": 45.0,
+			"screenshot": "C:/Users/admin/.codex/visualizations/2026/10/23/01a1695d-bd4e-75a0-8dda-d72055d219b4/character-scale/gatehouse_spawn.png",
+			"spawn": "start"
+		},
+		{
+			"camera": [
+				233.0,
+				284.0
+			],
+			"camera_zoom": [
+				1.0,
+				1.0
+			],
+			"far_camera": [
+				307.0,
+				284.0
+			],
+			"kind": "room",
+			"map": "library",
+			"map_size": [
+				467,
+				374
+			],
+			"player_scale": 1.0,
+			"player_visible": true,
+			"position": [
+				233.0,
+				296.0
+			],
+			"screen_character_height": 45.0,
+			"screenshot": "C:/Users/admin/.codex/visualizations/2026/10/23/01a1695d-bd4e-75a0-8dda-d72055d219b4/character-scale/library_spawn.png",
+			"spawn": "start"
+		},
+		{
+			"camera": [
+				278.0,
+				269.0
+			],
+			"camera_zoom": [
+				2.0,
+				2.0
+			],
+			"far_camera": [
+				477.0,
+				269.0
+			],
+			"kind": "room",
+			"map": "market",
+			"map_size": [
+				557,
+				314
+			],
+			"player_scale": 0.5,
+			"player_visible": true,
+			"position": [
+				278.0,
+				279.0
+			],
+			"screen_character_height": 45.0,
+			"screenshot": "C:/Users/admin/.codex/visualizations/2026/10/23/01a1695d-bd4e-75a0-8dda-d72055d219b4/character-scale/market_spawn.png",
+			"spawn": "from_overworld"
+		},
+		{
+			"camera": [
+				278.0,
+				269.0
+			],
+			"camera_zoom": [
+				2.0,
+				2.0
+			],
+			"far_camera": [
+				477.0,
+				269.0
+			],
+			"kind": "room",
+			"map": "market_night",
+			"map_size": [
+				557,
+				314
+			],
+			"player_scale": 0.5,
+			"player_visible": true,
+			"position": [
+				278.0,
+				279.0
+			],
+			"screen_character_height": 45.0,
+			"screenshot": "C:/Users/admin/.codex/visualizations/2026/10/23/01a1695d-bd4e-75a0-8dda-d72055d219b4/character-scale/market_night_spawn.png",
+			"spawn": "from_overworld"
+		},
+		{
+			"camera": [
+				320.0,
+				180.0
+			],
+			"camera_zoom": [
+				0.5,
+				0.5
+			],
+			"kind": "overworld",
+			"map": "overworld",
+			"map_size": [
+				640,
+				360
+			],
+			"player_scale": 1.0,
+			"player_visible": false,
+			"position": [
+				320.0,
+				180.0
+			],
+			"screen_character_height": 22.5,
+			"screenshot": "C:/Users/admin/.codex/visualizations/2026/10/23/01a1695d-bd4e-75a0-8dda-d72055d219b4/character-scale/overworld_spawn.png",
+			"spawn": "start"
+		},
+		{
+			"camera": [
+				207.0,
+				236.0
+			],
+			"camera_zoom": [
+				2.0,
+				2.0
+			],
+			"far_camera": [
+				341.0,
+				236.0
+			],
+			"kind": "room",
+			"map": "school_gate",
+			"map_size": [
+				421,
+				281
+			],
+			"player_scale": 0.5,
+			"player_visible": true,
+			"position": [
+				207.0,
+				255.0
+			],
+			"screen_character_height": 45.0,
+			"screenshot": "C:/Users/admin/.codex/visualizations/2026/10/23/01a1695d-bd4e-75a0-8dda-d72055d219b4/character-scale/school_gate_spawn.png",
+			"spawn": "from_alley"
+		},
+		{
+			"camera": [
+				158.0,
+				166.0
+			],
+			"camera_zoom": [
+				2.0,
+				2.0
+			],
+			"far_camera": [
+				236.0,
+				166.0
+			],
+			"kind": "room",
+			"map": "school_yard",
+			"map_size": [
+				316,
+				211
+			],
+			"player_scale": 0.5,
+			"player_visible": true,
+			"position": [
+				158.0,
+				186.0
+			],
+			"screen_character_height": 45.0,
+			"screenshot": "C:/Users/admin/.codex/visualizations/2026/10/23/01a1695d-bd4e-75a0-8dda-d72055d219b4/character-scale/school_yard_spawn.png",
+			"spawn": "from_gate"
+		},
+		{
+			"camera": [
+				160.0,
+				90.0
+			],
+			"camera_zoom": [
+				1.0,
+				1.0
+			],
+			"far_camera": [
+				160.0,
+				90.0
+			],
+			"kind": "room",
+			"map": "shop",
+			"map_size": [
+				320,
+				180
+			],
+			"player_scale": 1.0,
+			"player_visible": true,
+			"position": [
+				40.0,
+				140.0
+			],
+			"screen_character_height": 45.0,
+			"screenshot": "C:/Users/admin/.codex/visualizations/2026/10/23/01a1695d-bd4e-75a0-8dda-d72055d219b4/character-scale/shop_spawn.png",
+			"spawn": "from_market"
+		}
+	],
+	"passed": 113,
+	"viewport": [
+		320,
+		180
+	]
+}

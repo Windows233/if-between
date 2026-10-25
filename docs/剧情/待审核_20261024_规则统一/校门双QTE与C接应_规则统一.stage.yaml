@@ -1,0 +1,2336 @@
+{
+  "format": "stage-script/v2",
+  "title": "校门双QTE至C接应入馆：规则统一审核版",
+  "status": "ready_for_implementation",
+  "project": {
+    "name": "IF：如果之间",
+    "engine": "Godot 4.7.2",
+    "adapter": "if-between-native"
+  },
+  "game_context": {
+    "viewport": [
+      320,
+      180
+    ],
+    "coordinate_system": "原点左上，x向右y向下，所有at为地图逻辑脚底；没有绑定的走廊/教室交互用anchor binding=null，禁止冒写坐标。",
+    "scenes": [
+      {
+        "id": "school_gate",
+        "map_file": "data/maps/school_gate.json",
+        "background": "art/map/school_gate.png",
+        "map_size": [
+          421,
+          281
+        ],
+        "inspection": {
+          "data": "verified",
+          "visual": "verified",
+          "runtime": "not_run",
+          "notes": "实际画面已于审核编排时查看；发布时再次以main 25d2ce4核实地图数据；主工作区未提交操场布局另记录，不随文档提交。未运行新增整段剧情。"
+        },
+        "objects": [
+          {
+            "id": "sg_fountain",
+            "rect": [
+              164,
+              57,
+              89,
+              95
+            ],
+            "representation": "sprite",
+            "notes": "发布main 25d2ce4实际物件；未修改地图数据。"
+          },
+          {
+            "id": "can",
+            "rect": [
+              215,
+              234,
+              12,
+              14
+            ],
+            "reach": [
+              214,
+              232,
+              15,
+              18
+            ],
+            "representation": "interaction_only",
+            "notes": "发布main 25d2ce4实际物件；未修改地图数据。"
+          },
+          {
+            "id": "sg_occlude_1",
+            "rect": [
+              225,
+              186,
+              172,
+              39
+            ],
+            "representation": "sprite",
+            "notes": "发布main 25d2ce4实际物件；未修改地图数据。"
+          },
+          {
+            "id": "sg_occlude_2",
+            "rect": [
+              15,
+              183,
+              215,
+              40
+            ],
+            "representation": "sprite",
+            "notes": "发布main 25d2ce4实际物件；未修改地图数据。"
+          },
+          {
+            "id": "notice_board",
+            "rect": [
+              75,
+              142,
+              43,
+              48
+            ],
+            "reach": [
+              68,
+              136,
+              58,
+              60
+            ],
+            "representation": "interaction_only",
+            "notes": "发布main 25d2ce4实际物件；未修改地图数据。"
+          },
+          {
+            "id": "sculpture",
+            "rect": [
+              166,
+              55,
+              84,
+              100
+            ],
+            "reach": [
+              158,
+              54,
+              101,
+              107
+            ],
+            "representation": "interaction_only",
+            "notes": "发布main 25d2ce4实际物件；未修改地图数据。"
+          }
+        ],
+        "camera_notes": "实际视口320×180；player_scale=0.5；相机按地图标尺，不能当底图全景。",
+        "scene_notes": "雕像阻直线，走南侧；C不烘焙在底图，接应须独立小人。",
+        "integration": {
+          "notes": "只输出接入说明，不修改地图JSON。新增actor/碰撞/portal均在现有编辑器创建。"
+        },
+        "route_checks": {
+          "status": "verified",
+          "reference": "docs/剧情/待审核_20261024_规则统一/空间绑定静态校验.json",
+          "points": [
+            [
+              62,
+              114
+            ],
+            [
+              62,
+              164
+            ],
+            [
+              145,
+              164
+            ],
+            [
+              286,
+              164
+            ],
+            [
+              353,
+              164
+            ],
+            [
+              353,
+              150
+            ]
+          ],
+          "scope": "在main 25d2ce4发布工作树重跑WalkGrid，六段通路、三个脚点通过；仅静态通行。"
+        }
+      },
+      {
+        "id": "library",
+        "map_file": "data/maps/library.json",
+        "background": "art/map/library.png",
+        "map_size": [
+          467,
+          374
+        ],
+        "inspection": {
+          "data": "verified",
+          "visual": "verified",
+          "runtime": "not_run",
+          "notes": "实际画面已于审核编排时查看；发布时再次以main 25d2ce4核实地图数据；主工作区未提交操场布局另记录，不随文档提交。未运行新增整段剧情。"
+        },
+        "objects": [
+          {
+            "id": "shelf_a",
+            "rect": [
+              114.013671875,
+              109.9284164859,
+              35.4709201388889,
+              79.7082429501085
+            ],
+            "representation": "sprite",
+            "notes": "发布main 25d2ce4实际物件；未修改地图数据。"
+          },
+          {
+            "id": "shelf_b",
+            "rect": [
+              317.515407986111,
+              110.43546637744,
+              35.4709201388889,
+              78.9983731019523
+            ],
+            "representation": "sprite",
+            "notes": "发布main 25d2ce4实际物件；未修改地图数据。"
+          },
+          {
+            "id": "shelf_c",
+            "rect": [
+              114.013671875,
+              201.095986984816,
+              35.8763020833333,
+              78.9983731019523
+            ],
+            "representation": "sprite",
+            "notes": "发布main 25d2ce4实际物件；未修改地图数据。"
+          },
+          {
+            "id": "shelf_d",
+            "rect": [
+              317.515407986111,
+              201.90726681128,
+              35.7749565972222,
+              78.1870932754881
+            ],
+            "representation": "sprite",
+            "notes": "发布main 25d2ce4实际物件；未修改地图数据。"
+          },
+          {
+            "id": "cat_monster",
+            "rect": [
+              112,
+              104,
+              240,
+              176
+            ],
+            "representation": "interaction_only",
+            "notes": "发布main 25d2ce4实际物件；未修改地图数据。"
+          },
+          {
+            "id": "shelf_nw",
+            "rect": [
+              116.851345486111,
+              47.5612798264642,
+              96.5822482638889,
+              54.45715835141
+            ],
+            "representation": "sprite",
+            "notes": "发布main 25d2ce4实际物件；未修改地图数据。"
+          },
+          {
+            "id": "shelf_ne",
+            "rect": [
+              253.667751736111,
+              47.2570498915401,
+              124.350911458333,
+              54.659978308026
+            ],
+            "representation": "sprite",
+            "notes": "发布main 25d2ce4实际物件；未修改地图数据。"
+          },
+          {
+            "id": "shelf_w",
+            "rect": [
+              49.1525607638889,
+              107.190347071584,
+              26.5525173611111,
+              159.112255965293
+            ],
+            "representation": "sprite",
+            "notes": "发布main 25d2ce4实际物件；未修改地图数据。"
+          },
+          {
+            "id": "shelf_e",
+            "rect": [
+              392.004340277778,
+              80.7223427331887,
+              27.0592447916667,
+              185.377440347072
+            ],
+            "representation": "sprite",
+            "notes": "发布main 25d2ce4实际物件；未修改地图数据。"
+          },
+          {
+            "id": "shelf_sw",
+            "rect": [
+              103.575086805556,
+              282.832429501085,
+              81.3804253472222,
+              40.7668112798265
+            ],
+            "representation": "sprite",
+            "notes": "发布main 25d2ce4实际物件；未修改地图数据。"
+          },
+          {
+            "id": "shelf_se",
+            "rect": [
+              282.652560763889,
+              282.832429501085,
+              81.177734375,
+              40.7668112798265
+            ],
+            "representation": "sprite",
+            "notes": "发布main 25d2ce4实际物件；未修改地图数据。"
+          },
+          {
+            "id": "library_altar",
+            "rect": [
+              216.980685763889,
+              77.984273318872,
+              33.1399739583333,
+              29.1046637744035
+            ],
+            "representation": "sprite",
+            "notes": "发布main 25d2ce4实际物件；未修改地图数据。"
+          },
+          {
+            "id": "library_plant",
+            "rect": [
+              50.9767795138889,
+              262.956073752712,
+              34.1534288194444,
+              42.1865509761388
+            ],
+            "representation": "sprite",
+            "notes": "发布main 25d2ce4实际物件；未修改地图数据。"
+          },
+          {
+            "id": "library_reading_desk",
+            "rect": [
+              375.991753472222,
+              260.015184381779,
+              39.1193576388889,
+              47.0542299349241
+            ],
+            "representation": "sprite",
+            "notes": "发布main 25d2ce4实际物件；未修改地图数据。"
+          }
+        ],
+        "camera_notes": "实际视口320×180；player_scale=1；相机按地图标尺，不能当底图全景。",
+        "scene_notes": "中央猫/黑红雾已烘焙在底图，不能把它冒称独立可动猫；入口C用独立人物，前景墙另有library_wall遮挡。",
+        "integration": {
+          "notes": "只输出接入说明，不修改地图JSON。新增actor/碰撞/portal均在现有编辑器创建。"
+        },
+        "route_checks": {
+          "status": "verified",
+          "reference": "docs/剧情/待审核_20261024_规则统一/空间绑定静态校验.json",
+          "points": [
+            [
+              233,
+              296
+            ],
+            [
+              233,
+              280
+            ]
+          ],
+          "scope": "在main 25d2ce4发布工作树重跑WalkGrid，六段通路、三个脚点通过；仅静态通行。"
+        }
+      }
+    ]
+  },
+  "sources": [
+    {
+      "id": "v12",
+      "path": "docs/剧情/待审核_20261024_规则统一/剧情全文_规则统一审核稿.json",
+      "locator": "paragraphs[id=P299]至paragraphs[id=P519]；同一P编号保留，已合入用户规则修订",
+      "role": "script",
+      "authority": "selected"
+    },
+    {
+      "id": "approved_qte",
+      "path": "user_message",
+      "locator": "2026-10-24：双QTE可赢，C在门口接应；此前已指定校门跑动/收圈按键/慢动作",
+      "role": "script",
+      "authority": "approved"
+    },
+    {
+      "id": "runtime",
+      "path": "core/stage_step.gd",
+      "locator": "当前主工作区fe2fd3c，core/stage_step.gd、scenes/cutscene.gd的image/say/focus/goto及ui/stage_overlay.gd；不等同main已接完剧情",
+      "role": "implementation",
+      "authority": "observed"
+    },
+    {
+      "id": "last_qte",
+      "path": "docs/每日策划/2026-10-24_D3_追赶版/程序执行策划案.md",
+      "locator": "路线、两点QTE起调参数、恢复与验收",
+      "role": "reference",
+      "authority": "approved"
+    },
+    {
+      "id": "approved_rules",
+      "path": "user_message",
+      "locator": "2026-10-24：统一决策币；逃跑时主动触发隐蔽；随身对象回溯/地图血迹保留；猫不动；先审核后GitHub",
+      "role": "script",
+      "authority": "approved"
+    },
+    {
+      "id": "art_delivery",
+      "path": "art/catalogs/ch2_art_drop_20261024.json",
+      "locator": "2.zip及3.zip的15张图片，main素材提交25d2ce4；已查看实际画面",
+      "role": "reference",
+      "authority": "observed"
+    }
+  ],
+  "entities": [
+    {
+      "id": "hero",
+      "name": "主角",
+      "kind": "character"
+    },
+    {
+      "id": "c",
+      "name": "C",
+      "kind": "character"
+    },
+    {
+      "id": "unknown",
+      "name": "？？？",
+      "kind": "character"
+    },
+    {
+      "id": "mist",
+      "name": "黑雾猫",
+      "kind": "character"
+    },
+    {
+      "id": "notice",
+      "name": "校门通知栏",
+      "kind": "prop"
+    },
+    {
+      "id": "can",
+      "name": "易拉罐",
+      "kind": "prop"
+    },
+    {
+      "id": "gatehouse",
+      "name": "门卫室登记册",
+      "kind": "prop"
+    },
+    {
+      "id": "sculpture",
+      "name": "中心雕塑",
+      "kind": "prop"
+    },
+    {
+      "id": "flagpole",
+      "name": "旗杆",
+      "kind": "prop"
+    },
+    {
+      "id": "sandbox",
+      "name": "沙坑",
+      "kind": "prop"
+    },
+    {
+      "id": "swing",
+      "name": "秋千",
+      "kind": "prop"
+    },
+    {
+      "id": "hall_notice",
+      "name": "走廊公告栏（待建）",
+      "kind": "prop"
+    },
+    {
+      "id": "hall_mirror",
+      "name": "走廊镜子（待建）",
+      "kind": "prop"
+    },
+    {
+      "id": "class_door",
+      "name": "六年二班门（待建）",
+      "kind": "prop"
+    },
+    {
+      "id": "blackboard",
+      "name": "教室黑板（待绑交互）",
+      "kind": "prop"
+    },
+    {
+      "id": "diary_desk",
+      "name": "右侧有打开书本的课桌（待绑交互）",
+      "kind": "prop"
+    },
+    {
+      "id": "library_door",
+      "name": "图书馆门",
+      "kind": "prop"
+    },
+    {
+      "id": "register_desk",
+      "name": "门卫室登记册（desk交互）",
+      "kind": "prop"
+    }
+  ],
+  "assets": [
+    {
+      "id": "c_sprite",
+      "kind": "sprite",
+      "status": "verified",
+      "path": "art/npc/c/down1.png",
+      "spec": "已查看单帧；引擎sprite绑定目录art/npc/c，up/down/side各4帧；没有挥刀/伸手专用动画"
+    },
+    {
+      "id": "c_neutral",
+      "kind": "portrait",
+      "status": "verified",
+      "path": "art/portrait/c/neutral.png",
+      "spec": "已查看透明C立绘；原生portrait=c/neutral，不能用旧c_base冒充半身"
+    },
+    {
+      "id": "hero_quiet",
+      "kind": "portrait",
+      "status": "verified",
+      "path": "art/portrait/protagonist/quiet.png",
+      "spec": "主角现有立绘，台词按需换已存在表情"
+    },
+    {
+      "id": "mist_sprite",
+      "kind": "sprite",
+      "status": "verified",
+      "path": "art/npc/shadow_cat/chase_mist_right.png",
+      "spec": "透明右向单帧，约32×21逻辑像素起调，不是逐帧动画"
+    },
+    {
+      "id": "key_img",
+      "kind": "item",
+      "status": "verified",
+      "path": "art/item/key.png",
+      "spec": "现有钥匙"
+    },
+    {
+      "id": "student_img",
+      "kind": "item",
+      "status": "verified",
+      "path": "art/item/student_id_half.png",
+      "spec": "现有半张学生证"
+    },
+    {
+      "id": "old_charm",
+      "kind": "item",
+      "status": "verified",
+      "path": "art/item/charm.png",
+      "spec": "已查看，为御守布袋，不能当决策币正式图"
+    },
+    {
+      "id": "coin_img",
+      "kind": "item",
+      "status": "planned",
+      "path": null,
+      "spec": "新版决策币正反圆币图；不补新能力设定",
+      "fallback": "首次联调用“获得 决策币×1”文字，不显示御守图"
+    },
+    {
+      "id": "diary_pages",
+      "kind": "image",
+      "status": "verified",
+      "path": "art/props/ch2_diary_blank.png",
+      "spec": "已交一个透明底展开跨页，2762×1536；共用此底图做三屏阅读，不是三张已排字页。透明内容bbox=[533,234,2482,1303]，不改源图。"
+    },
+    {
+      "id": "failure_cg",
+      "kind": "cg",
+      "status": "verified",
+      "path": "art/cg/ch2_chase_failure.png",
+      "spec": "End5校园追逐失败CG，1671×941；已查看主角黑发红围巾及黑猫逼近。"
+    },
+    {
+      "id": "rescue_injury",
+      "kind": "cg",
+      "status": "verified",
+      "path": "art/cg/ch2_rescue_injury.png",
+      "spec": "End4救援受伤CG，1672×941；已查看红线与主角受伤画面。"
+    },
+    {
+      "id": "cat_sfx",
+      "kind": "audio",
+      "status": "verified",
+      "path": "audio/sfx/cat_meow.wav",
+      "spec": "已存在；一次触发，不默认可循环"
+    },
+    {
+      "id": "rescue_success",
+      "kind": "audio",
+      "status": "verified",
+      "path": "audio/sfx/rescue_success.wav",
+      "spec": "已存在；一次触发，不默认可循环"
+    },
+    {
+      "id": "rescue_mistake",
+      "kind": "audio",
+      "status": "verified",
+      "path": "audio/sfx/rescue_mistake.wav",
+      "spec": "已存在；一次触发，不默认可循环"
+    },
+    {
+      "id": "rescue_complete",
+      "kind": "audio",
+      "status": "verified",
+      "path": "audio/sfx/rescue_complete.wav",
+      "spec": "已存在；一次触发，不默认可循环"
+    },
+    {
+      "id": "door_open",
+      "kind": "audio",
+      "status": "verified",
+      "path": "audio/sfx/door_open.wav",
+      "spec": "已存在；一次触发，不默认可循环"
+    },
+    {
+      "id": "door_close",
+      "kind": "audio",
+      "status": "verified",
+      "path": "audio/sfx/door_close.wav",
+      "spec": "已存在；一次触发，不默认可循环"
+    },
+    {
+      "id": "school_music",
+      "kind": "audio",
+      "status": "verified",
+      "path": "audio/bgm/reclamation.mp3",
+      "spec": "校门/教室现有BGM；不在每句话重启"
+    },
+    {
+      "id": "notice_blank",
+      "kind": "image",
+      "status": "verified",
+      "path": "art/props/ch2_notice_board_blank.png",
+      "spec": "校门公告栏，两块大纸为空白；其他旧纸有装饰文字。三条最新通知在阅读框显示，不使用旧24h正文。"
+    },
+    {
+      "id": "blackboard_detail",
+      "kind": "image",
+      "status": "verified",
+      "path": "art/props/ch2_blackboard.png",
+      "spec": "现有黑板近景，有小女孩、猫、门与重复粉笔字；小字在320×180下不可依赖，原文用阅读框完整显示。"
+    },
+    {
+      "id": "register_detail",
+      "kind": "image",
+      "status": "verified",
+      "path": "art/props/ch2_register.png",
+      "spec": "现有来访者登记近景，涂黑名字；主角名及xxxx等以原文阅读框为准。"
+    },
+    {
+      "id": "sculpture_detail",
+      "kind": "image",
+      "status": "verified",
+      "path": "art/props/ch2_sculpture_inscription.png",
+      "spec": "现有刻字牌：静候归期……／……但归期不至？。"
+    },
+    {
+      "id": "hall_notice_detail",
+      "kind": "image",
+      "status": "verified",
+      "path": "art/props/ch2_teaching_notice_board.png",
+      "spec": "已有教学楼公告栏，旧纸贴满；小字不当可读正文，最新日期和寻猫通知由阅读框显示。"
+    },
+    {
+      "id": "mirror_detail",
+      "kind": "image",
+      "status": "verified",
+      "path": "art/props/ch2_mirror.png",
+      "spec": "已有金框雾镜与猫是人类的好朋友等字；作为调查近景，不据此声称走廊地图已有。"
+    }
+  ],
+  "variables": [
+    {
+      "id": "key_count",
+      "type": "int",
+      "initial": 0,
+      "binding": "item/key",
+      "persistence": "save",
+      "description": "钥匙只发一次，开门不消耗，保留回访"
+    },
+    {
+      "id": "student_count",
+      "type": "int",
+      "initial": 0,
+      "binding": "item/student_id",
+      "persistence": "save",
+      "description": "半张学生证"
+    },
+    {
+      "id": "rescued_c",
+      "type": "bool",
+      "initial": false,
+      "binding": "ch2/rescued_c",
+      "persistence": "save",
+      "description": "完整判定成功后置真"
+    },
+    {
+      "id": "rescue_ok",
+      "type": "bool",
+      "initial": false,
+      "binding": "ch2/rescue_success",
+      "persistence": "save",
+      "description": "当前正式救援结果；练习不计入"
+    },
+    {
+      "id": "teamed",
+      "type": "bool",
+      "initial": false,
+      "binding": "ch2/teamed_c",
+      "persistence": "save",
+      "description": "新版强制组队确认后真"
+    },
+    {
+      "id": "coin_count",
+      "type": "int",
+      "initial": 0,
+      "binding": "item/charm",
+      "persistence": "save",
+      "description": "唯一剧情赠礼决策币；为旧存档兼容可暂沿用item/charm内部ID，玩家显示不再叫旧名称；不多发一个物品。"
+    },
+    {
+      "id": "diary_count",
+      "type": "int",
+      "initial": 0,
+      "binding": "item/diary",
+      "persistence": "save",
+      "description": "新登记日记本，翻完三页后获得"
+    },
+    {
+      "id": "diary_read",
+      "type": "bool",
+      "initial": false,
+      "binding": "ch2/diary_read",
+      "persistence": "save",
+      "description": "首次看完三页；阅读不计时"
+    },
+    {
+      "id": "notice_read",
+      "type": "bool",
+      "initial": false,
+      "binding": "ch2/notice_read",
+      "persistence": "save",
+      "description": "已经读过校门三条通知"
+    },
+    {
+      "id": "night_started",
+      "type": "bool",
+      "initial": false,
+      "binding": "ch2/night_started",
+      "persistence": "save",
+      "description": "关完日记后进入深夜；不是跟随现实钟点"
+    },
+    {
+      "id": "escape_errors",
+      "type": "int",
+      "initial": 0,
+      "binding": "ch2/escape_errors",
+      "persistence": "save",
+      "description": "本次逃向选择的错选次数，重新挑战清零"
+    },
+    {
+      "id": "wrong_destination",
+      "type": "string",
+      "initial": "",
+      "binding": "session/wrong_destination",
+      "persistence": "chapter",
+      "description": "只用于第二次错选的去向演出"
+    },
+    {
+      "id": "q1_ok",
+      "type": "bool",
+      "initial": false,
+      "binding": "session/q1_ok",
+      "persistence": "chapter",
+      "description": "本次追逐Q1结果"
+    },
+    {
+      "id": "q2_ok",
+      "type": "bool",
+      "initial": false,
+      "binding": "session/q2_ok",
+      "persistence": "chapter",
+      "description": "本次追逐Q2结果"
+    },
+    {
+      "id": "arrived",
+      "type": "bool",
+      "initial": false,
+      "binding": "session/arrived",
+      "persistence": "chapter",
+      "description": "两次成功并到达终点"
+    },
+    {
+      "id": "chase_clear",
+      "type": "bool",
+      "initial": false,
+      "binding": "ch2/chase1_clear",
+      "persistence": "save",
+      "description": "到门口并完成接应后置真"
+    },
+    {
+      "id": "library_open",
+      "type": "bool",
+      "initial": false,
+      "binding": "ch2/library_open",
+      "persistence": "save",
+      "description": "只在成功入馆出口写真，救C后不开放"
+    },
+    {
+      "id": "library_entered",
+      "type": "bool",
+      "initial": false,
+      "binding": "ch2/library_first_entry",
+      "persistence": "save",
+      "description": "首次进馆，回溯另有专门流程，不重放追逐"
+    },
+    {
+      "id": "personal_anchor_captured",
+      "type": "bool",
+      "initial": false,
+      "persistence": "save",
+      "binding": "ch2/personal_anchor_captured",
+      "description": "首次入馆个人锚点只记录一次，剧情回溯和重复入馆不覆盖它。"
+    },
+    {
+      "id": "c_in_hall",
+      "type": "bool",
+      "initial": false,
+      "persistence": "save",
+      "binding": "ch2/c_in_hall",
+      "description": "准备好了并实际到达走廊后置真；此后重返操场不把C复制回秋千。"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "qte_policy",
+      "question": "新版强制失败与既定双QTE如何统一？",
+      "blocking": false,
+      "affects": [
+        "chase_prepare",
+        "run_q1",
+        "run_q2",
+        "arrive",
+        "c_door_cover",
+        "library_enter",
+        "library_explore",
+        "chase_caught"
+      ],
+      "resolution": "用户2026-10-24明确选择双QTE可赢、C在门口接应；不保留固定乱码、不可赢第三段或靠C判胜。"
+    },
+    {
+      "id": "coin_flow",
+      "question": "强制组队后无币如何处理？",
+      "blocking": false,
+      "affects": [
+        "chase_prepare",
+        "c_door_cover"
+      ],
+      "resolution": "强制组队正常流程必得同一个决策币；旧档缺币通过迁移/补交解决，不增设正常无币死亡。不把同一旧礼物和决策币各发一次。"
+    },
+    {
+      "id": "approved_concealment",
+      "question": "隐蔽何时启动？",
+      "blocking": false,
+      "affects": [
+        "chase_prepare",
+        "library_enter"
+      ],
+      "resolution": "第一次黑猫追逐没有夜幕之泪，不使用隐蔽。后段主角先凭防备躲刀，掀翻书架脱身，再在逃离C的途中主动驱动夜幕之泪；不是闪避被动触发。"
+    },
+    {
+      "id": "approved_personal_rewind",
+      "question": "主角随身状态与地图血迹如何回溯？",
+      "blocking": false,
+      "affects": [
+        "library_enter"
+      ],
+      "resolution": "沿用首次入馆的个人锚点，恢复主角自身及随身物品的锚点状态，主角记忆保留。身体/衣物上仍附着的血迹随个人表现重置；已经溅到地图上的血迹离开了主角，不随个人回溯重置。不使用整图清空替代个人恢复。"
+    }
+  ],
+  "entry": "chase_prepare",
+  "nodes": [
+    {
+      "id": "chase_prepare",
+      "title": "选对图书馆，从教学楼门外开始",
+      "sources": [
+        "v12",
+        "approved_qte",
+        "runtime"
+      ],
+      "scene": "school_gate",
+      "trigger": {
+        "type": "state",
+        "condition": {
+          "all": [
+            {
+              "var": "diary_read",
+              "op": "eq",
+              "value": true
+            },
+            {
+              "var": "teamed",
+              "op": "eq",
+              "value": true
+            },
+            {
+              "var": "coin_count",
+              "op": "ge",
+              "value": 1
+            }
+          ]
+        }
+      },
+      "control": "cutscene",
+      "repeat": "guarded",
+      "repeat_notes": "首次与重复调查按变量分流；once不是引擎自动防重入。已获物不得再赠；追逐/救援重试只重置本会话。",
+      "setup": {
+        "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
+        "characters": "主角继承实际到达脚点；C不在校门自由探索区。追逐时仅主角与临时黑雾猫，C到终点接应节点才出现。",
+        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
+      },
+      "cues": [
+        {
+          "id": "chase_gate",
+          "kind": "transition",
+          "origin": "staging",
+          "sources": [
+            "v12",
+            "runtime"
+          ],
+          "description": "从教室经教学楼出口切到school_gate near_classroom，跳过未制作走廊穿行演出",
+          "completion": "finished",
+          "params": {
+            "operation": "goto",
+            "map": "school_gate",
+            "spawn": "near_classroom"
+          },
+          "engine": {
+            "status": "existing",
+            "steps": [
+              {
+                "do": "fade",
+                "to": "black",
+                "time": 0.2
+              },
+              {
+                "do": "goto",
+                "map": "school_gate",
+                "spawn": "near_classroom"
+              },
+              {
+                "do": "fade",
+                "to": "clear",
+                "time": 0.2
+              }
+            ],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。"
+          }
+        },
+        {
+          "id": "chase_instructions",
+          "kind": "caption",
+          "origin": "staging",
+          "sources": [
+            "approved_qte",
+            "last_qte"
+          ],
+          "description": "先读无倒计时玩法说明，再确认开跑",
+          "completion": "confirm",
+          "params": {
+            "text": "沿雕像下方向右跑到图书馆。出现字母时，在圆圈收完前按下它。"
+          },
+          "engine": {
+            "status": "existing",
+            "steps": [
+              {
+                "do": "caption",
+                "lines": [
+                  {
+                    "text": "沿雕像下方向右跑到图书馆。出现字母时，在圆圈收完前按下它。"
+                  }
+                ]
+              }
+            ],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。"
+          }
+        },
+        {
+          "id": "chase_init",
+          "kind": "ui",
+          "origin": "staging",
+          "sources": [
+            "approved_qte",
+            "last_qte"
+          ],
+          "description": "保存追逐前完整快照，初始化两点、黑雾与镜头；不覆盖手动存档",
+          "completion": "immediate",
+          "params": {
+            "operation": "session_start",
+            "spawn": [
+              62,
+              114
+            ],
+            "control": "WASD/方向键可控，关闭普通调查/传送/鼠标自动走；保留暂停",
+            "camera": "当前基准×1.05；短震2–3屏幕像素",
+            "checkpoint": "追逐前背包/flag/时间/镜头/输入/音乐完整保存",
+            "mist": "复用art/npc/shadow_cat/chase_mist_right.png，实体id=mist，不做实体碰撞；主角先从[62,114]走出24逻辑像素，再在起点显出黑雾，沿已走脚点轨迹跟随32像素距离。QTE逼近12像素、成功退48像素；不抄穿过雕像的直线追踪。"
+          },
+          "engine": {
+            "status": "requires_work",
+            "steps": [],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。",
+            "plan": "新增追逐会话控制器；重试和读档重建该会话，不保留半圈/慢动作或已开放图书馆。 黑雾只复用现有透明单帧，按主体脚底统一比例后看实机，向左移动时翻转；沿主角轨迹移动，禁止穿雕像抄近路或挡住玩家。角色停步或偏航只保留压力表现，本段失败由已约定的两个QTE超时决定，不增加隐形体力／接触秒杀。"
+          }
+        },
+        {
+          "id": "chase_flags_reset",
+          "kind": "state",
+          "origin": "staging",
+          "sources": [
+            "v12",
+            "runtime"
+          ],
+          "description": "仅重置本次会话结果；不清主线背包/已获日记",
+          "completion": "immediate",
+          "params": {
+            "changes": [
+              {
+                "var": "q1_ok",
+                "op": "set",
+                "value": false
+              },
+              {
+                "var": "q2_ok",
+                "op": "set",
+                "value": false
+              },
+              {
+                "var": "arrived",
+                "op": "set",
+                "value": false
+              }
+            ],
+            "native_node_set": {
+              "session/q1_ok": false,
+              "session/q2_ok": false,
+              "session/arrived": false
+            }
+          },
+          "engine": {
+            "status": "requires_work",
+            "steps": [],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。",
+            "plan": "按本cue的准确时刻拆原生节点set；不能提前在整段入口赠物或开图书馆。"
+          }
+        }
+      ],
+      "exit": {
+        "type": "next",
+        "next": "run_q1"
+      },
+      "integration_notes": "选对图书馆的主线出口触发；开发入口可直接进此节点，但不能跳过正式前置校验。缺币的旧存档走迁移/回C补交，不能当新版正常坏结局。 第一段追逐发生在首次得到夜幕之泪之前，只有Q/E双QTE，没有隐蔽技能或被动触发。"
+    },
+    {
+      "id": "run_q1",
+      "title": "玩家跑动与第1处Q闪避",
+      "sources": [
+        "v12",
+        "approved_qte",
+        "runtime"
+      ],
+      "scene": "school_gate",
+      "trigger": {
+        "type": "flow"
+      },
+      "control": "minigame",
+      "repeat": "guarded",
+      "repeat_notes": "首次与重复调查按变量分流；once不是引擎自动防重入。已获物不得再赠；追逐/救援重试只重置本会话。",
+      "setup": {
+        "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
+        "characters": "主角继承实际到达脚点；C不在校门自由探索区。追逐时仅主角与临时黑雾猫，C到终点接应节点才出现。",
+        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
+      },
+      "cues": [
+        {
+          "id": "qte1",
+          "kind": "interaction",
+          "origin": "source",
+          "sources": [
+            "approved_qte",
+            "last_qte"
+          ],
+          "description": "首次跨x=145，猫逼近，显示Q与收缩外圈；成功才继续",
+          "completion": "interaction_result",
+          "params": {
+            "requirement_status": "planned",
+            "input": "Q",
+            "result_var": "q1_ok",
+            "trigger": {
+              "x": 145,
+              "policy": "可走Y全覆盖，按前进进度一次触发；不能绕过，Q2须Q1成功"
+            },
+            "time_limit_real_seconds": 1.4,
+            "slow_scale": 0.2,
+            "telegraph_real_seconds": 0.3,
+            "prompt_screen": [
+              160,
+              58
+            ],
+            "ring_radius": [
+              28,
+              16
+            ],
+            "success": "窗口内新按正确键即成功，用0.2秒真实时间的短侧移／现有方向帧切换表达闪避；黑雾沿已走路线退到48逻辑像素距离并短停，恢复跑动。没有侧移动作帧时不等新图，以方向帧＋猫退开呈现。",
+            "wrong": "错键红闪，不续时，不立刻判死；可补按正确键",
+            "failure": "超时无正确按下，结果false一次",
+            "pause": "ESC/失焦暂停真实计时；恢复剩余时间，不补算；菜单输入不判键",
+            "input_edge": "不计提示前按住或键盘重复；环和UI不跟镜头抖",
+            "camera": "基准×1.15短推近；退出复原，不能改角色大小",
+            "collision": "闪避落点必须WalkGrid可走；无安全点用原地侧身＋猫后退，不穿墙",
+            "timing": "先0.3秒接近预警（未开始收圈，不判玩家输）；预警结束显示字母与圆环，此刻才开始本题真实时间计时。成功收圈立刻清，恢复基准镜头；世界慢动作不缩短或延长真实判定窗口。",
+            "mist": "平时沿主角已走脚点轨迹跟随，距离32逻辑像素；本题预警和收圈时向12像素距离逼近，只在超时出口判被追上。成功退到48像素后渐回32像素，不另加接触秒杀。距离均为轨迹弧长，初调值须实机看角色比例。"
+          },
+          "engine": {
+            "status": "requires_work",
+            "steps": [],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。",
+            "plan": "新增圈式QTE/真实时间计时/顺序触发；旧IF或rescue面板不能直接冒称已支持；跑动阶段不加隐藏血量/体力/秒杀计时。"
+          }
+        }
+      ],
+      "exit": {
+        "type": "branch",
+        "cases": [
+          {
+            "condition": {
+              "var": "q1_ok",
+              "op": "eq",
+              "value": true
+            },
+            "next": "run_q2"
+          }
+        ],
+        "default": "chase_caught"
+      }
+    },
+    {
+      "id": "run_q2",
+      "title": "玩家跑动与第2处E闪避",
+      "sources": [
+        "v12",
+        "approved_qte",
+        "runtime"
+      ],
+      "scene": "school_gate",
+      "trigger": {
+        "type": "flow"
+      },
+      "control": "minigame",
+      "repeat": "guarded",
+      "repeat_notes": "首次与重复调查按变量分流；once不是引擎自动防重入。已获物不得再赠；追逐/救援重试只重置本会话。",
+      "setup": {
+        "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
+        "characters": "主角继承实际到达脚点；C不在校门自由探索区。追逐时仅主角与临时黑雾猫，C到终点接应节点才出现。",
+        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
+      },
+      "cues": [
+        {
+          "id": "qte2",
+          "kind": "interaction",
+          "origin": "source",
+          "sources": [
+            "approved_qte",
+            "last_qte"
+          ],
+          "description": "首次跨x=286，猫逼近，显示E与收缩外圈；成功才继续",
+          "completion": "interaction_result",
+          "params": {
+            "requirement_status": "planned",
+            "input": "E",
+            "result_var": "q2_ok",
+            "trigger": {
+              "x": 286,
+              "policy": "可走Y全覆盖，按前进进度一次触发；不能绕过，Q2须Q1成功"
+            },
+            "time_limit_real_seconds": 1.2,
+            "slow_scale": 0.2,
+            "telegraph_real_seconds": 0.3,
+            "prompt_screen": [
+              160,
+              58
+            ],
+            "ring_radius": [
+              28,
+              16
+            ],
+            "success": "窗口内新按正确键即成功，用0.2秒真实时间的短侧移／现有方向帧切换表达闪避；黑雾沿已走路线退到48逻辑像素距离并短停，恢复跑动。没有侧移动作帧时不等新图，以方向帧＋猫退开呈现。",
+            "wrong": "错键红闪，不续时，不立刻判死；可补按正确键",
+            "failure": "超时无正确按下，结果false一次",
+            "pause": "ESC/失焦暂停真实计时；恢复剩余时间，不补算；菜单输入不判键",
+            "input_edge": "不计提示前按住或键盘重复；环和UI不跟镜头抖",
+            "camera": "基准×1.15短推近；退出复原，不能改角色大小",
+            "collision": "闪避落点必须WalkGrid可走；无安全点用原地侧身＋猫后退，不穿墙",
+            "timing": "先0.3秒接近预警（未开始收圈，不判玩家输）；预警结束显示字母与圆环，此刻才开始本题真实时间计时。成功收圈立刻清，恢复基准镜头；世界慢动作不缩短或延长真实判定窗口。",
+            "mist": "平时沿主角已走脚点轨迹跟随，距离32逻辑像素；本题预警和收圈时向12像素距离逼近，只在超时出口判被追上。成功退到48像素后渐回32像素，不另加接触秒杀。距离均为轨迹弧长，初调值须实机看角色比例。"
+          },
+          "engine": {
+            "status": "requires_work",
+            "steps": [],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。",
+            "plan": "新增圈式QTE/真实时间计时/顺序触发；旧IF或rescue面板不能直接冒称已支持；跑动阶段不加隐藏血量/体力/秒杀计时。"
+          }
+        }
+      ],
+      "exit": {
+        "type": "branch",
+        "cases": [
+          {
+            "condition": {
+              "var": "q2_ok",
+              "op": "eq",
+              "value": true
+            },
+            "next": "arrive"
+          }
+        ],
+        "default": "chase_caught"
+      }
+    },
+    {
+      "id": "arrive",
+      "title": "两次成功后，玩家继续跑到图书馆门前",
+      "sources": [
+        "v12",
+        "approved_qte",
+        "runtime"
+      ],
+      "scene": "school_gate",
+      "trigger": {
+        "type": "flow"
+      },
+      "control": "minigame",
+      "repeat": "guarded",
+      "repeat_notes": "首次与重复调查按变量分流；once不是引擎自动防重入。已获物不得再赠；追逐/救援重试只重置本会话。",
+      "setup": {
+        "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
+        "characters": "主角继承实际到达脚点；C不在校门自由探索区。追逐时仅主角与临时黑雾猫，C到终点接应节点才出现。",
+        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
+      },
+      "cues": [
+        {
+          "id": "reach_library",
+          "kind": "interaction",
+          "origin": "staging",
+          "sources": [
+            "approved_qte",
+            "last_qte"
+          ],
+          "description": "双QTE成功不自动传送；玩家沿南侧通路到门前终点",
+          "completion": "interaction_result",
+          "params": {
+            "requirement_status": "planned",
+            "result_var": "arrived",
+            "goal_rect": [
+              338,
+              148,
+              30,
+              30
+            ],
+            "approach": [
+              353,
+              164
+            ],
+            "door": [
+              353,
+              150
+            ],
+            "control": "仍可跑动；未到门不触发C；不增第三QTE或强制失败",
+            "source_portal": [
+              341,
+              76,
+              24,
+              78
+            ]
+          },
+          "engine": {
+            "status": "requires_work",
+            "steps": [],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。",
+            "plan": "追逐控制器接终点区并禁止提前触发to_library；到门口后接管短演出，必要位移只沿已查安全段。"
+          }
+        }
+      ],
+      "exit": {
+        "type": "branch",
+        "cases": [
+          {
+            "condition": {
+              "var": "arrived",
+              "op": "eq",
+              "value": true
+            },
+            "next": "c_door_cover"
+          }
+        ],
+        "default": "chase_caught"
+      }
+    },
+    {
+      "id": "c_door_cover",
+      "title": "C在门口接应，玩家胜利有效",
+      "sources": [
+        "v12",
+        "approved_qte",
+        "runtime"
+      ],
+      "scene": "school_gate",
+      "trigger": {
+        "type": "flow"
+      },
+      "control": "cutscene",
+      "repeat": "guarded",
+      "repeat_notes": "首次与重复调查按变量分流；once不是引擎自动防重入。已获物不得再赠；追逐/救援重试只重置本会话。",
+      "setup": {
+        "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
+        "characters": "C脚底365,164侧向主角；主角停在353,164；仅单个C，暂未泄露决策币定位。",
+        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
+      },
+      "cues": [
+        {
+          "id": "qte_cleanup_success",
+          "kind": "ui",
+          "origin": "staging",
+          "sources": [
+            "approved_qte",
+            "last_qte"
+          ],
+          "description": "停止追逐判定，清圆环／输入监听／定时器，恢复正常时间和镜头；黑雾暂时冻结，留给接应后退演出",
+          "completion": "immediate",
+          "params": {
+            "operation": "cleanup",
+            "restore": "时间倍率、镜头zoom/offset、普通输入状态与音乐恢复；保持短演出移动锁。黑雾暂不删除，冻结在主角身后，接应动作结束才删。"
+          },
+          "engine": {
+            "status": "requires_work",
+            "steps": [],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。",
+            "plan": "全部出口共用清理，先执行再接C，避免后续图书馆残留慢动作；接应无新惩罚。"
+          }
+        },
+        {
+          "id": "door_player_align",
+          "kind": "actor",
+          "origin": "staging",
+          "sources": [
+            "approved_rules",
+            "runtime"
+          ],
+          "description": "终点区触发后，主角走到门前脚底[353,164]并朝上；不能把终点矩形任意一点直接视为已精确站好",
+          "completion": "finished",
+          "params": {
+            "operation": "move_to_anchor",
+            "position": {
+              "space": "map",
+              "at": [
+                353,
+                164
+              ],
+              "anchor": "feet"
+            },
+            "facing": "up",
+            "route": "从实际触发脚点经WalkGrid路径到门前；静态门前脚点已核实，动态起点需当次寻路"
+          },
+          "engine": {
+            "status": "requires_work",
+            "steps": [],
+            "notes": "对应当前原生指令或明确需补的代码；结构稿不直接作为事件运行。",
+            "plan": "终点命中后锁自由移动，先查询实际脚点到[353,164]的有效路径并走完；若被新增NPC挡住，C保持非阻挡演出角色，不穿墙瞬移。沿用现有place_player path执行返回路径。"
+          },
+          "target": "hero"
+        },
+        {
+          "id": "c_at_door",
+          "kind": "actor",
+          "origin": "staging",
+          "sources": [
+            "v12",
+            "runtime"
+          ],
+          "description": "school_gate只创建一个C，小人脚底[365, 164]，面向主角；复用方向帧；不播放不存在的伸手动作",
+          "completion": "finished",
+          "params": {
+            "operation": "show",
+            "position": {
+              "space": "map",
+              "at": [
+                365,
+                164
+              ],
+              "anchor": "feet"
+            },
+            "facing": "left"
+          },
+          "engine": {
+            "status": "existing",
+            "steps": [
+              {
+                "do": "npc",
+                "id": "c",
+                "sprite": "res://art/npc/c",
+                "at": [
+                  365,
+                  164
+                ],
+                "pose": "side"
+              }
+            ],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。"
+          },
+          "target": "c"
+        },
+        {
+          "id": "c_watch_out",
+          "kind": "dialogue",
+          "origin": "source",
+          "sources": [
+            "v12",
+            "runtime"
+          ],
+          "description": "台词：小心！",
+          "completion": "confirm",
+          "params": {
+            "speaker": "c",
+            "mode": "spoken",
+            "text": "小心！",
+            "side": "right",
+            "portrait": "c_neutral"
+          },
+          "engine": {
+            "status": "existing",
+            "steps": [
+              {
+                "do": "say",
+                "lines": [
+                  {
+                    "text": "小心！",
+                    "speaker": "C",
+                    "side": "right",
+                    "portrait": "c/neutral"
+                  }
+                ]
+              }
+            ],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。"
+          }
+        },
+        {
+          "id": "c_cover_action",
+          "kind": "actor",
+          "origin": "staging",
+          "sources": [
+            "approved_qte",
+            "v12"
+          ],
+          "description": "C以侧面站姿面向主角后方；冻结黑雾退开并淡出0.3秒后移除，主角不受新攻击",
+          "completion": "finished",
+          "params": {
+            "operation": "cover",
+            "c_position": [
+              365,
+              164
+            ],
+            "hero_position": [
+              353,
+              164
+            ],
+            "fallback": "用C侧面站姿＋黑雾后退/淡出表现掩护，不等挥刀动作帧"
+          },
+          "engine": {
+            "status": "requires_work",
+            "steps": [],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。",
+            "plan": "成功清理阶段保留冻结黑雾；此处将其向来路退开（安全点由WalkGrid确认）并淡出0.3秒，完成后删掉同一mist实体；无安全退点就原地淡出。C只用现有侧帧，不编造攻击动画或一刀必杀。"
+          },
+          "target": "c"
+        },
+        {
+          "id": "c_check_injury",
+          "kind": "dialogue",
+          "origin": "source",
+          "sources": [
+            "v12",
+            "runtime"
+          ],
+          "description": "台词：你没受伤吧",
+          "completion": "confirm",
+          "params": {
+            "speaker": "c",
+            "mode": "spoken",
+            "text": "你没受伤吧",
+            "side": "right",
+            "portrait": "c_neutral"
+          },
+          "engine": {
+            "status": "existing",
+            "steps": [
+              {
+                "do": "say",
+                "lines": [
+                  {
+                    "text": "你没受伤吧",
+                    "speaker": "C",
+                    "side": "right",
+                    "portrait": "c/neutral"
+                  }
+                ]
+              }
+            ],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。"
+          }
+        },
+        {
+          "id": "hero_to_library",
+          "kind": "dialogue",
+          "origin": "source",
+          "sources": [
+            "v12",
+            "runtime"
+          ],
+          "description": "台词：.....没有，我们快去图书馆吧",
+          "completion": "confirm",
+          "params": {
+            "speaker": "hero",
+            "mode": "spoken",
+            "text": ".....没有，我们快去图书馆吧",
+            "side": "left",
+            "portrait": "hero_quiet"
+          },
+          "engine": {
+            "status": "existing",
+            "steps": [
+              {
+                "do": "say",
+                "lines": [
+                  {
+                    "text": ".....没有，我们快去图书馆吧",
+                    "speaker": "我",
+                    "side": "left",
+                    "portrait": "protagonist/quiet"
+                  }
+                ]
+              }
+            ],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。"
+          }
+        },
+        {
+          "id": "hero_c_speed",
+          "kind": "dialogue",
+          "origin": "source",
+          "sources": [
+            "v12",
+            "runtime"
+          ],
+          "description": "心声：他怎么能到得这么快，而且，他怎么知道我在这里",
+          "completion": "confirm",
+          "params": {
+            "speaker": "hero",
+            "mode": "thought",
+            "text": "他怎么能到得这么快，而且，他怎么知道我在这里",
+            "side": "left",
+            "portrait": "hero_quiet"
+          },
+          "engine": {
+            "status": "existing",
+            "steps": [
+              {
+                "do": "say",
+                "lines": [
+                  {
+                    "text": "（心声）他怎么能到得这么快，而且，他怎么知道我在这里",
+                    "speaker": "我",
+                    "side": "left",
+                    "portrait": "protagonist/quiet"
+                  }
+                ]
+              }
+            ],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。"
+          }
+        }
+      ],
+      "exit": {
+        "type": "next",
+        "next": "library_enter"
+      },
+      "integration_notes": "保留P513–516关键台词；“小心”只接应，不追加不可赢陷阱、固定乱码或失去成功。强制组队正常流程必有决策币，未持币失败分支不放进新版正常主线。"
+    },
+    {
+      "id": "library_enter",
+      "title": "成功后开放并进入图书馆",
+      "sources": [
+        "v12",
+        "approved_qte",
+        "runtime"
+      ],
+      "scene": "library",
+      "trigger": {
+        "type": "flow"
+      },
+      "control": "cutscene",
+      "repeat": "guarded",
+      "repeat_notes": "首次与重复调查按变量分流；once不是引擎自动防重入。已获物不得再赠；追逐/救援重试只重置本会话。",
+      "setup": {
+        "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
+        "characters": "切图后主角脚底[233,296]朝上；C脚底[251,296]面朝左侧主角，单个C不堵门；中央底图猫不新增独立运动层。",
+        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
+      },
+      "cues": [
+        {
+          "id": "arrive_flags",
+          "kind": "state",
+          "origin": "staging",
+          "sources": [
+            "v12",
+            "runtime"
+          ],
+          "description": "两QTE+到门+接应完成才写成功与开放；不在救C节点写",
+          "completion": "immediate",
+          "params": {
+            "changes": [
+              {
+                "var": "chase_clear",
+                "op": "set",
+                "value": true
+              },
+              {
+                "var": "library_open",
+                "op": "set",
+                "value": true
+              }
+            ],
+            "native_node_set": {
+              "ch2/chase1_clear": true,
+              "ch2/library_open": true
+            }
+          },
+          "engine": {
+            "status": "requires_work",
+            "steps": [],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。",
+            "plan": "按本cue的准确时刻拆原生节点set；不能提前在整段入口赠物或开图书馆。"
+          }
+        },
+        {
+          "id": "entry_door_open",
+          "kind": "audio",
+          "origin": "source",
+          "sources": [
+            "v12",
+            "runtime"
+          ],
+          "description": "开门一次，不与猫叫抢同一原生SFX播放器",
+          "completion": "immediate",
+          "params": {
+            "operation": "play",
+            "bus": "sfx",
+            "asset": "door_open",
+            "loop": false
+          },
+          "engine": {
+            "status": "existing",
+            "steps": [
+              {
+                "do": "play_sound",
+                "path": "res://audio/sfx/door_open.wav"
+              }
+            ],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。"
+          }
+        },
+        {
+          "id": "library_goto",
+          "kind": "transition",
+          "origin": "source",
+          "sources": [
+            "v12",
+            "runtime"
+          ],
+          "description": "主角进入图书馆现有入口，旧地图C随切图清理",
+          "completion": "finished",
+          "params": {
+            "operation": "goto",
+            "map": "library",
+            "spawn": "from_school_gate"
+          },
+          "engine": {
+            "status": "existing",
+            "steps": [
+              {
+                "do": "goto",
+                "map": "library",
+                "spawn": "from_school_gate"
+              }
+            ],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。"
+          }
+        },
+        {
+          "id": "library_location",
+          "kind": "caption",
+          "origin": "source",
+          "sources": [
+            "v12",
+            "runtime"
+          ],
+          "description": "左上角状态：未知日期，图书馆深夜",
+          "completion": "immediate",
+          "params": {
+            "text": "？月 ？日 图书馆 深夜"
+          },
+          "engine": {
+            "status": "existing",
+            "steps": [
+              {
+                "do": "location",
+                "text": "？月 ？日 图书馆 深夜"
+              }
+            ],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。"
+          }
+        },
+        {
+          "id": "library_c",
+          "kind": "actor",
+          "origin": "staging",
+          "sources": [
+            "v12",
+            "runtime"
+          ],
+          "description": "C脚底[251,296]留在入口侧边，面朝位于左侧的主角；只出现一个C，不堵门。",
+          "completion": "finished",
+          "params": {
+            "operation": "show",
+            "position": {
+              "space": "map",
+              "at": [
+                251,
+                296
+              ],
+              "anchor": "feet"
+            },
+            "facing": "left"
+          },
+          "engine": {
+            "status": "existing",
+            "steps": [
+              {
+                "do": "npc",
+                "id": "c",
+                "sprite": "res://art/npc/c",
+                "at": [
+                  251,
+                  296
+                ],
+                "pose": "side"
+              }
+            ],
+            "notes": "侧面帧朝向由现有flip功能核对；画面要求面朝左侧主角，不使用不存在的伸手/攻击动画。"
+          },
+          "target": "c"
+        },
+        {
+          "id": "library_entry_state",
+          "kind": "state",
+          "origin": "staging",
+          "sources": [
+            "v12",
+            "runtime"
+          ],
+          "description": "地图实际切入且入口C就位后标记首次入馆；个人锚点由下一条单独记录，不在切图前拍快照。",
+          "completion": "immediate",
+          "params": {
+            "changes": [
+              {
+                "var": "library_entered",
+                "op": "set",
+                "value": true
+              }
+            ],
+            "native_node_set": {
+              "ch2/library_first_entry": true
+            }
+          },
+          "engine": {
+            "status": "requires_work",
+            "steps": [],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。",
+            "plan": "按本cue的准确时刻拆原生节点set；不能提前在整段入口赠物或开图书馆。"
+          }
+        },
+        {
+          "id": "entry_hero_facing",
+          "kind": "actor",
+          "origin": "staging",
+          "sources": [
+            "approved_rules",
+            "runtime"
+          ],
+          "description": "首次进馆主角脚底[233,296]朝上看向室内；这一落点来自现有入口，不挪进地毯或桌子",
+          "completion": "immediate",
+          "params": {
+            "operation": "face",
+            "position": {
+              "space": "map",
+              "at": [
+                233,
+                296
+              ],
+              "anchor": "feet"
+            },
+            "facing": "up"
+          },
+          "engine": {
+            "status": "existing",
+            "steps": [
+              {
+                "do": "place_player",
+                "at": [
+                  233,
+                  296
+                ],
+                "facing": "up"
+              }
+            ],
+            "notes": "对应当前原生指令或明确需补的代码；结构稿不直接作为事件运行。"
+          },
+          "target": "hero"
+        },
+        {
+          "id": "capture_personal_anchor",
+          "kind": "ui",
+          "origin": "staging",
+          "sources": [
+            "approved_rules",
+            "runtime"
+          ],
+          "description": "仅首次入馆记录个人锚点；记录主角自身和随身物品，不把地图血迹装进恢复范围",
+          "completion": "immediate",
+          "params": {
+            "operation": "capture_personal_anchor",
+            "guard": "personal_anchor_captured=false才建立",
+            "actor_state": "脚底233,296，朝上，正常伤势/表现；不新建血量系统",
+            "inventory": "当时完整随身物品及数量；已获钥匙/决策币/日记等按实录入",
+            "memory": "主角后续经历的记忆不回退",
+            "excluded": "已离身并溅在地图上的血迹；不对所有NPC/地图状态额外推定全局时间规则",
+            "on_rewind": "自身/随身物品按锚点恢复；不清地图血迹，不调用全地图快照覆盖血层",
+            "later_items": "沿用原文入馆背包锚点：日记消耗回退，锚点之后才获得的夜幕之泪/猫玩偶不凭空保留两份",
+            "repeat": "剧情回溯、重试和再次经过门口不得重拍或覆盖本锚点"
+          },
+          "engine": {
+            "status": "requires_work",
+            "steps": [],
+            "notes": "对应当前原生指令或明确需补的代码；结构稿不直接作为事件运行。",
+            "plan": "增加独立个人快照与恢复范围；记录成功后才置personal_anchor_captured。实际应用发生在后段背刺，不在本段额外触发回溯。普通手动读档、小游戏重试与剧情回溯须分开，不新增全世界不回溯规则。"
+          }
+        },
+        {
+          "id": "library_follow",
+          "kind": "camera",
+          "origin": "staging",
+          "sources": [
+            "v12",
+            "runtime"
+          ],
+          "description": "撤焦点并恢复跟随",
+          "completion": "immediate",
+          "params": {
+            "operation": "restore_follow"
+          },
+          "engine": {
+            "status": "existing",
+            "steps": [
+              {
+                "do": "focus"
+              }
+            ],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。"
+          }
+        }
+      ],
+      "exit": {
+        "type": "next",
+        "next": "library_explore"
+      },
+      "integration_notes": "原文P518–519到此止；猫的血迹/书架/净化/背刺不在本次编排范围，不提前消耗日记或发夜幕之泪。入口C不自动跟随。 入馆后先记录个人锚点，再恢复探索；本段不触发隐蔽，也不展示“决策币有定位”的系统说明。"
+    },
+    {
+      "id": "library_explore",
+      "title": "到馆后恢复探索并结束本稿",
+      "sources": [
+        "v12",
+        "approved_qte",
+        "runtime"
+      ],
+      "scene": "library",
+      "trigger": {
+        "type": "flow"
+      },
+      "control": "cutscene",
+      "repeat": "guarded",
+      "repeat_notes": "首次与重复调查按变量分流；once不是引擎自动防重入。已获物不得再赠；追逐/救援重试只重置本会话。",
+      "setup": {
+        "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
+        "characters": "主角继承233,296；C继承251,296；不跑入下段剧情。",
+        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
+      },
+      "cues": [],
+      "exit": {
+        "type": "return_control",
+        "handoff": "图书馆背景与library_wall正常；中央猫是底图现有内容，不再叠第二只；C留251,296可等待后续对话；恢复移动/调查/菜单/存档，日记与币仍在背包；不重启已完成追逐。"
+      }
+    },
+    {
+      "id": "chase_caught",
+      "title": "QTE超时被追上，进入End5",
+      "sources": [
+        "v12",
+        "approved_qte",
+        "runtime"
+      ],
+      "scene": "school_gate",
+      "trigger": {
+        "type": "flow"
+      },
+      "control": "cutscene",
+      "repeat": "guarded",
+      "repeat_notes": "首次与重复调查按变量分流；once不是引擎自动防重入。已获物不得再赠；追逐/救援重试只重置本会话。",
+      "setup": {
+        "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
+        "characters": "主角继承实际到达脚点；C不在校门自由探索区。追逐时仅主角与临时黑雾猫，C到终点接应节点才出现。",
+        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
+      },
+      "cues": [
+        {
+          "id": "chase_cleanup_fail",
+          "kind": "ui",
+          "origin": "staging",
+          "sources": [
+            "approved_qte",
+            "last_qte"
+          ],
+          "description": "超时先清理慢动作、镜头、输入监听、临时声音和环；锁定到一次失败出口",
+          "completion": "immediate",
+          "params": {
+            "operation": "cleanup",
+            "remove": "黑雾/环/定时器，临时输入释放；停止重复判定",
+            "retry": "回near_classroom，两QTE从零，恢复追逐前背包与flag；没有成功开放图书馆"
+          },
+          "engine": {
+            "status": "requires_work",
+            "steps": [],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。",
+            "plan": "共用清理函数覆盖失败、成功、重试、读档、切图、标题；读档中途重建检查点，不续半个QTE。"
+          }
+        },
+        {
+          "id": "caught_image",
+          "kind": "image",
+          "origin": "staging",
+          "sources": [
+            "v12",
+            "runtime",
+            "art_delivery"
+          ],
+          "description": "显示已交End5追逐失败CG；玩家确认一次才结束这一停格，期间停止追逐判定",
+          "completion": "confirm",
+          "params": {
+            "operation": "show",
+            "asset": "failure_cg",
+            "layout": "CG铺满320×180；原图接近16:9，细微比例差随现有fill；不裁切主体。",
+            "persistent": true,
+            "close": "阅读结束显式image_hide；结局先淡黑再收图。"
+          },
+          "engine": {
+            "status": "existing",
+            "steps": [
+              {
+                "do": "image",
+                "path": "res://art/cg/ch2_chase_failure.png",
+                "hide": false,
+                "wait_click": true,
+                "fade": 0.2,
+                "fill": true
+              }
+            ],
+            "notes": "对应当前原生指令或明确需补的代码；结构稿不直接作为事件运行。"
+          }
+        },
+        {
+          "id": "caught_black",
+          "kind": "transition",
+          "origin": "staging",
+          "sources": [
+            "v12",
+            "runtime"
+          ],
+          "description": "确认失败画面后淡黑",
+          "completion": "finished",
+          "params": {
+            "operation": "fade",
+            "to": "black",
+            "time": 0.3
+          },
+          "engine": {
+            "status": "existing",
+            "steps": [
+              {
+                "do": "fade",
+                "to": "black",
+                "time": 0.3
+              }
+            ],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。"
+          }
+        },
+        {
+          "id": "caught_image_hide",
+          "kind": "image",
+          "origin": "staging",
+          "sources": [
+            "v12",
+            "runtime",
+            "art_delivery"
+          ],
+          "description": "淡黑完成后撤追逐失败CG，再显示End5文字，避免露回校门地图",
+          "completion": "finished",
+          "params": {
+            "operation": "hide",
+            "asset": "failure_cg",
+            "layout": "现有image等比居中；透明留边保留，文字在下方阅读框，不依赖图内小字。",
+            "persistent": false,
+            "close": "阅读结束显式image_hide；结局先淡黑再收图。"
+          },
+          "engine": {
+            "status": "existing",
+            "steps": [
+              {
+                "do": "image_hide",
+                "fade": 0.2
+              }
+            ],
+            "notes": "对应当前原生指令或明确需补的代码；结构稿不直接作为事件运行。"
+          }
+        },
+        {
+          "id": "caught_title",
+          "kind": "dialogue",
+          "origin": "source",
+          "sources": [
+            "v12",
+            "runtime"
+          ],
+          "description": "台词：end 5 不可违的铁律",
+          "completion": "confirm",
+          "params": {
+            "speaker": null,
+            "mode": "narration",
+            "text": "end 5 不可违的铁律",
+            "side": "none",
+            "portrait": null
+          },
+          "engine": {
+            "status": "existing",
+            "steps": [
+              {
+                "do": "say",
+                "lines": [
+                  {
+                    "text": "end 5 不可违的铁律"
+                  }
+                ]
+              }
+            ],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。"
+          }
+        },
+        {
+          "id": "caught_end_text",
+          "kind": "dialogue",
+          "origin": "source",
+          "sources": [
+            "v12",
+            "runtime"
+          ],
+          "description": "台词：死亡可是人生的必修课，你只是超前学习了而已",
+          "completion": "confirm",
+          "params": {
+            "speaker": null,
+            "mode": "narration",
+            "text": "死亡可是人生的必修课，你只是超前学习了而已",
+            "side": "none",
+            "portrait": null
+          },
+          "engine": {
+            "status": "existing",
+            "steps": [
+              {
+                "do": "say",
+                "lines": [
+                  {
+                    "text": "死亡可是人生的必修课，你只是超前学习了而已"
+                  }
+                ]
+              }
+            ],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。"
+          }
+        }
+      ],
+      "exit": {
+        "type": "end",
+        "ending_id": "end4_iron",
+        "ending_number": 5,
+        "handoff": "按现有结局框架进入结局；提供从追逐前检查点重试/回标题，重试不是保存失败状态。两QTE成功后不能进入本出口。"
+      },
+      "integration_notes": "正式图art/cg/ch2_chase_failure.png；内部ending_id=end4_iron，对外显示End5。Q1或Q2超时只进入一次；两次成功并到门不得进入。重试从追逐开始前快照重建，Q/E都重新判。"
+    }
+  ],
+  "coverage": [
+    {
+      "from": "v12:P500",
+      "nodes": [
+        "chase_prepare"
+      ],
+      "note": "原台词/旁白逐句保留，动作与制作备注转为cue或接入要求。",
+      "source_text": "if ③"
+    },
+    {
+      "from": "v12:P501",
+      "nodes": [
+        "chase_prepare"
+      ],
+      "note": "原台词/旁白逐句保留，动作与制作备注转为cue或接入要求。",
+      "source_text": "if 选对"
+    },
+    {
+      "from": "v12:P502",
+      "nodes": [
+        "chase_prepare"
+      ],
+      "note": "原台词/旁白逐句保留，动作与制作备注转为cue或接入要求。",
+      "source_text": "（可触发追逐战）"
+    },
+    {
+      "from": "v12:P503",
+      "nodes": [
+        "chase_prepare"
+      ],
+      "note": "已依据用户明确确认修订，并与规则统一后的剧情全文同步；空段为撤掉的矛盾旧台词/备注。",
+      "source_text": "（追逐发生在现有school_gate地图。主角从教学楼门外出发，由玩家操控向右跑至图书馆，途中依次触发两次圈式按键QTE。）"
+    },
+    {
+      "from": "v12:P504",
+      "nodes": [
+        "chase_prepare"
+      ],
+      "note": "已依据用户明确确认修订，并与规则统一后的剧情全文同步；空段为撤掉的矛盾旧台词/备注。",
+      "source_text": "（任一次QTE超时且没有按下对应正确按键，进入end 5。两次QTE都成功并到达门口即可继续主线。）"
+    },
+    {
+      "from": "v12:P506",
+      "nodes": [
+        "chase_prepare"
+      ],
+      "note": "已依据用户明确确认修订，并与规则统一后的剧情全文同步；空段为撤掉的矛盾旧台词/备注。",
+      "source_text": "（两次QTE都成功后，玩家继续跑到图书馆门前，C在门口接应。主角诧异他为何来得如此迅速，为后面的决策币线索保留伏笔。）"
+    },
+    {
+      "from": "v12:P507",
+      "nodes": [
+        "chase_prepare"
+      ],
+      "note": "已依据用户明确确认修订，并与规则统一后的剧情全文同步；空段为撤掉的矛盾旧台词/备注。",
+      "source_text": "（此处不设置固定乱码、第三次必败判定或不可通关的追逐；C的接应不取消玩家已经取得的成功。）"
+    },
+    {
+      "from": "v12:P509",
+      "nodes": [
+        "c_door_cover"
+      ],
+      "note": "已依据用户明确确认修订，并与规则统一后的剧情全文同步；空段为撤掉的矛盾旧台词/备注。",
+      "source_text": "（正常主线已经强制组队并交付决策币，因此不设置“没有决策币、没有组队”的正常死亡分支。旧存档漏物需迁移或补交，不让主角说与已发生剧情相反的后悔台词。）"
+    },
+    {
+      "from": "v12:P510",
+      "nodes": [
+        "c_door_cover"
+      ],
+      "note": "已依据用户明确确认修订，并与规则统一后的剧情全文同步；空段为撤掉的矛盾旧台词/备注。",
+      "source_text": ""
+    },
+    {
+      "from": "v12:P511",
+      "nodes": [
+        "c_door_cover"
+      ],
+      "note": "已依据用户明确确认修订，并与规则统一后的剧情全文同步；空段为撤掉的矛盾旧台词/备注。",
+      "source_text": ""
+    },
+    {
+      "from": "v12:P513",
+      "nodes": [
+        "c_door_cover"
+      ],
+      "note": "原台词/旁白逐句保留，动作与制作备注转为cue或接入要求。",
+      "source_text": "C：“小心！”"
+    },
+    {
+      "from": "v12:P514",
+      "nodes": [
+        "c_door_cover"
+      ],
+      "note": "原台词/旁白逐句保留，动作与制作备注转为cue或接入要求。",
+      "source_text": "C：“你没受伤吧”"
+    },
+    {
+      "from": "v12:P515",
+      "nodes": [
+        "c_door_cover"
+      ],
+      "note": "原台词/旁白逐句保留，动作与制作备注转为cue或接入要求。",
+      "source_text": "主角：“.....没有，我们快去图书馆吧”"
+    },
+    {
+      "from": "v12:P516",
+      "nodes": [
+        "c_door_cover"
+      ],
+      "note": "原台词/旁白逐句保留，动作与制作备注转为cue或接入要求。",
+      "source_text": "主角os：他怎么能到得这么快，而且，他怎么知道我在这里"
+    },
+    {
+      "from": "v12:P518",
+      "nodes": [
+        "library_enter"
+      ],
+      "note": "原台词/旁白逐句保留，动作与制作备注转为cue或接入要求。",
+      "source_text": "【？月 ？日 图书馆 深夜】"
+    },
+    {
+      "from": "v12:P519",
+      "nodes": [
+        "library_enter"
+      ],
+      "note": "原台词/旁白逐句保留，动作与制作备注转为cue或接入要求。",
+      "source_text": "（后续主角进入可操控阶段 C的小人立绘就放置在传送点不动）"
+    }
+  ],
+  "readiness": {
+    "ready_parts": "现有校门与图书馆地图的需求绑定齐备，可先独立制作；整段演出已获用户审核通过，尚未接入游戏。",
+    "blocked_parts": "正式入口依赖走廊、日记交互和组队赠币闭环；本文件不是已经运行的玩法。",
+    "scope": "用户已审核通过，纳入本次GitHub文档发布；只发布演出需求，不修改地图、原生事件或游戏代码。"
+  },
+  "lifecycle": {
+    "revisit": "已获钥匙/学生证/币/日记不重复赠；日记重复阅读不再次追逐；通关后普通回访不重置library_open。",
+    "save_load": "救援前、追逐前、入馆后使用不同快照；原生save当前槽不是独立自动槽。读档重建临时NPC和可用状态，不保存半个QTE。",
+    "qte": "首次Q/E起调1.4/1.2秒真实时间、世界0.2倍；短按新事件，错键不续时；暂停/失焦冻剩余时间；两次成功后保证可赢。",
+    "rewind_boundary": "沿用首次入馆的个人锚点，恢复主角自身及随身物品的锚点状态，主角记忆保留。身体/衣物上仍附着的血迹随个人表现重置；已经溅到地图上的血迹离开了主角，不随个人回溯重置。不使用整图清空替代个人恢复。 后段按个人锚点执行；本段只记录，不提前回溯或发结晶。普通读档/救援重试/追逐重试不套用该剧情规则。",
+    "concealment": "第一次黑猫追逐没有夜幕之泪，不使用隐蔽。后段主角先凭防备躲刀，掀翻书架脱身，再在逃离C的途中主动驱动夜幕之泪；不是闪避被动触发。",
+    "cat": "猫的对白、身份、时间锚解释、净化和玩偶真相保持上一版，未新增猫的动机或过去循环。",
+    "pictures": "每个调查节点show持图→原文确认→image_hide；普通图不额外等空确认。End4/5先淡黑再撤CG。切图、读档、退出、重试统一清图片/阅读框；黑雾成功接应先冻结，掩护淡出后移除。",
+    "diary": "一张空白跨页配P467—469三屏全文；第三屏确认并收图后仅一次赠物/已读。重复阅读不重开追逐；无强制转学日期或新动机。"
+  },
+  "item_descriptions": {
+    "key": "（备注：未知的钥匙打开未知的门，万一这是哆啦b梦的万能钥匙呢）",
+    "student_id": "（备注：失去了脸我还能哭泣吗， 失去了手我还能拉住你吗）",
+    "charm_display_as_coin": "（备注：正或反，天堂还是地狱，都在这一念之间）",
+    "diary": "（备注：你走了我在哭，回来了我却只会哭，眼泪是吞没我的海啸）"
+  },
+  "review_status": "approved_by_user",
+  "publication_status": "approved_for_git_sync",
+  "approved_rules": {
+    "item": "C交给主角并带有定位作用的道具，剧情显示统一叫决策币；拿到、背包、回忆、识破定位、扔出窗外和失去提示均为同一物品。",
+    "concealment": "第一次黑猫追逐没有夜幕之泪，不使用隐蔽。后段主角先凭防备躲刀，掀翻书架脱身，再在逃离C的途中主动驱动夜幕之泪；不是闪避被动触发。",
+    "rewind": "沿用首次入馆的个人锚点，恢复主角自身及随身物品的锚点状态，主角记忆保留。身体/衣物上仍附着的血迹随个人表现重置；已经溅到地图上的血迹离开了主角，不随个人回溯重置。不使用整图清空替代个人恢复。",
+    "cat": "猫的对白、身份、时间锚解释、净化和玩偶真相保持上一版，未新增猫的动机或过去循环。",
+    "approval": "上述规则由用户明确指定；本文件R2整段演出编排已于2026-10-24获用户审核通过，获准同步GitHub。"
+  },
+  "revision": "20261024-art-staging-r2",
+  "art_review": {
+    "source_commit": "25d2ce4",
+    "status": "assets_verified_not_runtime_integrated",
+    "scope": "学校至首次入馆；第一遍童话书、合照、背刺、End6/7、教室躲藏留给后段，不在本段提前出现。",
+    "excluded_diary": "ch2_diary_written.png含旧版转学/固定日期，不作当前正文。",
+    "excluded_map": "library_no_cat_20261024.jpg是尺寸和布局不同的候选，不自动替换正式图书馆。",
+    "remaining": "独立走廊、决策币圆币图、教室调查与家具碰撞绑定仍缺；日记底图和End4/5 CG不再列缺图。"
+  },
+  "inspection_evidence": {
+    "art_sha256": {
+      "art/npc/c/down1.png": "83671630a04de1fa1c446e900f43af0d452f8bf79b132a79af44887de7958b92",
+      "art/portrait/c/neutral.png": "49f6d52948ffb053a046ab2dce7a7a678b412c1e2681134c30a1fb95251626d9",
+      "art/portrait/protagonist/quiet.png": "8159492d9072786e42f0572217cc6458c9c905f9c7f0f24f6618b52cdb583c80",
+      "art/npc/shadow_cat/chase_mist_right.png": "21b9fc0905ea697a9ed96690f97ff0bb5ec6089713c520ff223a2888737bdebd",
+      "art/item/key.png": "e9e3cd1a6d0e97c34d1b5d8643f2a7f25e70e514782eec21ef9a8d8062c0b19c",
+      "art/item/student_id_half.png": "a8a2b870ea8fb13dde1b5f9f6688f997ad4044eb0577fa0be3c4f705c05d2baa",
+      "art/item/charm.png": "6b46249ee413f58c152e75c8b9ad0d0d596ed69948a42199c1d0ec8bcdea1c61",
+      "art/props/ch2_diary_blank.png": "d288888fb80b826cea6b1235eb953a67d3e799946810b31a540a512869d6e6a3",
+      "art/cg/ch2_chase_failure.png": "8cb2c57034725d70674f399171b1ba46595c88903812f8987889096394a79956",
+      "art/cg/ch2_rescue_injury.png": "d51a3554aeddf8780fc29d3a1165d34d5a09acab044cf2341dbda51d425cb19b",
+      "audio/sfx/cat_meow.wav": "a0ce2761755debd26bb89eaebd30c815a1951fcb3e0e7146d27f9a852ad7cbf3",
+      "audio/sfx/rescue_success.wav": "6fb684980de2466ea7b4aba84599a91a321277901b365e8ab8f82c2eb427e5f9",
+      "audio/sfx/rescue_mistake.wav": "f4236e97d8334f092e726d8f21037d87cce385127a288457ddb74357e142fc38",
+      "audio/sfx/rescue_complete.wav": "20476fad5eca7f532d08128d42c7c3aa5f418ca69aac22710da9159d47628424",
+      "audio/sfx/door_open.wav": "d8923bede0a69598fc4f0d33b4634a515eeff0b380114910265f16bc41ebe73f",
+      "audio/sfx/door_close.wav": "12e8b6c5cc446ad102b8c7abf6e35f50102e7cf5694b944fb9f00548dc629d1e",
+      "audio/bgm/reclamation.mp3": "d4017d24b6b425464203e5906e91d875bb28aba4c0ef18cfcf30391c7396ee6d",
+      "art/props/ch2_notice_board_blank.png": "4002019be7b1ba97475c0ce4f44002e5df498a136ccfbb69a956ef93f5a6b50f",
+      "art/props/ch2_blackboard.png": "a4bdf828068830941e1628fced0e702bf46b4652f0fa4a261b48e580d1c6f2c7",
+      "art/props/ch2_register.png": "5dcba2a7f4a8dec9595bc93738b575ebe2e93d3c29e0329d411c776f92885216",
+      "art/props/ch2_sculpture_inscription.png": "2989127835e03ae7b45636aedf9f238e87dd8610e5fd4ae6ee3510a1abb78381",
+      "art/props/ch2_teaching_notice_board.png": "a555edf3ca7c6e5c559ad8314c18e45aca9d1de1c6da27cbcccbc2154176155f",
+      "art/props/ch2_mirror.png": "146ba7142e17c721ba79f8367f3fc467b2eb232eae4371c535c86adcf154922e"
+    },
+    "images_viewed": [
+      "school_gate.png",
+      "school_yard.png",
+      "classroom.png",
+      "library.png",
+      "c/neutral.png",
+      "shadow_cat/chase_mist_right.png",
+      "2.zip/3.zip十五图联系表",
+      "学校调查图五图联系表"
+    ],
+    "runtime": "not_run",
+    "static_walkgrid": "六段通路和三个脚点通过；新增NPC动态阻挡与QTE手感未验"
+  },
+  "approval": {
+    "date": "2026-10-24",
+    "authority": "user_message",
+    "text": "可以，推送到github上吧",
+    "scope": "上一轮审核的R2规则统一剧情与学校至首次入馆演出",
+    "target": "origin/main"
+  },
+  "release_baseline": "main 25d2ce4；与主工作区未合入操场布局分别记录"
+}

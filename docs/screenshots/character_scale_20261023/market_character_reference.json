@@ -1,0 +1,19 @@
+{
+	"a_authored_height": 45.0,
+	"a_foot_screen_height": 8.0,
+	"a_map_height": 22.5,
+	"a_position": [
+		302.0,
+		279.0
+	],
+	"a_screen_height": 45.0,
+	"map": "market",
+	"map_scale": 0.5,
+	"player_position": [
+		278.0,
+		279.0
+	],
+	"player_screen_height": 45.0,
+	"screenshot": "C:/Users/admin/.codex/visualizations/2026/10/23/01a1695d-bd4e-75a0-8dda-d72055d219b4/character-scale/market_character_reference.png",
+	"zoom": 2.0
+}

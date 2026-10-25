@@ -24,6 +24,7 @@ class PreviewPlayer:
 
 	func _init() -> void:
 		name = "Player"
+		texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		z_index = 10
 		var collision := CollisionShape2D.new()
 		var box := RectangleShape2D.new()
@@ -171,6 +172,7 @@ class PreviewPanel:
 				spawn = definition.spawns.keys()[0]
 			player.position = definition.spawn_point(spawn)
 		player.walk_path.clear()
+		player.configure_environment(definition)
 		player.velocity = Vector2.ZERO
 		_ranges.definition = definition
 		_ranges.flags = flags
@@ -179,7 +181,6 @@ class PreviewPanel:
 		_collect_collision_shapes(player)
 		_range_toggle.set_pressed_no_signal(bool(options.get("show_ranges", _range_toggle.button_pressed)))
 		_set_ranges_visible(_range_toggle.button_pressed)
-		_camera.position = Vector2(definition.size) * 0.5
 		_fit_camera()
 		view.set_player_y(player.position.y)
 		_update_blocked()
@@ -193,9 +194,16 @@ class PreviewPanel:
 		if _camera == null:
 			return
 		var available := _display.size if _display.size.x > 1.0 and _display.size.y > 1.0 else Vector2(1060, 640)
-		var fit := minf(available.x / maxf(definition.size.x, 1.0),
-			available.y / maxf(definition.size.y, 1.0))
-		_camera.zoom = Vector2.ONE * fit
+		if definition.kind == MapDef.Kind.OVERWORLD:
+			_camera.zoom = GameCamera.zoom_for(Vector2(definition.size), available)
+			_camera.position = Vector2(definition.size) * 0.5
+			return
+		# 试走与游戏共用人物标尺；面板大小只决定统一的显示倍率，不再按各图适配全图。
+		var logical_view := GameCamera.view_size()
+		var fit := minf(available.x / logical_view.x, available.y / logical_view.y)
+		_camera.zoom = GameCamera.room_zoom_for(definition.player_scale) * fit
+		_camera.position = GameCamera.position_for(player.position,
+			Vector2(definition.size), available / _camera.zoom)
 
 	func _update_blocked() -> void:
 		blocked = false
@@ -235,6 +243,7 @@ class PreviewPanel:
 		_update_blocked()
 		if not blocked:
 			player._physics_process(delta)
+		_fit_camera()
 		view.set_player_y(player.global_position.y)
 		if _ranges.visible:
 			_ranges.queue_redraw()
