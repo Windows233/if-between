@@ -28,6 +28,18 @@ const KINDS: Dictionary = {
 	&"save": [],                # 写入当前槽位（用于剧情检查点）
 	&"image": ["path"],         # 屏幕中央的大图淡入
 	&"image_hide": [],          # 大图淡出
+	&"personal_anchor": [],    # 记录首次入馆的个人与背包状态
+	&"personal_anchor_restore": [],
+	&"map_actor_variant": ["actor", "variant"],
+	&"ch2_checkpoint_save": ["checkpoint"],
+	&"ch2_checkpoint_restore": ["checkpoint"],
+	&"ch2_checkpoint_clear": ["checkpoint"],
+	&"ch2_chase_validate": [],
+	&"ch2_chase_start": [],
+	&"ch2_chase_qte": ["key", "trigger_x"],
+	&"ch2_chase_arrive": [],
+	&"ch2_chase_mist_retreat": [],
+	&"ch2_dodge_qte": ["key"],
 	&"npc": ["id", "sprite", "at"],  # 在地图上放一个临时角色
 	                                # 可选 `z`：盖住家具的层级。站在会挡人的
 	                                # 家具（书桌）**前面**时要给，否则被家具切掉
@@ -44,6 +56,7 @@ const KINDS: Dictionary = {
 	                            # 可选 `pose`（`idle_<名字>`）、`flip`（水平翻转）。
 	                            # A 没有走路动画，「转过身去」只能靠翻侧面图
 	&"npc_remove": ["id"],      # 收走那个角色
+	&"npc_talk": ["id", "talk"],
 	&"hide_player": [],         # 把**玩家角色**藏起来 / 显示回来。
 	                            # 用在「场景图上已经画着人了」那几幕 —— 比如
 	                            # 「床上躺着主角」那张图，图上本来就有人。
@@ -200,6 +213,17 @@ func validate() -> Array[String]:
 		var raw_lines: Variant = data.get("lines")
 		if not (raw_lines is Array) or (raw_lines as Array).is_empty():
 			problems.append("演出指令 caption 的 lines 得是一个非空的数组")
+	if kind in [&"ch2_checkpoint_save", &"ch2_checkpoint_restore", &"ch2_checkpoint_clear"] \
+			and text("checkpoint") not in ["rescue", "chase", "route"]:
+		problems.append("演出指令 %s 的 checkpoint 只能是 rescue、chase 或 route" % kind)
+	if kind == &"ch2_chase_qte" and text("key") not in ["q", "e"]:
+		problems.append("追逐QTE的key只能是q或e")
+	if kind == &"ch2_chase_qte" and number("trigger_x") <= 0.0:
+		problems.append("追逐QTE需要有效的trigger_x")
+	if kind == &"ch2_dodge_qte" and text("key") not in ["q", "e"]:
+		problems.append("闪避QTE的key只能是q或e")
+	if kind == &"map_actor_variant" and text("actor") == "":
+		problems.append("map_actor_variant 需要 actor")
 	if kind == &"hint" and text("at") not in ["", "corner", "center"]:
 		problems.append("演出指令 hint 的 at 只能是 corner 或 center，写的是「%s」" % text("at"))
 	# 图存不存在**不在这里查** —— core 层不碰资源系统，

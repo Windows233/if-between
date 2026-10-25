@@ -93,6 +93,35 @@
         74
       ],
       "sprite": "res://art/props/market_day_fountain.png"
+    },
+    {
+      "actions": [
+        {
+          "event": "ch2_market_b_end",
+          "id": "meet_b",
+          "label": "接近 B",
+          "once": true
+        }
+      ],
+      "id": "b_end_anchor",
+      "if": {
+        "var": "ch2/left_veil_realm",
+        "op": "==",
+        "value": true
+      },
+      "label": "站在传送点旁的人",
+      "rect": [
+        310,
+        240,
+        40,
+        30
+      ],
+      "reach": [
+        286,
+        246,
+        64,
+        30
+      ]
     }
   ],
   "background": "res://art/map/market_night.png",

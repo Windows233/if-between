@@ -18,6 +18,9 @@ const START_MAP: StringName = &"desk_shop"
 ## 见 `data/events/ch1_opening.json`。
 const OPENING_EVENT: StringName = &"ch1_opening"
 const START_SPAWN: StringName = &"start"
+const PERSONAL_ANCHOR_SCRIPT = preload("res://core/personal_anchor.gd")
+const CHASE_OVERLAY_SCRIPT = preload("res://ui/chase_overlay.gd")
+const CHASE_SESSION_SCRIPT = preload("res://scenes/ch2_chase_session.gd")
 ## 从「出门」连接进入的大地图
 const OVERWORLD_MAP: StringName = &"overworld"
 
@@ -50,6 +53,8 @@ var camera: GameCamera
 var dialogue: DialogueBox
 var choice_menu: ChoiceMenu
 var rescue_panel: RescuePanel
+var chase_overlay: ChaseOverlay
+var chase_session: Ch2ChaseSession
 var tooltip: MapTooltip
 
 ## IF 条件框。剧情里「观察」之后弹出来的那个。
@@ -125,6 +130,8 @@ var map_triggers := preload("res://scenes/map_trigger_runner.gd").new()
 var endings := EndingTable.new()
 ## 游戏里有哪些物品。数量就存在 `flags` 里，键是 `item/<id>`，跟结局一个路子。
 var items := ItemTable.new()
+var personal_anchor = PERSONAL_ANCHOR_SCRIPT.new()
+var ch2_checkpoints: Dictionary = {}
 ## 结局图鉴的**全局记录**：跨存档、只增不减。跟存档分开，删档不带走它。
 var gallery := EndingGallery.new()
 ## 游戏设置：跨存档、跨局保留的偏好（目前只有文字速度）。
@@ -286,6 +293,14 @@ func boot() -> void:
 	rescue_panel.setup()
 	rescue_panel.feedback.connect(_on_rescue_feedback)
 
+	chase_overlay = CHASE_OVERLAY_SCRIPT.new()
+	chase_overlay.name = "ChaseOverlay"
+	add_child(chase_overlay)
+	chase_session = CHASE_SESSION_SCRIPT.new()
+	chase_session.name = "Ch2ChaseSession"
+	add_child(chase_session)
+	chase_session.setup(self, chase_overlay)
+
 	tooltip = MapTooltip.new()
 	tooltip.name = "MapTooltip"
 	add_child(tooltip)
@@ -436,7 +451,8 @@ func _set_process_modes() -> void:
 	# 整个 main.gd 加载失败，游戏黑屏。2026-09-24 踩的）。
 	# 它的推进靠 `await`，要停得另想办法，见 `Cutscene` 里的 `_sleep`。
 	for node: Node in [map_view, stage_view, player, camera,
-			stage_overlay, stage_curtain, dialogue, choice_menu, tooltip, rescue_panel]:
+			stage_overlay, stage_curtain, dialogue, choice_menu, tooltip, rescue_panel,
+			chase_overlay, chase_session]:
 		if node != null:
 			node.process_mode = Node.PROCESS_MODE_PAUSABLE
 
@@ -467,10 +483,13 @@ func enter_map(map_id: StringName, spawn_name: StringName,
 			push_error("[地图] " + problem)
 		return
 
+	if chase_session != null:
+		chase_session.cancel()
 	current_map = def
 	map_triggers.configure(def.id, def.triggers, flags, _map_trigger_event_exists, _start_map_trigger)
 	current_spawn = spawn_name
 	map_view.build(def, flags)
+	_sync_library_box_visual()
 	player.global_position = def.spawn_point(spawn_name)
 	# 保留地图坐标中的美术标尺及碰撞；相机以倒数投影，屏幕上的主角始终等高。
 	player.scale = Vector2(def.player_scale, def.player_scale)
@@ -494,6 +513,17 @@ func enter_map(map_id: StringName, spawn_name: StringName,
 	# 上一张图上的临时角色是上一张图的东西，别跟过来
 	if cutscene != null:
 		cutscene.clear_actors()
+		if current_map.id == &"school_yard":
+			cutscene.restore_school_yard_c()
+			if spawn_name == &"from_gate" and flags.get_value(&"ch2/yard_entry_seen") != true:
+				_pending_ch2_entry_event = &"ch2_yard_entry"
+		elif current_map.id == &"school_gate" \
+				and spawn_name in [&"near_yard", &"near_classroom"] \
+				and flags.get_value(&"ch2/c_at_school_gate") == true:
+			cutscene.place_c_at_school_gate_wait_spawn()
+		elif current_map.id == &"school_gate" and spawn_name == &"from_alley" \
+				and flags.get_value(&"ch2/gate_entry_seen") != true and not story.is_active():
+			_pending_ch2_entry_event = &"ch2_gate_entry"
 	pending_actor = null
 	# 覆盖在上面的界面也一起收掉：它们显示的是上一个场景的事，
 	# 跳完了还在就对不上（读档时尤其明显 —— 菜单还开着，场景已经换了）。
@@ -536,6 +566,12 @@ func current_music() -> String:
 ## 变体只替换主贴图，不改变物件位置、碰撞、交互或遮挡。
 func set_actor_sprite_variant(actor_id: StringName, variant_id: StringName) -> bool:
 	return map_view != null and map_view.set_actor_sprite_variant(actor_id, variant_id)
+
+
+func _sync_library_box_visual() -> void:
+	if current_map != null and current_map.id == &"library" \
+			and flags.get_value(&"ch2/library/box_opened") == true:
+		set_actor_sprite_variant(&"box", &"open")
 
 
 ## 换场景时切背景音乐。曲子在 `data/maps/*.json` 的 `music` 字段里。
@@ -637,6 +673,7 @@ func travel_to(map_id: StringName, spawn_name: StringName) -> void:
 
 ## 玩家当前停在哪个 `auto_menu` 物件的 reach 里（防止菜单关了又开）。
 var _auto_menu_actor := StringName(&"")
+var _pending_ch2_entry_event := StringName(&"")
 
 
 func _process(_delta: float) -> void:
@@ -649,6 +686,19 @@ func _process(_delta: float) -> void:
 	_check_walk_arrival()
 	_update_footsteps()
 	_update_map_triggers()
+	_start_pending_ch2_entry_event()
+
+
+func _start_pending_ch2_entry_event() -> void:
+	if _pending_ch2_entry_event == &"" or current_map == null or story.is_active():
+		return
+	if fade != null and fade.is_busy():
+		return
+	if ui_host != null and ui_host.is_busy():
+		return
+	var event_id := _pending_ch2_entry_event
+	_pending_ch2_entry_event = &""
+	start_story(event_id)
 
 
 func _map_trigger_busy() -> bool:
@@ -772,7 +822,12 @@ func _announce_items() -> void:
 			continue
 		if _as_int(change.get("to", 0)) <= _as_int(change.get("from", 0)):
 			continue
-		gained.append(items.name_of(ItemTable.id_from_flag(key)))
+		var item_id := ItemTable.id_from_flag(key)
+		var item_name := items.name_of(item_id)
+		if item_id == &"charm":
+			var amount := _as_int(change.get("to", 0)) - _as_int(change.get("from", 0))
+			item_name += "×%d" % amount
+		gained.append(item_name)
 
 	# 变更看完就清，不然下一帧会把同一次获得再报一遍
 	flags.clear_changes()
@@ -911,13 +966,14 @@ func update_player_control() -> void:
 	# **过场期间不许动。** 黑屏那几段没有界面开着，
 	# 光看 `ui_host` 会让角色在黑屏里走来走去。
 	var cutscene_locked := story.is_active()
+	var chase_movement := chase_session != null and chase_session.can_move_player()
 	# 大图（CG）摆着 —— 背包图标要让开，理由见下面那一段。
 	var picture_up := stage_overlay != null and stage_overlay.has_image()
 
 	player.visible = on_room
 	# 被按住的时候连物理都不给 —— 见 `Player.pinned`
-	var movable := on_room and not busy and not fading and not cutscene_locked \
-		and not player.pinned
+	var movable := on_room and not busy and not fading \
+		and (not cutscene_locked or chase_movement) and not player.pinned
 	player.set_physics_process(movable)
 
 	# 右下角那个背包图标：有界面开着、在演过场、或者黑幕压着时就收起来。
@@ -1020,6 +1076,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		if not escape_pressed:
 			rescue_panel.handle_input(event)
 			return
+
+	if chase_overlay != null and chase_overlay.is_running() \
+			and chase_overlay.handle_input(event):
+		return
+	if chase_session != null and chase_session.active and event is InputEventMouseButton:
+		return
 
 	# 全局快捷键放在最前面，免得被开着的界面先吃掉。
 	# F4 图鉴、F5 存档菜单、F9 读档菜单。
@@ -1207,6 +1269,12 @@ func interact() -> void:
 	# 只认朝向面前的东西。玩家的原点就在脚底。
 	var actor := current_map.actor_near(player.global_position, INTERACT_RANGE, flags,
 		player.facing)
+	if current_map.id == &"school_yard":
+		var actor_distance := INTERACT_RANGE
+		if actor != null:
+			actor_distance = MapDef.rect_distance(actor.reach, player.global_position)
+		if _talk_to_transient(actor_distance):
+			return
 	if actor != null:
 		begin_interaction(actor)
 		return
@@ -1229,6 +1297,10 @@ func _take_portal() -> bool:
 	var portal := current_map.portal_at(player.global_position, flags)
 	if portal == null:
 		return false
+
+	if current_map.id == &"school_gate" and portal.id == &"to_classroom":
+		start_story(&"ch2_class_door")
+		return true
 
 	if _portal_blocked(portal):
 		if portal.blocked_text != "" and toast != null:
@@ -1265,11 +1337,11 @@ func _portal_blocked(portal: MapDef.Portal) -> bool:
 ##
 ## 这一条是补「自由活动阶段碰到老人，发现那只是张贴图」那个缺口的
 ##（2026-09-24 策划报的）—— 演出放出来的临时角色，也是这个场景里的人。
-func _talk_to_transient() -> void:
+func _talk_to_transient(max_distance: float = INTERACT_RANGE) -> bool:
 	if cutscene == null or player == null:
-		return
+		return false
 	var best_event := StringName(&"")
-	var best_distance := INTERACT_RANGE
+	var best_distance := max_distance
 	for item: Array in cutscene.talkable_list():
 		var at: Vector2 = item[1]
 		var feet := Rect2(at.x - TALK_FOOT_HALF, at.y - TALK_FOOT_HEIGHT,
@@ -1280,8 +1352,10 @@ func _talk_to_transient() -> void:
 		if distance < best_distance:
 			best_distance = distance
 			best_event = item[2]
-	if best_event != &"":
-		start_story(best_event, &"")
+	if best_event == &"":
+		return false
+	start_story(best_event, &"")
+	return true
 
 
 ## 临时角色「站着占的那块地」：他脚底一小圈。
@@ -1297,7 +1371,24 @@ const TALK_FOOT_HEIGHT := 16.0
 ## 只有一个动作时直接执行 —— 大多数 NPC 只有「交谈」，
 ## 为此弹一个只有一项的菜单纯属添乱。有多个动作才弹菜单。
 func begin_interaction(actor: MapDef.Actor) -> void:
-	if actor == null or actor.interactions.is_empty():
+	if actor == null:
+		return
+	if current_map.id == &"gatehouse" and actor.id == &"desk":
+		start_story(&"ch2_register")
+		return
+	if current_map.id == &"school_yard" and actor.id == &"swing":
+		var event_id: StringName = &"ch2_swing_repeat" if flags.get_value(&"ch2/rescued_c") == true else &"ch2_swing"
+		start_story(event_id)
+		return
+	if current_map.id == &"classroom":
+		var classroom_events := {
+			&"blackboard": &"ch2_blackboard",
+			&"diary_desk": &"ch2_diary",
+		}
+		if classroom_events.has(actor.id):
+			start_story(classroom_events[actor.id])
+			return
+	if actor.interactions.is_empty():
 		return
 
 	if actor.interactions.size() == 1:
@@ -1621,6 +1712,8 @@ func _on_inventory_button() -> void:
 ## —— 开标题、开存档菜单 —— 入口该有一个地方列全，而不是散在两个文件里。
 ## 每个转发三行，比让调用方先去查「这个在 menu_flow 还是 main」便宜。
 func show_title() -> void:
+	if chase_session != null:
+		chase_session.cancel()
 	# 标题放**它自己的曲子**，不是上一个场景的。
 	# `boot()` 那会儿起始场景其实已经加载好了，不换一手的话，
 	# 玩家还没进屋就听着屋里的曲子。
@@ -1694,7 +1787,11 @@ func quit_game() -> void:
 ##
 ## **图鉴不动** —— 那是跨存档的全局记录，开新局不该把「你见过几个结局」清掉。
 func new_game(start_map: StringName = &"", start_spawn: StringName = &"") -> void:
+	if chase_session != null:
+		chase_session.cancel()
 	map_triggers.reset()
+	personal_anchor = PERSONAL_ANCHOR_SCRIPT.new()
+	ch2_checkpoints.clear()
 	menu_flow.new_game(start_map, start_spawn)
 
 
@@ -1714,6 +1811,164 @@ func can_save() -> bool:
 ##
 ## 存的是「当前全部状态」：场景、坐标、朝向、剧情进度、世界状态、结局进度。
 ## 读档要回到玩家离开的那一刻，不是把他丢回场景开头。
+func capture_ch2_checkpoint(checkpoint_id: String) -> bool:
+	if checkpoint_id not in ["rescue", "chase", "route"] or current_map == null or player == null:
+		return false
+	var saved_flags := flags.snapshot().duplicate(true)
+	saved_flags.erase(StringName("ch2/retry_checkpoint/" + checkpoint_id))
+	var serial_flags: Dictionary = {}
+	for key: Variant in saved_flags:
+		serial_flags[str(key)] = saved_flags[key]
+	var checkpoint := {
+		"map_id": str(current_map.id),
+		"spawn": str(current_spawn),
+		"player_position": [player.global_position.x, player.global_position.y],
+		"facing": [player.facing.x, player.facing.y],
+		"velocity": [player.velocity.x, player.velocity.y],
+		"pinned": player.pinned,
+		"visible": player.visible,
+		"scale": [player.scale.x, player.scale.y],
+		"flags": serial_flags,
+		"actors": cutscene.snapshot_actors() if cutscene != null else [],
+		"camera_focus": [camera_focus.x, camera_focus.y] if camera_focus is Vector2 else null,
+		"time_scale": Engine.time_scale,
+	}
+	ch2_checkpoints[checkpoint_id] = checkpoint
+	flags.set_value(StringName("ch2/retry_checkpoint/" + checkpoint_id), checkpoint.duplicate(true))
+	return true
+
+
+func restore_ch2_checkpoint(checkpoint_id: String) -> bool:
+	if not ch2_checkpoints.has(checkpoint_id) or player == null:
+		return false
+	var checkpoint: Dictionary = ch2_checkpoints[checkpoint_id]
+	var target_map := StringName(checkpoint.get("map_id", ""))
+	var target_spawn := StringName(checkpoint.get("spawn", "default"))
+	var saved_flags: Variant = checkpoint.get("flags", {})
+	if not (saved_flags is Dictionary) or target_map == &"":
+		return false
+	_clear_player_motion_state()
+	var persistent_flags: Dictionary = {}
+	for key: StringName in flags.keys():
+		if _is_ch2_persistent_flag(key):
+			persistent_flags[key] = flags.get_value(key)
+	flags.clear()
+	flags.load_values(saved_flags as Dictionary)
+	for key: Variant in persistent_flags:
+		flags.set_value(StringName(key), persistent_flags[key])
+	if current_map == null or current_map.id != target_map:
+		enter_map(target_map, target_spawn, true)
+	else:
+		current_spawn = target_spawn
+	player.global_position = _checkpoint_vector(checkpoint.get("player_position"), player.global_position)
+	player.facing = _checkpoint_vector(checkpoint.get("facing"), Vector2.DOWN)
+	player.velocity = _checkpoint_vector(checkpoint.get("velocity"), Vector2.ZERO)
+	player.pinned = bool(checkpoint.get("pinned", false))
+	player.visible = bool(checkpoint.get("visible", true))
+	player.scale = _checkpoint_vector(checkpoint.get("scale"), player.scale)
+	var saved_focus: Variant = checkpoint.get("camera_focus")
+	camera_focus = _checkpoint_vector(saved_focus, Vector2.ZERO) if saved_focus is Array else null
+	Engine.time_scale = float(checkpoint.get("time_scale", 1.0))
+	flags.set_value(StringName("ch2/retry_checkpoint/" + checkpoint_id), checkpoint.duplicate(true))
+	if rescue_panel != null:
+		rescue_panel.close()
+	if cutscene != null:
+		cutscene.clear_actors()
+		var saved_actors: Variant = checkpoint.get("actors", [])
+		if saved_actors is Array:
+			cutscene.restore_actors(saved_actors as Array)
+	refresh_scene()
+	update_camera()
+	update_player_control()
+	update_cover()
+	return true
+
+
+func _is_ch2_persistent_flag(key: StringName) -> bool:
+	var name := str(key)
+	return name.begins_with("memory/") \
+		or name.begins_with("map_blood/") \
+		or name.begins_with("ch2/personal/") \
+		or name.begins_with("ending/") \
+		or name in [
+			"ch2/personal_anchor_snapshot",
+			"ch2/personal_anchor_captured",
+		]
+
+
+func _checkpoint_vector(raw: Variant, fallback: Vector2) -> Vector2:
+	if raw is Array and (raw as Array).size() >= 2:
+		return Vector2(float(raw[0]), float(raw[1]))
+	if raw is Vector2:
+		return raw
+	return fallback
+
+
+func clear_ch2_checkpoint(checkpoint_id: String) -> void:
+	ch2_checkpoints.erase(checkpoint_id)
+	flags.unset_value(StringName("ch2/retry_checkpoint/" + checkpoint_id))
+
+
+func _sync_ch2_checkpoints_from_flags() -> void:
+	ch2_checkpoints.clear()
+	for checkpoint_id: String in ["rescue", "chase", "route"]:
+		var saved: Variant = flags.get_value(
+			StringName("ch2/retry_checkpoint/" + checkpoint_id))
+		if saved is Dictionary:
+			ch2_checkpoints[checkpoint_id] = saved.duplicate(true)
+
+
+func capture_personal_anchor() -> bool:
+	if personal_anchor.is_captured() or current_map == null or player == null:
+		return false
+	var snapshot := SaveData.new()
+	snapshot.map_id = current_map.id
+	snapshot.spawn = current_spawn
+	snapshot.player_position = player.global_position
+	snapshot.facing = player.facing
+	if not personal_anchor.capture_once(snapshot, flags):
+		return false
+	flags.set_value(&"ch2/personal_anchor_snapshot", personal_anchor.to_dictionary())
+	flags.set_value(&"ch2/personal_anchor_captured", true)
+	return true
+
+
+func restore_personal_anchor() -> bool:
+	if not personal_anchor.is_captured():
+		_sync_personal_anchor_from_flags()
+	if not personal_anchor.is_captured() or current_map == null or player == null:
+		return false
+	var snapshot := SaveData.new()
+	if not personal_anchor.restore(snapshot, flags):
+		return false
+	if current_map.id != snapshot.map_id:
+		enter_map(snapshot.map_id, snapshot.spawn, true)
+		if current_map == null or current_map.id != snapshot.map_id:
+			return false
+	current_spawn = snapshot.spawn
+	_clear_player_motion_state()
+	player.global_position = snapshot.player_position
+	player.facing = snapshot.facing
+	player.velocity = Vector2.ZERO
+	update_camera()
+	update_cover()
+	return true
+
+
+func _clear_player_motion_state() -> void:
+	walk_and_use = false
+	pending_actor = null
+	if player != null:
+		player.walk_path.clear()
+
+
+func _sync_personal_anchor_from_flags() -> void:
+	personal_anchor = PERSONAL_ANCHOR_SCRIPT.new()
+	var saved: Variant = flags.get_value(&"ch2/personal_anchor_snapshot")
+	if saved != null and personal_anchor.load_dictionary(saved):
+		flags.set_value(&"ch2/personal_anchor_captured", true)
+
+
 func save_game(slot: int = -1) -> bool:
 	if not can_save():
 		toast.show_text("转场中，等一下")
@@ -1757,6 +2012,8 @@ func load_game(slot: int = -1) -> bool:
 	var data := save_mgr.load_state(slot)
 	if data == null:
 		return false
+	_sync_personal_anchor_from_flags()
+	_sync_ch2_checkpoints_from_flags()
 
 	if title_screen != null:
 		title_screen.close()
@@ -1770,7 +2027,14 @@ func load_game(slot: int = -1) -> bool:
 	# 剧情接着演。存档时正演到一半，读回来从**那个节点的那一步**继续 ——
 	# 只定位到节点是不够的，那样整段台词会重放一遍。
 	if data.in_story():
-		start_story(data.story_event, data.story_node, data.story_step, data.story_spoke)
+		var resume_node: StringName = data.story_node
+		var resume_step: int = data.story_step
+		var resume_spoke: bool = data.story_spoke
+		if data.story_event == &"ch2_diary" and resume_node in [&"run_q1", &"run_q2", &"arrive"]:
+			resume_node = &"restart_chase"
+			resume_step = 0
+			resume_spoke = false
+		start_story(data.story_event, resume_node, resume_step, resume_spoke)
 	# **把场上的人摆回来。** 放在 `start_story` **之后** ——
 	# 剧情自己会摆的（节点里的 `npc`）优先级更高，`restore_actors` 会跳过同名的人。
 	# 反过来的话会先恢复一个、再被剧情摆的那个顶掉，白闪一下。
@@ -1793,3 +2057,4 @@ func refresh_scene() -> void:
 	if current_map == null or map_view == null:
 		return
 	map_view.build(current_map, flags)
+	_sync_library_box_visual()

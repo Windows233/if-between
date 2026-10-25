@@ -1,15 +1,29 @@
 {
   "id": "ch2_sandbox",
-  "entry": "read",
+  "entry": "yard_sand",
   "nodes": [
     {
-      "id": "read",
-      "set": { "item/student_id": 1 },
+      "id": "yard_sand",
+      "stage": [],
+      "next": "sand_gain",
+      "next_when": {
+        "if": {
+          "var": "item/student_id",
+          "op": ">=",
+          "value": 1
+        },
+        "next": "sand_again"
+      }
+    },
+    {
+      "id": "sand_gain",
       "stage": [
         {
           "do": "say",
           "lines": [
-            { "text": "沙坑里有爪印，旁边埋着一个东西" }
+            {
+              "text": "沙坑里有爪印，旁边埋着一个东西"
+            }
           ]
         },
         {
@@ -18,15 +32,42 @@
           "fade": 0.4,
           "wait_click": true,
           "hide": true
-        },
+        }
+      ],
+      "next": "sand_reward"
+    },
+    {
+      "id": "sand_reward",
+      "set": {
+        "item/student_id": 1
+      },
+      "stage": [],
+      "next": "sand_line"
+    },
+    {
+      "id": "sand_line",
+      "stage": [
         {
           "do": "say",
           "lines": [
             {
               "speaker": "我",
-              "text": "姓名栏被撕了啊，只有班级，嗯...六年二班。",
+              "text": "个人信息栏被撕了啊，只有班级，嗯...六年二班。",
               "side": "left",
-              "portrait": "protagonist/reading"
+              "portrait": "protagonist/quiet"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sand_again",
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "text": "沙坑里还留着爪印。"
             }
           ]
         }

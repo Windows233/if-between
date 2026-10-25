@@ -92,6 +92,34 @@ func actor_ids() -> Array:
 	return _actors.keys()
 
 
+func place_c_at_school_gate_wait_spawn() -> bool:
+	if main == null or main.current_map == null or main.current_map.id != &"school_gate" or not main.current_map.spawns.has(&"near_classroom"):
+		return false
+	var spawn: Variant = main.current_map.spawns[&"near_classroom"]
+	if not (spawn is Vector2) or not Vector2(spawn).is_finite():
+		return false
+	var actor := add_actor_with_talk("c", "res://art/npc/c",
+		main.current_map.spawn_point(&"near_classroom"), 32.0, 12, "down", "ch2_c_wait")
+	return actor != null
+
+
+func restore_school_yard_c() -> void:
+	if main == null or main.current_map == null \
+			or main.current_map.id != &"school_yard":
+		return
+	if _actors.has("c") and is_instance_valid(_actors["c"]):
+		return
+
+	var rescued := _c_is_rescued()
+	var talk := "ch2_c_wait" if rescued else "ch2_swing"
+	var c_height := 32.0
+	var actor := add_actor_with_talk("c", "res://art/npc/c",
+		Vector2(186, 88), c_height, 12, "down", talk)
+	if not rescued and actor != null \
+			and _add_c_rescue_binding(actor, c_height) != null:
+		_recipes["c"]["rescue_binding"] = true
+
+
 ## 往场景里放一个临时角色，脚底中点落在 `at`。
 ##
 ## `_npc` 指令走的就是它。单独开出来是给烟测和截图用的 ——
@@ -119,6 +147,8 @@ func add_actor_with_talk(id: String, sprite_path: String, at: Vector2,
 	if sprite == null or main == null:
 		return null
 	sprite.position = at
+	if id == "c":
+		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	main.stage_view.add_child(sprite)
 	if main.current_map != null:
 		preload("res://scenes/world_look.gd").style_actor(sprite, main.current_map)
@@ -320,6 +350,32 @@ func _apply(step: StageStep) -> void:
 			await _image(step)
 		&"image_hide":
 			await _overlay().hide_image(_time(step.number("fade", 0.4)))
+		&"personal_anchor":
+			main.capture_personal_anchor()
+		&"personal_anchor_restore":
+			main.restore_personal_anchor()
+		&"map_actor_variant":
+			main.set_actor_sprite_variant(
+				StringName(step.text("actor")), StringName(step.text("variant")))
+		&"ch2_checkpoint_save":
+			main.capture_ch2_checkpoint(step.text("checkpoint"))
+		&"ch2_checkpoint_restore":
+			main.restore_ch2_checkpoint(step.text("checkpoint"))
+		&"ch2_checkpoint_clear":
+			main.clear_ch2_checkpoint(step.text("checkpoint"))
+		&"ch2_chase_validate":
+			main.flags.set_value(&"ch2/chase_ready", main.chase_session.can_start())
+		&"ch2_chase_start":
+			main.chase_session.begin()
+		&"ch2_chase_qte":
+			await main.chase_session.run_qte(StringName(step.text("key")), step.number("trigger_x"))
+		&"ch2_chase_arrive":
+			await main.chase_session.wait_for_arrival()
+		&"ch2_chase_mist_retreat":
+			await main.chase_session.retreat_mist(step.number("time", 0.3))
+		&"ch2_dodge_qte":
+			var dodge_success: bool = await main.chase_session.run_dodge_qte(StringName(step.text("key")))
+			main.flags.set_value(&"ch2/dodge_succeeded", dodge_success)
 		&"npc":
 			await _npc(step)
 		&"npc_move":
@@ -328,6 +384,8 @@ func _apply(step: StageStep) -> void:
 			_npc_pose(step)
 		&"npc_remove":
 			await _npc_remove(step)
+		&"npc_talk":
+			_npc_talk(step)
 		&"hold":
 			_hold(step)
 		&"focus":
@@ -757,6 +815,7 @@ func _add_c_rescue_binding(actor: Node2D, height: float) -> Sprite2D:
 		return null
 	var binding: Sprite2D = C_RESCUE_BINDING_SCRIPT.new()
 	binding.name = "RescueBinding"
+	binding.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	binding.call("set_state", 0)
 	var binding_size: Vector2 = binding.texture.get_size()
 	# 束缚是 C 的子节点，地图/角色缩放会由父节点统一带下去。
@@ -908,6 +967,17 @@ func _npc_pose(step: StageStep) -> void:
 	if pose == "" or not (actor is AnimatedSprite2D):
 		return
 	_play_if_any(actor as AnimatedSprite2D, StringName("idle_" + pose))
+
+
+func _npc_talk(step: StageStep) -> void:
+	var id := step.text("id")
+	if _actor(id) == null:
+		return
+	var talk := step.text("talk")
+	if talk.is_empty():
+		_talk.erase(id)
+	else:
+		_talk[id] = StringName(talk)
 
 
 func _npc_remove(step: StageStep) -> void:

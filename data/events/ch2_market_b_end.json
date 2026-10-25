@@ -1,0 +1,408 @@
+{
+  "id": "ch2_market_b_end",
+  "entry": "check",
+  "nodes": [
+    {
+      "id": "check",
+      "stage": [],
+      "next": "blocked",
+      "next_when": {
+        "if": {
+          "var": "ch2/left_veil_realm",
+          "op": "==",
+          "value": true
+        },
+        "next": "b_arrives"
+      }
+    },
+    {
+      "id": "blocked",
+      "stage": [
+        {
+          "do": "say",
+          "text": "那个人没有回应。"
+        }
+      ]
+    },
+    {
+      "id": "b_arrives",
+      "stage": [
+        {
+          "do": "npc",
+          "id": "b",
+          "sprite": "res://art/npc/b",
+          "at": [
+            300,
+            279
+          ],
+          "height": 40,
+          "z": 12,
+          "pose": "down"
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "终于出来了",
+              "side": "left",
+              "portrait": "protagonist/quiet"
+            },
+            {
+              "speaker": "B",
+              "text": "回来了？我就说不会坑你的吧",
+              "side": "right",
+              "portrait": "mysterious"
+            },
+            {
+              "speaker": "我",
+              "text": "你还敢说？！怎么没告诉我蚀界还允许多人进入，我差点死在里面",
+              "side": "left",
+              "portrait": "protagonist/guarded"
+            },
+            {
+              "speaker": "B",
+              "text": "什 么！谁来了",
+              "side": "right",
+              "portrait": "mysterious"
+            },
+            {
+              "speaker": "我",
+              "text": "C，也不知道是不是真叫这个名",
+              "side": "left",
+              "portrait": "protagonist/thinking"
+            },
+            {
+              "speaker": "B",
+              "text": "（小声）怎么他会来，看来....",
+              "side": "right",
+              "portrait": "mysterious"
+            },
+            {
+              "speaker": "B",
+              "text": "算了，你先把东西给我，吊坠就留给你做纪念吧",
+              "side": "right",
+              "portrait": "mysterious"
+            }
+          ]
+        }
+      ],
+      "next": "pendant_check"
+    },
+    {
+      "id": "pendant_check",
+      "stage": [],
+      "next": "pendant_show",
+      "next_when": {
+        "if": {
+          "var": "item/pendant",
+          "op": ">=",
+          "value": 1
+        },
+        "next": "pendant_already_owned"
+      }
+    },
+    {
+      "id": "pendant_show",
+      "stage": [
+        {
+          "do": "image",
+          "path": "res://art/item/pendant.png",
+          "fade": 0.35,
+          "wait_click": false,
+          "hide": false
+        }
+      ],
+      "next": "pendant_reward"
+    },
+    {
+      "id": "pendant_reward",
+      "set": {
+        "item/pendant": 1
+      },
+      "stage": [
+        {
+          "do": "say",
+          "text": "获得 未知吊坠 ×1"
+        },
+        {
+          "do": "image_hide",
+          "fade": 0.35
+        }
+      ],
+      "next": "lose_tear"
+    },
+    {
+      "id": "pendant_already_owned",
+      "stage": [
+        {
+          "do": "say",
+          "text": "你摸到口袋里的吊坠，它仍然留在你身边。"
+        }
+      ],
+      "next": "lose_tear"
+    },
+    {
+      "id": "lose_tear",
+      "stage": [
+        {
+          "do": "say",
+          "text": "失去 夜幕之泪 x1"
+        }
+      ],
+      "next": "lose_tear_apply"
+    },
+    {
+      "id": "lose_tear_apply",
+      "set": {
+        "item/night_tear": 0,
+        "ch2/personal/tear_transferred": true
+      },
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "B",
+              "text": "行，我们还会再见的",
+              "side": "right",
+              "portrait": "mysterious"
+            }
+          ]
+        },
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.25
+        },
+        {
+          "do": "goto",
+          "map": "desk_shop",
+          "spawn": "from_overworld"
+        },
+        {
+          "do": "location",
+          "text": "？月 ？日 委托屋 深夜"
+        }
+      ],
+      "next": "elder_arrives"
+    },
+    {
+      "id": "elder_arrives",
+      "stage": [
+        {
+          "do": "fade",
+          "to": "clear",
+          "time": 0.25
+        },
+        {
+          "do": "npc",
+          "id": "elder",
+          "sprite": "res://art/npc/elder",
+          "at": [
+            223,
+            330
+          ],
+          "height": 45,
+          "z": 12,
+          "pose": "down"
+        },
+        {
+          "do": "npc_move",
+          "id": "elder",
+          "to": [
+            223,
+            170
+          ],
+          "time": 1.4
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "老人",
+              "text": "你找到了我的猫吗",
+              "side": "left",
+              "portrait": "elder"
+            },
+            {
+              "speaker": "我",
+              "text": "老人家，你的猫......我只找到了这个",
+              "side": "right",
+              "portrait": "protagonist/quiet"
+            }
+          ]
+        }
+      ],
+      "next": "doll_transfer"
+    },
+    {
+      "id": "doll_transfer",
+      "stage": [
+        {
+          "do": "say",
+          "text": "失去 猫玩偶 x1"
+        }
+      ],
+      "next": "doll_transfer_apply"
+    },
+    {
+      "id": "doll_transfer_apply",
+      "set": {
+        "item/cat_doll": 0,
+        "ch2/cat_delivered": true
+      },
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "老人",
+              "text": "太好了，这就是我的猫！",
+              "side": "left",
+              "portrait": "elder"
+            },
+            {
+              "speaker": "老人",
+              "text": "前几天我家里跑进了一只猫，把我孙女的玩偶叼走了",
+              "side": "left",
+              "portrait": "elder"
+            },
+            {
+              "speaker": "老人",
+              "text": "谢谢你啊小姑娘",
+              "side": "left",
+              "portrait": "elder"
+            }
+          ]
+        }
+      ],
+      "next": "silver_reward"
+    },
+    {
+      "id": "silver_reward",
+      "set": {
+        "item/silver_coin": 10
+      },
+      "stage": [
+        {
+          "do": "say",
+          "text": "获得 银币x10"
+        }
+      ],
+      "next": "elder_leaves"
+    },
+    {
+      "id": "elder_leaves",
+      "set": {
+        "ch2/school_closed": true,
+        "ch2/night_tear_absorbed": true
+      },
+      "stage": [
+        {
+          "do": "npc_move",
+          "id": "elder",
+          "to": [
+            223,
+            330
+          ],
+          "time": 1.4,
+          "fade": true
+        },
+        {
+          "do": "npc_remove",
+          "id": "elder"
+        }
+      ],
+      "next": "ending_reaction"
+    },
+    {
+      "id": "ending_reaction",
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "原来只是一个玩偶不见了吗喂？！！！",
+              "side": "left",
+              "portrait": "protagonist/shocked"
+            },
+            {
+              "speaker": "我",
+              "text": "太好了，终于——结束了.....吧",
+              "side": "left",
+              "portrait": "protagonist/quiet"
+            }
+          ]
+        },
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.4
+        },
+        {
+          "do": "caption",
+          "fade": 0.7,
+          "hold": 1.3,
+          "out": 0.5,
+          "lines": [
+            {
+              "text": "条件已改写：猫 = 玩偶"
+            },
+            {
+              "text": "学校：已关闭"
+            },
+            {
+              "text": "夜幕之泪：已吸收"
+            }
+          ]
+        },
+        {
+          "do": "caption",
+          "fade": 0.7,
+          "hold": 1.0,
+          "out": 0.5,
+          "lines": [
+            {
+              "text": "结束.....了吗？"
+            }
+          ]
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "C",
+              "text": "yn是吗，你比我想象中的做得还要好呢",
+              "side": "right",
+              "portrait": "c/neutral"
+            },
+            {
+              "speaker": "C",
+              "text": "很期待我们的正式见面 ^ ^",
+              "side": "right",
+              "portrait": "c/neutral"
+            }
+          ]
+        },
+        {
+          "do": "caption",
+          "fade": 0.8,
+          "wait_click": true,
+          "lines": [
+            {
+              "text": "end 7 未到的明天",
+              "size": 16
+            },
+            {
+              "text": "明天已经来临，只不过藏在夜幕里",
+              "size": 14
+            }
+          ]
+        }
+      ],
+      "ending": "end7_rewritten"
+    }
+  ]
+}

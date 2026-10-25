@@ -1,0 +1,51 @@
+{
+  "id": "ch2_register",
+  "entry": "start",
+  "nodes": [
+    {
+      "id": "start",
+      "stage": [
+        {
+          "do": "say",
+          "text": "玻璃碎了。桌面上有一本登记册。最后一页写着："
+        },
+        {
+          "do": "image",
+          "path": "res://art/props/ch2_register.png",
+          "fade": 0.4,
+          "wait_click": false,
+          "hide": false
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "text": "来访者登记"
+            },
+            {
+              "text": "xxxx  xxxx  xxxx 主角"
+            }
+          ]
+        },
+        {
+          "do": "image_hide",
+          "fade": 0.4
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "text": "怎么其他名字都涂黑了，不知道的还以为是死亡笔记（汗）",
+              "speaker": "我",
+              "portrait": "protagonist/quiet",
+              "side": "left"
+            }
+          ]
+        },
+        {
+          "do": "focus"
+        }
+      ]
+    }
+  ]
+}

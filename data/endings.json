@@ -28,5 +28,17 @@
     "title": "自以为是的到来",
     "summary": "你是主角没错，但主角可以换人啊。",
     "kind": "bad"
+  },
+  {
+    "id": "end6_sin",
+    "title": "罪过",
+    "summary": "你已经知道会发生什么，却还是没能躲开。",
+    "kind": "bad"
+  },
+  {
+    "id": "end7_rewritten",
+    "title": "未到的明天",
+    "summary": "条件被改写：猫 = 玩偶。学校：已关闭。夜幕之泪：已吸收。",
+    "kind": "good"
   }
 ]

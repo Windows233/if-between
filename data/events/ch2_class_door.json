@@ -1,0 +1,85 @@
+{
+  "id": "ch2_class_door",
+  "entry": "door_notice",
+  "nodes": [
+    {
+      "id": "door_notice",
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "text": "门紧闭着，但好像可以用钥匙打开"
+            },
+            {
+              "text": "嗯....钥匙.....",
+              "speaker": "我",
+              "portrait": "protagonist/quiet",
+              "side": "left"
+            }
+          ]
+        }
+      ],
+      "next": "key_check"
+    },
+    {
+      "id": "key_check",
+      "stage": [],
+      "next": "door_locked",
+      "next_when": {
+        "if": {
+          "var": "item/key",
+          "op": ">=",
+          "value": 1
+        },
+        "next": "class_enter"
+      }
+    },
+    {
+      "id": "door_locked",
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "text": "是不是漏了什么地方，再去找找吧",
+              "speaker": "我",
+              "portrait": "protagonist/quiet",
+              "side": "left"
+            }
+          ]
+        },
+        {
+          "do": "focus"
+        }
+      ]
+    },
+    {
+      "id": "class_enter",
+      "stage": [
+        {
+          "do": "play_sound",
+          "path": "res://audio/sfx/door_open.wav"
+        },
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.2
+        },
+        {
+          "do": "goto",
+          "map": "classroom",
+          "spawn": "from_gate"
+        },
+        {
+          "do": "focus"
+        },
+        {
+          "do": "fade",
+          "to": "clear",
+          "time": 0.2
+        }
+      ]
+    }
+  ]
+}

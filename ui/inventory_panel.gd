@@ -220,6 +220,8 @@ static func collect(items: ItemTable, flags: WorldState) -> Array[Dictionary]:
 
 ## 物品图标。没有就返回空字符串，格子会画成占位方块。
 static func icon_path(id: StringName) -> String:
+	if id == &"charm":
+		return ""
 	var path := "res://art/item/%s.png" % id
 	return path if ResourceLoader.exists(path) else ""
 

@@ -1,0 +1,91 @@
+{
+  "id": "ch2_library_shelf",
+  "entry": "check",
+  "nodes": [
+    {
+      "id": "check",
+      "stage": [],
+      "next": "first",
+      "next_when": {
+        "if": {
+          "var": "ch2/library/shelf_seen",
+          "op": "==",
+          "value": true
+        },
+        "next": "seen"
+      }
+    },
+    {
+      "id": "first",
+      "set": {
+        "ch2/library/shelf_seen": true
+      },
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "这是一本写着猫和小女孩的童话书。",
+              "side": "left",
+              "portrait": "protagonist/quiet"
+            },
+            {
+              "speaker": "我",
+              "text": "故事停在猫被留在学校的那一页。",
+              "side": "left",
+              "portrait": "protagonist/quiet"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "seen",
+      "stage": [],
+      "next": "repeat",
+      "next_when": {
+        "if": {
+          "var": "ch2/library/rewound",
+          "op": "==",
+          "value": true
+        },
+        "next": "second"
+      }
+    },
+    {
+      "id": "second",
+      "set": {
+        "ch2/library/fairy_tale_second": true
+      },
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "书里多了一页。猫没有等到主人，而是叼走了一只玩偶。",
+              "side": "left",
+              "portrait": "protagonist/shocked"
+            },
+            {
+              "speaker": "我",
+              "text": "这不是我刚才看到的内容。",
+              "side": "left",
+              "portrait": "protagonist/thinking"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "repeat",
+      "stage": [
+        {
+          "do": "say",
+          "text": "童话书还是那一页。"
+        }
+      ]
+    }
+  ]
+}

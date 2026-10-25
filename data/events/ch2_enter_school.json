@@ -4,6 +4,7 @@
   "nodes": [
     {
       "id": "go",
+      "next": "gate_entry",
       "stage": [
         {
           "do": "play_sound",
@@ -13,6 +14,21 @@
           "do": "goto",
           "map": "school_gate",
           "spawn": "from_alley"
+        }
+      ]
+    },
+    {
+      "id": "gate_entry",
+      "set": {
+        "ch2/gate_entry_seen": true
+      },
+      "stage": [
+        {
+          "do": "location",
+          "text": "？月 ？日 校门 未知"
+        },
+        {
+          "do": "focus"
         }
       ]
     }

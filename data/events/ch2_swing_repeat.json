@@ -1,0 +1,45 @@
+{
+  "id": "ch2_swing_repeat",
+  "entry": "rescued_check",
+  "nodes": [
+    {
+      "id": "rescued_check",
+      "stage": [],
+      "next": "not_rescued",
+      "next_when": {
+        "if": {
+          "var": "ch2/rescued_c",
+          "op": "==",
+          "value": true
+        },
+        "next": "swing_repeat"
+      }
+    },
+    {
+      "id": "not_rescued",
+      "stage": []
+    },
+    {
+      "id": "swing_repeat",
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "text": "两个秋千，一个在动，铁链上缠着猫尾巴一样的黑毛"
+            },
+            {
+              "text": "....是风吧，一定是风，对",
+              "speaker": "我",
+              "portrait": "protagonist/quiet",
+              "side": "left"
+            }
+          ]
+        },
+        {
+          "do": "focus"
+        }
+      ]
+    }
+  ]
+}

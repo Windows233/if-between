@@ -1,35 +1,28 @@
 {
   "id": "ch2_swing",
-  "entry": "cutscene",
+  "entry": "rescue_entry",
   "nodes": [
     {
-      "id": "cutscene",
+      "id": "rescue_entry",
       "stage": [
-        { "do": "save" },
-        { "do": "focus", "at": [200, 79] },
         {
-          "do": "npc",
-          "id": "c",
-          "sprite": "res://art/npc/c",
-          "at": [186, 88],
-          "height": 32,
-          "z": 12,
-          "pose": "down",
-          "rescue_binding": true
+          "do": "ch2_checkpoint_save",
+          "checkpoint": "rescue"
         },
         {
           "do": "say",
           "lines": [
             {
               "speaker": "C",
-              "text": "别碰线。碰了会——",
-              "side": "right"
+              "portrait": "c/neutral",
+              "side": "right",
+              "text": "别碰线。碰了会——"
             },
             {
               "speaker": "我",
-              "text": "嗯？",
+              "portrait": "protagonist/quiet",
               "side": "left",
-              "portrait": "protagonist/puzzled"
+              "text": "嗯？"
             }
           ]
         }
@@ -39,40 +32,100 @@
     {
       "id": "challenge",
       "stage": [
-        { "do": "say", "slide": "out" },
-        { "do": "rescue", "flag": "ch2/rescue_success" }
+        {
+          "do": "say",
+          "slide": "out"
+        },
+        {
+          "do": "rescue",
+          "flag": "ch2/rescue_success"
+        }
       ],
       "next": "failed",
       "next_when": {
-        "if": { "var": "ch2/rescue_success", "op": "==", "value": true },
+        "if": {
+          "var": "ch2/rescue_success",
+          "op": "==",
+          "value": true
+        },
         "next": "rescued"
       }
     },
     {
       "id": "failed",
       "stage": [
-        { "do": "say", "lines": [
-          { "speaker": "我", "portrait": "protagonist/agony", "side": "left", "text": "啊—！！怎么..." }
-        ] },
-        { "do": "fade", "to": "black", "time": 0.45 },
-        { "do": "say", "lines": [
-          { "speaker": "？？？", "side": "right", "text": "这种程度就不行了吗？呵，是我走眼了__" }
-        ] },
-        { "do": "caption", "wait_click": true, "out": 0.3, "lines": [
-          { "text": "end 4 自以为是的到来", "size": 16 },
-          { "text": "你是主角没错，但主角可以换人啊", "size": 12 }
-        ] }
+        {
+          "do": "image",
+          "path": "res://art/cg/ch2_rescue_injury.png",
+          "fade": 0.3,
+          "fill": true,
+          "hide": false
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "portrait": "protagonist/quiet",
+              "side": "left",
+              "text": "啊—！！怎么..."
+            }
+          ]
+        },
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.45
+        },
+        {
+          "do": "image_hide",
+          "fade": 0.3
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "？？？",
+              "text": "这种程度就不行了吗？呵，是我走眼了__"
+            },
+            {
+              "text": "end 4 自以为是的到来"
+            },
+            {
+              "text": "你是主角没错，但主角可以换人啊"
+            }
+          ]
+        }
       ],
       "choices": [
-        { "id": "retry", "label": "重试救援", "next": "retry" },
-        { "id": "finish", "label": "返回标题", "next": "ending" }
+        {
+          "id": "retry",
+          "label": "重试救援",
+          "next": "retry"
+        },
+        {
+          "id": "finish",
+          "label": "返回标题",
+          "next": "ending"
+        }
       ]
     },
     {
       "id": "retry",
       "stage": [
-        { "do": "say", "slide": "out" },
-        { "do": "fade", "to": "clear", "time": 0.3 }
+        {
+          "do": "say",
+          "slide": "out"
+        },
+        {
+          "do": "ch2_checkpoint_restore",
+          "checkpoint": "rescue"
+        },
+        {
+          "do": "fade",
+          "to": "clear",
+          "time": 0.3
+        }
       ],
       "next": "challenge"
     },
@@ -80,37 +133,282 @@
       "id": "ending",
       "ending": "end4_arrogant",
       "stage": [
-        { "do": "caption", "wait_click": true, "lines": [
-          { "text": "end 4 自以为是的到来", "size": 16 },
-          { "text": "你是主角没错，但主角可以换人啊", "size": 12 }
-        ] }
+        {
+          "do": "ch2_checkpoint_clear",
+          "checkpoint": "rescue"
+        }
       ]
     },
     {
       "id": "rescued",
-      "set": { "ch2/rescued_c": true },
+      "set": {
+        "ch2/rescued_c": true
+      },
       "stage": [
-        { "do": "npc_pose", "id": "c", "pose": "down" },
-        { "do": "say", "lines": [
-          { "speaker": "C", "portrait": "c_base", "side": "right", "text": ".....你竟然能直接引导因果线？" },
-          { "speaker": "C", "portrait": "c_base", "side": "right", "text": "等下，你又是谁！？" },
-          { "speaker": "我", "portrait": "protagonist/puzzled", "side": "left", "text": "你妈妈没有跟你说，问别人前先要自·报·家·门吗？" },
-          { "speaker": "C", "portrait": "c_base", "side": "right", "text": "这样子啊~ 在下C，白塔分部下的一名专案员。" },
-          { "speaker": "C", "portrait": "c_base", "side": "right", "text": "这地方的规则。蚀界里的所有东西都靠‘if - then’运转。" },
-          { "speaker": "C", "portrait": "c_base", "side": "right", "text": "这个给你，只要你拿着它，后面你遇到困难，我都会来英·雄·救·美的呢 ^ ^" },
-          { "speaker": "我", "portrait": "protagonist/quiet", "side": "left", "text": "...不需要" }
-        ] },
-        { "do": "say", "slide": "out" },
-        { "do": "image", "path": "res://art/item/charm.png", "fade": 0.35, "wait_click": true, "hide": true }
+        {
+          "do": "ch2_checkpoint_clear",
+          "checkpoint": "rescue"
+        },
+        {
+          "do": "npc_pose",
+          "id": "c",
+          "pose": "down"
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "C",
+              "portrait": "c/neutral",
+              "side": "right",
+              "text": ".....你竟然能直接引导因果线？"
+            },
+            {
+              "speaker": "C",
+              "portrait": "c/neutral",
+              "side": "right",
+              "text": "等下，你又是谁！？"
+            },
+            {
+              "speaker": "我",
+              "portrait": "protagonist/quiet",
+              "side": "left",
+              "text": "你妈妈没有跟你说，问别人前先要自·报·家·门吗？"
+            },
+            {
+              "speaker": "C",
+              "portrait": "c/neutral",
+              "side": "right",
+              "text": "这样子啊~ 在下C，白塔分部下的一名专案员。"
+            },
+            {
+              "speaker": "C",
+              "portrait": "c/neutral",
+              "side": "right",
+              "text": "现在可以了吗，小姐"
+            },
+            {
+              "speaker": "我",
+              "portrait": "protagonist/quiet",
+              "side": "left",
+              "text": "yn，自己经营一家事务所"
+            },
+            {
+              "speaker": "我",
+              "portrait": "protagonist/quiet",
+              "side": "left",
+              "text": "还有，你说的因果线...是什么？"
+            },
+            {
+              "speaker": "C",
+              "portrait": "c/neutral",
+              "side": "right",
+              "text": "这地方的规则。蚀界里的所有东西都靠‘if - then’运转。"
+            },
+            {
+              "speaker": "C",
+              "portrait": "c/neutral",
+              "side": "right",
+              "text": "你碰了线，按理说会被标记成入侵者。但你没有。"
+            },
+            {
+              "speaker": "C",
+              "portrait": "c/neutral",
+              "side": "right",
+              "text": "......"
+            },
+            {
+              "speaker": "C",
+              "portrait": "c/neutral",
+              "side": "right",
+              "text": "你不是能力者，对吧？"
+            },
+            {
+              "speaker": "我",
+              "portrait": "protagonist/quiet",
+              "side": "left",
+              "text": "什么能力者？"
+            },
+            {
+              "speaker": "C",
+              "portrait": "c/neutral",
+              "side": "right",
+              "text": "欸，那你是怎么进来的"
+            },
+            {
+              "speaker": "我",
+              "portrait": "protagonist/quiet",
+              "side": "left",
+              "text": "呐，这个吊坠，是有人告诉我可以进来这里的"
+            },
+            {
+              "speaker": "C",
+              "portrait": "c/neutral",
+              "side": "right",
+              "text": "！？ 竟然是..."
+            },
+            {
+              "speaker": "C",
+              "portrait": "c/neutral",
+              "side": "right",
+              "text": "那你其实不该在这的。这地方叫蚀界。"
+            },
+            {
+              "speaker": "C",
+              "portrait": "c/neutral",
+              "side": "right",
+              "text": "执念太强的人，脑子里那些‘if’会漏出来，把现实泡烂。"
+            },
+            {
+              "speaker": "C",
+              "portrait": "c/neutral",
+              "side": "right",
+              "text": "你们知道的白塔，就那个你们知道的行政机构，其实也管这个。"
+            },
+            {
+              "speaker": "我",
+              "portrait": "protagonist/quiet",
+              "side": "left",
+              "text": "白塔！？专案局还管这些吗"
+            },
+            {
+              "speaker": "C",
+              "portrait": "c/neutral",
+              "side": "right",
+              "text": "或许只是你们眼里的呢，白塔的本质还是维持世界秩序的稳定，看到的面不同罢了"
+            },
+            {
+              "speaker": "C",
+              "portrait": "c/neutral",
+              "side": "right",
+              "text": "白塔算是官方组织，还有一些工会。"
+            },
+            {
+              "speaker": "C",
+              "portrait": "c/neutral",
+              "side": "right",
+              "text": "破解蚀界的话就能得到相应结晶，结晶含有巨大能量，很多人也是奔着这个来的"
+            },
+            {
+              "speaker": "我",
+              "portrait": "protagonist/quiet",
+              "side": "left",
+              "text": "就是那个夜幕之泪！？那人还说什么很·简·单"
+            },
+            {
+              "speaker": "C",
+              "portrait": "c/neutral",
+              "side": "right",
+              "text": "我现在倒是很好奇，是什么原因让你敢进入这里"
+            },
+            {
+              "speaker": "我",
+              "portrait": "protagonist/quiet",
+              "side": "left",
+              "text": "....."
+            },
+            {
+              "speaker": "我",
+              "portrait": "protagonist/quiet",
+              "side": "left",
+              "text": "我...我其实就是来找个猫"
+            },
+            {
+              "speaker": "C",
+              "portrait": "c/neutral",
+              "side": "right",
+              "text": "猫？ 如果我没想错的话，那只猫不是普通猫"
+            },
+            {
+              "speaker": "C",
+              "portrait": "c/neutral",
+              "side": "right",
+              "text": "它已经在这地方待太久了，已经和蚀界长在一起了"
+            },
+            {
+              "speaker": "C",
+              "portrait": "c/neutral",
+              "side": "right",
+              "text": "你越晚找到它，它就越不像猫，到最后它会"
+            },
+            {
+              "speaker": "我",
+              "portrait": "protagonist/quiet",
+              "side": "left",
+              "text": "会怎样？"
+            },
+            {
+              "speaker": "C",
+              "portrait": "c/neutral",
+              "side": "right",
+              "text": "会变成这地方的一部分。到时候你找到的就彻底不是猫，是一团‘if’。"
+            },
+            {
+              "speaker": "C",
+              "portrait": "c/neutral",
+              "side": "right",
+              "text": "算了算了，遇见就是缘分。yn，和我组队吧"
+            },
+            {
+              "speaker": "C",
+              "portrait": "c/neutral",
+              "side": "right",
+              "text": "在这个地方，有个伴还是会好一点"
+            }
+          ]
+        }
       ],
-      "next": "gift"
+      "choices": [
+        {
+          "id": "agree",
+          "label": "同意组队",
+          "next": "join_c"
+        }
+      ]
     },
     {
-      "id": "gift",
-      "set": { "item/charm": 1 },
+      "id": "join_c",
+      "set": {
+        "ch2/teamed_c": true
+      },
       "stage": [
-        { "do": "focus" },
-        { "do": "npc", "id": "c", "sprite": "res://art/npc/c", "at": [186, 88], "height": 32, "z": 12, "pose": "down", "talk": "ch2_c_wait" }
+        {
+          "do": "npc_talk",
+          "id": "c",
+          "talk": "ch2_c_wait"
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "C",
+              "portrait": "c/neutral",
+              "side": "right",
+              "text": "这个给你，只要你拿着它，后面你遇到困难，我都会来英·雄·救·美的呢 ^ ^"
+            },
+            {
+              "speaker": "我",
+              "portrait": "protagonist/quiet",
+              "side": "left",
+              "text": "...不需要"
+            },
+            {
+              "text": "一道闪光划过，落在了你的手里"
+            }
+          ]
+        }
+      ],
+      "next": "grant_coin"
+    },
+    {
+      "id": "grant_coin",
+      "set": {
+        "item/charm": 1
+      },
+      "stage": [
+        {
+          "do": "focus"
+        }
       ]
     }
   ]

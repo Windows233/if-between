@@ -100,6 +100,13 @@ func shake(strength: float = 2.0, time: float = 0.3) -> void:
 	_shake_left = maxf(_shake_left, time)
 
 
+func clear_shake() -> void:
+	_shake_left = 0.0
+	_shake_total = 0.0
+	_shake_strength = 0.0
+	offset = Vector2.ZERO
+
+
 func _process(delta: float) -> void:
 	if _shake_left <= 0.0:
 		return

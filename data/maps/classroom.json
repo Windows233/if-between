@@ -107,6 +107,7 @@
     {
       "cover": true,
       "cover_y": 179,
+      "decor": true,
       "id": "new_actor_3",
       "label": "新物件",
       "rect": [
@@ -120,7 +121,14 @@
     {
       "cover": true,
       "cover_y": 153,
-      "id": "日记0",
+      "actions": [
+        {
+          "event": "ch2_diary",
+          "id": "read",
+          "label": "阅读日记"
+        }
+      ],
+      "id": "diary_desk",
       "label": "日记",
       "rect": [
         260,
@@ -132,6 +140,13 @@
     },
     {
       "decor": false,
+      "actions": [
+        {
+          "event": "ch2_blackboard",
+          "id": "read",
+          "label": "查看黑板"
+        }
+      ],
       "id": "blackboard",
       "label": "黑板",
       "rect": [
@@ -141,6 +156,29 @@
         124
       ],
       "sprite": "res://art/props/ch2_blackboard_2.png"
+    },
+    {
+      "actions": [
+        {
+          "event": "ch2_classroom_window",
+          "id": "throw_coin",
+          "label": "走到窗边"
+        }
+      ],
+      "id": "classroom_window",
+      "label": "窗边",
+      "reach": [
+        284,
+        88,
+        44,
+        36
+      ],
+      "rect": [
+        330,
+        64,
+        28,
+        44
+      ]
     }
   ],
   "background": "res://art/map/classroom.png",
@@ -153,6 +191,8 @@
     {
       "id": "back_gate",
       "label": "学校大门",
+      "blocked_by": "ch2/personal/stealth_started",
+      "blocked_text": "现在还不能从后门离开，先把定位决策币丢到窗外。",
       "rect": [
         172,
         263,

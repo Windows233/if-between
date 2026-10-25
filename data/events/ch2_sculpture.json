@@ -6,24 +6,38 @@
       "id": "read",
       "stage": [
         {
+          "do": "image",
+          "path": "res://art/props/ch2_sculpture_inscription.png",
+          "fade": 0.4,
+          "wait_click": false,
+          "hide": false
+        },
+        {
           "do": "say",
           "lines": [
             {
               "speaker": "我",
               "text": "竟然还有刻字。静候归期...",
               "side": "left",
-              "portrait": "protagonist/puzzled"
+              "portrait": "protagonist/quiet"
             },
             {
-              "text": "旁边还有一行小字，像是后来有人用直接刻上去的"
+              "text": "旁边还有一行小字，像是后来有人直接刻上去的"
             },
             {
               "speaker": "我",
               "text": "....但归期不至？",
               "side": "left",
-              "portrait": "protagonist/puzzled"
+              "portrait": "protagonist/quiet"
             }
           ]
+        },
+        {
+          "do": "image_hide",
+          "fade": 0.4
+        },
+        {
+          "do": "focus"
         }
       ]
     }

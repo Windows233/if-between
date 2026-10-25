@@ -1,6 +1,13 @@
 {
   "actors": [
     {
+      "actions": [
+        {
+          "event": "ch2_library_shelf",
+          "id": "read_fairy_tale",
+          "label": "查看童话书"
+        }
+      ],
       "collision": [
         [
           2.986328125,
@@ -113,9 +120,69 @@
       "sprite": "res://art/props/library_shelf_d_cover.png"
     },
     {
+      "actions": [
+        {
+          "event": "ch2_library_cat",
+          "id": "approach",
+          "label": "接近小猫"
+        }
+      ],
+      "if": {
+        "any": [
+          {
+            "all": [
+              {
+                "var": "ch2/library/first_betrayal",
+                "op": "!=",
+                "value": true
+              },
+              {
+                "var": "ch2/library/blood_seen",
+                "op": "==",
+                "value": true
+              },
+              {
+                "var": "ch2/library/shelf_seen",
+                "op": "==",
+                "value": true
+              }
+            ]
+          },
+          {
+            "all": [
+              {
+                "var": "ch2/library/rewound",
+                "op": "==",
+                "value": true
+              },
+              {
+                "var": "ch2/library/blood_second_seen",
+                "op": "==",
+                "value": true
+              },
+              {
+                "var": "ch2/library/fairy_tale_second",
+                "op": "==",
+                "value": true
+              },
+              {
+                "var": "ch2/library/box_opened",
+                "op": "==",
+                "value": true
+              }
+            ]
+          }
+        ]
+      },
       "id": "cat_monster",
       "label": "小猫怪兽",
       "line": "……",
+      "reach": [
+        190,
+        180,
+        120,
+        95
+      ],
       "rect": [
         112,
         104,
@@ -401,12 +468,42 @@
       ],
       "sort_collider": 0,
       "sort_offset": 2,
-      "sprite": "res://art/props/ch2_box_closed_2.png"
+      "sprite": "res://art/props/ch2_box_closed_2.png",
+      "sprite_variants": {
+        "closed": "res://art/props/ch2_box_closed_2.png",
+        "open": "res://art/props/ch2_box_open.png"
+      },
+      "sprite_variant": "closed",
+      "actions": [
+        {
+          "event": "ch2_library_box",
+          "id": "open",
+          "label": "查看上锁盒子"
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "event": "ch2_library_blood",
+          "id": "inspect",
+          "label": "查看血迹"
+        }
+      ],
+      "id": "library_blood",
+      "label": "墙边的血迹",
+      "rect": [
+        77,
+        264,
+        42,
+        20
+      ]
     }
   ],
   "background": "res://art/map/library.png",
   "id": "library",
   "indoor": true,
+  "music": "res://audio/bgm/reclamation.mp3",
   "name": "图书馆",
   "overlay": "res://art/map/library_wall.png",
   "portals": [

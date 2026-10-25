@@ -4,18 +4,90 @@
   "nodes": [
     {
       "id": "wait",
-      "stage": [{ "do": "say", "lines": [
-        { "speaker": "C", "portrait": "c_base", "side": "right", "text": "准备好和我一起前往二楼了吗？" }
-      ] }],
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "C",
+              "portrait": "c/neutral",
+              "side": "right",
+              "text": "准备好和我一起去教学楼了吗？"
+            }
+          ]
+        }
+      ],
       "choices": [
-        { "id": "later", "label": "我再逛逛", "next": "later" }
+        {
+          "id": "ready",
+          "label": "准备好了",
+          "next": "depart"
+        },
+        {
+          "id": "later",
+          "label": "我再逛逛",
+          "next": "later"
+        }
       ]
     },
     {
       "id": "later",
-      "stage": [{ "do": "say", "lines": [
-        { "speaker": "C", "portrait": "c_base", "side": "right", "text": "好吧，我会在这等你的哦。" }
-      ] }]
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "C",
+              "portrait": "c/neutral",
+              "side": "right",
+              "text": "好吧，我会一直在这等你的哦"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "depart",
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "C",
+              "portrait": "c/neutral",
+              "side": "right",
+              "text": "好哦，那我们出发咯~"
+            }
+          ]
+        },
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.25
+        },
+        {
+          "do": "goto",
+          "map": "school_gate",
+          "spawn": "near_yard"
+        },
+        {
+          "do": "fade",
+          "to": "clear",
+          "time": 0.25
+        }
+      ],
+      "set": {
+        "ch2/c_at_school_gate": true
+      },
+      "next": "departed"
+    },
+    {
+      "id": "departed",
+      "stage": [
+        {
+          "do": "focus"
+        }
+      ]
     }
   ]
 }

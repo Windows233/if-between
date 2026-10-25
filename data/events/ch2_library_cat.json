@@ -1,0 +1,905 @@
+{
+  "id": "ch2_library_cat",
+  "entry": "check",
+  "nodes": [
+    {
+      "id": "check",
+      "stage": [],
+      "next": "first_check",
+      "next_when": {
+        "if": {
+          "var": "ch2/library/rewound",
+          "op": "==",
+          "value": true
+        },
+        "next": "second_scene"
+      }
+    },
+    {
+      "id": "first_check",
+      "stage": [],
+      "next": "no_diary",
+      "next_when": {
+        "if": {
+          "var": "item/diary",
+          "op": ">=",
+          "value": 1
+        },
+        "next": "with_diary"
+      }
+    },
+    {
+      "id": "no_diary",
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "C",
+              "text": "它不愿意接近你。你还缺少能让它认出的东西。",
+              "side": "right",
+              "portrait": "c/neutral"
+            },
+            {
+              "speaker": "我",
+              "text": "也许日记还在教室里。",
+              "side": "left",
+              "portrait": "protagonist/thinking"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "with_diary",
+      "set": {
+        "item/diary": 0,
+        "ch2/library/first_cat_mediation": true
+      },
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "C",
+              "text": "（呢喃）不愧是“夜幕之泪”啊",
+              "side": "right",
+              "portrait": "c/neutral"
+            },
+            {
+              "speaker": "我",
+              "text": "？",
+              "side": "left",
+              "portrait": "protagonist/puzzled"
+            },
+            {
+              "speaker": "C",
+              "text": "你来试试吧，我不用武力的话这猫看起来不会乖呢 ^ ^",
+              "side": "right",
+              "portrait": "c/neutral"
+            },
+            {
+              "speaker": "我",
+              "text": "....？这么亲切的人，怎么说出的话怪怪的",
+              "side": "left",
+              "portrait": "protagonist/thinking"
+            },
+            {
+              "speaker": "我",
+              "text": "好",
+              "side": "left",
+              "portrait": "protagonist/quiet"
+            },
+            {
+              "text": "你伸出手"
+            },
+            {
+              "text": "猫认得那个味道，是那个再次给它爱的人"
+            },
+            {
+              "speaker": "猫",
+              "text": "！是你",
+              "side": "right"
+            },
+            {
+              "speaker": "我",
+              "text": "一直有人在家等你回来。等等，回家了。",
+              "side": "left",
+              "portrait": "protagonist/quiet"
+            },
+            {
+              "speaker": "猫",
+              "text": "......喵",
+              "side": "right"
+            }
+          ]
+        }
+      ],
+      "next": "cat_reward"
+    },
+    {
+      "id": "cat_reward",
+      "stage": [
+        {
+          "do": "say",
+          "text": "猫的身影缩进黑暗，地上留下两件东西。"
+        }
+      ],
+      "next": "first_tear_show"
+    },
+    {
+      "id": "first_tear_show",
+      "stage": [
+        {
+          "do": "image",
+          "path": "res://art/item/night_tear.png",
+          "fade": 0.35,
+          "wait_click": false,
+          "hide": false
+        }
+      ],
+      "next": "first_tear_reward"
+    },
+    {
+      "id": "first_tear_reward",
+      "set": {
+        "item/night_tear": 1
+      },
+      "stage": [
+        {
+          "do": "say",
+          "text": "获得 夜幕之泪 ×1"
+        },
+        {
+          "do": "image_hide",
+          "fade": 0.35
+        }
+      ],
+      "next": "first_doll_show"
+    },
+    {
+      "id": "first_doll_show",
+      "stage": [
+        {
+          "do": "image",
+          "path": "res://art/item/cat_doll.png",
+          "fade": 0.35,
+          "wait_click": false,
+          "hide": false
+        }
+      ],
+      "next": "first_doll_reward"
+    },
+    {
+      "id": "first_doll_reward",
+      "set": {
+        "item/cat_doll": 1
+      },
+      "stage": [
+        {
+          "do": "say",
+          "text": "获得 猫玩偶 ×1"
+        },
+        {
+          "do": "image_hide",
+          "fade": 0.35
+        }
+      ],
+      "next": "first_betrayal"
+    },
+    {
+      "id": "first_betrayal",
+      "set": {
+        "ch2/library/first_betrayal": true,
+        "ch2/library/rewound": true
+      },
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "C",
+              "text": "真漂亮啊，好久没见到纯度这么高的结晶了",
+              "side": "right",
+              "portrait": "c/neutral"
+            },
+            {
+              "speaker": "C",
+              "text": "你是来找猫的对吧，这个能给我吗",
+              "side": "right",
+              "portrait": "c/neutral"
+            },
+            {
+              "speaker": "我",
+              "text": ".....可能不太行，我已经和人约好了",
+              "side": "left",
+              "portrait": "protagonist/guarded"
+            },
+            {
+              "speaker": "C",
+              "text": "真的不行吗 ^ ^",
+              "side": "right",
+              "portrait": "c/neutral"
+            },
+            {
+              "speaker": "我",
+              "text": "嗯，不行",
+              "side": "left",
+              "portrait": "protagonist/guarded"
+            },
+            {
+              "speaker": "C",
+              "text": "好吧，真是可惜啊",
+              "side": "right",
+              "portrait": "c/neutral"
+            }
+          ]
+        },
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.2
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "C",
+              "text": "可是，可",
+              "side": "right",
+              "portrait": "c/neutral"
+            },
+            {
+              "speaker": "C",
+              "text": "我已经给过你机会了，是你自己没有把握",
+              "side": "right",
+              "portrait": "c/neutral"
+            },
+            {
+              "speaker": "C",
+              "text": "不过还是得谢谢你，这种纯度的确实少见",
+              "side": "right",
+              "portrait": "c/neutral"
+            },
+            {
+              "speaker": "C",
+              "text": "你要怪就怪你的能力吧，让你拿着夜幕之泪去当敲门砖，倒不如就在这拜拜啦 ^ ^",
+              "side": "right",
+              "portrait": "c/neutral"
+            }
+          ]
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "你——",
+              "side": "left",
+              "portrait": "protagonist/shocked"
+            },
+            {
+              "speaker": "我",
+              "text": "为什么.....为什么...为什么为什么为什么！",
+              "side": "left",
+              "portrait": "protagonist/shocked"
+            },
+            {
+              "speaker": "我",
+              "text": "凭什么凭什么凭·什·么·",
+              "side": "left",
+              "portrait": "protagonist/shocked"
+            }
+          ]
+        },
+        {
+          "do": "personal_anchor_restore"
+        },
+        {
+          "do": "fade",
+          "to": "clear",
+          "time": 0.25
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "啊、这是重来了",
+              "side": "left",
+              "portrait": "protagonist/shocked"
+            },
+            {
+              "speaker": "我",
+              "text": "这个夜幕之泪到底是什么.....竟然这么想得到它",
+              "side": "left",
+              "portrait": "protagonist/thinking"
+            },
+            {
+              "speaker": "C",
+              "text": "这就不行了吗，yn还是得多练呐",
+              "side": "right",
+              "portrait": "c/neutral"
+            },
+            {
+              "speaker": "我",
+              "text": "。。不用你管",
+              "side": "left",
+              "portrait": "protagonist/guarded"
+            },
+            {
+              "speaker": "C",
+              "text": "？ 好吧",
+              "side": "right",
+              "portrait": "c/neutral"
+            },
+            {
+              "speaker": "我",
+              "text": "现在再来看，这调性也不像是白塔的人，也没有看见任何白塔的身份证明",
+              "side": "left",
+              "portrait": "protagonist/thinking"
+            },
+            {
+              "speaker": "我",
+              "text": "想来是其他什么组织的",
+              "side": "left",
+              "portrait": "protagonist/thinking"
+            },
+            {
+              "speaker": "我",
+              "text": "可恶，还是太大意了",
+              "side": "left",
+              "portrait": "protagonist/guarded"
+            },
+            {
+              "speaker": "我",
+              "text": "也不像是我能打过的样子，要演戏是吧...",
+              "side": "left",
+              "portrait": "protagonist/guarded"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "second_scene",
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "C",
+              "text": "（呢喃）不愧是“夜幕之泪”啊",
+              "side": "right",
+              "portrait": "c/neutral"
+            },
+            {
+              "speaker": "我",
+              "text": "原来在这时候就不对劲了吗",
+              "side": "left",
+              "portrait": "protagonist/thinking"
+            },
+            {
+              "speaker": "C",
+              "text": "你来试试吧，我不用武力的话这猫看起来不会乖呢 ^ ^",
+              "side": "right",
+              "portrait": "c/neutral"
+            },
+            {
+              "speaker": "我",
+              "text": "（翻白眼）",
+              "side": "left",
+              "portrait": "protagonist/guarded"
+            },
+            {
+              "speaker": "我",
+              "text": "好",
+              "side": "left",
+              "portrait": "protagonist/quiet"
+            },
+            {
+              "speaker": "猫",
+              "text": "是你...怎么又回来了？",
+              "side": "right"
+            },
+            {
+              "speaker": "我",
+              "text": "！你竟然能记得之前的事",
+              "side": "left",
+              "portrait": "protagonist/shocked"
+            },
+            {
+              "speaker": "猫",
+              "text": "主人说过她会回来看我的，所以只要明天不到来，今天就永远是昨天",
+              "side": "right"
+            },
+            {
+              "speaker": "猫",
+              "text": "现在喵回来了，我又怎么会忘记任何",
+              "side": "right"
+            },
+            {
+              "speaker": "猫",
+              "text": "好啦好啦，本喵是这个蚀界的核心，喵当然知道这个时间锚里发生的所有事情",
+              "side": "right"
+            },
+            {
+              "speaker": "猫",
+              "text": "等你们带着结晶出去，没有能量维系，这里自然喵会消散",
+              "side": "right"
+            },
+            {
+              "speaker": "猫",
+              "text": "而你，你的能力是回溯吧喵，你的血液里带着时间的种子",
+              "side": "right"
+            },
+            {
+              "speaker": "猫",
+              "text": "你看那里的血迹，你既处于现在的喵，也处于过去的喵",
+              "side": "right"
+            },
+            {
+              "speaker": "猫",
+              "text": "因果可以说都凝聚在你身上，知道自己其实是个天赋怪吗喵喵",
+              "side": "right"
+            },
+            {
+              "speaker": "我",
+              "text": "。。。？",
+              "side": "left",
+              "portrait": "protagonist/puzzled"
+            },
+            {
+              "speaker": "我",
+              "text": "说人话谢谢",
+              "side": "left",
+              "portrait": "protagonist/puzzled"
+            },
+            {
+              "speaker": "猫",
+              "text": "本喵怎么会说人话呢嘻嘻",
+              "side": "right"
+            },
+            {
+              "speaker": "猫",
+              "text": "算了，我和你说那么多干什么",
+              "side": "right"
+            },
+            {
+              "speaker": "我",
+              "text": "等...等一下，这个夜幕之泪到底是什么",
+              "side": "left",
+              "portrait": "protagonist/thinking"
+            },
+            {
+              "speaker": "我",
+              "text": "为什么....就因为一个结晶就能杀了我！",
+              "side": "left",
+              "portrait": "protagonist/guarded"
+            },
+            {
+              "speaker": "猫",
+              "text": "蚀界产生的结晶内含有巨大的能量，这个C是告诉过你了喵",
+              "side": "right"
+            },
+            {
+              "speaker": "猫",
+              "text": "但他没告诉你喵，达到一定品质的结晶会带有特殊的能力",
+              "side": "right"
+            },
+            {
+              "speaker": "猫",
+              "text": "品质越高，其相对能力喵也越强",
+              "side": "right"
+            },
+            {
+              "speaker": "猫",
+              "text": "而且喵，能力者的天赋，决定了ta在蚀界内获得结晶品质的上限",
+              "side": "right"
+            },
+            {
+              "speaker": "猫",
+              "text": "那么现在你再看看你，其实你自己就是个宝贝啊喵喵喵",
+              "side": "right"
+            },
+            {
+              "speaker": "我",
+              "text": "什.....什么",
+              "side": "left",
+              "portrait": "protagonist/shocked"
+            },
+            {
+              "speaker": "我",
+              "text": "那其实我投靠C的话，这一切都解决了......",
+              "side": "left",
+              "portrait": "protagonist/thinking"
+            },
+            {
+              "speaker": "我",
+              "text": "不行，能随便杀人的组织能是什么好组织",
+              "side": "left",
+              "portrait": "protagonist/guarded"
+            },
+            {
+              "speaker": "猫",
+              "text": "这就要你自己决定了喵，你该走了，你在这待的时间太长了喵",
+              "side": "right"
+            },
+            {
+              "speaker": "我",
+              "text": "好，回家，对，只要回去，白塔一定不会不管的",
+              "side": "left",
+              "portrait": "protagonist/quiet"
+            }
+          ]
+        }
+      ],
+      "next": "night_tear_show"
+    },
+    {
+      "id": "night_tear_show",
+      "stage": [
+        {
+          "do": "image",
+          "path": "res://art/item/night_tear.png",
+          "fade": 0.35,
+          "wait_click": false,
+          "hide": false
+        }
+      ],
+      "next": "night_tear_reward"
+    },
+    {
+      "id": "night_tear_reward",
+      "set": {
+        "item/night_tear": 1,
+        "ch2/library/second_cat_mediation": true
+      },
+      "stage": [
+        {
+          "do": "say",
+          "text": "获得 夜幕之泪 ×1"
+        },
+        {
+          "do": "image_hide",
+          "fade": 0.35
+        }
+      ],
+      "next": "cat_doll_show"
+    },
+    {
+      "id": "cat_doll_show",
+      "stage": [
+        {
+          "do": "image",
+          "path": "res://art/item/cat_doll.png",
+          "fade": 0.35,
+          "wait_click": false,
+          "hide": false
+        }
+      ],
+      "next": "cat_doll_reward"
+    },
+    {
+      "id": "cat_doll_reward",
+      "set": {
+        "item/cat_doll": 1
+      },
+      "stage": [
+        {
+          "do": "say",
+          "text": "获得 猫玩偶 ×1"
+        },
+        {
+          "do": "image_hide",
+          "fade": 0.35
+        }
+      ],
+      "next": "second_attack"
+    },
+    {
+      "id": "second_attack",
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "C",
+              "text": "真漂亮啊，好久没见到纯度这么高的结晶了",
+              "side": "right",
+              "portrait": "c/neutral"
+            },
+            {
+              "speaker": "C",
+              "text": "你是来找猫的对吧，现在猫你找到了，这个就给我吧",
+              "side": "right",
+              "portrait": "c/neutral"
+            },
+            {
+              "speaker": "我",
+              "text": "不，这个我不能给你",
+              "side": "left",
+              "portrait": "protagonist/guarded"
+            },
+            {
+              "speaker": "C",
+              "text": "是吗，那真是可惜啊~",
+              "side": "right",
+              "portrait": "c/neutral"
+            },
+            {
+              "speaker": "C",
+              "text": "那真是抱歉，呵",
+              "side": "right",
+              "portrait": "c/neutral"
+            }
+          ]
+        },
+        {
+          "do": "ch2_dodge_qte",
+          "key": "q"
+        }
+      ],
+      "next": "dodge_failed",
+      "next_when": {
+        "if": {
+          "var": "ch2/dodge_succeeded",
+          "op": "==",
+          "value": true
+        },
+        "next": "dodge_success"
+      }
+    },
+    {
+      "id": "dodge_failed",
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "C",
+              "text": "还不错嘛，有点警惕心",
+              "side": "right",
+              "portrait": "c/neutral"
+            },
+            {
+              "speaker": "C",
+              "text": "不过，你还是太年轻了啊",
+              "side": "right",
+              "portrait": "c/neutral"
+            },
+            {
+              "speaker": "C",
+              "text": "这下彻底再见咯，yn",
+              "side": "right",
+              "portrait": "c/neutral"
+            },
+            {
+              "speaker": "我",
+              "text": "就。。这么结束了.........",
+              "side": "left",
+              "portrait": "protagonist/shocked"
+            },
+            {
+              "speaker": "我",
+              "text": "为·什么。",
+              "side": "left",
+              "portrait": "protagonist/shocked"
+            }
+          ]
+        }
+      ],
+      "ending": "end6_sin"
+    },
+    {
+      "id": "dodge_success",
+      "set": {
+        "ch2/personal/stealth_available": true
+      },
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "C",
+              "text": "竟然能躲过吗~",
+              "side": "right",
+              "portrait": "c/neutral"
+            },
+            {
+              "speaker": "C",
+              "text": "不错不错，我真的对你越来越感兴趣了",
+              "side": "right",
+              "portrait": "c/neutral"
+            },
+            {
+              "speaker": "C",
+              "text": "让我看看你还能带给我什么惊喜吧",
+              "side": "right",
+              "portrait": "c/neutral"
+            },
+            {
+              "speaker": "我",
+              "text": "啊！",
+              "side": "left",
+              "portrait": "protagonist/shocked"
+            }
+          ]
+        }
+      ],
+      "next": "crowbar_missing",
+      "next_when": {
+        "if": {
+          "var": "item/crowbar",
+          "op": ">=",
+          "value": 1
+        },
+        "next": "crowbar_used"
+      }
+    },
+    {
+      "id": "crowbar_used",
+      "set": {
+        "ch2/personal/crowbar_used": true,
+        "ch2/library/shelf_fallen": true
+      },
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "不行，赶紧想想能怎么脱身",
+              "side": "left",
+              "portrait": "protagonist/thinking"
+            },
+            {
+              "speaker": "我",
+              "text": "对了！书架",
+              "side": "left",
+              "portrait": "protagonist/guarded"
+            },
+            {
+              "text": "你用早已准备好的撬棍掀倒书架，挡住了 C 的去路。"
+            },
+            {
+              "speaker": "C",
+              "text": "咳咳咳，可恶",
+              "side": "right",
+              "portrait": "c/neutral"
+            },
+            {
+              "speaker": "C",
+              "text": "看来这场游戏要尽早结束了",
+              "side": "right",
+              "portrait": "c/neutral"
+            }
+          ]
+        }
+      ],
+      "next": "stealth_choice"
+    },
+    {
+      "id": "crowbar_missing",
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "手边没有撬棍，书架纹丝不动。",
+              "side": "left",
+              "portrait": "protagonist/guarded"
+            },
+            {
+              "speaker": "C",
+              "text": "我倒要看看你还能躲到哪里去呢",
+              "side": "right",
+              "portrait": "c/neutral"
+            }
+          ]
+        }
+      ],
+      "next": "stealth_choice"
+    },
+    {
+      "id": "stealth_choice",
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "要被追上了！！怎么办。。。怎么办，我不能就这么死·在·这·里",
+              "side": "left",
+              "portrait": "protagonist/shocked"
+            },
+            {
+              "speaker": "我",
+              "text": "夜幕之泪在手里发冷。它可以遮住你的痕迹，但需要你主动驱动。",
+              "side": "left",
+              "portrait": "protagonist/thinking"
+            }
+          ]
+        }
+      ],
+      "choices": [
+        {
+          "id": "activate_stealth",
+          "label": "主动驱动夜幕之泪",
+          "set": {
+            "ch2/personal/stealth_started": true
+          },
+          "next": "stealth_escape"
+        },
+        {
+          "id": "run_without",
+          "label": "直接逃跑",
+          "next": "stealth_refused"
+        }
+      ]
+    },
+    {
+      "id": "stealth_refused",
+      "stage": [
+        {
+          "do": "say",
+          "text": "没有隐蔽能力，你的脚步立刻被 C 捕捉到了。"
+        }
+      ],
+      "next": "stealth_choice"
+    },
+    {
+      "id": "stealth_escape",
+      "set": {
+        "ch2/left_library": true
+      },
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "我驱动夜幕之泪，藏住自己的气息。",
+              "side": "left",
+              "portrait": "protagonist/guarded"
+            },
+            {
+              "speaker": "我",
+              "text": "决策币还会暴露位置。到教室窗边再把它丢出去。",
+              "side": "left",
+              "portrait": "protagonist/thinking"
+            },
+            {
+              "speaker": "C",
+              "text": "竟然选择跳窗逃跑吗，年轻人就是有活力",
+              "side": "right",
+              "portrait": "c/neutral"
+            },
+            {
+              "speaker": "C",
+              "text": "不过，这下可就没地方藏了，哎",
+              "side": "right",
+              "portrait": "c/neutral"
+            },
+            {
+              "speaker": "我",
+              "text": "！果然有问题，快走！",
+              "side": "left",
+              "portrait": "protagonist/guarded"
+            }
+          ]
+        },
+        {
+          "do": "goto",
+          "map": "classroom",
+          "spawn": "from_gate"
+        },
+        {
+          "do": "location",
+          "text": "？月 ？日 教室 深夜"
+        }
+      ]
+    }
+  ]
+}

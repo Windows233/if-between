@@ -354,7 +354,7 @@ static func test_data_loader(h: TestHarness) -> void:
 	h.check("读不存在的剧情返回 null", DataLoader.load_event(&"没有这个剧情"), null)
 
 	var table := DataLoader.load_endings()
-	h.check("读到结局表", table.endings.size(), 5)
+	h.check("读到结局表", table.endings.size(), 7)
 	h.check("旧铁律结局与新增救援结局并存",
 		table.ids().has(&"end4_iron") and table.ids().has(&"end4_arrogant"), true)
 	h.check("结局表里有第一章的 end1", table.get_ending(&"end1_calm") != null, true)

@@ -75,8 +75,8 @@
       "rect": [
         194,
         38,
-        58,
-        42
+        56,
+        38
       ]
     },
     {
@@ -166,14 +166,16 @@
   "player_scale": 0.5,
   "portals": [
     {
-      "action": "overworld",
-      "label": "南门",
+      "label": "校门",
       "rect": [
         144,
         151,
         26,
         60
-      ]
+      ],
+      "id": "to_school_gate",
+      "to": "school_gate",
+      "spawn": "near_yard"
     }
   ],
   "size": [

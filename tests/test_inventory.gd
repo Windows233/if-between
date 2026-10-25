@@ -34,6 +34,8 @@ static func test_item_table(h: TestHarness) -> void:
 	h.check("物品键认得出来", ItemTable.is_item_flag(&"item/cat_photo"), true)
 	h.check("剧情变量不是物品", ItemTable.is_item_flag(&"quest_cat"), false)
 	h.check("从键反推 id", ItemTable.id_from_flag(&"item/cat_photo"), &"cat_photo")
+	var items := DataLoader.load_items()
+	h.check("旧 charm 存档显示为决策币", items.name_of(&"charm"), "决策币")
 
 
 static func test_panel_lists_items(h: TestHarness) -> void:
@@ -59,6 +61,8 @@ static func test_panel_lists_items(h: TestHarness) -> void:
 
 	# 没有图的东西不该让格子空掉
 	h.check("没图就返回空路径", InventoryPanel.icon_path(&"不存在的物品"), "")
+	h.check("正式圆币图未到时不显示旧御守图",
+		InventoryPanel.icon_path(&"charm"), "")
 
 
 static func test_panel_open_close(h: TestHarness) -> void:

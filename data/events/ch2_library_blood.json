@@ -1,0 +1,86 @@
+{
+  "id": "ch2_library_blood",
+  "entry": "check",
+  "nodes": [
+    {
+      "id": "check",
+      "stage": [],
+      "next": "first",
+      "next_when": {
+        "if": {
+          "var": "ch2/library/blood_seen",
+          "op": "==",
+          "value": true
+        },
+        "next": "seen"
+      }
+    },
+    {
+      "id": "first",
+      "set": {
+        "ch2/library/blood_seen": true,
+        "map_blood/library/entrance": true
+      },
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "墙边有一小片已经发黑的血迹。",
+              "side": "left",
+              "portrait": "protagonist/quiet"
+            },
+            {
+              "speaker": "我",
+              "text": "这里之前发生过什么？",
+              "side": "left",
+              "portrait": "protagonist/quiet"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "seen",
+      "stage": [],
+      "next": "repeat",
+      "next_when": {
+        "if": {
+          "var": "ch2/library/rewound",
+          "op": "==",
+          "value": true
+        },
+        "next": "second"
+      }
+    },
+    {
+      "id": "second",
+      "set": {
+        "ch2/library/blood_second_seen": true
+      },
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "血迹还在，像是从来没有被回溯抹掉。",
+              "side": "left",
+              "portrait": "protagonist/thinking"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "repeat",
+      "stage": [
+        {
+          "do": "say",
+          "text": "血迹已经干了。"
+        }
+      ]
+    }
+  ]
+}

@@ -123,6 +123,8 @@ func close() -> void:
 
 
 func set_binding_sprite(binding: Sprite2D) -> void:
+	if is_instance_valid(_binding_sprite) and _binding_sprite != binding:
+		_binding_sprite.hide()
 	_binding_sprite = binding
 	_sync_binding()
 

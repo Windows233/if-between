@@ -1,0 +1,122 @@
+{
+  "id": "ch2_library_box",
+  "entry": "check",
+  "nodes": [
+    {
+      "id": "check",
+      "stage": [],
+      "next": "state_check",
+      "next_when": {
+        "if": {
+          "var": "ch2/library/box_opened",
+          "op": "==",
+          "value": true
+        },
+        "next": "repeat"
+      }
+    },
+    {
+      "id": "state_check",
+      "stage": [],
+      "next": "locked",
+      "next_when": {
+        "if": {
+          "all": [
+            {
+              "var": "ch2/library/rewound",
+              "op": "==",
+              "value": true
+            },
+            {
+              "var": "ch2/library/blood_second_seen",
+              "op": "==",
+              "value": true
+            },
+            {
+              "var": "ch2/library/fairy_tale_second",
+              "op": "==",
+              "value": true
+            }
+          ]
+        },
+        "next": "open"
+      }
+    },
+    {
+      "id": "locked",
+      "stage": [
+        {
+          "do": "say",
+          "text": "盒子锁着，暂时打不开。"
+        }
+      ]
+    },
+    {
+      "id": "open",
+      "stage": [
+        {
+          "do": "map_actor_variant",
+          "actor": "box",
+          "variant": "open"
+        },
+        {
+          "do": "image",
+          "path": "res://art/item/group_photo.png",
+          "fade": 0.35,
+          "wait_click": false,
+          "hide": false
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "他的照片怎么会在这里！",
+              "side": "left",
+              "portrait": "protagonist/quiet"
+            },
+            {
+              "speaker": "我",
+              "text": "看来他的到来根本就不是偶然",
+              "side": "left",
+              "portrait": "protagonist/thinking"
+            },
+            {
+              "speaker": "我",
+              "text": "你到底是谁...",
+              "side": "left",
+              "portrait": "protagonist/guarded"
+            }
+          ]
+        }
+      ],
+      "next": "reward"
+    },
+    {
+      "id": "reward",
+      "set": {
+        "ch2/library/box_opened": true,
+        "item/group_photo": 1
+      },
+      "stage": [
+        {
+          "do": "say",
+          "text": "获得 合照 ×1"
+        },
+        {
+          "do": "image_hide",
+          "fade": 0.35
+        }
+      ]
+    },
+    {
+      "id": "repeat",
+      "stage": [
+        {
+          "do": "say",
+          "text": "盒子已经打开，里面只剩下合照的空位。"
+        }
+      ]
+    }
+  ]
+}

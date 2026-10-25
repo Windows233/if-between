@@ -1,0 +1,752 @@
+{
+  "id": "ch2_diary",
+  "entry": "diary_check",
+  "nodes": [
+    {
+      "id": "diary_check",
+      "stage": [],
+      "next": "diary_first",
+      "next_when": {
+        "if": {
+          "var": "ch2/diary_read",
+          "op": "==",
+          "value": true
+        },
+        "next": "diary_again"
+      }
+    },
+    {
+      "id": "diary_first",
+      "stage": [
+        {
+          "do": "say",
+          "text": "建议在此处存档"
+        },
+        {
+          "do": "image",
+          "path": "res://art/props/ch2_diary_blank.png",
+          "fade": 0.4,
+          "wait_click": false,
+          "hide": false
+        },
+        {
+          "do": "say",
+          "speaker": "日记（1/3）",
+          "text": "我竟然在学校捡了一只猫，太荒唐了，但它很可爱"
+        },
+        {
+          "do": "say",
+          "speaker": "日记（2/3）",
+          "text": "我爱它，但我带不走它，也许留下就是它的命"
+        },
+        {
+          "do": "say",
+          "speaker": "日记（3/3）",
+          "text": "猫一直在哭"
+        },
+        {
+          "do": "image_hide",
+          "fade": 0.4
+        }
+      ],
+      "next": "diary_reward"
+    },
+    {
+      "id": "diary_reward",
+      "set": {
+        "item/diary": 1,
+        "ch2/diary_read": true
+      },
+      "stage": [],
+      "next": "diary_reaction"
+    },
+    {
+      "id": "diary_reaction",
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "原来是对抛弃一直不能释怀吗",
+              "side": "left",
+              "portrait": "protagonist/quiet"
+            }
+          ]
+        }
+      ],
+      "next": "cat_meow"
+    },
+    {
+      "id": "cat_meow",
+      "stage": [
+        {
+          "do": "play_sound",
+          "path": "res://audio/sfx/cat_meow.wav"
+        }
+      ],
+      "next": "enter_night"
+    },
+    {
+      "id": "enter_night",
+      "set": {
+        "ch2/night_entered": true,
+        "ch2/route_mistakes": 0
+      },
+      "stage": [],
+      "next": "cat_warning"
+    },
+    {
+      "id": "cat_warning",
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "糟糕！听声音是猫往这边过来了",
+              "side": "left",
+              "portrait": "protagonist/quiet"
+            },
+            {
+              "speaker": "我",
+              "text": "怎么会突然过来，也不知道C又去哪里了",
+              "side": "left",
+              "portrait": "protagonist/quiet"
+            },
+            {
+              "speaker": "我",
+              "text": "先跑吧，C如果是白塔的人，手上会有自保手段的",
+              "side": "left",
+              "portrait": "protagonist/quiet"
+            },
+            {
+              "speaker": "我",
+              "text": "能去哪里呢？",
+              "side": "left",
+              "portrait": "protagonist/quiet"
+            }
+          ]
+        }
+      ],
+      "next": "route_checkpoint"
+    },
+    {
+      "id": "route_checkpoint",
+      "stage": [
+        {
+          "do": "ch2_checkpoint_save",
+          "checkpoint": "route"
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "text": "图书馆将在晚上开放自习室"
+            },
+            {
+              "text": "学校不会处罚在自习室学习的同学"
+            },
+            {
+              "text": "天黑后不得在校内游荡"
+            }
+          ]
+        }
+      ],
+      "next": "route_choice"
+    },
+    {
+      "id": "diary_again",
+      "stage": [
+        {
+          "do": "image",
+          "path": "res://art/props/ch2_diary_blank.png",
+          "fade": 0.4,
+          "wait_click": false,
+          "hide": false
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "日记（1/3）",
+              "text": "我竟然在学校捡了一只猫，太荒唐了，但它很可爱"
+            },
+            {
+              "speaker": "日记（2/3）",
+              "text": "我爱它，但我带不走它，也许留下就是它的命"
+            },
+            {
+              "speaker": "日记（3/3）",
+              "text": "猫一直在哭"
+            }
+          ]
+        },
+        {
+          "do": "image_hide",
+          "fade": 0.4
+        }
+      ]
+    },
+    {
+      "id": "route_choice",
+      "choices": [
+        {
+          "id": "choose_wrong_gate",
+          "label": "前往校门",
+          "next": "route_wrong",
+          "set": {
+            "ch2/route_destination": "gate"
+          }
+        },
+        {
+          "id": "choose_wrong_yard",
+          "label": "前往操场",
+          "next": "route_wrong",
+          "set": {
+            "ch2/route_destination": "yard"
+          }
+        },
+        {
+          "id": "choose_library",
+          "label": "前往图书馆",
+          "next": "chase_prepare"
+        }
+      ]
+    },
+    {
+      "id": "route_wrong",
+      "stage": [],
+      "next": "route_first_error",
+      "next_when": {
+        "if": {
+          "var": "ch2/route_mistakes",
+          "op": "==",
+          "value": 1
+        },
+        "next": "wrong_route_dispatch"
+      }
+    },
+    {
+      "id": "route_first_error",
+      "set": {
+        "ch2/route_mistakes": 1
+      },
+      "talk": [
+        {
+          "text": "黑夜.....宵禁？！ 赶紧想一下天黑后哪里还开放",
+          "speaker": "旁白"
+        }
+      ],
+      "next": "route_choice"
+    },
+    {
+      "id": "wrong_route_dispatch",
+      "set": {
+        "ch2/route_mistakes": 2
+      },
+      "next": "wrong_yard_end",
+      "next_when": {
+        "if": {
+          "var": "ch2/route_destination",
+          "op": "==",
+          "value": "gate"
+        },
+        "next": "wrong_gate_end"
+      }
+    },
+    {
+      "id": "wrong_gate_end",
+      "set": {
+        "ch2/end5_retry_kind": "route"
+      },
+      "stage": [
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.25
+        },
+        {
+          "do": "goto",
+          "map": "school_gate",
+          "spawn": "near_yard"
+        },
+        {
+          "do": "fade",
+          "to": "clear",
+          "time": 0.2
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "text": "为什么猫没有停下，到底...是哪里",
+              "speaker": "我",
+              "portrait": "protagonist/quiet",
+              "side": "left"
+            }
+          ]
+        },
+        {
+          "do": "play_sound",
+          "path": "res://audio/sfx/cat_meow.wav"
+        },
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.2
+        }
+      ],
+      "next": "end5_route_cg"
+    },
+    {
+      "id": "wrong_yard_end",
+      "set": {
+        "ch2/end5_retry_kind": "route"
+      },
+      "stage": [
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.25
+        },
+        {
+          "do": "goto",
+          "map": "school_yard",
+          "spawn": "from_gate"
+        },
+        {
+          "do": "fade",
+          "to": "clear",
+          "time": 0.2
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "text": "为什么猫没有停下，到底...是哪里",
+              "speaker": "我",
+              "portrait": "protagonist/quiet",
+              "side": "left"
+            }
+          ]
+        },
+        {
+          "do": "play_sound",
+          "path": "res://audio/sfx/cat_meow.wav"
+        },
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.2
+        }
+      ],
+      "next": "end5_route_cg"
+    },
+    {
+      "id": "chase_prepare",
+      "stage": [
+        {
+          "do": "ch2_chase_validate"
+        }
+      ],
+      "next": "chase_checkpoint",
+      "next_when": {
+        "if": {
+          "var": "ch2/chase_ready",
+          "op": "==",
+          "value": false
+        },
+        "next": "chase_missing"
+      }
+    },
+    {
+      "id": "chase_missing",
+      "stage": [
+        {
+          "do": "hint",
+          "text": "请回操场与C确认组队状态和决策币"
+        }
+      ]
+    },
+    {
+      "id": "chase_checkpoint",
+      "stage": [
+        {
+          "do": "goto",
+          "map": "school_gate",
+          "spawn": "near_classroom"
+        },
+        {
+          "do": "say",
+          "text": "沿雕像下方向右跑到图书馆。出现字母时，在圆圈收完前按下它。"
+        },
+        {
+          "do": "ch2_checkpoint_clear",
+          "checkpoint": "route"
+        },
+        {
+          "do": "ch2_checkpoint_save",
+          "checkpoint": "chase"
+        },
+        {
+          "do": "ch2_chase_start"
+        }
+      ],
+      "next": "run_q1"
+    },
+    {
+      "id": "run_q1",
+      "stage": [
+        {
+          "do": "ch2_chase_qte",
+          "key": "q",
+          "trigger_x": 145
+        }
+      ],
+      "next": "chase_caught",
+      "next_when": {
+        "if": {
+          "var": "ch2/chase_q1",
+          "op": "==",
+          "value": true
+        },
+        "next": "run_q2"
+      }
+    },
+    {
+      "id": "run_q2",
+      "stage": [
+        {
+          "do": "ch2_chase_qte",
+          "key": "e",
+          "trigger_x": 286
+        }
+      ],
+      "next": "chase_caught",
+      "next_when": {
+        "if": {
+          "var": "ch2/chase_q2",
+          "op": "==",
+          "value": true
+        },
+        "next": "arrive"
+      }
+    },
+    {
+      "id": "arrive",
+      "stage": [
+        {
+          "do": "ch2_chase_arrive"
+        }
+      ],
+      "next": "chase_caught",
+      "next_when": {
+        "if": {
+          "var": "ch2/chase_arrived",
+          "op": "==",
+          "value": true
+        },
+        "next": "c_door_cover"
+      }
+    },
+    {
+      "id": "chase_caught",
+      "set": {
+        "ch2/end5_retry_kind": "chase"
+      },
+      "stage": [
+        {
+          "do": "image",
+          "path": "res://art/cg/ch2_chase_failure.png",
+          "fill": true,
+          "fade": 0.3,
+          "wait_click": true,
+          "hide": false
+        },
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.4
+        },
+        {
+          "do": "image_hide",
+          "fade": 0.2
+        }
+      ],
+      "next": "end5_chase_outcome"
+    },
+    {
+      "id": "end5_route_cg",
+      "stage": [
+        {
+          "do": "image",
+          "path": "res://art/cg/ch2_chase_failure.png",
+          "fill": true,
+          "fade": 0.3,
+          "wait_click": true,
+          "hide": false
+        },
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.4
+        },
+        {
+          "do": "image_hide",
+          "fade": 0.2
+        }
+      ],
+      "next": "end5_route_outcome"
+    },
+    {
+      "id": "end5_route_outcome",
+      "stage": [],
+      "choices": [
+        {
+          "id": "retry_route",
+          "label": "重试",
+          "next": "retry_route"
+        },
+        {
+          "id": "return_title",
+          "label": "返回标题",
+          "next": "end5_ending"
+        }
+      ],
+      "talk": [
+        {
+          "speaker": "旁白",
+          "text": "end 5 不可违的铁律"
+        },
+        {
+          "speaker": "旁白",
+          "text": "死亡可是人生的必修课，你只是超前学习了而已"
+        }
+      ]
+    },
+    {
+      "id": "end5_chase_outcome",
+      "stage": [],
+      "choices": [
+        {
+          "id": "retry_chase",
+          "label": "重试",
+          "next": "retry_chase"
+        },
+        {
+          "id": "return_title",
+          "label": "返回标题",
+          "next": "end5_ending"
+        }
+      ],
+      "talk": [
+        {
+          "speaker": "旁白",
+          "text": "end 5 不可违的铁律"
+        },
+        {
+          "speaker": "旁白",
+          "text": "死亡可是人生的必修课，你只是超前学习了而已"
+        }
+      ]
+    },
+    {
+      "id": "retry_route",
+      "stage": [
+        {
+          "do": "ch2_checkpoint_restore",
+          "checkpoint": "route"
+        }
+      ],
+      "next": "route_choice"
+    },
+    {
+      "id": "retry_chase",
+      "stage": [
+        {
+          "do": "ch2_checkpoint_restore",
+          "checkpoint": "chase"
+        },
+        {
+          "do": "ch2_chase_start"
+        }
+      ],
+      "next": "run_q1"
+    },
+    {
+      "id": "end5_ending",
+      "ending": "end4_iron",
+      "stage": []
+    },
+    {
+      "id": "c_door_cover",
+      "stage": [
+        {
+          "do": "place_player",
+          "facing": "up",
+          "path": [
+            [
+              353,
+              164
+            ]
+          ]
+        },
+        {
+          "do": "npc",
+          "id": "c",
+          "sprite": "res://art/npc/c",
+          "at": [
+            365,
+            164
+          ],
+          "height": 32,
+          "z": 12,
+          "pose": "side"
+        },
+        {
+          "do": "npc_pose",
+          "id": "c",
+          "pose": "side",
+          "flip": true
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "text": "小心！",
+              "speaker": "C",
+              "portrait": "c/neutral",
+              "side": "right"
+            }
+          ]
+        },
+        {
+          "do": "ch2_chase_mist_retreat",
+          "time": 0.3
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "text": "你没受伤吧",
+              "speaker": "C",
+              "portrait": "c/neutral",
+              "side": "right"
+            }
+          ]
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "text": ".....没有，我们快去图书馆吧",
+              "speaker": "我",
+              "portrait": "protagonist/quiet",
+              "side": "left"
+            }
+          ]
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "text": "他怎么能到得这么快，而且，他怎么知道我在这里",
+              "speaker": "我",
+              "portrait": "protagonist/quiet",
+              "side": "left"
+            }
+          ]
+        }
+      ],
+      "next": "library_enter"
+    },
+    {
+      "id": "library_enter",
+      "stage": [
+        {
+          "do": "play_sound",
+          "path": "res://audio/sfx/door_open.wav"
+        },
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.25
+        },
+        {
+          "do": "goto",
+          "map": "library",
+          "spawn": "from_school_gate"
+        },
+        {
+          "do": "location",
+          "text": "？月 ？日 图书馆 深夜"
+        },
+        {
+          "do": "npc",
+          "id": "c",
+          "sprite": "res://art/npc/c",
+          "at": [
+            251,
+            296
+          ],
+          "height": 32,
+          "z": 12,
+          "pose": "side"
+        },
+        {
+          "do": "npc_pose",
+          "id": "c",
+          "pose": "side",
+          "flip": true
+        }
+      ],
+      "next": "library_state"
+    },
+    {
+      "id": "library_state",
+      "set": {
+        "ch2/chase_success": true,
+        "ch2/library_open": true,
+        "ch2/first_library_entry": true
+      },
+      "stage": [
+        {
+          "do": "fade",
+          "to": "clear",
+          "time": 0.25
+        },
+        {
+          "do": "ch2_checkpoint_clear",
+          "checkpoint": "chase"
+        },
+        {
+          "do": "ch2_checkpoint_clear",
+          "checkpoint": "route"
+        }
+      ],
+      "next": "library_anchor"
+    },
+    {
+      "id": "library_anchor",
+      "stage": [
+        {
+          "do": "personal_anchor"
+        }
+      ]
+    },
+    {
+      "id": "restart_chase",
+      "stage": [
+        {
+          "do": "ch2_checkpoint_restore",
+          "checkpoint": "chase"
+        },
+        {
+          "do": "ch2_chase_start"
+        }
+      ],
+      "next": "run_q1"
+    }
+  ]
+}

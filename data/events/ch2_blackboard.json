@@ -1,0 +1,45 @@
+{
+  "id": "ch2_blackboard",
+  "entry": "read",
+  "nodes": [
+    {
+      "id": "read",
+      "stage": [
+        {
+          "do": "image",
+          "path": "res://art/props/ch2_blackboard.png",
+          "fade": 0.4,
+          "wait_click": false,
+          "hide": false
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "text": "黑板上写满同一句话："
+            },
+            {
+              "text": "你什么时候回·来·"
+            },
+            {
+              "speaker": "我",
+              "text": "这画的是一个小女孩、一只猫和...一扇门？",
+              "side": "left",
+              "portrait": "protagonist/quiet"
+            },
+            {
+              "speaker": "我",
+              "text": "好抽象的画",
+              "side": "left",
+              "portrait": "protagonist/quiet"
+            }
+          ]
+        },
+        {
+          "do": "image_hide",
+          "fade": 0.4
+        }
+      ]
+    }
+  ]
+}

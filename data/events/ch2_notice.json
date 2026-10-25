@@ -8,17 +8,59 @@
         {
           "do": "say",
           "lines": [
-            { "text": "旁边有个通知栏 去看看吧" },
-            { "text": "“图书馆将在晚上开放自习室”" },
-            { "text": "“学校不会处罚在自习室学习的同学”" },
-            { "text": "“天黑后不得在校内游荡”" },
+            {
+              "text": "旁边有个通知栏 去看看吧"
+            }
+          ]
+        },
+        {
+          "do": "image",
+          "path": "res://art/props/ch2_notice_board_blank.png",
+          "fade": 0.4,
+          "wait_click": false,
+          "hide": false
+        }
+      ],
+      "next": "notices"
+    },
+    {
+      "id": "notices",
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "text": "“图书馆将在晚上开放自习室”"
+            },
+            {
+              "text": "“学校不会处罚在自习室学习的同学”"
+            },
+            {
+              "text": "“天黑后不得在校内游荡”"
+            },
             {
               "speaker": "我",
               "text": "谁天黑不回家啊",
               "side": "left",
-              "portrait": "protagonist/puzzled"
+              "portrait": "protagonist/quiet"
             }
           ]
+        },
+        {
+          "do": "image_hide",
+          "fade": 0.4
+        }
+      ],
+      "next": "complete"
+    },
+    {
+      "id": "complete",
+      "set": {
+        "ch2/notice_read": true
+      },
+      "stage": [
+        {
+          "do": "focus"
         }
       ]
     }

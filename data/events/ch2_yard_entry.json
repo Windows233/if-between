@@ -1,0 +1,21 @@
+{
+  "id": "ch2_yard_entry",
+  "entry": "start",
+  "nodes": [
+    {
+      "id": "start",
+      "set": {
+        "ch2/yard_entry_seen": true
+      },
+      "stage": [
+        {
+          "do": "location",
+          "text": "？月 ？日 操场 未知"
+        },
+        {
+          "do": "focus"
+        }
+      ]
+    }
+  ]
+}

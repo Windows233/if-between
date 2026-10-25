@@ -2,20 +2,19 @@ extends RefCounted
 
 
 static func run(h: TestHarness) -> void:
-	h.section("第二章秋千救援整合")
+	h.section("第二章C救援整合")
 	var raw: Variant = JSON.parse_string(
 		FileAccess.get_file_as_string("res://data/events/ch2_swing.json"))
 	var event := StoryEvent.from_dictionary(raw)
-	h.check("秋千救援剧情校验", event.validate(), [])
+	h.check("C救援剧情校验", event.validate(), [])
 
-	var intro := _node(event, &"cutscene")
-	h.check("开场先自动存档", intro.stage[0].kind, &"save")
-	h.check("C 在秋千处登场", intro.stage[2].kind, &"npc")
-	h.check("C 的脚底位置", intro.stage[2].point("at"), Vector2(186, 88))
-	h.check("救援前 C 使用受困朝向", intro.stage[2].text("pose"), "down")
-	h.check("受困 C 挂载束缚状态层", intro.stage[2].flag("rescue_binding"), true)
-	h.check("开场由 C 提醒别碰线",
-		intro.stage[3].dialogue().lines[0].text, "别碰线。碰了会——")
+	var rescue_entry := _node(event, &"rescue_entry")
+	h.check("救援剧情入口节点", rescue_entry.id, &"rescue_entry")
+	h.check("开场先建立救援专属检查点",
+		rescue_entry.stage[0].kind, &"ch2_checkpoint_save")
+	h.check("救援检查点使用独立类型",
+		rescue_entry.stage[0].text("checkpoint"), "rescue")
+	h.check("检查点之后进入正式挑战", rescue_entry.next_id, &"challenge")
 
 	var challenge := _node(event, &"challenge")
 	h.check("小游戏是剧情演出步骤", challenge.stage[1].kind, &"rescue")
@@ -28,24 +27,39 @@ static func run(h: TestHarness) -> void:
 	var failed := _node(event, &"failed")
 	h.check("失败后不提前解锁结局", failed.effects.has(&"ending/end4_arrogant"), false)
 	h.check("失败提供重试和退出", _choice_ids(failed), [&"retry", &"finish"])
-	h.check("重试回到同一场小游戏", _node(event, &"retry").next_id, &"challenge")
-	h.check("退出选项進入新結局节点", _node(event, &"ending").ending, &"end4_arrogant")
+	var retry := _node(event, &"retry")
+	h.check("重试回到同一场小游戏", retry.next_id, &"challenge")
+	h.check("重试恢复救援专属检查点", retry.stage[1].kind, &"ch2_checkpoint_restore")
+	h.check("重试检查点类型", retry.stage[1].text("checkpoint"), "rescue")
+	var ending := _node(event, &"ending")
+	h.check("退出节点清理救援专属检查点", ending.stage[0].kind, &"ch2_checkpoint_clear")
+	h.check("退出清理的检查点类型", ending.stage[0].text("checkpoint"), "rescue")
 	h.check("旧铁律结局仍保留",
 		DataLoader.load_endings().ids().has(&"end4_iron"), true)
 
 	var rescued := _node(event, &"rescued")
 	h.check("成功后标记 C 已获救", rescued.effects.get(&"ch2/rescued_c"), true)
-	h.check("成功段落包含后续会面", rescued.next_id, &"gift")
-	var gift := _node(event, &"gift")
-	h.check("成功后获得御守", gift.effects.get(&"item/charm"), 1)
-	h.check("C 留在秋千旁等待交谈",
-		gift.stage[1].text("talk"), "ch2_c_wait")
-	h.check("C 立绘文件存在", FileAccess.file_exists("res://art/portrait/c_base.png"), true)
+	h.check("成功后出现组队确认", _choice_ids(rescued), [&"agree"])
+	h.check("组队确认进入当前节点", rescued.choices[0].next_id, &"join_c")
+	var join_c := _node(event, &"join_c")
+	h.check("组队后保留 C 的操场等待交互",
+		join_c.stage[0].text("talk"), "ch2_c_wait")
+	h.check("组队节点进入当前奖励节点", join_c.next_id, &"grant_coin")
+	var grant_coin := _node(event, &"grant_coin")
+	h.check("组队后获得决策币", grant_coin.effects.get(&"item/charm"), 1)
+	h.check("C 立绘文件存在", FileAccess.file_exists("res://art/portrait/c/neutral.png"), true)
 	h.check("旧的未生成立绘引用已清除",
 		FileAccess.get_file_as_string("res://data/events/ch2_swing.json")
 			.contains("c_rescue_v1"), false)
 
 	var main := h.new_main()
+	main.flags.clear_changes()
+	main.flags.set_value(&"item/charm", 1)
+	main._announce_items()
+	h.check("决策币提示按稿件显示名称与数量",
+		main.toast.current_text(), "获得 决策币×1")
+	main.flags.unset_value(&"item/charm")
+	main.flags.clear_changes()
 	main._on_rescue_feedback(&"success")
 	h.check("成功判定播放对应音效", main.last_sound,
 		"res://audio/sfx/rescue_success.wav")
@@ -56,7 +70,9 @@ static func run(h: TestHarness) -> void:
 	h.check("救援完成播放对应音效", main.last_sound,
 		"res://audio/sfx/rescue_complete.wav")
 	main.enter_map(&"school_yard", &"from_gate")
-	await main.cutscene._perform(intro.stage[2])
+	h.check("操场入场立即显示唯一受困C", main.cutscene.actor_ids(), ["c"])
+	h.check("救援前未预置获救状态",
+		main.flags.has_value(&"ch2/rescued_c"), false)
 	var c_actor: Node2D = main.cutscene._actor("c")
 	var binding: Sprite2D = c_actor.get_node_or_null("RescueBinding") as Sprite2D
 	h.check("救援复用场上唯一的 C", main.cutscene.actor_ids(), ["c"])
@@ -130,6 +146,7 @@ static func run(h: TestHarness) -> void:
 	main.rescue_panel.model.phase = 0.25
 	main.rescue_panel.submit()
 	h.check("第三次正式成功隐藏束缚层", binding.visible, false)
+	h.check("救援正式成功需要三条线", RescueTiming.LINE_COUNT, 3)
 	for frame: int in 3:
 		if success_finished[0]:
 			break
@@ -161,9 +178,11 @@ static func run(h: TestHarness) -> void:
 		if failed_finished[0]:
 			break
 		await h.root.get_tree().process_frame
-	h.check("三次失误结束本轮救援", failed_finished[0], true)
+	h.check("三次正式失误结束本轮救援", failed_finished[0], true)
+	h.check("救援正式失败阈值为三次失误", RescueTiming.ERROR_LIMIT, 3)
 	h.check("失败结果写入剧情状态为否",
 		main.flags.get_value(&"ch2/rescue_success"), false)
+	h.check("失败结束后清理束缚显示", binding.visible, false)
 	main.flags.unset_value(&"ch2/rescue_success")
 	var retry_finished: Array[bool] = [false]
 	_finish_rescue(main.cutscene, rescue_step, retry_finished)

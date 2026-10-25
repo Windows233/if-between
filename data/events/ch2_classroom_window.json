@@ -1,0 +1,86 @@
+{
+  "id": "ch2_classroom_window",
+  "entry": "check",
+  "nodes": [
+    {
+      "id": "check",
+      "stage": [],
+      "next": "blocked",
+      "next_when": {
+        "if": {
+          "all": [
+            {
+              "var": "ch2/personal/stealth_started",
+              "op": "==",
+              "value": true
+            },
+            {
+              "var": "item/charm",
+              "op": ">=",
+              "value": 1
+            }
+          ]
+        },
+        "next": "throw"
+      }
+    },
+    {
+      "id": "blocked",
+      "stage": [
+        {
+          "do": "say",
+          "text": "窗外太黑了，现在还不能从这里离开。"
+        }
+      ]
+    },
+    {
+      "id": "throw",
+      "set": {
+        "item/charm": 0,
+        "ch2/library/charm_thrown": true,
+        "ch2/left_veil_realm": true
+      },
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "我走到窗边，把决策币抛了出去。",
+              "side": "left",
+              "portrait": "protagonist/quiet"
+            },
+            {
+              "text": "失去 决策币 x1"
+            },
+            {
+              "speaker": "我",
+              "text": "现在，离开这里。",
+              "side": "left",
+              "portrait": "protagonist/guarded"
+            }
+          ]
+        },
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.25
+        },
+        {
+          "do": "goto",
+          "map": "market_night",
+          "spawn": "from_overworld"
+        },
+        {
+          "do": "location",
+          "text": "？月 ？日 集市 深夜"
+        },
+        {
+          "do": "fade",
+          "to": "clear",
+          "time": 0.25
+        }
+      ]
+    }
+  ]
+}

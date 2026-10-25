@@ -1,16 +1,29 @@
 {
   "id": "ch2_can",
-  "entry": "start",
+  "entry": "can_check",
   "nodes": [
     {
-      "id": "start",
+      "id": "can_check",
+      "stage": [],
+      "next": "can_pick_offer",
+      "next_when": {
+        "if": {
+          "var": "item/key",
+          "op": ">=",
+          "value": 1
+        },
+        "next": "can_empty"
+      }
+    },
+    {
+      "id": "can_pick_offer",
       "stage": [
         {
           "do": "say",
           "lines": [
             {
               "speaker": "我",
-              "portrait": "protagonist/puzzled",
+              "portrait": "protagonist/quiet",
               "side": "left",
               "text": "怎么还有人乱丢垃圾的"
             }
@@ -19,35 +32,47 @@
       ],
       "choices": [
         {
-          "id": "pick",
+          "id": "can_pick",
           "label": "捡起",
-          "next": "pick"
+          "next": "can_pick"
         },
         {
-          "id": "leave",
-          "label": "不捡起",
-          "next": "leave"
+          "id": "can_leave",
+          "label": "暂不拾取",
+          "next": "can_leave"
         }
       ]
     },
     {
-      "id": "pick",
-      "set": {
-        "item/key": 1
-      },
+      "id": "can_pick",
       "stage": [
         {
           "do": "image",
           "path": "res://art/item/key.png",
           "fade": 0.45,
-          "wait_click": true
-        },
+          "wait_click": true,
+          "hide": true
+        }
+      ],
+      "next": "can_pick_reward"
+    },
+    {
+      "id": "can_pick_reward",
+      "set": {
+        "item/key": 1
+      },
+      "stage": [],
+      "next": "can_pick_line"
+    },
+    {
+      "id": "can_pick_line",
+      "stage": [
         {
           "do": "say",
           "lines": [
             {
               "speaker": "我",
-              "portrait": "protagonist/puzzled",
+              "portrait": "protagonist/quiet",
               "side": "left",
               "text": "里面竟然有把钥匙吗...那很安全了"
             }
@@ -56,7 +81,20 @@
       ]
     },
     {
-      "id": "leave",
+      "id": "can_empty",
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "text": "钥匙已经收好了。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "can_leave",
       "stage": []
     }
   ]

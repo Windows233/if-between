@@ -1,0 +1,21 @@
+{
+  "id": "ch2_gate_entry",
+  "entry": "start",
+  "nodes": [
+    {
+      "id": "start",
+      "set": {
+        "ch2/gate_entry_seen": true
+      },
+      "stage": [
+        {
+          "do": "location",
+          "text": "？月 ？日 校门 未知"
+        },
+        {
+          "do": "focus"
+        }
+      ]
+    }
+  ]
+}

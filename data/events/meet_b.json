@@ -250,7 +250,8 @@
     {
       "id": "pendant",
       "set": {
-        "item/pendant": 1
+        "item/pendant": 1,
+        "item/crowbar": 1
       },
       "stage": [
         {
@@ -286,6 +287,10 @@
               "portrait": "protagonist/puzzled"
             }
           ]
+        },
+        {
+          "do": "say",
+          "text": "获得 撬棍 ×1"
         },
         {
           "do": "music",
