@@ -24,7 +24,7 @@
         },
         {
           "do": "image",
-          "path": "res://art/props/ch2_diary_blank.png",
+          "path": "res://art/props/ch2_diary_written.png",
           "fade": 0.4,
           "wait_click": false,
           "hide": false
@@ -160,7 +160,7 @@
       "stage": [
         {
           "do": "image",
-          "path": "res://art/props/ch2_diary_blank.png",
+          "path": "res://art/props/ch2_diary_written.png",
           "fade": 0.4,
           "wait_click": false,
           "hide": false

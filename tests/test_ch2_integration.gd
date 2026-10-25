@@ -140,8 +140,8 @@ static func _test_events_and_maps(harness: TestHarness) -> void:
 	var notice_event := StoryEvent.from_dictionary(_json("res://data/events/ch2_notice.json"))
 	var notice_read := _node(notice_event, &"read")
 	var notice_image := notice_read.stage[1]
-	harness.check("校门通知演出使用空白公告栏",
-		notice_image.text("path"), "res://art/props/ch2_notice_board_blank.png")
+	harness.check("校门通知演出使用新版规则公告栏",
+		notice_image.text("path"), "res://art/props/ch2_notice_board.png")
 	harness.check("公告栏出现不额外等待点击", notice_image.flag("wait_click"), false)
 	harness.check("公告阅读期间公告栏保持显示", notice_image.flag("hide"), false)
 	var notices := _node(notice_event, &"notices")

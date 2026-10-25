@@ -18,7 +18,7 @@
       8,
       9
     ],
-    "minutes_per_person_per_day": 120,
+    "minutes_per_person_per_day": null,
     "user_role": "策划协调，不安排个人制作工时",
     "roles": [
       "程序",
@@ -26,12 +26,20 @@
       "第二美术兼整合验收",
       "文案",
       "音效音乐"
+    ],
+    "daily_timeboxing_cancelled": true,
+    "planning_mode": "由用户确定制作推进目标，不按每天两小时排产",
+    "current_task_documents": [
+      "docs/每日策划/2026-10-25_图书馆后段策划/程序任务.md",
+      "docs/每日策划/2026-10-25_图书馆后段策划/美术任务.md"
     ]
   },
   "checked_versions": {
     "main_baseline": "7a2eb77",
     "primary_branch": "main",
-    "scope": "2026-10-25非EXE文件树快照已由f822ec1推送至origin/main；247个文件包含D4地图/素材、地图编辑器功能、学校素材归档和策划；排除573771104字节游戏EXE及其历史。其余归档单文件均低于GitHub 100MB限制。Godot 4.7.2导入、游戏/地图编辑器测试、探针、烟测、数据/计划/stage校验均通过。原工作区旧main历史另保留备份，不直接推送"
+    "scope": "2026-10-25非EXE文件树快照已由f822ec1推送至origin/main；247个文件包含D4地图/素材、地图编辑器功能、学校素材归档和策划；排除573771104字节游戏EXE及其历史。其余归档单文件均低于GitHub 100MB限制。Godot 4.7.2导入、游戏/地图编辑器测试、探针、烟测、数据/计划/stage校验均通过。原工作区旧main历史另保留备份，不直接推送",
+    "art_drop_4_baseline": "0a600ec；本轮仅素材/引用及策划约束更新，不将旧进度账当作最新完整功能验收",
+    "latest_runtime_evidence": "本轮先快进34e9d74→0a600ec，包含9b56f8f后段路线实现；此证据覆盖旧账中“事件链尚未实现”的历史判断，但实机通关/视觉验收仍未确认。本轮不重排今日任务。"
   },
   "counts": {
     "maps": 14,
@@ -105,6 +113,14 @@
         "LIB-STORY",
         "LIB-LAYERS",
         "WINDOW"
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "report": "制作D1—D6不变，取消每天两小时分工，由用户确定推进目标；今天仍以图书馆后段程序任务.md和美术任务.md为已布置任务，等用户反馈实绩再规划。收到4.zip五张新版美术，按明确用途替换并更新既有剧情引用。",
+      "affected_ids": [
+        "DIARY-ART",
+        "ART-DROP-4"
       ]
     }
   ],
@@ -185,17 +201,21 @@
       "id": "DIARY-ART",
       "name": "三页日记美术",
       "owner": "主美术",
-      "production": "用户确认完成",
-      "delivery": "漏打包待补收",
-      "integration": "待接入",
-      "acceptance": "用户要求本轮跳过",
+      "production": "新版日记带字跨页已交",
+      "delivery": "4.zip已接收，非三张独立图片",
+      "integration": "首次/重复日记阅读改用新版带字跨页，三屏原文仍逐条可读；空白版保留",
+      "acceptance": "最新正文/未知日期核对通过，Godot加载与4664项回归通过；游戏中字样/构图待团队实机验收",
       "evidence": [
         {
           "date": "2026-10-24",
           "reference": "2026-10-23用户：忘记放进去了，你先跳过这里"
+        },
+        {
+          "date": "2026-10-25",
+          "reference": "4.zip/日记.PNG → art/props/ch2_diary_written.png；移除旧转学和10月日期文案"
         }
       ],
-      "next_action": "不再派制作；文字流程可先接，补包后验收"
+      "next_action": "不再派画或补交日记；只核验当前显示与最新正文"
     },
     {
       "id": "RULE-TEXT",
@@ -305,9 +325,9 @@
       "id": "LIB-STORY",
       "name": "图书馆首遍与二遍调查",
       "owner": "程序/文案",
-      "production": "剧情事件未接",
-      "delivery": "正文已归档",
-      "integration": "未入游戏",
+      "production": "main 9b56f8f已有图书馆后段事件实现；待整段实机验收",
+      "delivery": "已随队友提交进入main，本轮已同步0a600ec",
+      "integration": "现有事件与地图绑定已进入工作区；不将自动测试视为完整通关",
       "acceptance": "待验收",
       "evidence": [
         {
@@ -317,6 +337,10 @@
         {
           "date": "2026-10-25",
           "reference": "新增图书馆后段程序/美术任务与11节点stage草案；library中心猫烘焙底图，后段事件仍未接入；策划稿draft"
+        },
+        {
+          "date": "2026-10-25",
+          "reference": "本轮fetch并快进0a600ec；9b56f8f含ch2_library_*、ch2_classroom_window、ch2_market_b_end等事件和地图绑定。"
         }
       ],
       "next_action": "按程序任务接日记介入、首次背刺回溯、二次线索/合照、第二次闪避分支及已确认的夜市B尾声；猫/血迹/决策币/窗边素材与场景绑定仍待补齐和验收"
@@ -524,13 +548,29 @@
         }
       ],
       "next_action": "团队从GitHub main同步；原本地main保留旧EXE历史，使用前需切换到已发布main快照"
+    },
+    {
+      "id": "ART-DROP-4",
+      "name": "4.zip新版素材替换",
+      "owner": "两名美术/素材整合",
+      "production": "5张图已交",
+      "delivery": "已接收原始文件",
+      "integration": "新版日记/公告栏/End5 CG替换；决策币正反面拆分并启用背包；抛币静态CG接现有事件",
+      "acceptance": "5张原图散列与2张硬币单面像素核对通过；Godot资源7/7、数据检查、4664/4664、真窗口烟测通过；第二章实际表现仍待验收",
+      "evidence": [
+        {
+          "date": "2026-10-25",
+          "reference": "art/catalogs/ch2_art_drop_4_20261025.json"
+        }
+      ],
+      "next_action": "程序/美术实机核对阅读可读性与抛币静态表现；无需为这5张图重画"
     }
   ],
   "pending_inputs": [
-    "图书馆猫层/无猫底图、血迹层、正式决策币图、教室窗边抛币分层需美术交付或完成候选对位验收",
+    "图书馆猫层/无猫底图、血迹层、教室窗边抛币分层仍需交付；正式决策币正反面及抛币静态CG已由4.zip交付，不重新派制作",
     "图书馆调查点/宝箱和夜市B接应脚点、触发范围需在地图编辑器绑定并实走",
     "P741-P749程序录入前逐段对照1.2校对稿；吊坠ID和图已确认复用item/pendant及art/item/pendant.png",
-    "图书馆后段事件链、回溯与存档闭环尚未实现；本轮游戏测试和烟测退出码为0，但未捕获用例数及逐步日志"
+    "后段事件与绑定已随9b56f8f进入main；完整实走、视觉与音频表现仍待验收，本轮仅素材替换，不重派程序整段重写"
   ],
   "verification": {
     "scope": "2026-10-25先推送图书馆后段策划/素材，再从7a2eb77将本地main全部非EXE文件树差异整理为247文件快照；图书馆后段程序/美术任务整合stage演出与阻断说明，不按工时排产；策划稿不是代码实现或完整通关验收",
@@ -543,7 +583,17 @@
     "stage": "图书馆后段stage结构校验通过：11节点，draft；End6失败台词、market_night/from_overworld[278,279]、P747吊坠和P748夜幕之泪交付时序已确认；猫/血迹/决策币/窗边素材及地图对象绑定未完成，不代表场景运行或通关验证",
     "daily_budget": "本日按用户要求拆为程序与美术两个任务文件，不按时间安排工作量",
     "doc": "程序任务与美术任务两份Markdown已更新；阻断说明已并入程序任务；不按时间安排，未生成Word或day_plan.json",
-    "diagnostics": "既有负面测试与引擎诊断保留，不宣称日志全净"
+    "diagnostics": "既有负面测试与引擎诊断保留，不宣称日志全净",
+    "art_drop_4_20261025": {
+      "resource_import": "PASS Godot 4.7.2 editor import, exit 0",
+      "textures": "PASS 7/7 Texture2D load and exact dimensions",
+      "originals": "PASS 5/5 byte hashes preserved",
+      "coin_extraction": "PASS source halves pixel-exact, 887x887 each",
+      "data": "PASS 14 maps / 32 events / 7 endings / 11 items",
+      "game_tests": "PASS 4664/4664; exit 0",
+      "smoke": "PASS first-chapter real rendering smoke, isolated APPDATA; exit 0",
+      "scope": "不等于第二章整段实走；新图的实际构图、可读性和抛币演出由团队实机验收"
+    }
   },
   "active_daily_plan": "docs/每日策划/2026-10-25_图书馆后段策划/"
 }

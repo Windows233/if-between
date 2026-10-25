@@ -15,7 +15,7 @@
         },
         {
           "do": "image",
-          "path": "res://art/props/ch2_notice_board_blank.png",
+          "path": "res://art/props/ch2_notice_board.png",
           "fade": 0.4,
           "wait_click": false,
           "hide": false

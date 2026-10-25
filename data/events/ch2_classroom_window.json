@@ -42,6 +42,14 @@
       },
       "stage": [
         {
+          "do": "image",
+          "path": "res://art/cg/ch2_coin_throw.png",
+          "fade": 0.25,
+          "fill": true,
+          "wait_click": false,
+          "hide": false
+        },
+        {
           "do": "say",
           "lines": [
             {
@@ -65,6 +73,10 @@
           "do": "fade",
           "to": "black",
           "time": 0.25
+        },
+        {
+          "do": "image_hide",
+          "fade": 0.2
         },
         {
           "do": "goto",

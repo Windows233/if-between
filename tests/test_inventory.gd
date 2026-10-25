@@ -61,8 +61,8 @@ static func test_panel_lists_items(h: TestHarness) -> void:
 
 	# 没有图的东西不该让格子空掉
 	h.check("没图就返回空路径", InventoryPanel.icon_path(&"不存在的物品"), "")
-	h.check("正式圆币图未到时不显示旧御守图",
-		InventoryPanel.icon_path(&"charm"), "")
+	h.check("正式决策币沿用charm存档ID并显示已交圆币图",
+		InventoryPanel.icon_path(&"charm"), "res://art/item/charm.png")
 
 
 static func test_panel_open_close(h: TestHarness) -> void:

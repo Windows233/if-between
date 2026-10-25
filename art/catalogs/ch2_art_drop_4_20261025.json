@@ -1,0 +1,110 @@
+{
+  "date": "2026-10-25",
+  "source": "4.zip",
+  "archive_sha256": "5a0af0e3246b7e57d3c01cdf8a0779d7a31d4a85ff44a7c703063697cb590091",
+  "valid_images": 5,
+  "ignored_macos_files": 5,
+  "base_commit": "0a600ec",
+  "assets": [
+    {
+      "source": "4/扔决策币.PNG",
+      "target": "art/cg/ch2_coin_throw.png",
+      "sha256": "55cd0fda491e08ddf6ae67415063c9dc18dbf48734808146c5dd29202368fc21",
+      "previous_sha256": null,
+      "note": "新增：室内抛币静态CG；不是可独立移动的窗框/人物/硬币分层",
+      "size": [
+        1672,
+        941
+      ],
+      "mode": "RGB"
+    },
+    {
+      "source": "4/决策币.PNG",
+      "target": "art/props/ch2_decision_coin_faces.png",
+      "sha256": "861d5070f7884b084d94923be02a400426696dc53cb4afcfb44945598af89170",
+      "previous_sha256": null,
+      "note": "新增：YES/NO原始合图，保留字节；正反面由Godot按左右887方框提取",
+      "size": [
+        1774,
+        887
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "source": "4/cg更改.PNG",
+      "target": "art/cg/ch2_chase_failure.png",
+      "sha256": "6609b387fae8d48805ea28cdae077406c7995ba58c6c47ad4a14738eac682f17",
+      "previous_sha256": "8cb2c57034725d70674f399171b1ba46595c88903812f8987889096394a79956",
+      "note": "替换：原校园黑猫追逐失败CG，内部end4_iron，对外End5",
+      "size": [
+        1671,
+        941
+      ],
+      "mode": "RGB"
+    },
+    {
+      "source": "4/日记.PNG",
+      "target": "art/props/ch2_diary_written.png",
+      "sha256": "affef7cf67b912ad7786a5654640134fc4ba6fe8d9a465e59059a4aad7886e0b",
+      "previous_sha256": "b8c4cb76e0201928bf614a793fe8c1bf9e4c209463c0b8ac821fadbf455d0200",
+      "note": "替换：最新文字与未知日期，保留空白版供地图及排字复用",
+      "size": [
+        1681,
+        936
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "source": "4/公告栏.PNG",
+      "target": "art/props/ch2_notice_board.png",
+      "sha256": "9796ad89228fc65e65ce1b04f51c8719c2d3e9fffb5eb668ca38f7a4d0b749ca",
+      "previous_sha256": "e0668040ecaa0109b46dfc21d3b90e8e7d26d194f586c4c8aaad0bdd37ff790f",
+      "note": "替换：移除旧24h规则；图片只有两条校规，第三条继续在剧情阅读框显示",
+      "size": [
+        992,
+        1586
+      ],
+      "mode": "RGBA"
+    }
+  ],
+  "derived": [
+    {
+      "target": "art/item/charm.png",
+      "source": "art/props/ch2_decision_coin_faces.png",
+      "region": [
+        0,
+        0,
+        887,
+        887
+      ],
+      "purpose": "YES正面/背包默认",
+      "pixel_exact": true,
+      "sha256": "4368e249492aa7b9be6cd275435f3a83df7d6604b836c6729be6d70d794299c2"
+    },
+    {
+      "target": "art/item/decision_coin_no.png",
+      "source": "art/props/ch2_decision_coin_faces.png",
+      "region": [
+        887,
+        0,
+        887,
+        887
+      ],
+      "purpose": "NO反面",
+      "pixel_exact": true,
+      "sha256": "f4b2b73664d8074e77aa5ed57c39c897afbf51b5eeffe74fa5fec5e544c67758"
+    }
+  ],
+  "map_data_modified": false,
+  "notes": "源图按原字节接收；旧版可从Git父提交恢复。现有空白日记/公告栏保留，不把带字图覆盖到blank文件。",
+  "verification": {
+    "resource_import": "PASS Godot 4.7.2 editor import, exit 0",
+    "textures": "PASS 7/7 Texture2D load and exact dimensions",
+    "originals": "PASS 5/5 byte hashes preserved",
+    "coin_extraction": "PASS source halves pixel-exact, 887x887 each",
+    "data": "PASS 14 maps / 32 events / 7 endings / 11 items",
+    "game_tests": "PASS 4664/4664; exit 0",
+    "smoke": "PASS first-chapter real rendering smoke, isolated APPDATA; exit 0",
+    "scope": "不等于第二章整段实走；新图的实际构图、可读性和抛币演出由团队实机验收"
+  }
+}
