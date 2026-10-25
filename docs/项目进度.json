@@ -31,7 +31,7 @@
   "checked_versions": {
     "main_baseline": "7a2eb77",
     "primary_branch": "main",
-    "scope": "2026-10-25发布候选从已发布main提交7a2eb77派生；按文件树快照纳入原工作区main全部非EXE差异（247文件），包含D4地图/素材、地图编辑器功能、学校素材归档和策划；排除573771104字节游戏EXE及其历史。其余归档单文件均低于GitHub 100MB限制。Godot 4.7.2导入、游戏/地图编辑器测试、探针、烟测、数据/计划/stage校验均通过。候选待推送；原工作区main保留旧历史，不直接推送"
+    "scope": "2026-10-25非EXE文件树快照已由f822ec1推送至origin/main；247个文件包含D4地图/素材、地图编辑器功能、学校素材归档和策划；排除573771104字节游戏EXE及其历史。其余归档单文件均低于GitHub 100MB限制。Godot 4.7.2导入、游戏/地图编辑器测试、探针、烟测、数据/计划/stage校验均通过。原工作区旧main历史另保留备份，不直接推送"
   },
   "counts": {
     "maps": 14,
@@ -510,9 +510,9 @@
       "name": "教室摆放与项目GitHub同步",
       "owner": "程序/第二美术兼整合验收",
       "production": "策划分支已在本地main合并；教室摆放和黑板图已进入合并提交",
-      "delivery": "教室摆放和图书馆后段策划已在5d22bd6推送；其余本地非EXE文件树差异正在整理为main快照",
-      "integration": "远端安全候选从7a2eb77派生，共247文件；排除游戏EXE及旧历史，学校素材归档包等其他非EXE内容保留",
-      "acceptance": "最终候选的Godot 4.7.2游戏/编辑器测试、探针、烟测、数据检查及策划校验均通过；推送后核验远端main",
+      "delivery": "教室摆放、图书馆后段策划及全部本地非EXE文件树差异已推送至GitHub main，最新内容提交f822ec1",
+      "integration": "247文件快照从7a2eb77派生并推送；排除游戏EXE及旧历史，学校素材归档包等其他非EXE内容保留",
+      "acceptance": "Godot 4.7.2游戏/编辑器测试、探针、烟测、数据检查及策划校验均通过；远端main已核验",
       "evidence": [
         {
           "date": "2026-10-25",
@@ -523,7 +523,7 @@
           "reference": "本地旧main包含573771104字节IF如果之间.exe，不能将这段历史推到GitHub；通过从7a2eb77重建文件快照排除EXE，其他归档单文件均小于100MB"
         }
       ],
-      "next_action": "快照推送后复核origin/main与工作区清洁状态；团队从GitHub main同步"
+      "next_action": "团队从GitHub main同步；原本地main保留旧EXE历史，使用前需切换到已发布main快照"
     }
   ],
   "pending_inputs": [
