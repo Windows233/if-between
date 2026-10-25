@@ -29,9 +29,9 @@
     ]
   },
   "checked_versions": {
-    "main_baseline": "9cd078b",
+    "main_baseline": "0b99155",
     "primary_branch": "main",
-    "scope": "2026-10-25本地GitHub工作区；origin/main远端引用为f8288a5；main本地领先12个提交，历史大文件阻止整支推送；保留未提交地图和素材，不视为已交付"
+    "scope": "2026-10-25本地main已合并codex/story-library-crowbar-20261025至0b99155；origin/main仍为f8288a5，本地领先16个提交。历史含547MB IF如果之间.exe及学校.rar，整支推送受GitHub文件限制；当前环境无Godot 4.7.2，验证闸门未全过，不能推送。合并前stash中的卧室/图书馆/操场地图改动和未跟踪素材仍保留在工作区，不代表已交付"
   },
   "counts": {
     "maps": 14,
@@ -95,6 +95,16 @@
       "affected_ids": [
         "LIB-STORY",
         "ENDING"
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "report": "用户要求先合并本地策划分支到main，再制定程序/美术两份任务稿；先列影响程序演出的美术素材，不按时间安排工作量，并把演出稿与完成条件并入程序任务。",
+      "affected_ids": [
+        "REPO-SYNC",
+        "LIB-STORY",
+        "LIB-LAYERS",
+        "WINDOW"
       ]
     }
   ],
@@ -263,17 +273,17 @@
       "id": "CLASSROOM",
       "name": "教室四调查与日记流程",
       "owner": "程序/文案",
-      "production": "当前工作区已有黑板和日记actor摆放，用户要求今日同步；交互绑定未完成",
-      "delivery": "日记底图已交；黑板新图与摆放尚在工作区、未提交；其余地图有未提交修改需逐项审阅",
-      "integration": "黑板/日记actor存在于未提交classroom.json但未发现interaction绑定；当前工作区未找到ch2_diary.json或ch2_class_door.json",
+      "production": "教室黑板、日记actor摆放和黑板新图已合并到本地main；交互绑定未完成",
+      "delivery": "已进入本地main合并提交0b99155，尚未推送GitHub；日记底图按用户此前要求待补包，不重复制作",
+      "integration": "classroom.json已有黑板/日记actor；当前仍未找到ch2_diary.json或ch2_class_door.json，素材摆放不等于剧情已可触发",
       "acceptance": "待验收",
       "evidence": [
         {
           "date": "2026-10-25",
-          "reference": "当前main的classroom有课桌；未提交diff新增日记0和blackboard两个actor，黑板贴图art/props/ch2_blackboard_2.png为未跟踪文件；actor尚未绑定黑板/日记调查事件。不要把工作区布局当作GitHub内容或可玩流程"
+          "reference": "本地main合并提交0b99155包含data/maps/classroom.json、art/props/ch2_blackboard_2.png和.import；当前origin/main尚未更新，actors仍未绑定剧情事件"
         }
       ],
-      "next_action": "审阅classroom.json完整diff，使用地图编辑器绑定黑板与日记调查及碰撞；仅纳入用户确认的教室布局/素材，跑数据检查与实际交互验收后提交"
+      "next_action": "程序使用地图编辑器核验actor触发范围/碰撞并接入黑板和日记事件；完成Godot验证后再同步远端"
     },
     {
       "id": "LIB-MAP",
@@ -399,33 +409,33 @@
       "id": "LIB-LAYERS",
       "name": "猫补地与血迹分层",
       "owner": "两名美术",
-      "production": "原图已有，加工交付未收",
-      "delivery": "待确认实际交付",
+      "production": "无猫整图候选已入库，但非正式尺寸且为JPG；猫透明层/补地与血迹透明层未交",
+      "delivery": "候选参考在main；正式可叠加层待交",
       "integration": "尚未正式分层",
       "acceptance": "待验收",
       "evidence": [
         {
           "date": "2026-10-24",
-          "reference": "学校/图书馆/独立猫及图书馆2血迹已存在；正式library烘焙中央猫"
+          "reference": "library.png为5608x4488且中央猫烘焙在底图；library_no_cat_20261024.jpg为2400x1792 RGB候选，不能逐像素对位或作透明层；main无正式独立血迹图"
         }
       ],
-      "next_action": "交猫可淡隐透明层/无猫底图与可跨回溯保留的血迹透明层，附原图坐标及对位预览；不重画猫或整馆"
+      "next_action": "按美术任务优先交猫/补地层和血迹透明层，提供原图坐标、源文件及叠图预览；不重画猫或整馆"
     },
     {
       "id": "WINDOW",
       "name": "教室窗口局部",
       "owner": "主美术",
-      "production": "未收到成品",
-      "delivery": "待确认",
-      "integration": "现教室无窗",
+      "production": "有整图窗边候选作构图参考，未收到能对位现教室的独立窗框/人物/硬币层",
+      "delivery": "候选已入main；正式分层待交",
+      "integration": "正式教室底图未接入窗户，抛币演出未绑定",
       "acceptance": "待验收",
       "evidence": [
         {
           "date": "2026-10-24",
-          "reference": "art/map/classroom.png右侧为镜子，窗边新图未见"
+          "reference": "classroom.png为4608x3688 RGBA；classroom_with_window_20261024.png为1152x922 RGB完整构图候选，不能直接充当透明局部层"
         }
       ],
-      "next_action": "确认现有候选窗位是否能落在classroom真实画面；补窗框局部、主角抛决策币层与独立币层的对位预览，不重画全教室"
+      "next_action": "按美术任务确认窗位并交付对位窗框、室内抛币角色层及独立硬币层；不重画全教室"
     },
     {
       "id": "LOCAL-PROPS",
@@ -499,21 +509,21 @@
       "id": "REPO-SYNC",
       "name": "教室摆放与项目GitHub同步",
       "owner": "程序/第二美术兼整合验收",
-      "production": "本地工作区已有未提交classroom日记/黑板actor摆放及黑板素材；用户明确要求同步这些缺项",
-      "delivery": "未提交；当前本地main为9cd078b，origin/main为f8288a5",
-      "integration": "本地main含12个远端未有提交；直接推送被GitHub拒绝，历史包含547MB的IF如果之间.exe，故今日内容需走基于远端main的独立功能分支/PR；不重写远端历史",
-      "acceptance": "明确列出提交路径并确认没有把卧室/图书馆/操场其他未提交改动混入；新分支可从GitHub获取且CI/数据检查通过",
+      "production": "策划分支已在本地main合并；教室摆放和黑板图已进入合并提交",
+      "delivery": "本地main提交0b99155，origin/main仍为f8288a5；尚未交付GitHub",
+      "integration": "本地main领先远端16个提交；历史含547MB IF如果之间.exe及54.83MB学校.rar，GitHub拒绝大文件历史；当前Godot验证缺失也未过发布闸门",
+      "acceptance": "待选择可从origin/main安全同步的提交范围；先通过仓库要求的完整验证，再交PR或同步方式，不能重写远端历史",
       "evidence": [
         {
           "date": "2026-10-25",
-          "reference": "git status显示classroom、bedroom、library、school_yard均修改且多张图未跟踪；本轮只授权同步教室日记/黑板相关内容，需逐项审阅。origin/main=f8288a5；本地main=9cd078b"
+          "reference": "本轮在本地main合并codex/story-library-crowbar-20261025，生成0b99155；现保留stash中的卧室/图书馆/操场差异和未跟踪箱子、门卫桌、D4目录，不混入此次合并"
         },
         {
           "date": "2026-10-25",
           "reference": "直接git push origin main被GitHub GH001拒绝：历史中的IF如果之间.exe为547.19MB，超过100MB限制；学校.rar为54.83MB并触发推荐上限警告"
         }
       ],
-      "next_action": "程序先在干净的origin/main工作树挑入用户指定教室地图与资源，完成功能和仓库验证后推送新分支并交PR链接；GitHub main的历史清理另行决策"
+      "next_action": "先解决历史大文件导致的远端同步路径，并补齐Godot全量测试/真窗口烟测；通过闸门后再提交可审阅PR，保留远端main历史"
     }
   ],
   "pending_inputs": [
@@ -523,15 +533,15 @@
     "图书馆后段事件链、回溯与存档闭环尚未实现；当前游戏测试和烟测没有有效用例统计，不能视为通过"
   ],
   "verification": {
-    "scope": "2026-10-25根据剧情修改1.2、R2审核稿、当前工程地图/事件/素材及用户对End6、离界地图、B交付时序和P747吊坠的确认，更新图书馆后段程序/美术任务与stage稿；策划稿不是代码实现或完整通关验收",
+    "scope": "2026-10-25将codex/story-library-crowbar-20261025合并至本地main 0b99155；更新图书馆后段程序/美术两份任务，整合stage演出与阻断说明，不按工时排产；策划稿不是代码实现或完整通关验收",
     "route": "当前school_yard出口action=overworld会返回大地图；school_gate有直通classroom portal且无门actor，钥匙门控未接；路线实测待做",
-    "assets": "crowbar.png复制为art/props/ch2_crowbar.png，尺寸128x128 RGBA、SHA-256已登记；Godot 4.7.2 headless editor导入通过，游戏载入和剧情绑定待验",
+    "assets": "合并进main的撬棍128x128 RGBA与黑板图已登记；图书馆候选无猫JPG和教室候选整图尺寸均不匹配正式底图；猫/补地层、血迹层、决策币、窗边分层未完成",
     "game_tests": "当前执行环境不存在交接文档指定的Godot 4.7.2可执行文件，无法运行run_tests.gd；此前相同命令也未产生用例统计，不能认定全量测试通过",
     "smoke_run": "当前执行环境找不到Godot可执行文件，无法运行smoke_run.gd；尚无本轮真实窗口剧情运行证据",
-    "data_check": "本隔离交付分支Godot 4.7.2 headless editor导入后，check_data.py退出0，统计14图/19事件/5结局/7物品；仅保留cat_doll、night_tear图鉴未登记及end4_iron无剧情可达三条既有提醒",
+    "data_check": "本地合并工作区python tools/check_data.py退出0，统计14图/19事件/5结局/7物品；仅保留cat_doll、night_tear图鉴未登记及end4_iron无剧情可达三条既有提醒",
     "stage": "图书馆后段stage稿为draft；End6失败台词、market_night/from_overworld[278,279]、P747吊坠和P748夜幕之泪交付时序已确认；猫/血迹/决策币/窗边素材及地图对象绑定未完成，不代表场景运行或通关验证",
     "daily_budget": "本日按用户要求拆为程序与美术两个任务文件，不按时间安排工作量",
-    "doc": "按用户要求提供程序任务与美术任务两个Markdown文件，不按时间安排；未生成Word或day_plan.json",
+    "doc": "程序任务与美术任务两份Markdown已更新；阻断说明已并入程序任务；不按时间安排，未生成Word或day_plan.json",
     "diagnostics": "既有负面测试与引擎诊断保留，不宣称日志全净"
   },
   "active_daily_plan": "docs/每日策划/2026-10-25_图书馆后段策划/"
