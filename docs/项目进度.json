@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-24",
+  "updated_at": "2026-10-25",
   "project": "IF：如果之间",
   "constraints": {
     "start_date": "2026-10-22",
-    "current_day": "D3",
+    "current_day": "D4",
     "production_days": [
       1,
       2,
@@ -29,9 +29,9 @@
     ]
   },
   "checked_versions": {
-    "main_baseline": "eb2dc4a",
-    "primary_branch": "codex/world-pixel-cohesion",
-    "scope": "隔离工作树核查，不包含主工作区未提交演出/画面改动"
+    "main_baseline": "9cd078b",
+    "primary_branch": "main",
+    "scope": "2026-10-25本地GitHub工作区；origin/main远端引用为f8288a5；main本地领先12个提交，历史大文件阻止整支推送；保留未提交地图和素材，不视为已交付"
   },
   "counts": {
     "maps": 14,
@@ -68,6 +68,26 @@
         "RESCUE-AUDIO"
       ],
       "supersedes": "同日早前已做完但未交GitHub的整体完成报告"
+    },
+    {
+      "date": "2026-10-25",
+      "report": "昨天只审阅修订稿和工程数据，没有改代码、地图、剧情文件或素材；新稿取消教学楼走廊，要求操场经校门门口钥匙检查进入教室，再调查黑板和日记、展示三条校规并进行图书馆追逐。用户确认当前工作区的教室日记和黑板摆放是昨天指出缺少的地图JSON内容，并要求同步到GitHub。",
+      "affected_ids": [
+        "C-READY",
+        "KEY",
+        "CLASSROOM",
+        "CHASE",
+        "CORRIDOR",
+        "REPO-SYNC"
+      ],
+      "source_note": "用户报告引用的C:/Users/q3382/Documents/GameProject/if：如果之间在当前电脑不存在；以当前GitHub工作区文件和用户本条明确要求安排今日执行，外部报告仅作为待复核问题清单。"
+    },
+    {
+      "date": "2026-10-25",
+      "report": "用户补交crowbar.png并要求合并到素材。已复制到art/props/ch2_crowbar.png；文件为128x128 RGBA、SHA-256 fc382cd2e54b631263dc699e632c492193961657b346818e2b3d8228a4d97989。Godot 4.7.2 headless editor导入通过；运行时显示验收待做。",
+      "affected_ids": [
+        "CLUE-ART"
+      ]
     }
   ],
   "items": [
@@ -203,9 +223,13 @@
         {
           "date": "2026-10-24",
           "reference": "data/events/ch2_can.json已发item/key；art/item/key.png已有；教室无钥匙入口条件未闭环"
+        },
+        {
+          "date": "2026-10-25",
+          "reference": "当前data/maps/school_gate.json的to_classroom仍是直通教室的portal；地图无教学楼门交互actor，当前工作区未找到data/events/ch2_class_door.json"
         }
       ],
-      "next_action": "测试有/无钥匙分流，不再画钥匙"
+      "next_action": "先用地图编辑器创建/绑定教学楼门交互并处理直通portal；验有钥匙开门声并入教室、无钥匙留在校门且可返回其他区域"
     },
     {
       "id": "C-READY",
@@ -219,25 +243,29 @@
         {
           "date": "2026-10-24",
           "reference": "data/events/ch2_c_wait.json仅later"
+        },
+        {
+          "date": "2026-10-25",
+          "reference": "当前本地事件仍只有later选项；操场portal使用action=overworld，退出会到大地图；需按新稿改为操场-校门路线并验证C在教学楼门口等待"
         }
       ],
-      "next_action": "文案先交短节点，程序在入口链接入"
+      "next_action": "按已审核新稿补准备好了/我再逛逛状态分支；C不跟随进教室，在校门教学楼门口等待；实测返回操场后仍可再次出发"
     },
     {
       "id": "CLASSROOM",
       "name": "教室四调查与日记流程",
       "owner": "程序/文案",
-      "production": "地图有，调查未接",
-      "delivery": "素材部分已交",
-      "integration": "未接事件",
+      "production": "当前工作区已有黑板和日记actor摆放，用户要求今日同步；交互绑定未完成",
+      "delivery": "日记底图已交；黑板新图与摆放尚在工作区、未提交；其余地图有未提交修改需逐项审阅",
+      "integration": "黑板/日记actor存在于未提交classroom.json但未发现interaction绑定；当前工作区未找到ch2_diary.json或ch2_class_door.json",
       "acceptance": "待验收",
       "evidence": [
         {
-          "date": "2026-10-24",
-          "reference": "data/maps/classroom.json的actors为空；黑板等特写已入库"
+          "date": "2026-10-25",
+          "reference": "当前main的classroom有课桌；未提交diff新增日记0和blackboard两个actor，黑板贴图art/props/ch2_blackboard_2.png为未跟踪文件；actor尚未绑定黑板/日记调查事件。不要把工作区布局当作GitHub内容或可玩流程"
         }
       ],
-      "next_action": "文案交节点包，程序接入；日记图片不阻塞文本联调"
+      "next_action": "审阅classroom.json完整diff，使用地图编辑器绑定黑板与日记调查及碰撞；仅纳入用户确认的教室布局/素材，跑数据检查与实际交互验收后提交"
     },
     {
       "id": "LIB-MAP",
@@ -267,9 +295,13 @@
         {
           "date": "2026-10-24",
           "reference": "library猫只有line省略号，未见血迹/童话/媒介/净化/两遍新事件"
+        },
+        {
+          "date": "2026-10-25",
+          "reference": "新增图书馆后段程序/美术任务与11节点stage草案；library中心猫烘焙底图，后段事件仍未接入；策划稿draft"
         }
       ],
-      "next_action": "先首遍再回溯二遍，复用相同地图与资源"
+      "next_action": "按R2规则先接日记介入、首次背刺回溯、二次线索/合照、第二次闪避分支；未确认的窗边和结尾路线停在交接点"
     },
     {
       "id": "REWIND",
@@ -283,6 +315,10 @@
         {
           "date": "2026-10-24",
           "reference": "docs/剧情/剧情修改1.0版.docx；回溯落点是首次进馆前"
+        },
+        {
+          "date": "2026-10-25",
+          "reference": "依据R2和1.2整理到docs/staged_scripts/v1.2_library_after/；程序实现与存读档回归尚未开始"
         }
       ],
       "next_action": "恢复完整物品快照，不只加回日记；阻止重复发晶石/玩偶"
@@ -291,7 +327,7 @@
       "id": "CHASE",
       "name": "两段追逐与闪避",
       "owner": "程序/策划",
-      "production": "校门两点QTE方案已按用户本轮要求具体化",
+      "production": "校门两点QTE方案已具体化；用户确认新稿取消走廊并保留校门追逐目标",
       "delivery": "规则/路线/触发与黑雾图交付",
       "integration": "追逐控制器和圈式QTE尚待程序实现",
       "acceptance": "路线静态通过；玩法未实机实现",
@@ -323,33 +359,33 @@
       "id": "CORRIDOR",
       "name": "教学楼走廊图",
       "owner": "主美术",
-      "production": "未收到成品",
-      "delivery": "待确认实际交付",
-      "integration": "main为占位且无独立地图",
-      "acceptance": "待验收",
+      "production": "用户2026-10-25确认新稿取消走廊，不再制作",
+      "delivery": "既有走廊占位素材仅存档，不纳入本段可玩流程",
+      "integration": "当前需排查并断开旧走廊事件/楼梯对白/教学楼集合的可触发连接",
+      "acceptance": "确认无可触发走廊入口，C在校门教学楼口等待",
       "evidence": [
         {
           "date": "2026-10-24",
           "reference": "art/map/building.png为320x180占位；teaching_corridor.png未见"
         }
       ],
-      "next_action": "先核对昨日有无稿，有稿返修，无稿单段布局首版"
+      "next_action": "取消走廊制图与走廊专属音画；只清理旧流程连接和过期说明，不删除历史素材"
     },
     {
       "id": "CLUE-ART",
       "name": "撬棍/盒子/合照/童话新页",
       "owner": "两名美术",
-      "production": "未收到对应成品",
-      "delivery": "待确认实际交付",
-      "integration": "尚无新图",
-      "acceptance": "待验收",
+      "production": "用户2026-10-25补交撬棍素材；合照/童话新页其他项交付仍待确认",
+      "delivery": "crowbar.png已复制到art/props/ch2_crowbar.png并完成Godot 4.7.2 headless editor导入；当前待GitHub交付；其余缺项未确认",
+      "integration": "撬棍已入项目素材目录，尚无地图/事件绑定；其他项尚待接入",
+      "acceptance": "撬棍图片格式/尺寸/透明通道和Godot资源导入已通过，游戏显示待验；其他项待验收",
       "evidence": [
         {
           "date": "2026-10-24",
-          "reference": "crowbar.png/group_photo.png/ch2_box_closed/open.png/ch2_fairy_tale_book_second.png未见；首章cat_photo非C合照"
+          "reference": "2026-10-25收到crowbar.png，已核为128x128 RGBA，sha256 fc382cd2e54b631263dc699e632c492193961657b346818e2b3d8228a4d97989；group_photo与ch2_fairy_tale_book_second待确认主线路径，首章cat_photo非C合照"
         }
       ],
-      "next_action": "依v2必要项排；若已做先补交，不重新生成"
+      "next_action": "程序核对撬棍原文对应交互并绑定；第二美术确认合照/童话页是否已入主线；不重画已交撬棍"
     },
     {
       "id": "LIB-LAYERS",
@@ -450,25 +486,46 @@
         }
       ],
       "next_action": "直接沿用main人物与地图标尺；并行画面改动不夹带本轮提交"
+    },
+    {
+      "id": "REPO-SYNC",
+      "name": "教室摆放与项目GitHub同步",
+      "owner": "程序/第二美术兼整合验收",
+      "production": "本地工作区已有未提交classroom日记/黑板actor摆放及黑板素材；用户明确要求同步这些缺项",
+      "delivery": "未提交；当前本地main为9cd078b，origin/main为f8288a5",
+      "integration": "本地main含12个远端未有提交；直接推送被GitHub拒绝，历史包含547MB的IF如果之间.exe，故今日内容需走基于远端main的独立功能分支/PR；不重写远端历史",
+      "acceptance": "明确列出提交路径并确认没有把卧室/图书馆/操场其他未提交改动混入；新分支可从GitHub获取且CI/数据检查通过",
+      "evidence": [
+        {
+          "date": "2026-10-25",
+          "reference": "git status显示classroom、bedroom、library、school_yard均修改且多张图未跟踪；本轮只授权同步教室日记/黑板相关内容，需逐项审阅。origin/main=f8288a5；本地main=9cd078b"
+        },
+        {
+          "date": "2026-10-25",
+          "reference": "直接git push origin main被GitHub GH001拒绝：历史中的IF如果之间.exe为547.19MB，超过100MB限制；学校.rar为54.83MB并触发推荐上限警告"
+        }
+      ],
+      "next_action": "程序先在干净的origin/main工作树挑入用户指定教室地图与资源，完成功能和仓库验证后推送新分支并交PR链接；GitHub main的历史清理另行决策"
     }
   ],
   "pending_inputs": [
-    "程序交付最新版提交号及运行入口",
-    "昨日走廊/盒子等是否已有未上传成品",
-    "日记后续补包，本轮跳过",
-    "C出场时序仍需文案核对；首段猫追逐按本轮双QTE执行，后段C追逐另行接入"
+    "昨天报告所说的实际运行构建/启动入口仍未提供；今天先复现当前GitHub工作区的构建并记录版本/提交",
+    "用户已确认今日同步范围是当前工作区的教室日记与黑板摆放JSON；程序提交前仍须审阅classroom.json差异并隔离卧室/图书馆/操场改动",
+    "日记后续补包，本轮跳过；当前已交日记底图可先接文本调查",
+    "开门音效、教室与图书馆BGM、追逐音频的已交版本和文件路径待音效组核对；不重复制作已交素材",
+    "双QTE首段追逐按已审核R2执行；后段C追逐另行接入"
   ],
   "verification": {
-    "scope": "本轮资源与路线静态核查，不表示救援/追逐正式剧情已可玩",
-    "route": "校门5段WalkGrid静态通路全通过",
-    "assets": "三音与透明黑雾猫均加载成功",
-    "game_tests": "4373/4373通过；先发现既有束缚缩放回归，修正后全过",
-    "smoke_run": "真实窗口烟测通过；exit0",
-    "data_check": "14图/19事件/5结局/7物品；保留三条既有提醒",
-    "stage": "6节点结构稿ready_for_implementation校验通过；不是已实现",
-    "daily_budget": "5人各120分钟通过",
-    "doc": "7页Word已渲染并逐页检查",
+    "scope": "2026-10-25根据剧情修改1.2、R2审核稿、当前工程地图/事件/素材与用户补交crowbar.png制定图书馆后段程序/美术任务；策划稿不是代码实现或完整通关验收",
+    "route": "当前school_yard出口action=overworld会返回大地图；school_gate有直通classroom portal且无门actor，钥匙门控未接；路线实测待做",
+    "assets": "crowbar.png复制为art/props/ch2_crowbar.png，尺寸128x128 RGBA、SHA-256已登记；Godot 4.7.2 headless editor导入通过，游戏载入和剧情绑定待验",
+    "game_tests": "本隔离交付分支按仓库命令运行run_tests.gd仅输出Godot版本并退出0，没有用例统计；不能认定全量测试通过",
+    "smoke_run": "smoke_run.gd按仓库命令也仅输出Godot版本；尚无真实窗口剧情运行证据",
+    "data_check": "本隔离交付分支Godot 4.7.2 headless editor导入后，check_data.py退出0，统计14图/19事件/5结局/7物品；仅保留cat_doll、night_tear图鉴未登记及end4_iron无剧情可达三条既有提醒",
+    "stage": "11节点图书馆后段稿为draft；script-to-stage结构与当前origin/main地图绑定校验通过，不代表场景运行或结尾路线验证",
+    "daily_budget": "本日按用户要求拆为程序与美术两个任务文件，不按时间安排工作量",
+    "doc": "按用户要求提供程序任务与美术任务两个Markdown文件，不按时间安排；未生成Word或day_plan.json",
     "diagnostics": "既有负面测试与引擎诊断保留，不宣称日志全净"
   },
-  "active_daily_plan": "docs/每日策划/2026-10-24_D3_追赶版/"
+  "active_daily_plan": "docs/每日策划/2026-10-25_图书馆后段策划/"
 }
