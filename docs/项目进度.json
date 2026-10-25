@@ -31,7 +31,7 @@
   "checked_versions": {
     "main_baseline": "0b99155",
     "primary_branch": "main",
-    "scope": "2026-10-25本地main已合并codex/story-library-crowbar-20261025至0b99155；origin/main仍为f8288a5，本地领先16个提交。历史含547MB IF如果之间.exe及学校.rar，整支推送受GitHub文件限制；当前环境无Godot 4.7.2，验证闸门未全过，不能推送。合并前stash中的卧室/图书馆/操场地图改动和未跟踪素材仍保留在工作区，不代表已交付"
+    "scope": "2026-10-25游戏/素材核查基线为本地main合并提交0b99155；策划文件更新已在main本地提交。git ls-remote复核origin/main仍为f8288a5，本地main含18个未推送提交。历史含573771104字节IF如果之间.exe及学校.rar，整支推送受GitHub文件限制；当前环境无Godot 4.7.2，验证闸门未全过，不能推送。合并前stash中的卧室/图书馆/操场地图改动和未跟踪素材仍保留在工作区，不代表已交付"
   },
   "counts": {
     "maps": 14,
@@ -510,13 +510,13 @@
       "name": "教室摆放与项目GitHub同步",
       "owner": "程序/第二美术兼整合验收",
       "production": "策划分支已在本地main合并；教室摆放和黑板图已进入合并提交",
-      "delivery": "本地main提交0b99155，origin/main仍为f8288a5；尚未交付GitHub",
-      "integration": "本地main领先远端16个提交；历史含547MB IF如果之间.exe及54.83MB学校.rar，GitHub拒绝大文件历史；当前Godot验证缺失也未过发布闸门",
+      "delivery": "教室摆放与素材在本地main合并提交0b99155；程序/美术任务稿已提交到本地main；origin/main仍为f8288a5，尚未交付GitHub",
+      "integration": "本地main领先远端18个提交；历史含573771104字节IF如果之间.exe及57494781字节学校.rar，GitHub拒绝大文件历史；当前Godot验证缺失也未过发布闸门",
       "acceptance": "待选择可从origin/main安全同步的提交范围；先通过仓库要求的完整验证，再交PR或同步方式，不能重写远端历史",
       "evidence": [
         {
           "date": "2026-10-25",
-          "reference": "本轮在本地main合并codex/story-library-crowbar-20261025，生成0b99155；现保留stash中的卧室/图书馆/操场差异和未跟踪箱子、门卫桌、D4目录，不混入此次合并"
+          "reference": "本轮在本地main合并codex/story-library-crowbar-20261025，生成0b99155；程序/美术任务稿及进度账已另行提交到本地main。现保留stash中的卧室/图书馆/操场差异和未跟踪箱子、门卫桌、D4目录，不混入合并提交"
         },
         {
           "date": "2026-10-25",
@@ -533,7 +533,7 @@
     "图书馆后段事件链、回溯与存档闭环尚未实现；当前游戏测试和烟测没有有效用例统计，不能视为通过"
   ],
   "verification": {
-    "scope": "2026-10-25将codex/story-library-crowbar-20261025合并至本地main 0b99155；更新图书馆后段程序/美术两份任务，整合stage演出与阻断说明，不按工时排产；策划稿不是代码实现或完整通关验收",
+    "scope": "2026-10-25将codex/story-library-crowbar-20261025合并至本地main 0b99155，并以5dc6de3提交图书馆后段程序/美术两份任务；整合stage演出与阻断说明，不按工时排产；策划稿不是代码实现或完整通关验收",
     "route": "当前school_yard出口action=overworld会返回大地图；school_gate有直通classroom portal且无门actor，钥匙门控未接；路线实测待做",
     "assets": "合并进main的撬棍128x128 RGBA与黑板图已登记；图书馆候选无猫JPG和教室候选整图尺寸均不匹配正式底图；猫/补地层、血迹层、决策币、窗边分层未完成",
     "game_tests": "当前执行环境不存在交接文档指定的Godot 4.7.2可执行文件，无法运行run_tests.gd；此前相同命令也未产生用例统计，不能认定全量测试通过",
