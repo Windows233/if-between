@@ -94,10 +94,10 @@ var _map_management: HFlowContainer
 var _toolbar_drawers: Array[Control] = []
 var _drawer_buttons: Array[Button] = []
 var _object_inspector: Control
-var _texture_rect_button: Button
 var _texture_request_serial := 0
 var _texture_selection_key: Array = []
 var _sprite_path_edit: LineEdit
+var _visibility_icons: Array[Texture2D] = []
 
 
 func _ready() -> void:
@@ -166,10 +166,15 @@ func _build() -> void:
 	_object_tree = SceneTreeControl.new()
 	_object_tree.hierarchy_drop.connect(_on_hierarchy_drop)
 	_object_tree.hide_root = true
+	_object_tree.columns = 2
+	_object_tree.set_column_expand(0, true)
+	_object_tree.set_column_expand(1, false)
+	_object_tree.set_column_custom_minimum_width(1, 24)
 	_object_tree.select_mode = Tree.SELECT_MULTI
 	_object_tree.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_object_tree.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_object_tree.multi_selected.connect(_on_hierarchy_multi_selected)
+	_object_tree.button_clicked.connect(_on_hierarchy_button_clicked)
 	_object_tree.item_edited.connect(_on_hierarchy_item_edited)
 	_object_tree.item_activated.connect(_on_hierarchy_item_activated)
 	scene_page.add_child(_object_tree)
@@ -707,12 +712,14 @@ func _refresh_objects() -> void:
 		item.set_editable(0, editable)
 		item.set_tooltip_text(0, "双击编组名称可改名；选中编组会整体选择成员。" if editable
 			else "编组包含锁定物件或组 ID 无效，暂时不能改名。")
+	var actor_id_counts := _actor_id_counts()
 	for index: int in model.count(Kind.ACTOR):
 		var item: TreeItem = _hierarchy_actor_items[index]
 		var label := model.label_of(Kind.ACTOR, index)
 		var actor_id := str(model.actor_field(index, "id", ""))
+		var hidden := _hidden_actor_ids.has(actor_id)
 		var state_tags: Array[String] = []
-		if _hidden_actor_ids.has(actor_id):
+		if hidden:
 			state_tags.append("隐藏")
 		if _locked_actor_ids.has(actor_id):
 			state_tags.append("锁定")
@@ -720,10 +727,76 @@ func _refresh_objects() -> void:
 			label += "  [%s]" % " / ".join(state_tags)
 		item.set_text(0, "%s  [%s]" % [label, actor_id])
 		item.set_tooltip_text(0, "双击定位物件；隐藏与锁定状态仅影响编辑器。")
+		item.clear_buttons()
+		var valid_id := not actor_id.is_empty() and int(actor_id_counts.get(actor_id, 0)) == 1
+		item.add_button(1, _visibility_icon(hidden), 1, not valid_id,
+			"切换编辑器画布可见性" if valid_id else "请先为物件设置唯一 ID，才能保存可见性状态。")
 	_sync_hierarchy_selection()
 	_hierarchy_syncing = false
 	_refresh_object_state_buttons()
 	_refresh_group_buttons()
+
+
+func _visibility_icon(hidden: bool) -> Texture2D:
+	if not hidden and _object_tree.has_theme_icon("GuiVisibilityVisible", "EditorIcons"):
+		return _object_tree.get_theme_icon("GuiVisibilityVisible", "EditorIcons")
+	if _visibility_icons.is_empty():
+		_visibility_icons = [_make_visibility_icon(false), _make_visibility_icon(true)]
+	return _visibility_icons[1 if hidden else 0]
+
+
+func _make_visibility_icon(hidden: bool) -> Texture2D:
+	var image := Image.create(16, 16, false, Image.FORMAT_RGBA8)
+	image.fill(Color.TRANSPARENT)
+	var ink := Color(0.82, 0.86, 0.9, 1.0)
+	for x in range(2, 14):
+		var rise := sin(PI * float(x - 2) / 11.0) * 4.5
+		var upper := roundi(7.5 - rise)
+		var lower := roundi(7.5 + rise)
+		image.set_pixel(x, upper, ink)
+		image.set_pixel(x, lower, ink)
+	for y in range(5, 11):
+		for x in range(5, 11):
+			if Vector2(x - 7.5, y - 7.5).length_squared() <= 5.0:
+				image.set_pixel(x, y, ink)
+	for y in range(6, 10):
+		for x in range(6, 10):
+			if Vector2(x - 7.5, y - 7.5).length_squared() <= 2.0:
+				image.set_pixel(x, y, Color(0.22, 0.26, 0.3, 1.0))
+	if hidden:
+		var cross := Color(1.0, 0.42, 0.36, 1.0)
+		for step in range(3, 13):
+			image.set_pixel(step, step, cross)
+			image.set_pixel(step, 15 - step, cross)
+	return ImageTexture.create_from_image(image)
+
+
+func _on_hierarchy_button_clicked(item: TreeItem, column: int, button_id: int,
+		_mouse_button: int) -> void:
+	if column != 1 or button_id != 1 or item == null:
+		return
+	var metadata: Dictionary = item.get_metadata(0)
+	if metadata.get("kind", "") != "actor":
+		return
+	var index := int(metadata.get("index", -1))
+	if index < 0 or index >= model.count(Kind.ACTOR):
+		return
+	var actor_id := str(model.actor_field(index, "id", ""))
+	if actor_id.is_empty() or int(_actor_id_counts().get(actor_id, 0)) != 1:
+		_status.text = "请先为物件设置唯一 ID，才能保存可见性状态。"
+		return
+	var hidden := not _hidden_actor_ids.has(actor_id)
+	if hidden:
+		_hidden_actor_ids[actor_id] = true
+	else:
+		_hidden_actor_ids.erase(actor_id)
+	var save_error := _save_actor_editor_state()
+	canvas.set_actor_editor_state(_hidden_actor_ids, _locked_actor_ids)
+	_refresh_selection()
+	if save_error == OK:
+		_status.text = "物件已从编辑器画布隐藏。" if hidden else "物件已在编辑器画布显示。"
+	else:
+		_status.text = "状态已临时应用，但未能写入编辑器状态文件：%d" % save_error
 
 
 func _create_group_item(group: Dictionary, root: TreeItem, items: Dictionary, visiting: Dictionary) -> TreeItem:
@@ -1587,24 +1660,19 @@ func _refresh_dirty() -> void:
 # ---------------------------------------------------------------- 交互
 
 func _on_tool(which: int) -> void:
-	if which in [Canvas.Tool.BASELINE, Canvas.Tool.COLLISION, Canvas.Tool.TEXTURE_RECT]:
+	if which in [Canvas.Tool.BASELINE, Canvas.Tool.COLLISION]:
 		if canvas.sel_kind != Kind.ACTOR or canvas.selected_actors().size() != 1 \
 				or not _allow_selection_edit():
 			_status.text = "请先单选一件未锁定物件，再使用属性卡里的工具。"
-			return
-		if which == Canvas.Tool.TEXTURE_RECT and not canvas._collision_editable():
-			_status.text = "请单选一件可见且未锁定的独立物件，再框选贴图范围。"
 			return
 	canvas.tool = which
 	for button: Button in _tool_buttons:
 		button.set_pressed_no_signal(int(button.get_meta("map_tool")) == which)
 	if is_instance_valid(_object_inspector):
 		_object_inspector.set_active_tool(which)
-	if is_instance_valid(_texture_rect_button):
-		_texture_rect_button.set_pressed_no_signal(which == Canvas.Tool.TEXTURE_RECT)
 	match which:
 		Canvas.Tool.SELECT:
-			_status.text = "选择：拖动物件；单选物件的碰撞框优先拾取，拖内部移动、八柄缩放；精确数值见「选择与尺寸」。"
+			_status.text = "选择：拖动物件；移动会带动交互区和碰撞。绿色框调整交互区，红色框调整碰撞；贴图尺寸见「视觉部件与变换」。"
 		Canvas.Tool.WALL:
 			_status.text = "画墙：在图上按住左键拖出一个框，松手就加进 walls。"
 		Canvas.Tool.PORTAL:
@@ -1613,8 +1681,6 @@ func _on_tool(which: int) -> void:
 			_status.text = "拉基线：点一件遮挡物（身上有黄线），上下拖，松手写进它的 cover_y。"
 		Canvas.Tool.COLLISION:
 			_status.text = "先单选物件：空白处拖出碰撞，已有红框可移动和八柄缩放，Esc 取消；排序取参考碰撞上边缘。"
-		Canvas.Tool.TEXTURE_RECT:
-			_status.text = "框选贴图范围：在地图上按住左键拖框，松手将所选物件适配到框内；Esc 取消，可撤销。"
 
 
 func _on_layer(on: bool, prop: String) -> void:
@@ -1825,12 +1891,16 @@ func _on_spin_changed(_v: float) -> void:
 		_on_edited()
 		canvas.queue_redraw()
 		return
-	var r: Rect2 = canvas.model.rect_of(canvas.sel_kind, canvas.sel_index)
+	var r: Rect2 = canvas.model.interaction_rect_of(canvas.sel_index) \
+		if canvas.sel_kind == Kind.ACTOR else canvas.model.rect_of(canvas.sel_kind, canvas.sel_index)
 	var next := Rect2(
 		Vector2(_spins[0].value, _spins[1].value),
 		Vector2(maxf(1.0, _spins[2].value), maxf(1.0, _spins[3].value)))
 	if next != r:
-		canvas.model.set_rect(canvas.sel_kind, canvas.sel_index, next)
+		if canvas.sel_kind == Kind.ACTOR:
+			canvas.model.set_interaction_rect(canvas.sel_index, next)
+		else:
+			canvas.model.set_rect(canvas.sel_kind, canvas.sel_index, next)
 		_on_edited()
 		canvas.queue_redraw()
 
@@ -1855,7 +1925,7 @@ func _on_base_auto() -> void:
 
 func _on_selection_changed() -> void:
 	_texture_request_serial += 1
-	if canvas.tool in [Canvas.Tool.BASELINE, Canvas.Tool.COLLISION, Canvas.Tool.TEXTURE_RECT] \
+	if canvas.tool in [Canvas.Tool.BASELINE, Canvas.Tool.COLLISION] \
 			and (canvas.sel_kind != Kind.ACTOR or canvas.selected_actors().size() != 1):
 		_on_tool(Canvas.Tool.SELECT)
 	_refresh_selection()
@@ -1879,12 +1949,16 @@ func _refresh_selection() -> void:
 			_base_row.visible = false
 	else:
 		var names := ["墙", "传送区", "物件", "出生点", "前景层"]
-		var r: Rect2 = model.rect_of(kind, index)
-		_sel_label.text = "%s #%d %s" % [names[kind], index, model.label_of(kind, index)]
+		var r: Rect2 = model.interaction_rect_of(index) if kind == Kind.ACTOR \
+			else model.rect_of(kind, index)
+		_sel_label.text = ("物件交互区" if kind == Kind.ACTOR else names[kind]) \
+			+ " #%d %s" % [index, model.label_of(kind, index)]
 		_spins[0].value = r.position.x
 		_spins[1].value = r.position.y
 		_spins[2].value = r.size.x
 		_spins[3].value = r.size.y
+		for spin: SpinBox in _spins:
+			spin.tooltip_text = "编辑物件交互区；不会改变贴图或碰撞。" if kind == Kind.ACTOR else "编辑所选矩形。"
 		var is_spawn: bool = kind == Kind.SPAWN
 		var is_overlay: bool = kind == Kind.OVERLAY
 		var is_locked: bool = _selection_has_locked_actor() or not canvas.is_kind_editable(kind)
@@ -1914,9 +1988,6 @@ func _refresh_selection() -> void:
 			_base_spin.tooltip_text = "独立物件：碰撞箱上边缘；旧物件：贴图底边。橙线表示手动调整。"
 	_syncing = false
 	_sync_actor_panel()
-	if is_instance_valid(_texture_rect_button):
-		_texture_rect_button.disabled = not canvas._collision_editable()
-		_texture_rect_button.set_pressed_no_signal(canvas.tool == Canvas.Tool.TEXTURE_RECT)
 	if kind == Kind.ACTOR and is_instance_valid(_object_inspector):
 		for object_tool: int in _object_inspector._tool_buttons:
 			var button: Button = _object_inspector._tool_buttons[object_tool]
@@ -2006,7 +2077,7 @@ func _on_edited() -> void:
 
 func _on_canvas_edited() -> void:
 	_on_edited()
-	if canvas.sel_kind == Kind.ACTOR and (canvas.tool in [Canvas.Tool.COLLISION, Canvas.Tool.TEXTURE_RECT] \
+	if canvas.sel_kind == Kind.ACTOR and (canvas.tool == Canvas.Tool.COLLISION \
 			or canvas._has_collision_selection()):
 		_build_actor_panel()
 	_refresh_selection()
@@ -2142,20 +2213,6 @@ func _build_actor_panel() -> void:
 	import_texture.text = "导入贴图…"
 	import_texture.pressed.connect(_open_actor_texture_import)
 	row2.add_child(import_texture)
-	_texture_rect_button = Button.new()
-	_texture_rect_button.text = "框选贴图范围"
-	_texture_rect_button.toggle_mode = true
-	_texture_rect_button.tooltip_text = "在地图上拖出目标范围，物件位置和宽高随框设置；碰撞与交互区同步缩放。"
-	_texture_rect_button.pressed.connect(func() -> void:
-		_on_tool(Canvas.Tool.SELECT if canvas.tool == Canvas.Tool.TEXTURE_RECT else Canvas.Tool.TEXTURE_RECT)
-		canvas.grab_focus())
-	row2.add_child(_texture_rect_button)
-	var native_size := Button.new()
-	native_size.text = "恢复原图尺寸"
-	native_size.tooltip_text = "按背景像素比例恢复物件尺寸，保持与地图背景一致。"
-	native_size.pressed.connect(func() -> void:
-		_set_actor_texture(_panel_index, str(model.actor_field(_panel_index, "sprite", "")), false))
-	row2.add_child(native_size)
 	_actor_panel.add_child(row2)
 
 	var row3 := HFlowContainer.new()
@@ -2446,7 +2503,7 @@ func _apply_actor_texture(index: int, path: String, keep_rect := true) -> bool:
 		_sprite_path_edit.text = path
 	_on_edited()
 	_refresh_selection()
-	_status.text = "贴图已更新，保留当前范围；可点「框选贴图范围」在地图上重新定大小。" if keep_rect \
+	_status.text = "贴图已更新，尺寸保持不变；到「视觉部件与变换」调整大小。" if keep_rect \
 		else "物件已按背景像素比例恢复原图尺寸。"
 	return true
 
@@ -2673,6 +2730,5 @@ func _import_and_create(source_path: String) -> void:
 	_on_edited()
 	_refresh_selection()
 	canvas.queue_redraw()
-	_on_tool(Canvas.Tool.TEXTURE_RECT)
-	canvas.grab_focus()
-	_status.text = "已导入 %s：直接在地图上拖框设置位置和大小，Esc 返回选择工具。" % res_path
+	_on_tool(Canvas.Tool.SELECT)
+	_status.text = "已导入 %s；贴图尺寸可在「视觉部件与变换」中调整。" % res_path

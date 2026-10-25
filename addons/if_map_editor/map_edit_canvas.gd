@@ -5,12 +5,12 @@
 ## 缩放/平移自己实现（不借 2D 编辑器），因为整个画布是自成一体的面板，
 ## 不依赖当前打开哪个场景。
 ##
-## 工具：选择 / 画墙 / 画传送区 / 拉基线 / 画物件碰撞箱 / 框选贴图范围。
+## 工具：选择 / 画墙 / 画传送区 / 拉基线 / 画物件碰撞箱。
 ## 纯绘制与交互，数据全部交给 `map_edit_model.gd`。
 @tool
 extends Control
 
-enum Tool { SELECT, WALL, PORTAL, BASELINE, COLLISION, TEXTURE_RECT }
+enum Tool { SELECT, WALL, PORTAL, BASELINE, COLLISION }
 
 const Kind := preload("res://addons/if_map_editor/map_edit_model.gd").Kind
 const ObjectTransform := preload("res://addons/if_map_editor/map_object_transform.gd")
@@ -106,7 +106,6 @@ var sel_kind := -1
 var sel_index := -1
 var actor_selection: Array[int] = []
 var _drag_actor_rects: Dictionary = {}
-var _drag_actor_sources: Dictionary = {}
 var _duplicate_on_drag := false
 var _marquee_additive := false
 var _marquee_toggle := false
@@ -122,8 +121,6 @@ var _drag_start_game := Vector2.ZERO
 var _drag_start_rect := Rect2()
 var _drag_handle := -1
 var _drag_new_rect := Rect2()
-var _texture_rect_actor := -1
-var _texture_rect_source: Dictionary = {}
 var _walk_texture: ImageTexture = null
 var _walk_refresh_timer: Timer
 var _tex_cache := {}
@@ -154,7 +151,6 @@ func load_map(model_ref, bg_path: String, overlay_path: String, size: Vector2) -
 	_clear_collision_selection()
 	_drag_mode = 0
 	_drag_actor_rects.clear()
-	_drag_actor_sources.clear()
 	_duplicate_on_drag = false
 	model = model_ref
 	map_size = size
@@ -540,6 +536,7 @@ func frame_selection() -> bool:
 				continue
 			var actor_rect: Rect2 = model.rect_of(Kind.ACTOR, index)
 			bounds = bounds.merge(actor_rect) if has_bounds else actor_rect
+			bounds = bounds.merge(model.interaction_rect_of(index))
 			for part: Dictionary in actor_visual_items(index):
 				bounds = bounds.merge(part["rect"])
 			has_bounds = true
@@ -703,7 +700,7 @@ func _draw() -> void:
 	if model != null and is_kind_visible(Kind.ACTOR):
 		for index in model.count(Kind.ACTOR):
 			if not actor_is_hidden(index):
-				_draw_rect_game(model.rect_of(Kind.ACTOR, index), ACTOR_FILL, Color.TRANSPARENT)
+				_draw_rect_game(model.interaction_rect_of(index), ACTOR_FILL, Color.TRANSPARENT)
 	_draw_visual_layer("back")
 	_draw_visual_layer("auto")
 	if is_kind_visible(Kind.OVERLAY) and tex_overlay != null:
@@ -736,7 +733,7 @@ func _draw() -> void:
 		for i in model.count(Kind.ACTOR):
 			if actor_is_hidden(i):
 				continue
-			var r: Rect2 = model.rect_of(Kind.ACTOR, i)
+			var r: Rect2 = model.interaction_rect_of(i)
 			var actor_edge := Color(0.62, 0.66, 0.70, 0.9) if actor_is_locked(i) else ACTOR_EDGE
 			_draw_rect_game(r, Color.TRANSPARENT, actor_edge)
 			_label(r.position + Vector2(2, r.size.y - 3), model.label_of(Kind.ACTOR, i), actor_edge)
@@ -751,7 +748,6 @@ func _draw() -> void:
 							and (_drag_mode == 5 or _drag_mode == 6) and _collision_drag_valid():
 						shape = _drag_new_rect
 					_draw_rect_game(shape, WALL_FILL, WALL_EDGE, 2.0)
-				_draw_rect_game(actor.reach, Color(0.2, 0.7, 1, 0.08), PORTAL_EDGE)
 				_draw_rect_game(r, Color.TRANSPARENT, SELECT_COLOR, 2.0)
 
 	# 出生点（紫点 + 名字）
@@ -762,11 +758,8 @@ func _draw() -> void:
 			draw_string(ThemeDB.fallback_font, p + Vector2(7, 4), model.label_of(Kind.SPAWN, i),
 				HORIZONTAL_ALIGNMENT_LEFT, -1, 12, SPAWN_COLOR)
 
-	if _drag_mode == 3 or _drag_mode == 7 or _drag_mode == 8 or _drag_mode == 10:
+	if _drag_mode == 3 or _drag_mode == 7 or _drag_mode == 8:
 		_draw_rect_game(_drag_new_rect, Color(1, 1, 1, 0.15), SELECT_COLOR)
-		if _drag_mode == 10:
-			_label(_drag_new_rect.position, "贴图范围 %.2f × %.2f" % [
-				_drag_new_rect.size.x, _drag_new_rect.size.y], SELECT_COLOR)
 
 	# 测试工具：鼠标处的脚底框（绿=站得住，红=站不住）
 	if show_foot and _mouse_inside and model != null:
@@ -781,8 +774,8 @@ func _draw() -> void:
 
 	if sel_kind >= 0 and is_kind_visible(sel_kind) \
 			and not (sel_kind == Kind.ACTOR and actor_is_hidden(sel_index)):
-		var r: Rect2 = overlay_game_rect() if sel_kind == Kind.OVERLAY \
-			else model.rect_of(sel_kind, sel_index)
+		var r: Rect2 = overlay_game_rect() if sel_kind == Kind.OVERLAY else \
+			model.interaction_rect_of(sel_index) if sel_kind == Kind.ACTOR else model.rect_of(sel_kind, sel_index)
 		_draw_rect_game(r, Color(0, 0, 0, 0), SELECT_COLOR, 2.0)
 		# 出生点是个点、前景层整张拉伸 —— 都没有「改尺寸」这回事，不给手柄
 		if tool == Tool.SELECT and is_kind_editable(sel_kind) \
@@ -1033,8 +1026,6 @@ func _route_shortcut(event: InputEvent) -> void:
 	var command := str(shortcuts.action_for(event))
 	if command.is_empty():
 		return
-	if _drag_mode == 10:
-		cancel_interaction()
 	_clear_collision_selection()
 	if command == "cancel" and _drag_mode == 8:
 		_drag_mode = 0
@@ -1072,10 +1063,6 @@ func _update_pointer_drag(pos: Vector2) -> void:
 			var origin := _drag_start_game if _drag_mode == 8 else _snap(_drag_start_game)
 			_drag_new_rect = Rect2(origin.min(start), (start - origin).abs())
 			queue_redraw()
-		10:
-			var point := _texture_point(pos)
-			_drag_new_rect = Rect2(_drag_start_game.min(point), (point - _drag_start_game).abs())
-			queue_redraw()
 		4:
 			var baseline := _snap(to_game(pos)).y
 			model.set_actor_cover_y(sel_index, baseline)
@@ -1093,18 +1080,6 @@ func _press(pos: Vector2, additive := false, toggle := false, duplicate := false
 		return
 	_clear_collision_selection()
 	match tool:
-		Tool.TEXTURE_RECT:
-			if not _collision_editable():
-				status.emit("请单选一件可见且未锁定的独立物件，再框选贴图范围。")
-				return
-			if not Rect2(Vector2.ZERO, map_size).has_point(to_game(pos)):
-				return
-			_texture_rect_actor = sel_index
-			_texture_rect_source = model.actor_dict(sel_index).duplicate(true)
-			_drag_mode = 10
-			_drag_start_game = _texture_point(pos)
-			_drag_new_rect = Rect2(_drag_start_game, Vector2.ZERO)
-			queue_redraw()
 		Tool.COLLISION:
 			if sel_kind != Kind.ACTOR:
 				status.emit("先在左侧选中一个物件，再在图上拖出它的碰撞箱。")
@@ -1140,16 +1115,15 @@ func _press(pos: Vector2, additive := false, toggle := false, duplicate := false
 			if handle >= 0:
 				_drag_mode = 2
 				_drag_handle = handle
-				_drag_start_rect = model.rect_of(sel_kind, sel_index)
-				_drag_actor_sources.clear()
-				if sel_kind == Kind.ACTOR:
-					_drag_actor_sources[sel_index] = model.actor_dict(sel_index).duplicate(true)
+				_drag_start_rect = model.interaction_rect_of(sel_index) if sel_kind == Kind.ACTOR \
+					else model.rect_of(sel_kind, sel_index)
 				return
 			var hit := _hit_item(pos)
 			if hit.x < 0 or hit.x == Kind.OVERLAY:
 				for index: int in selected_actors():
 					if (actor_is_hidden(index) or actor_is_locked(index)) \
-						and _rect_hit(model.rect_of(Kind.ACTOR, index), pos, HIT_SLOP):
+						and (_rect_hit(model.rect_of(Kind.ACTOR, index), pos, HIT_SLOP) \
+						or _rect_hit(model.interaction_rect_of(index), pos, HIT_SLOP)):
 						status.emit("物件已隐藏或锁定，请先显示并解锁。")
 						return
 				_drag_mode = 8
@@ -1190,10 +1164,8 @@ func _press(pos: Vector2, additive := false, toggle := false, duplicate := false
 					_drag_start_game = to_game(pos)
 					_drag_start_rect = model.rect_of(sel_kind, sel_index)
 					_drag_actor_rects.clear()
-					_drag_actor_sources.clear()
 					for index: int in selected_actors():
 						_drag_actor_rects[index] = model.rect_of(Kind.ACTOR, index)
-						_drag_actor_sources[index] = model.actor_dict(index).duplicate(true)
 					_duplicate_on_drag = duplicate and sel_kind == Kind.ACTOR
 				else:
 					status.emit(block_reason)
@@ -1210,7 +1182,8 @@ func _finish_marquee() -> void:
 		for index in model.count(Kind.ACTOR):
 			if actor_is_hidden(index) or actor_is_locked(index):
 				continue
-			var intersects: bool = _drag_new_rect.intersects(model.rect_of(Kind.ACTOR, index))
+			var intersects: bool = _drag_new_rect.intersects(model.rect_of(Kind.ACTOR, index)) \
+				or _drag_new_rect.intersects(model.interaction_rect_of(index))
 			for part: Dictionary in actor_visual_items(index):
 				intersects = intersects or _drag_new_rect.intersects(part["rect"])
 			if not intersects:
@@ -1254,17 +1227,12 @@ func _duplicate_drag_selection() -> void:
 		model.set_rect(Kind.ACTOR, copies[offset], model.rect_of(Kind.ACTOR, originals[offset]))
 	select_actors(copies)
 	_drag_actor_rects.clear()
-	_drag_actor_sources.clear()
 	for index: int in copies:
 		_drag_actor_rects[index] = model.rect_of(Kind.ACTOR, index)
-		_drag_actor_sources[index] = model.actor_dict(index).duplicate(true)
 	selection_changed.emit()
 
 
 func _release() -> void:
-	if _drag_mode == 10:
-		_release_texture_rect()
-		return
 	if _drag_mode >= 5 and _drag_mode <= 7:
 		_release_collision_drag()
 		return
@@ -1290,39 +1258,12 @@ func _release() -> void:
 		edited.emit()
 	_drag_mode = 0
 	_duplicate_on_drag = false
-	_drag_actor_sources.clear()
 	invalidate_def()
 	queue_redraw()
 
 
-## 框选只预览，松手时整步提交；取消、切图或切工具不写半成品。
 func cancel_interaction() -> void:
-	if _drag_mode == 10:
-		_drag_mode = 0
-		_texture_rect_actor = -1
-		_texture_rect_source.clear()
-		queue_redraw()
-
-
-func _texture_point(pos: Vector2) -> Vector2:
-	return _snap(to_game(pos)).clamp(Vector2.ZERO, map_size)
-
-
-func _release_texture_rect() -> void:
-	var valid: bool = _collision_editable() and sel_index == _texture_rect_actor \
-		and model.actor_dict(sel_index) == _texture_rect_source
-	var target := _drag_new_rect
-	var source := _texture_rect_source.duplicate(true)
-	cancel_interaction()
-	if not valid or minf(target.size.x, target.size.y) * zoom < 3.0:
-		return
-	if ObjectTransform.write_actor(model, sel_index, ObjectTransform.resized_actor(source, target)):
-		invalidate_def()
-		edited.emit()
-		selection_changed.emit()
-		status.emit("贴图已适配框选范围（%.2f × %.2f），可撤销；碰撞和交互区同步缩放。" % [
-			target.size.x, target.size.y])
-	queue_redraw()
+	pass
 
 
 func _zoom_at(pos: Vector2, factor: float) -> void:
@@ -1340,9 +1281,8 @@ func _set_zoom_at(pos: Vector2, value: float) -> void:
 
 func _resize_to(pos: Vector2) -> void:
 	var target := _resized_rect(pos)
-	if sel_kind == Kind.ACTOR and _drag_actor_sources.has(sel_index):
-		ObjectTransform.write_actor(model, sel_index,
-			ObjectTransform.resized_actor(_drag_actor_sources[sel_index], target))
+	if sel_kind == Kind.ACTOR:
+		model.set_interaction_rect(sel_index, target)
 	else:
 		model.set_rect(sel_kind, sel_index, target)
 
@@ -1457,7 +1397,8 @@ func _hit_cover_actor(pos: Vector2) -> int:
 
 
 func _actor_hit(index: int, pos: Vector2) -> bool:
-	if _rect_hit(model.rect_of(Kind.ACTOR, index), pos):
+	if _rect_hit(model.rect_of(Kind.ACTOR, index), pos) \
+			or _rect_hit(model.interaction_rect_of(index), pos):
 		return true
 	for part: Dictionary in actor_visual_items(index):
 		if _rect_hit(part["rect"], pos):
@@ -1479,7 +1420,8 @@ func _hit_handle(pos: Vector2) -> int:
 		return -1          # 出生点没有尺寸；前景层整张拉伸，也改不了
 	if sel_kind == Kind.ACTOR and not _actor_selection_block_reason().is_empty():
 		return -1
-	var r: Rect2 = model.rect_of(sel_kind, sel_index)
+	var r: Rect2 = model.interaction_rect_of(sel_index) if sel_kind == Kind.ACTOR \
+		else model.rect_of(sel_kind, sel_index)
 	var points := _handle_points(r)
 	for i in points.size():
 		if (points[i] as Vector2).distance_to(pos) <= HANDLE_SIZE:

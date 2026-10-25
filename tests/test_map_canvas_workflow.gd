@@ -163,7 +163,7 @@ static func test_grid_and_resize(h: TestHarness) -> void:
 	canvas.configure_grid(8.0, true)
 	h.check("网格配置与吸附一致", canvas._snap(Vector2(6, 13)), Vector2(8, 16))
 	canvas.select_actors([0])
-	drag(canvas, Vector2(60, 44), Vector2(66, 57))
+	drag(canvas, Vector2(70, 60), Vector2(76, 73))
 	h.check("拖动按配置步长吸附且保留尺寸", canvas.model.rect_of(Model.Kind.ACTOR, 0), Rect2(48, 56, 40, 20))
 	h.check("网格拖动一次撤销", canvas.model.undo(), true)
 	h.check("网格拖动撤销还原", canvas.model.data, fixture())
@@ -174,17 +174,19 @@ static func test_grid_and_resize(h: TestHarness) -> void:
 	canvas.model.data["actors"] = [geometry_actor()]
 	canvas.model.reset_history()
 	canvas.select_actors([0])
-	button(canvas, Vector2(220, 180), true)
-	h.check("物件外框手柄使用尺寸工具", canvas._drag_mode, 2)
+	button(canvas, Vector2(190, 190), true)
+	h.check("绿色交互框手柄使用交互区尺寸工具", canvas._drag_mode, 2)
 	motion(canvas, Vector2(250, 230))
 	button(canvas, Vector2(340, 280), false)
-	h.check("尺寸拖动从手势源重算而不累乘", canvas.model.actor_field(0, "collision"),
-		[[40, 50, 100, 80], [-60, -40, 50, 36]])
-	h.check("尺寸拖动同步局部交互", canvas.model.actor_field(0, "reach_local"), [-20, 120, 200, 100])
-	h.check("尺寸拖动同步子部件", canvas.model.actor_field(0, "visual_parts")[0]["rect"], [-20, 40, 120, 60])
-	h.check("尺寸拖动只记一次历史", canvas.model._history.size(), 2)
-	h.check("尺寸拖动能整体撤销", canvas.model.undo(), true)
-	h.check("尺寸拖动撤销保留原始字段", canvas.model.actor_dict(0), geometry_actor())
+	h.check("绿色框尺寸独立写入交互区", canvas.model.interaction_rect_of(0), Rect2(90, 140, 250, 140))
+	h.check("交互区拉伸不改变贴图框", canvas.model.rect_of(Model.Kind.ACTOR, 0), Rect2(100, 80, 120, 100))
+	h.check("交互区拉伸不改变碰撞", canvas.model.actor_field(0, "collision"),
+		geometry_actor()["collision"])
+	h.check("交互区拉伸不改变视觉部件", canvas.model.actor_field(0, "visual_parts"),
+		geometry_actor()["visual_parts"])
+	h.check("交互区尺寸操作只记一次历史", canvas.model._history.size(), 2)
+	h.check("交互区尺寸操作能整体撤销", canvas.model.undo(), true)
+	h.check("撤销交互区拉伸保留原始字段", canvas.model.actor_dict(0), geometry_actor())
 	canvas.free()
 
 
@@ -302,21 +304,21 @@ static func test_edit_layers(h: TestHarness) -> void:
 static func test_transform_geometry(h: TestHarness) -> void:
 	var source := geometry_actor()
 	var flipped := ObjectTransform.transformed_actor(source, "flip_h")
-	h.check("水平翻转完整映射负坐标碰撞", flipped["collision"], [[50, 25, 50, 40], [125, -20, 25, 18]])
-	h.check("水平翻转局部交互", flipped["reach_local"], [30, 60, 100, 50])
+	h.check("水平翻转不改变碰撞几何", flipped["collision"], source["collision"])
+	h.check("水平翻转不改变交互范围", flipped["reach_local"], source["reach_local"])
 	h.check("水平翻转子部件", flipped["visual_parts"][0]["rect"], [70, 20, 60, 30])
 	var rotated := ObjectTransform.transformed_actor(source, "rotate_cw")
 	h.check("90度旋转使用中心新AABB", rotated["rect"], [110, 70, 100, 120])
-	h.check("90度旋转完整局部碰撞", rotated["collision"], [[35, 20, 40, 50], [102, -30, 18, 25]])
-	h.check("90度旋转局部交互", rotated["reach_local"], [-10, -10, 50, 100])
+	h.check("90度旋转保留碰撞世界范围", rotated["collision"], [[10, 35, 50, 40], [-40, -10, 25, 18]])
+	h.check("90度旋转保留交互世界范围", rotated["reach_local"], [-20, 70, 100, 50])
 	h.check("90度旋转子部件", rotated["visual_parts"][0]["rect"], [50, -10, 30, 60])
 	h.check("参考碰撞索引不丢", rotated["sort_collider"], 1)
 	h.check("绝对cover_y转换为相对偏移", [rotated.has("cover_y"), rotated["sort_offset"]], [false, 7])
-	h.check("偏移落在旋转后的参考基线", MapDef._actor_from(rotated).effective_cover_y(), 47)
+	h.check("偏移落在旋转后的参考基线", MapDef._actor_from(rotated).effective_cover_y(), 67)
 	var scaled := ObjectTransform.transformed_actor(source, "scale", Vector2(2, 0.5))
 	h.check("非等比缩放中心固定", scaled["rect"], [40, 105, 240, 50])
-	h.check("非等比缩放碰撞", scaled["collision"], [[40, 12.5, 100, 20], [-60, -10, 50, 9]])
-	h.check("非等比缩放局部交互", scaled["reach_local"], [-20, 30, 200, 25])
+	h.check("非等比缩放保留碰撞世界范围", scaled["collision"], [[80, 0, 50, 40], [30, -45, 25, 18]])
+	h.check("非等比缩放保留交互世界范围", scaled["reach_local"], [50, 35, 100, 50])
 	h.check("比例缩放手动基线偏移", scaled["sort_offset"], 3.5)
 	h.check("比例缩放子部件排序偏移", scaled["visual_parts"][1]["sort_offset"], 3)
 	h.check("旧sprite保留", scaled["sprite"], "legacy.png")
@@ -325,7 +327,8 @@ static func test_transform_geometry(h: TestHarness) -> void:
 	source.erase("reach_local")
 	source["reach"] = [90, 140, 100, 50]
 	rotated = ObjectTransform.transformed_actor(source, "rotate_cw")
-	h.check("旧绝对交互框转换为正确的局部交互框", [rotated.has("reach"), rotated["reach_local"]], [false, [-10, -10, 50, 100]])
+	h.check("旧绝对交互框转换为保持世界范围的局部交互框",
+		[rotated.has("reach"), rotated["reach_local"]], [false, [-20, 70, 100, 50]])
 
 
 static func test_transform_orientation(h: TestHarness) -> void:

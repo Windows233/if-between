@@ -5,12 +5,16 @@ signal edited
 signal rebuild_requested
 
 const Transform := preload("res://addons/if_map_editor/map_object_transform.gd")
+const MapDef := preload("res://core/map_def.gd")
 const LAYERS := ["back", "auto", "front"]
 var model
 var actor_index := -1
 var selection: Array[int] = []
 var _variant_id_input: LineEdit
 var _variant_path_input: LineEdit
+var _texture_width: SpinBox
+var _texture_height: SpinBox
+var _texture_scale: SpinBox
 
 
 func configure(source, index: int, selected: Array[int] = []) -> void:
@@ -20,6 +24,7 @@ func configure(source, index: int, selected: Array[int] = []) -> void:
 	var title := Label.new()
 	title.text = "视觉部件与变换"
 	add_child(title)
+	_build_texture_size()
 	var tools := HFlowContainer.new()
 	for action: Array in [["水平翻转", "flip_h"], ["垂直翻转", "flip_v"], ["顺时针 90°", "rotate_cw"], ["逆时针 90°", "rotate_ccw"]]:
 		var button := Button.new()
@@ -32,14 +37,17 @@ func configure(source, index: int, selected: Array[int] = []) -> void:
 	scale.step = 0.01
 	scale.value = 1
 	scale.custom_minimum_size.x = 100
+	scale.name = "TextureScale"
+	_texture_scale = scale
 	tools.add_child(scale)
 	var apply := Button.new()
 	apply.text = "等比缩放"
+	apply.name = "ApplyTextureScale"
 	apply.pressed.connect(func() -> void: _transform("scale", scale.value))
 	tools.add_child(apply)
 	add_child(tools)
 	var note := Label.new()
-	note.text = "变换会同步局部碰撞与交互区。部件矩形相对物件左上角；自动层使用物件基线加偏移。"
+	note.text = "绿色框为交互区，红框为碰撞；贴图变换不改变两者范围。部件矩形相对物件左上角。"
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(note)
 	_build_sprite_variants()
@@ -51,6 +59,91 @@ func configure(source, index: int, selected: Array[int] = []) -> void:
 	add.text = "添加视觉部件"
 	add.pressed.connect(add_part)
 	add_child(add)
+
+
+func _build_texture_size() -> void:
+	var section := VBoxContainer.new()
+	section.name = "TextureSize"
+	section.add_child(_text("贴图框大小（地图单位）"))
+	var row := HFlowContainer.new()
+	_texture_width = _size_field(row, "宽")
+	_texture_width.name = "TextureWidth"
+	_texture_height = _size_field(row, "高")
+	_texture_height.name = "TextureHeight"
+	var rect := Transform.rect_from(model.actor_field(actor_index, "rect", []))
+	_texture_width.set_value_no_signal(rect.size.x)
+	_texture_height.set_value_no_signal(rect.size.y)
+	section.add_child(row)
+	var restore := Button.new()
+	restore.text = "恢复背景 1:1"
+	restore.name = "RestoreTextureSize"
+	restore.tooltip_text = "按主贴图像素与地图背景图比例恢复大小；交互区和碰撞保持不变。"
+	restore.disabled = _source_texture_size().is_zero_approx() or selection.size() != 1
+	restore.pressed.connect(_restore_texture_size)
+	section.add_child(restore)
+	add_child(section)
+	if selection.size() != 1:
+		_texture_width.editable = false
+		_texture_height.editable = false
+		_texture_width.tooltip_text = "精确尺寸需单选一件物件。"
+		_texture_height.tooltip_text = "精确尺寸需单选一件物件。"
+
+
+func _size_field(parent: Control, caption: String) -> SpinBox:
+	parent.add_child(_text(caption))
+	var field := SpinBox.new()
+	field.min_value = 0.01
+	field.max_value = 100000
+	field.step = 0.01
+	field.update_on_text_changed = false
+	field.custom_minimum_size.x = 100
+	field.value_changed.connect(_on_texture_size_changed)
+	parent.add_child(field)
+	return field
+
+
+func _on_texture_size_changed(_value := 0.0) -> void:
+	if selection.size() != 1 or _texture_width == null or _texture_height == null:
+		return
+	_apply_texture_size(Vector2(_texture_width.value, _texture_height.value))
+
+
+func _restore_texture_size() -> void:
+	var size := _source_texture_size()
+	if size.is_zero_approx():
+		return
+	if int(model.actor_field(actor_index, "quarter_turns", 0)) % 2 != 0:
+		size = Vector2(size.y, size.x)
+	if _apply_texture_size(size):
+		rebuild_requested.emit()
+
+
+func _source_texture_size() -> Vector2:
+	var actor := MapDef._actor_from(model.actor_dict(actor_index))
+	for path: String in actor.visual_sprites():
+		if path.is_empty() or not FileAccess.file_exists(path):
+			continue
+		if path.begins_with("res://"):
+			var texture := ResourceLoader.load(path, "Texture2D") as Texture2D
+			if texture != null:
+				return model.world_size_for_image(texture.get_size())
+		var image := Image.load_from_file(path)
+		if image == null or image.is_empty():
+			continue
+		return model.world_size_for_image(Vector2(image.get_size()))
+	return Vector2.ZERO
+
+
+func _apply_texture_size(size: Vector2) -> bool:
+	if not size.is_finite() or size.x <= 0.0 or size.y <= 0.0:
+		return false
+	var rect := Transform.rect_from(model.actor_field(actor_index, "rect", []))
+	var target := Rect2(rect.position, size)
+	var updated := Transform.resized_actor(model.actor_dict(actor_index), target)
+	if not Transform.write_actor(model, actor_index, updated):
+		return false
+	edited.emit()
+	return true
 
 
 func _build_sprite_variants() -> void:

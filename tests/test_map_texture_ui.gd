@@ -5,6 +5,7 @@ extends SceneTree
 
 const Dock := preload("res://addons/if_map_editor/map_edit_dock.gd")
 const Shortcuts := preload("res://addons/if_map_editor/map_shortcuts.gd")
+const MapDef := preload("res://core/map_def.gd")
 
 
 class MemoryShortcuts extends Shortcuts:
@@ -126,23 +127,40 @@ static func _test_texture_assignment(h: TestHarness, dock, folder: String) -> vo
 
 
 static func _test_buttons(h: TestHarness, dock, viewport: SubViewport, folder: String) -> void:
-	var fit: Button = dock._texture_rect_button
-	h.check("单选独立物件可使用框选按钮", fit.disabled, false)
-	await _visible_click(viewport, dock, fit)
-	h.check("真实点击框选按钮切换画布工具", dock.canvas.tool, Dock.Canvas.Tool.TEXTURE_RECT)
-	h.check("真实点击框选按钮同步按下状态", fit.button_pressed, true)
-	await _visible_click(viewport, dock, fit)
-	h.check("再次点击框选按钮回到选择工具", dock.canvas.tool, Dock.Canvas.Tool.SELECT)
-	h.check("再次点击框选按钮清除按下状态", fit.button_pressed, false)
-	var native := _button(dock._actor_panel, "恢复原图尺寸")
-	h.check("属性卡提供恢复原图按钮", native != null, true)
-	if native == null:
+	h.check("旧画布框选贴图入口已移除", _button(dock._actor_panel, "框选贴图范围"), null)
+	var width := dock._actor_panel.find_child("TextureWidth", true, false) as SpinBox
+	var height := dock._actor_panel.find_child("TextureHeight", true, false) as SpinBox
+	var resize := dock._actor_panel.find_child("ApplyTextureScale", true, false) as Button
+	var native := dock._actor_panel.find_child("RestoreTextureSize", true, false) as Button
+	h.check("视觉栏提供精确宽高和比例控件", [width != null, height != null, resize != null], [true, true, true])
+	h.check("视觉栏提供背景 1:1 恢复按钮", native != null, true)
+	if width == null or height == null or resize == null or native == null:
 		return
-	var before: Rect2 = dock.model.rect_of(Dock.Kind.ACTOR, 0)
+	var before := MapDef._actor_from(dock.model.actor_dict(0))
+	width.value = 150
+	height.value = 90
+	h.check("精确宽高编辑修改贴图尺寸", dock.model.rect_of(Dock.Kind.ACTOR, 0).size, Vector2(150, 90))
+	var after_manual := MapDef._actor_from(dock.model.actor_dict(0))
+	h.check("精确贴图尺寸不改变碰撞", after_manual.collision_rects(), before.collision_rects())
+	h.check("精确贴图尺寸不改变交互区", after_manual.reach, before.reach)
+	var scale := dock._actor_panel.find_child("TextureScale", true, false) as SpinBox
+	h.check("比例缩放提供比例数值", scale != null, true)
+	if scale == null:
+		return
+	scale.value = 2
+	await _visible_click(viewport, dock, resize)
+	var after_scale := MapDef._actor_from(dock.model.actor_dict(0))
+	h.check("比例缩放改变贴图尺寸", dock.model.rect_of(Dock.Kind.ACTOR, 0).size, Vector2(300, 180))
+	h.check("比例缩放不改变碰撞", after_scale.collision_rects(), before.collision_rects())
+	h.check("比例缩放不改变交互区", after_scale.reach, before.reach)
+	native = dock._actor_panel.find_child("RestoreTextureSize", true, false) as Button
 	await _visible_click(viewport, dock, native)
 	var expected: Vector2 = dock.model.world_size_for_image(Vector2(48, 24))
-	h.check("恢复原图按钮使用背景像素比例", dock.model.rect_of(Dock.Kind.ACTOR, 0), Rect2(before.position, expected))
-	h.check("恢复原图按钮确实改变已框尺寸", dock.model.rect_of(Dock.Kind.ACTOR, 0).size != before.size, true)
+	h.check("背景 1:1 按背景像素比例恢复尺寸",
+		dock.model.rect_of(Dock.Kind.ACTOR, 0).size, expected)
+	var after_restore := MapDef._actor_from(dock.model.actor_dict(0))
+	h.check("恢复尺寸不改变碰撞", after_restore.collision_rects(), before.collision_rects())
+	h.check("恢复尺寸不改变交互区", after_restore.reach, before.reach)
 	_check_sprite_edit(h, dock, folder.path_join("replacement.png"), "恢复原图尺寸")
 
 
@@ -150,15 +168,13 @@ static func _test_protected_selection(h: TestHarness, dock) -> void:
 	var before: Dictionary = dock.model.data.duplicate(true)
 	dock.canvas.set_actor_editor_state({}, {"desk": true})
 	dock.canvas.selection_changed.emit()
-	h.check("锁定物件禁用框选按钮", dock._texture_rect_button.disabled, true)
-	dock._on_tool(Dock.Canvas.Tool.TEXTURE_RECT)
-	h.check("锁定物件不能进入框选工具", dock.canvas.tool, Dock.Canvas.Tool.SELECT)
+	var width := dock._actor_panel.find_child("TextureWidth", true, false) as SpinBox
+	h.check("锁定物件贴图尺寸只读", width.editable, false)
 	dock.canvas.set_actor_editor_state({}, {})
 	dock.canvas.selection_changed.emit()
 	_select(dock, [0, 1])
-	h.check("多选物件禁用框选按钮", dock._texture_rect_button.disabled, true)
-	dock._on_tool(Dock.Canvas.Tool.TEXTURE_RECT)
-	h.check("多选物件不能进入框选工具", dock.canvas.tool, Dock.Canvas.Tool.SELECT)
+	width = dock._actor_panel.find_child("TextureWidth", true, false) as SpinBox
+	h.check("多选物件禁用精确尺寸输入", width.editable, false)
 	h.check("锁定与多选拦截不改地图", dock.model.data, before)
 	_select(dock, [0])
 

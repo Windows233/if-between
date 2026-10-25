@@ -349,7 +349,10 @@ static func test_frame_selection(h: TestHarness) -> void:
 	var selected: Array[int] = [0, 1]
 	canvas.select_actors(selected)
 	h.check("多选物件可定位", canvas.frame_selection(), true)
-	var bounds: Rect2 = model.rect_of(Model.Kind.ACTOR, 0).merge(model.rect_of(Model.Kind.ACTOR, 1))
+	var bounds: Rect2 = model.rect_of(Model.Kind.ACTOR, 0) \
+		.merge(model.interaction_rect_of(0)) \
+		.merge(model.rect_of(Model.Kind.ACTOR, 1)) \
+		.merge(model.interaction_rect_of(1))
 	h.check("定位把选区中心放到画布中心", canvas.to_screen(bounds.get_center()), canvas.size * 0.5)
 	h.check("定位后两个物件都在画布内", Rect2(Vector2.ZERO, canvas.size).encloses(
 		Rect2(canvas.to_screen(bounds.position), bounds.size * canvas.zoom)), true)
@@ -400,7 +403,7 @@ static func test_editor_state(h: TestHarness) -> void:
 	canvas.pan = Vector2.ZERO
 	var motion := InputEventMouseMotion.new()
 	var actor_point := Vector2(100, 60)
-	var handle_point := Vector2(60, 40)
+	var handle_point := Vector2(54, 82)
 	var edit_attempts: Array[Dictionary] = [
 		{"name": "移动", "tool": Canvas.Tool.SELECT,
 			"start": actor_point, "end": Vector2(120, 80)},

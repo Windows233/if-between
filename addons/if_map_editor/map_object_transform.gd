@@ -120,19 +120,15 @@ static func write_actor(model, index: int, target: Dictionary) -> bool:
 static func _geometry(source: Dictionary, local: Transform2D, target: Rect2,
 		offset_scale: float) -> Dictionary:
 	var result := source.duplicate(true)
-	var old_rect := rect_from(source.get("rect"))
 	result["rect"] = rect_array(target)
-	if source.has("collision"):
+	var actor := MapDef._actor_from(source)
+	if source.has("collision") or actor.solid or actor.person:
 		var shapes: Array = []
-		for shape: Variant in source["collision"]:
-			shapes.append(rect_array(transformed_rect(rect_from(shape), local)))
+		for shape: Rect2 in actor.collision_rects():
+			shapes.append(rect_array(Rect2(shape.position - target.position, shape.size)))
 		result["collision"] = shapes
-	if source.has("reach_local") or source.has("reach"):
-		var reach := rect_from(source.get("reach_local", source.get("reach")))
-		if not source.has("reach_local"):
-			reach.position -= old_rect.position
-		result["reach_local"] = rect_array(transformed_rect(reach, local))
-		result.erase("reach")
+	result["reach_local"] = rect_array(Rect2(actor.reach.position - target.position, actor.reach.size))
+	result.erase("reach")
 	var parts: Variant = source.get("visual_parts", [])
 	if parts is Array and not parts.is_empty():
 		var transformed_parts: Array = []

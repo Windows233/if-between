@@ -2,6 +2,7 @@ extends RefCounted
 
 const Dock := preload("res://addons/if_map_editor/map_edit_dock.gd")
 const Model := preload("res://addons/if_map_editor/map_edit_model.gd")
+const MapDef := preload("res://core/map_def.gd")
 
 
 static func fixture() -> Dictionary:
@@ -24,6 +25,8 @@ static func run(h: TestHarness) -> void:
 	test_selection(h, dock)
 	_reset(dock)
 	test_visibility_and_lock(h, dock)
+	_reset(dock)
+	test_row_visibility(h, dock)
 	_reset(dock)
 	test_group_rename(h, dock)
 	_reset(dock)
@@ -184,6 +187,29 @@ static func test_visibility_and_lock(h: TestHarness, dock: Control) -> void:
 	h.check("解锁组恢复树编辑", _find(dock._object_tree, "group", "reading").is_editable(0), true)
 	h.check("树的隐藏锁定不修改地图数据", Model.stringify(dock.model.data), original_data)
 	h.check("树的隐藏锁定不弄脏地图", dock.model.dirty, false)
+
+
+static func test_row_visibility(h: TestHarness, dock: Control) -> void:
+	var original_data := Model.stringify(dock.model.data)
+	var item := _find(dock._object_tree, "actor", 0)
+	h.check("物件行新增独立眼睛按钮", item.get_button_count(1), 1)
+	var visible_icon: Texture2D = item.get_button(1, 0)
+	h.check("显示状态眼睛图标存在", visible_icon != null, true)
+	dock._object_tree.button_clicked.emit(item, 1, 1, MOUSE_BUTTON_LEFT)
+	h.check("单行眼睛隐藏编辑器画布物件", dock.canvas.actor_is_hidden(0), true)
+	h.check("隐藏后物件仍留在层级树", _find(dock._object_tree, "actor", 0) != null, true)
+	var hidden_item := _find(dock._object_tree, "actor", 0)
+	var hidden_icon: Texture2D = hidden_item.get_button(1, 0)
+	h.check("隐藏状态眼睛改为带叉图标", hidden_icon != null and hidden_icon != visible_icon, true)
+	h.check("眼睛状态不写入地图数据", Model.stringify(dock.model.data), original_data)
+	h.check("眼睛状态不弄脏地图或产生撤销", [dock.model.dirty, dock.model.undo()], [false, false])
+	dock._object_tree.button_clicked.emit(hidden_item, 1, 1, MOUSE_BUTTON_LEFT)
+	h.check("再次点击眼睛恢复编辑器显示", dock.canvas.actor_is_hidden(0), false)
+	h.check("显示状态图标恢复", _find(dock._object_tree, "actor", 0).get_button(1, 0), visible_icon)
+	h.check("运行时物件定义仍包含原矩形", MapDef._actor_from(dock.model.actor_dict(0)).rect,
+		dock.model.rect_of(Model.Kind.ACTOR, 0))
+	h.check("编辑器隐藏状态没有写进物件字段",
+		dock.model.actor_dict(0).has("editor_hidden"), false)
 
 
 static func test_group_rename(h: TestHarness, dock: Control) -> void:

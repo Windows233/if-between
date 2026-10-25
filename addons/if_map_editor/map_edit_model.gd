@@ -645,6 +645,26 @@ func rect_of(kind: int, index: int) -> Rect2:
 	return Rect2()
 
 
+func interaction_rect_of(index: int) -> Rect2:
+	if index < 0 or index >= count(Kind.ACTOR):
+		return Rect2()
+	return MapDef._actor_from(actor_dict(index)).reach
+
+
+func set_interaction_rect(index: int, rect: Rect2) -> void:
+	if index < 0 or index >= count(Kind.ACTOR) or not rect.has_area() \
+			or not rect.position.is_finite() or not rect.size.is_finite():
+		return
+	var actor_rect := rect_of(Kind.ACTOR, index)
+	var local := Rect2(rect.position - actor_rect.position, rect.size)
+	var value: Array = _normalize([local.position.x, local.position.y, local.size.x, local.size.y])
+	var actor := actor_dict(index)
+	if actor.get("reach_local", null) == value and not actor.has("reach"):
+		return
+	set_actor_field(index, "reach_local", value)
+	erase_actor_field(index, "reach")
+
+
 func set_rect(kind: int, index: int, rect: Rect2) -> void:
 	if kind == Kind.OVERLAY:
 		return          # 前景层没有位置数据（整张拉伸），拖它不改变什么

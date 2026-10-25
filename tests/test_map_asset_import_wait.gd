@@ -180,7 +180,7 @@ static func _test_import_actions(h: TestHarness, dock, source: String, copied: S
 	await dock._import_and_create(source)
 	h.check("新物件等待延迟导入后才创建", dock.model.count(Model.Kind.ACTOR), 3)
 	h.check("新物件写入真正就绪的贴图", dock.model.actor_field(2, "sprite", ""), copied)
-	h.check("新物件导入完成进入框选工具", dock.canvas.tool, Canvas.Tool.TEXTURE_RECT)
+	h.check("新物件导入完成进入选择工具", dock.canvas.tool, Canvas.Tool.SELECT)
 	_reset(dock, source, copied)
 	await dock._import_overlay(source)
 	h.check("前景层同样等待目标纹理后应用", dock.model.data.get("overlay", ""), copied)
