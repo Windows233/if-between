@@ -111,8 +111,7 @@
         316,
         209
       ],
-      "sort_collider": 0,
-      "sprite": "res://art/props/操场抠图_upscayl_4x_upscayl_standard_4x.png"
+      "sort_collider": 0
     },
     {
       "cover": true,
@@ -146,6 +145,19 @@
         38
       ],
       "sprite": "res://art/props/秋千.png"
+    },
+    {
+      "cover": true,
+      "cover_y": 155,
+      "id": "new_actor_3",
+      "label": "围墙遮挡",
+      "rect": [
+        0,
+        0,
+        316,
+        211
+      ],
+      "sprite": "res://art/props/school_yard_bottom_wall.png"
     }
   ],
   "background": "res://art/map/school_yard.png",
