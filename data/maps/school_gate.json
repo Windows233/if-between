@@ -94,7 +94,7 @@
         421,
         281
       ],
-      "sprite": "res://art/props/校门扣图_3.png"
+      "sprite": "res://art/props/school_gate_bottom_wall.png"
     }
   ],
   "background": "res://art/map/school_gate.png",

@@ -110,8 +110,7 @@
         316,
         209
       ],
-      "sort_collider": 0,
-      "sprite": "res://art/props/操场抠图_upscayl_4x_upscayl_standard_4x.png"
+      "sort_collider": 0
     },
     {
       "cover": true,
@@ -146,11 +145,11 @@
       "label": "围墙遮挡",
       "rect": [
         0,
-        -1,
+        0,
         316,
         211
       ],
-      "sprite": "res://art/props/操场抠图_upscayl_4x_upscayl_standard_4x.png"
+      "sprite": "res://art/props/school_yard_bottom_wall.png"
     }
   ],
   "background": "res://art/map/school_yard.png",
@@ -166,6 +165,7 @@
   "player_scale": 0.5,
   "portals": [
     {
+      "id": "to_school_gate",
       "label": "校门",
       "rect": [
         144,
@@ -173,9 +173,8 @@
         26,
         60
       ],
-      "id": "to_school_gate",
-      "to": "school_gate",
-      "spawn": "near_yard"
+      "spawn": "near_yard",
+      "to": "school_gate"
     }
   ],
   "size": [

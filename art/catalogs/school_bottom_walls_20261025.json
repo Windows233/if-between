@@ -1,0 +1,46 @@
+{
+  "date": "2026-10-25",
+  "assets": [
+    {
+      "map": "school_yard",
+      "source": "art/map/school_yard.png",
+      "source_sha256": "09c4a5c19cf7ad59f1a4580b6cb32ff05ff0a9803d0f2fc9c11b02b3cdf340e3",
+      "alpha_reference": "art/props/操场抠图_upscayl_4x_upscayl_standard_4x.png",
+      "alpha_reference_sha256": "01c50d8773e2fe9b00b6dd2d7417315d62f31d31d2379accac610804b054df67",
+      "output": "art/props/school_yard_bottom_wall.png",
+      "output_sha256": "5af5c861019e5c325a5263284b1e30bae77eb78e5e4db4125d5f870c22c0b700",
+      "size": [
+        5056,
+        3372
+      ],
+      "visible_rgb_equals_source": true,
+      "canvas": "full source canvas; same origin; transparent outside bottom wall",
+      "alpha_method": "Original hand-cut alpha only, resized with cubic interpolation when needed; alpha <16 cleared, >239 made opaque. All visible RGB copied from map at identical coordinates."
+    },
+    {
+      "map": "school_gate",
+      "source": "art/map/school_gate.png",
+      "source_sha256": "56c93259a08187e0e687f025f546c92396b4ff1245fa858f060ea53c7b7cad33",
+      "alpha_reference": "art/props/校门扣图_3.png",
+      "alpha_reference_sha256": "0b1465464a305a388526159b2d493c0a429646c9b02183263d6412e5c3e3ab21",
+      "output": "art/props/school_gate_bottom_wall.png",
+      "output_sha256": "659d7c3c3de57e1e6abc6551a0c847bbc166682c64c0e824aa8327e50c7819b3",
+      "size": [
+        6144,
+        4096
+      ],
+      "visible_rgb_equals_source": true,
+      "canvas": "full source canvas; same origin; transparent outside bottom wall",
+      "alpha_method": "Original hand-cut alpha only, resized with cubic interpolation when needed; alpha <16 cleared, >239 made opaque. All visible RGB copied from map at identical coordinates."
+    }
+  ],
+  "verification": {
+    "data": "14 maps / 32 events / 7 endings / 11 items",
+    "game_tests": "4663/4663",
+    "map_gpu": "26/26",
+    "wall_instances": "1 per map",
+    "occlusion": "behind z11 / front z5; 0 failures",
+    "smoke": "pass"
+  },
+  "unused_generation": "A built-in imagegen extraction trial shifted geometry and was discarded; final assets contain original map pixels only."
+}
