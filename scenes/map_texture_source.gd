@@ -1,4 +1,4 @@
-## 将已确认同源的缩略切片映射回高清原图区域，返回保留原生透明度的 AtlasTexture。
+## 将同源缩略切片映射回高清图集，并解析单独登记的像素重绘背景。
 ##
 ## 清单使用原纹理的精确裁切位置，不从物件当前位置反推；挪动、翻转、旋转和遮挡
 ## 继续由 MapView 决定。本层只解析纹理，不改地图、节点、材质或 PNG。
@@ -10,6 +10,9 @@ extends RefCounted
 const MARKET_DAY := "res://art/map/market_overlay.png"
 const MARKET_NIGHT := "res://art/map/market_night_overlay.png"
 const MARKET_SIZE := Vector2i(6688, 3764)
+## 用户否决上一版后巷重绘的色调；当前保留原图，不启用任何重绘替换。
+## 保留解析入口供后续经过视觉验收的候选使用。
+const PIXEL_REPAINTS: Dictionary = {}
 ## region 均为高清原图像素；旧切片来自 1672×941 透明图的精确裁切，坐标乘 4。
 const MANIFEST := {
 	"res://art/props/market_day_building_left.png": {"source_path": MARKET_DAY,
@@ -46,6 +49,12 @@ static var _cache: Dictionary = {}
 
 
 static func resolve(path: String, original: Texture2D) -> Texture2D:
+	if original != null and PIXEL_REPAINTS.has(path):
+		var repaint: Dictionary = PIXEL_REPAINTS[path]
+		if original.get_size() == Vector2(repaint.old_size):
+			var source := _load_source(repaint)
+			if source != null:
+				return source
 	if original == null or not MANIFEST.has(path):
 		return original
 	var entry: Dictionary = MANIFEST[path]

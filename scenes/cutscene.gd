@@ -120,6 +120,8 @@ func add_actor_with_talk(id: String, sprite_path: String, at: Vector2,
 		return null
 	sprite.position = at
 	main.stage_view.add_child(sprite)
+	if main.current_map != null:
+		preload("res://scenes/world_look.gd").style_actor(sprite, main.current_map)
 	_actors[id] = sprite
 	_talk.erase(id)
 	if talk != "":

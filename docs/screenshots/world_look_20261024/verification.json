@@ -1,0 +1,132 @@
+{
+  "date": "2026-10-24",
+  "engine": "Godot 4.7.2 Steam",
+  "base_commit": "72626e0",
+  "baseline": "Captured before code changes with production nearest filtering; no asset replacement or legacy-filter replay.",
+  "comparison": "Same map, spawn, window resolution and camera; crops are native pixels, no resampling.",
+  "terrain_cell_logical": 0.5,
+  "actor_cell_logical": 0.25,
+  "actor_height_logical": 45,
+  "gpu_fixture": {
+    "adapter": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "failed": 0,
+    "passed": 25
+  },
+  "all_maps_gpu": {
+    "passed": 157,
+    "failed": 0,
+    "map_count": 14
+  },
+  "maps": [
+    {
+      "id": "library",
+      "scale": 1.0,
+      "character_physical_height": 180.0,
+      "character_visible": true
+    },
+    {
+      "id": "school_yard",
+      "scale": 0.5,
+      "character_physical_height": 180.0,
+      "character_visible": true
+    },
+    {
+      "id": "dead_alley",
+      "scale": 0.5,
+      "character_physical_height": 180.0,
+      "character_visible": true
+    },
+    {
+      "id": "gatehouse",
+      "scale": 1.0,
+      "character_physical_height": 180.0,
+      "character_visible": true
+    },
+    {
+      "id": "bedroom_night_sleep",
+      "scale": 1.0,
+      "character_physical_height": 180.0,
+      "character_visible": true
+    },
+    {
+      "id": "market_night",
+      "scale": 0.5,
+      "character_physical_height": 180.0,
+      "character_visible": true
+    },
+    {
+      "id": "overworld",
+      "scale": 1.0,
+      "character_physical_height": 90.0,
+      "character_visible": false
+    },
+    {
+      "id": "bedroom",
+      "scale": 1.0,
+      "character_physical_height": 180.0,
+      "character_visible": true
+    },
+    {
+      "id": "market",
+      "scale": 0.5,
+      "character_physical_height": 180.0,
+      "character_visible": true
+    },
+    {
+      "id": "classroom",
+      "scale": 0.5,
+      "character_physical_height": 180.0,
+      "character_visible": true
+    },
+    {
+      "id": "desk_shop",
+      "scale": 1.0,
+      "character_physical_height": 180.0,
+      "character_visible": true
+    },
+    {
+      "id": "bedroom_night",
+      "scale": 1.0,
+      "character_physical_height": 180.0,
+      "character_visible": true
+    },
+    {
+      "id": "school_gate",
+      "scale": 0.5,
+      "character_physical_height": 180.0,
+      "character_visible": true
+    },
+    {
+      "id": "shop",
+      "scale": 1.0,
+      "character_physical_height": 180.0,
+      "character_visible": true
+    }
+  ],
+  "worktree_tests": {
+    "game": [
+      4385,
+      4385
+    ],
+    "plugin": [
+      4507,
+      4507
+    ],
+    "data": "14/19/5/7; three pre-existing notices",
+    "smoke_exit": 0,
+    "editor_probe_exit": 0
+  },
+  "staged_snapshot_tests": {
+    "game": [
+      4383,
+      4383
+    ],
+    "plugin": [
+      4507,
+      4507
+    ],
+    "data_exit": 0,
+    "smoke_exit": 0
+  },
+  "diagnostics": "Existing negative-case errors and engine resource warnings retained; no GDScript or shader errors."
+}

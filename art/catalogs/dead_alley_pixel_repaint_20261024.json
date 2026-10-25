@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-24",
+  "asset": "res://art/background/chapter2_dead_alley_pixel_20261024.png",
+  "source": "res://art/background/chapter2_dead_alley.png",
+  "generator": "built-in image_gen",
+  "intent": "style-transfer; native pixel repaint of the alley referenced in the user's screenshot",
+  "prompt": "Edit image 1, the alley map. Image 2 is ONLY the protagonist sprite's drawing style reference; do not put the character into the map. Match that sprite's genuinely hard-edged pixel drawing language: flat opaque pixel clusters, dark navy/black 1-pixel stair-step outlines, a small finite set of solid colors for each material, sharply separated shadow bands, absolutely no airbrush, soft transitions, subpixel antialiasing or painterly gradients. Make foliage into clean designed clusters and masonry into clear edged blocks rather than blurry noise. The previous map edit still had soft edges; remove that softness throughout. If a character occupied this map it would be about 90 output pixels high, so the background's smallest deliberate pixels must be 1–2 output pixels, matching that scale. Keep EVERY architectural outline, pathway width, lower entrance pillar, upper gate, six lantern positions, both wooden boxes, umbrella, and boundary in image 1 in exactly its current location; do not zoom, crop, relocate, add or remove anything. Preserve 3:2 canvas, dark blue nighttime and amber lamps. Deliver only the map, no characters, UI or text. Output 1536x1024. This must be crisp pixel sprite art that stays crisp under nearest-neighbor enlargement, not an illustration with a pixel-art theme.",
+  "source_dimensions": [
+    4608,
+    3072
+  ],
+  "output_dimensions": [
+    1536,
+    1024
+  ],
+  "map_world_size": [
+    384,
+    256
+  ],
+  "integration": "MapTextureSource.PIXEL_REPAINTS resolves the legacy background path to the versioned repaint. The legacy PNG and map JSON remain present. Missing repaint or changed legacy dimensions fall back to the original texture.",
+  "sampling": "Native nearest-neighbor rendering; no global palette/posterization or sharpening filter shipped.",
+  "geometry_review": "Reviewed in the real editor preview with the existing collision and interaction overlays at the lower entrance and at the upper iron gate. Main wall lines, entrance, gate and walkable corridor retain the same layout. This is a generative repaint, not a pixel-identical copy; decorative textures differ.",
+  "scope": "Only dead_alley is repainted in this revision. Other backgrounds keep their existing art.",
+  "evidence": "docs/screenshots/pixel_style_20261024/",
+  "source_sha256": "b1d73117ccc9072cc963d9256f2a7f602ac8ae9d5d70c3ef7c5c19c352bd596a",
+  "output_sha256": "34a24e6e7ac758276f9e50524e711799cbbea37aa7c3d7520a5ad13c02992f22",
+  "style_reference": "res://art/player/down1.png",
+  "prompt_history": [
+    "Use case: style-transfer. Asset type: production 2D RPG background, image edit. Repaint ONLY the visual rendering of the provided alley map into authentic crisp hand-placed pixel art, preserving the exact complete 3:2 composition, camera, geometry, paths, boundaries and object locations. Keep the gate centered at the top, both buildings at the sides, the precise continuous north-south walkable road, the six warm lanterns in their existing positions, the two wooden boxes and umbrella, and the lower entrance with its two square pillars exactly aligned to the reference. No new objects, no characters, no text. Preserve the dark navy nighttime palette and small warm amber lights. Style: detailed 16-bit/32-bit top-down RPG pixel environment with deliberate small square pixels, clean 1-pixel stair-step silhouettes, solid clustered foliage, legible individual masonry blocks, carefully chosen limited color ramps, crisp iron bars and sharp angular stone highlights. Replace the muddy painterly ground/foliage textures with readable designed pixel clusters. Do not simply posterize the photograph. Absolutely no soft brushwork, blur, antialiasing, smooth gradients, photorealistic grain or noise, bloom, depth of field or fake resolution enhancement. Keep structural edges and relative sizes identical. Output the whole map at 1536x1024, edge to edge, no frame, no montage.",
+    "Edit image 1, the alley map. Image 2 is ONLY the protagonist sprite's drawing style reference; do not put the character into the map. Match that sprite's genuinely hard-edged pixel drawing language: flat opaque pixel clusters, dark navy/black 1-pixel stair-step outlines, a small finite set of solid colors for each material, sharply separated shadow bands, absolutely no airbrush, soft transitions, subpixel antialiasing or painterly gradients. Make foliage into clean designed clusters and masonry into clear edged blocks rather than blurry noise. The previous map edit still had soft edges; remove that softness throughout. If a character occupied this map it would be about 90 output pixels high, so the background's smallest deliberate pixels must be 1–2 output pixels, matching that scale. Keep EVERY architectural outline, pathway width, lower entrance pillar, upper gate, six lantern positions, both wooden boxes, umbrella, and boundary in image 1 in exactly its current location; do not zoom, crop, relocate, add or remove anything. Preserve 3:2 canvas, dark blue nighttime and amber lamps. Deliver only the map, no characters, UI or text. Output 1536x1024. This must be crisp pixel sprite art that stays crisp under nearest-neighbor enlargement, not an illustration with a pixel-art theme."
+  ],
+  "selected_candidate": "Second built-in edit, using the protagonist sprite as hard-pixel style reference. The first candidate was not selected."
+}

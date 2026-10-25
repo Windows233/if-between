@@ -163,6 +163,10 @@ class Actor:
 	## 按 `rect` 的大小贴上，于是「画好的桌子」和「要交互的桌子」是同一个东西。
 	## 留空则退回占位色块 + 名字。
 	var sprite: String = ""
+	## 同一主贴图位置的命名状态贴图；运行时可由 MapView 按 Actor ID 切换。
+	var sprite_variants: Dictionary = {}
+	## 默认及当前运行时使用的变体；空串表示使用 sprite。
+	var sprite_variant: String = ""
 	## 非空时替代旧 sprite。每段 rect 相对旋转后 actor.rect 左上角，几何已由编辑器烘焙。
 	var visual_parts: Array[VisualPart] = []
 	## 源纹理先沿局部轴翻转，再顺时针旋转 quarter_turns 个 90 度；不再变换碰撞或交互。
@@ -278,11 +282,18 @@ class Actor:
 	func visual_sprites() -> PackedStringArray:
 		var result := PackedStringArray()
 		if visual_parts.is_empty():
-			result.append(sprite)
+			result.append(sprite_for_variant(sprite_variant))
 		else:
 			for part: VisualPart in visual_parts:
 				result.append(part.sprite)
 		return result
+
+
+	## 返回指定变体的贴图；空变体使用旧 sprite 字段。
+	func sprite_for_variant(variant_id: String = "") -> String:
+		if variant_id.is_empty():
+			return sprite
+		return str(sprite_variants.get(variant_id, ""))
 
 
 	## 与世界矩形同序的 back/auto/front；旧物件由 over、cover 映射成同一协议。
@@ -590,6 +601,15 @@ func validate() -> Array[String]:
 			problems.append("场景 %s 的角色 %s：%s" % [id, actor.id, problem])
 		if actor.quarter_turns < 0 or actor.quarter_turns > 3:
 			problems.append("角色 %s 的 quarter_turns 必须是 0..3 的整数" % actor.id)
+		if actor.sprite_variant != "" and not actor.sprite_variants.has(actor.sprite_variant):
+			problems.append("角色 %s 的默认贴图变体不存在：%s" % [actor.id, actor.sprite_variant])
+		if not actor.sprite_variants.is_empty() and not actor.visual_parts.is_empty():
+			problems.append("角色 %s 不能同时使用贴图变体和 visual_parts" % actor.id)
+		for variant_id: Variant in actor.sprite_variants:
+			var variant_path: Variant = actor.sprite_variants[variant_id]
+			if not variant_id is String or str(variant_id).strip_edges().is_empty() \
+					or not variant_path is String or str(variant_path).strip_edges().is_empty():
+				problems.append("角色 %s 的贴图变体必须使用非空名称和路径" % actor.id)
 		var part_ids := {}
 		for part: VisualPart in actor.visual_parts:
 			if part.id != &"" and part_ids.has(part.id):
@@ -770,6 +790,12 @@ static func _actor_from(raw: Variant) -> Actor:
 	actor.sort_offset = float(raw.get("sort_offset", 0.0))
 	actor.label = str(raw.get("label", ""))
 	actor.sprite = str(raw.get("sprite", ""))
+	var raw_variants: Variant = raw.get("sprite_variants", {})
+	if raw_variants is Dictionary:
+		actor.sprite_variants = raw_variants.duplicate(true)
+	else:
+		actor._visual_problems.append("sprite_variants 必须是对象")
+	actor.sprite_variant = str(raw.get("sprite_variant", ""))
 	_visuals_from(actor, raw)
 	actor.solid = bool(raw.get("solid", false))
 	actor.cover = bool(raw.get("cover", false))

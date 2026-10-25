@@ -172,6 +172,7 @@ class PreviewPanel:
 				spawn = definition.spawns.keys()[0]
 			player.position = definition.spawn_point(spawn)
 		player.walk_path.clear()
+		player.configure_environment(definition)
 		player.velocity = Vector2.ZERO
 		_ranges.definition = definition
 		_ranges.flags = flags

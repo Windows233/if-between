@@ -1,0 +1,449 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-10-24",
+  "project": "IF：如果之间",
+  "constraints": {
+    "start_date": "2026-10-22",
+    "current_day": "D3",
+    "production_days": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "polish_days": [
+      7,
+      8,
+      9
+    ],
+    "minutes_per_person_per_day": 120,
+    "user_role": "策划协调，不安排个人制作工时",
+    "roles": [
+      "程序",
+      "主美术",
+      "第二美术兼整合验收",
+      "文案",
+      "音效音乐"
+    ]
+  },
+  "checked_versions": {
+    "main": "e7ddfff",
+    "origin_main_at_local_check": "e7ddfff",
+    "primary_work_branch": "codex/pixel-map-clarity",
+    "primary_work_commit": "f948474",
+    "remote_freshness": "本轮开工为本地远端跟踪引用；收工推送前再核对"
+  },
+  "counts": {
+    "maps": 14,
+    "events": 19,
+    "registered_endings": 5,
+    "registered_items": 7,
+    "meaning": "仅文件登记数量，不是可完整游玩内容数量"
+  },
+  "user_updates": [
+    {
+      "date": "2026-10-24",
+      "report": "C的束缚线以及小游戏已经做了，只是程序还没交到GitHub",
+      "affected_ids": [
+        "C-BIND",
+        "C-GAME"
+      ]
+    },
+    {
+      "date": "2026-10-23",
+      "report": "日记忘记放进去了，先跳过这里",
+      "affected_ids": [
+        "DIARY-ART"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "id": "C-BIND",
+      "name": "C束缚线最新版",
+      "owner": "程序",
+      "production": "用户确认完成",
+      "delivery": "待提交GitHub",
+      "integration": "待合入核验",
+      "acceptance": "待验收",
+      "evidence": [
+        {
+          "date": "2026-10-24",
+          "reference": "用户本轮明确报告；main已有art/fx/rescue_c/素材，不等于已收到个人绑定版本"
+        }
+      ],
+      "next_action": "补交已有代码、提交号与操作说明；不重新实现"
+    },
+    {
+      "id": "C-GAME",
+      "name": "救援时机小游戏最新版",
+      "owner": "程序",
+      "production": "用户确认完成",
+      "delivery": "待提交GitHub",
+      "integration": "待合入核验",
+      "acceptance": "待验收",
+      "evidence": [
+        {
+          "date": "2026-10-24",
+          "reference": "用户本轮明确报告；main另有ui/rescue_panel.gd与data/events/ch2_swing.json基础版"
+        }
+      ],
+      "next_action": "对照差异提交合入，复核练习/成败/重试/御守；不重写"
+    },
+    {
+      "id": "C-ART",
+      "name": "C立绘小人及救援UI",
+      "owner": "美术",
+      "production": "仓库已交",
+      "delivery": "已提交",
+      "integration": "已入main",
+      "acceptance": "本次不重画",
+      "evidence": [
+        {
+          "date": "2026-10-24",
+          "reference": "art/portrait/c/；art/npc/c/；art/fx/rescue_c/；art/ui/rescue_c/"
+        }
+      ],
+      "next_action": "只随程序最新版检查比例与线层状态"
+    },
+    {
+      "id": "SCHOOL-ART",
+      "name": "学校13张交付图14路径",
+      "owner": "美术",
+      "production": "已审核交付",
+      "delivery": "已提交dab9ada",
+      "integration": "已入main",
+      "acceptance": "素材加载已验，剧情引用分项待接",
+      "evidence": [
+        {
+          "date": "2026-10-24",
+          "reference": "art/catalogs/school_art_update_20261023.json；学生证/晶石/猫玩偶正式图"
+        }
+      ],
+      "next_action": "不重复同步旧包；只接新剧情引用及改字"
+    },
+    {
+      "id": "DIARY-ART",
+      "name": "三页日记美术",
+      "owner": "主美术",
+      "production": "用户确认完成",
+      "delivery": "漏打包待补收",
+      "integration": "待接入",
+      "acceptance": "用户要求本轮跳过",
+      "evidence": [
+        {
+          "date": "2026-10-24",
+          "reference": "2026-10-23用户：忘记放进去了，你先跳过这里"
+        }
+      ],
+      "next_action": "不再派制作；文字流程可先接，补包后验收"
+    },
+    {
+      "id": "RULE-TEXT",
+      "name": "校门三条规则文本",
+      "owner": "文案",
+      "production": "已完成",
+      "delivery": "已提交",
+      "integration": "已入main",
+      "acceptance": "正文核对通过",
+      "evidence": [
+        {
+          "date": "2026-10-24",
+          "reference": "data/events/ch2_notice.json：晚间自习、学习不处罚、天黑不游荡"
+        }
+      ],
+      "next_action": "程序不再改同一正文"
+    },
+    {
+      "id": "RULE-ART",
+      "name": "公告栏旧24h图片文字修订",
+      "owner": "主美术",
+      "production": "未收到修订交付",
+      "delivery": "待确认",
+      "integration": "旧图已入库",
+      "acceptance": "待验收",
+      "evidence": [
+        {
+          "date": "2026-10-24",
+          "reference": "art/props/ch2_notice_board.png仍含旧24h字样；新稿若已制作先补交"
+        }
+      ],
+      "next_action": "有稿验收，无稿只改文字区域，不重画公告栏"
+    },
+    {
+      "id": "KEY",
+      "name": "钥匙与教室门条件",
+      "owner": "程序",
+      "production": "钥匙领取已做，门条件待接",
+      "delivery": "领取已提交",
+      "integration": "部分入main",
+      "acceptance": "需补门口两态验收",
+      "evidence": [
+        {
+          "date": "2026-10-24",
+          "reference": "data/events/ch2_can.json已发item/key；art/item/key.png已有；教室无钥匙入口条件未闭环"
+        }
+      ],
+      "next_action": "测试有/无钥匙分流，不再画钥匙"
+    },
+    {
+      "id": "C-READY",
+      "name": "C准备好了与再逛逛分支",
+      "owner": "程序/文案",
+      "production": "已有再逛逛，出发待接",
+      "delivery": "部分已交",
+      "integration": "部分入main",
+      "acceptance": "待验收",
+      "evidence": [
+        {
+          "date": "2026-10-24",
+          "reference": "data/events/ch2_c_wait.json仅later"
+        }
+      ],
+      "next_action": "文案先交短节点，程序在入口链接入"
+    },
+    {
+      "id": "CLASSROOM",
+      "name": "教室四调查与日记流程",
+      "owner": "程序/文案",
+      "production": "地图有，调查未接",
+      "delivery": "素材部分已交",
+      "integration": "未接事件",
+      "acceptance": "待验收",
+      "evidence": [
+        {
+          "date": "2026-10-24",
+          "reference": "data/maps/classroom.json的actors为空；黑板等特写已入库"
+        }
+      ],
+      "next_action": "文案交节点包，程序接入；日记图片不阻塞文本联调"
+    },
+    {
+      "id": "LIB-MAP",
+      "name": "图书馆地图与往返",
+      "owner": "程序",
+      "production": "地图及返回口已有",
+      "delivery": "已提交",
+      "integration": "已入main但正式开放链未闭环",
+      "acceptance": "入口可达性待验收",
+      "evidence": [
+        {
+          "date": "2026-10-24",
+          "reference": "data/maps/library.json已有14个actors；school_gate读取ch2/library_open，main无赋值"
+        }
+      ],
+      "next_action": "核对个人最新版是否补标志；没有则随日记完成后补正式开放，不重新搭图书馆"
+    },
+    {
+      "id": "LIB-STORY",
+      "name": "图书馆首遍与二遍调查",
+      "owner": "程序/文案",
+      "production": "剧情事件未接",
+      "delivery": "正文已归档",
+      "integration": "未入游戏",
+      "acceptance": "待验收",
+      "evidence": [
+        {
+          "date": "2026-10-24",
+          "reference": "library猫只有line省略号，未见血迹/童话/媒介/净化/两遍新事件"
+        }
+      ],
+      "next_action": "先首遍再回溯二遍，复用相同地图与资源"
+    },
+    {
+      "id": "REWIND",
+      "name": "背刺回溯与背包快照",
+      "owner": "程序",
+      "production": "第二章未接",
+      "delivery": "有原文和既有回溯表现",
+      "integration": "未入游戏",
+      "acceptance": "待验收",
+      "evidence": [
+        {
+          "date": "2026-10-24",
+          "reference": "docs/剧情/剧情修改1.0版.docx；回溯落点是首次进馆前"
+        }
+      ],
+      "next_action": "恢复完整物品快照，不只加回日记；阻止重复发晶石/玩偶"
+    },
+    {
+      "id": "CHASE",
+      "name": "两段追逐与闪避",
+      "owner": "程序/策划",
+      "production": "尚未接入本章",
+      "delivery": "规则待最终锁定",
+      "integration": "未入游戏",
+      "acceptance": "待验收",
+      "evidence": [
+        {
+          "date": "2026-10-24",
+          "reference": "救援小游戏不能代表追逐已做；正文要求猫追逐及C追逐/隐蔽/抛御守"
+        }
+      ],
+      "next_action": "先复用能力验证；最小表现方案单列提案，不能承诺新自由追逐系统"
+    },
+    {
+      "id": "ENDING",
+      "name": "章末交付与End6/End7",
+      "owner": "程序/文案",
+      "production": "未接",
+      "delivery": "正文已定主线",
+      "integration": "未登记完整章末",
+      "acceptance": "待验收",
+      "evidence": [
+        {
+          "date": "2026-10-24",
+          "reference": "正文End6闪避失败、End7未到的明天；main只有5个结局登记，end4_iron对应正文End5"
+        }
+      ],
+      "next_action": "交晶石给B、玩偶给老人、10银币文字和End7闭环；内部旧ID不随便改名"
+    },
+    {
+      "id": "CORRIDOR",
+      "name": "教学楼走廊图",
+      "owner": "主美术",
+      "production": "未收到成品",
+      "delivery": "待确认实际交付",
+      "integration": "main为占位且无独立地图",
+      "acceptance": "待验收",
+      "evidence": [
+        {
+          "date": "2026-10-24",
+          "reference": "art/map/building.png为320x180占位；teaching_corridor.png未见"
+        }
+      ],
+      "next_action": "先核对昨日有无稿，有稿返修，无稿单段布局首版"
+    },
+    {
+      "id": "CLUE-ART",
+      "name": "撬棍/盒子/合照/童话新页",
+      "owner": "两名美术",
+      "production": "未收到对应成品",
+      "delivery": "待确认实际交付",
+      "integration": "尚无新图",
+      "acceptance": "待验收",
+      "evidence": [
+        {
+          "date": "2026-10-24",
+          "reference": "crowbar.png/group_photo.png/ch2_box_closed/open.png/ch2_fairy_tale_book_second.png未见；首章cat_photo非C合照"
+        }
+      ],
+      "next_action": "依v2必要项排；若已做先补交，不重新生成"
+    },
+    {
+      "id": "LIB-LAYERS",
+      "name": "猫补地与血迹分层",
+      "owner": "两名美术",
+      "production": "原图已有，加工交付未收",
+      "delivery": "待确认实际交付",
+      "integration": "尚未正式分层",
+      "acceptance": "待验收",
+      "evidence": [
+        {
+          "date": "2026-10-24",
+          "reference": "学校/图书馆/独立猫及图书馆2血迹已存在；正式library烘焙中央猫"
+        }
+      ],
+      "next_action": "只补地、分层和对齐，不重画猫/血或整馆"
+    },
+    {
+      "id": "WINDOW",
+      "name": "教室窗口局部",
+      "owner": "主美术",
+      "production": "未收到成品",
+      "delivery": "待确认",
+      "integration": "现教室无窗",
+      "acceptance": "待验收",
+      "evidence": [
+        {
+          "date": "2026-10-24",
+          "reference": "art/map/classroom.png右侧为镜子，窗边新图未见"
+        }
+      ],
+      "next_action": "补固定近景承接抛御守，不重画全教室"
+    },
+    {
+      "id": "LOCAL-PROPS",
+      "name": "旗杆外套和秋千独立图",
+      "owner": "第二美术兼整合验收",
+      "production": "主工作区已有",
+      "delivery": "本地未提交",
+      "integration": "main未含这些独立图",
+      "acceptance": "待来源与对位验收",
+      "evidence": [
+        {
+          "date": "2026-10-24",
+          "reference": "主工作区art/props/ch2_flagpole.png、ch2_swing.png"
+        }
+      ],
+      "next_action": "确认所有者和来源后交付；不混入本轮策划提交，不派重画"
+    },
+    {
+      "id": "RESCUE-AUDIO",
+      "name": "三条救援音效",
+      "owner": "音效音乐",
+      "production": "已完成交付",
+      "delivery": "已提交",
+      "integration": "main已绑定",
+      "acceptance": "最新版重试与状态切换待联验",
+      "evidence": [
+        {
+          "date": "2026-10-24",
+          "reference": "audio/sfx/rescue_success.wav/mistake.wav/complete.wav；scenes/main.gd已调用"
+        }
+      ],
+      "next_action": "不重制音效；核对个人新版触发一次且不叠音"
+    },
+    {
+      "id": "TOOLS",
+      "name": "地图编辑与导入工具",
+      "owner": "程序",
+      "production": "已完成相关修复",
+      "delivery": "已提交",
+      "integration": "main已合入",
+      "acceptance": "已有回归，继续复用",
+      "evidence": [
+        {
+          "date": "2026-10-24",
+          "reference": "贴图框选、PNG导入等待、可走格刷新、导航分区提示已合入e7ddfff"
+        }
+      ],
+      "next_action": "内容接入使用编辑器，不重搭工具"
+    },
+    {
+      "id": "SCALE",
+      "name": "统一人物标尺及像素清晰度",
+      "owner": "并行程序工作",
+      "production": "标尺有分支提交；清晰度进行中",
+      "delivery": "分支f948474；主工作区另有改动",
+      "integration": "本次核查main尚未合入标尺",
+      "acceptance": "依对应分支记录",
+      "evidence": [
+        {
+          "date": "2026-10-24",
+          "reference": "codex/unified-character-scale=f948474；当前codex/pixel-map-clarity工作中"
+        }
+      ],
+      "next_action": "策划记录为并行技术交付，不混入当前提交、不用分支通过数冒充main基线"
+    }
+  ],
+  "pending_inputs": [
+    "程序交付最新版提交号及运行入口",
+    "昨日走廊/盒子等是否已有未上传成品",
+    "日记后续补包，本轮跳过",
+    "C出场时序矛盾及两次追逐最小规则待最终确认"
+  ],
+  "verification": {
+    "scope": "策划/技能提交所在隔离工作树，未含主工作区并行技术改动",
+    "baseline": "e7ddfff",
+    "data_check": "14/19/5/7；通过，三条既有提示保留",
+    "game_tests": "2647/2647；exit0",
+    "smoke_run": "真实窗口烟测通过；exit0",
+    "daily_budget": "5名制作成员各120分钟；校验通过",
+    "skill_structure": "仓库及个人安装副本均通过quick_validate.py",
+    "skill_trial": "独立代理完成真实类型前向试用；修正先本地验收过闸门再推送的顺序",
+    "diagnostics": "游戏负例与引擎诊断不视为日志全净"
+  }
+}

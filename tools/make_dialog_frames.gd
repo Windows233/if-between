@@ -202,4 +202,3 @@ func _push_if_bg(wall: PackedByteArray, outside: PackedByteArray,
 		return
 	outside[i] = 1
 	stack.push_back(i)
-

@@ -1,0 +1,261 @@
+format: stage-script/v2
+title: 第二章·校门南侧易拉罐调查（实际场景编排示例）
+status: ready_for_implementation
+project:
+  name: IF：如果之间
+  engine: Godot
+  adapter: if-between
+game_context:
+  viewport: [320, 180]
+  coordinate_system: 地图左上角为原点，x向右、y向下；人物位置锚点为脚底。PNG原始像素不能直接当地图逻辑坐标。
+  scenes:
+    - id: school_gate
+      map_file: data/maps/school_gate.json
+      background: art/map/school_gate.png
+      map_size: [421, 281]
+      inspection:
+        data: verified
+        visual: verified
+        runtime: not_run
+        notes: 已读取地图JSON并查看真实校门底图和钥匙图；本示例未运行游戏，不声称通过实机画面或通行验收。
+      objects:
+        - id: can
+          rect: [215, 234, 12, 14]
+          reach: [214, 232, 15, 18]
+          representation: baked
+          notes: 罐子已画在南门右侧地面；actor不含独立sprite。保留地面罐子，不生成会消失的第二个罐子。
+      camera_notes: school_gate为可走动地图，不是overworld；相机保持原比例跟随并受421×281边界限制。调查不缩放、不切全图、不改focus。
+      scene_notes: 北侧通往操场，左上教学楼、右上图书馆，中央喷泉，南侧为入校门与罐子。此段只在南门附近进行，不移动到喷泉或建筑门口。
+      route_checks: {status: not_needed, reason: 玩家自行走到可交互处；事件全程原地，不添加移动路径或强制站位。}
+      integration:
+        map_action: actors[id=can].actions[id=check].event
+        existing_event: ch2_can
+        event_file: data/events/ch2_can.json
+        changes: 在同一事件中加入口分流；用next_when判断item/key>=1，有则empty_can，否则inspect_can。choices保留pick/leave；gain_key单独节点set=item/key:1；其他节点不set钥匙。不要在地图物件上加once，拒绝后仍能再次调查。
+sources:
+  - id: script_can
+    path: 学校/第二章.txt
+    locator: 第25至35行，易拉罐与钥匙
+    role: script
+    authority: selected
+  - id: impl_can
+    path: data/events/ch2_can.json
+    locator: 当前事件结构、钥匙flag与资源路径；不采用其扩写台词
+    role: implementation
+    authority: observed
+  - id: impl_map
+    path: data/maps/school_gate.json
+    locator: 易拉罐调查所在地图
+    role: implementation
+    authority: observed
+entities:
+  - {id: protagonist, name: 主角, kind: character}
+  - {id: can, name: 易拉罐, kind: prop}
+  - {id: key, name: 钥匙, kind: prop}
+assets:
+  - id: key_picture
+    kind: item_image
+    status: verified
+    path: art/item/key.png
+    spec: 已有钥匙道具图，居中展示，保持宽高比，不铺满地图。
+variables:
+  - id: key_count
+    type: int
+    initial: 0
+    persistence: save
+    binding: item/key
+    description: 当前钥匙数量；沿用背包值，不在进入调查时重置。
+decisions: []
+entry: can_entry
+nodes:
+  - id: can_entry
+    title: 调查入口与重复保护
+    sources: [script_can, impl_can, impl_map]
+    scene: school_gate
+    trigger: {type: interact, target: can}
+    control: cutscene
+    repeat: guarded
+    repeat_notes: 每次交互读已有key_count。拿过钥匙走empty_can，没拿走inspect_can；拒绝拾取后仍可再次调查。
+    setup:
+      camera: inherit，继续跟随主角，不切地图，不另开特写。
+      characters: protagonist保持交互开始时位置和朝向，可见；can沿用地图已有调查物，不生成第二个罐子。
+      environment: inherit，保留校门地图与现有光照。
+      audio: inherit，保留地图背景音乐；本例不新增音效资源。
+    cues: []
+    exit:
+      type: branch
+      cases:
+        - condition: {var: key_count, op: ge, value: 1}
+          next: empty_can
+      default: inspect_can
+
+  - id: inspect_can
+    title: 看见垃圾并选择是否翻找
+    sources: [script_can]
+    scene: school_gate
+    trigger: {type: flow}
+    control: cutscene
+    repeat: repeatable
+    setup:
+      camera: inherit
+      characters: inherit，不移动主角，不新增人物。
+      environment: inherit
+      audio: inherit
+    cues:
+      - id: can_thought
+        kind: dialogue
+        origin: source
+        sources: [script_can]
+        description: 显示主角心声，地图保持可见，不播放口型或配音；玩家确认后出现两个选项。
+        completion: confirm
+        engine:
+          status: existing
+          steps:
+            - {do: say, lines: [{speaker: 我, text: 怎么还有人乱丢垃圾的, side: left}]}
+          notes: 用现有文字对话表达心声，不额外创建地图人物；心声分类保留在剧本语义中，原生不支持mode字段，不能直接塞入JSON。
+        params:
+          speaker: protagonist
+          mode: thought
+          text: 怎么还有人乱丢垃圾的
+          side: left
+          portrait: null
+    exit:
+      type: choice
+      prompt: null
+      cancel: disabled
+      options:
+        - {id: pick, label: 捡起, next: gain_key}
+        - {id: leave, label: 不捡起, next: leave_can}
+
+  - id: gain_key
+    title: 获取并展示钥匙
+    sources: [script_can, impl_can]
+    scene: school_gate
+    trigger: {type: flow}
+    control: cutscene
+    repeat: once
+    repeat_notes: 仅从未持有钥匙的选择入口进入；入口保护负责防止再次获取。
+    setup:
+      camera: inherit
+      characters: inherit，无拾取专用动作帧，沿用站姿；此处不播放虚构的弯腰动画。
+      environment: inherit
+      audio: inherit
+    cues:
+      - id: grant_key
+        kind: state
+        origin: source
+        sources: [script_can]
+        description: 玩家已确认捡起，此时将钥匙数量设为1，紧接着显示获得道具画面；不在前一节点询问时提前发放。
+        completion: immediate
+        engine:
+          status: existing
+          steps: []
+          node_set: {item/key: 1}
+          notes: 放在gain_key独立节点入口，与下面道具展示同一阶段；不要挪到inspect_can入口。set是赋值，不累计。
+        params:
+          changes:
+            - {var: key_count, op: set, value: 1}
+      - id: show_key
+        kind: image
+        origin: staging
+        sources: [script_can, impl_can]
+        description: 钥匙道具图在画面中心淡入，保持比例；地图仍为背景，对话框在图片上方显示。
+        completion: finished
+        seconds: 0.45
+        assets: [key_picture]
+        engine:
+          status: existing
+          steps:
+            - {do: image, path: 'res://art/item/key.png', fade: 0.45, hide: false}
+          notes: 不写hold/wait_click，淡入后留图，接下一句say；图片是道具图而非地图物件位移。
+        params: {operation: show, asset: key_picture, layout: center_fit, persist: true}
+      - id: key_line
+        kind: dialogue
+        origin: source
+        sources: [script_can]
+        description: 钥匙图保持可见，主角说出原句，玩家确认读完后才收起图片。
+        completion: confirm
+        engine:
+          status: existing
+          steps:
+            - {do: say, lines: [{speaker: 我, text: 里面竟然有钥匙吗..., side: left}]}
+          notes: 对话层高于道具图；玩家确认读完才继续image_hide。
+        params:
+          speaker: protagonist
+          mode: spoken
+          text: 里面竟然有钥匙吗...
+          side: left
+          portrait: null
+      - id: hide_key
+        kind: image
+        origin: staging
+        sources: [script_can, impl_can]
+        description: 钥匙道具图淡出；对话已结束后关闭，重新呈现完整地图。
+        completion: finished
+        seconds: 0.25
+        assets: [key_picture]
+        engine:
+          status: existing
+          steps:
+            - {do: image_hide, fade: 0.25}
+          notes: 原生image_hide按fade淡出；随后事件结束归还控制。
+        params: {operation: hide, asset: key_picture}
+    exit:
+      type: return_control
+      handoff: 图片与对话关闭，镜头跟随主角；保持校门背景音乐；允许主角走动和调查。
+
+  - id: leave_can
+    title: 不捡起
+    sources: [script_can]
+    scene: school_gate
+    trigger: {type: flow}
+    control: cutscene
+    repeat: repeatable
+    setup:
+      camera: inherit
+      characters: inherit
+      environment: inherit
+      audio: inherit
+    cues: []
+    exit:
+      type: return_control
+      handoff: 关闭选项与对话，不移动主角，不改变钥匙数量；允许走动及再次调查。本例将“直接离开”解释为结束本次调查，不强制切换地图。
+
+  - id: empty_can
+    title: 已取走钥匙后的短反馈
+    sources: [script_can, impl_can]
+    scene: school_gate
+    trigger: {type: flow}
+    control: cutscene
+    repeat: repeatable
+    setup:
+      camera: inherit
+      characters: inherit
+      environment: inherit
+      audio: inherit
+    cues:
+      - id: empty_hint
+        kind: ui
+        origin: staging
+        sources: [script_can, impl_can]
+        description: 右上角显示短提示“已经空了。”，沿用Toast的三秒寿命自动淡出；不再发钥匙，显示后立即允许继续走动。
+        completion: immediate
+        engine:
+          status: existing
+          steps:
+            - {do: hint, text: 已经空了。, at: corner}
+          notes: ui/toast.gd的LIFE为3.0，hint不阻塞。本事件结束时把这条自动消失提示交接给Toast管理，不额外等待三秒。
+        params: {operation: hint, text: 已经空了。, position: corner, hide_on_finish: true}
+    exit:
+      type: return_control
+      handoff: 镜头和音乐保留，立即允许走动和调查；提示交给现有Toast按三秒寿命自动淡出，不在节点结束时提前清掉。
+coverage:
+  - from: script_can，第25至28行，调查心声与两项选择
+    nodes: [inspect_can]
+    note: 保留原台词与选项，不采用现有JSON里“那很安全了”的扩写。
+  - from: script_can，第30至35行，离开或获得钥匙
+    nodes: [leave_can, gain_key]
+    note: 保留结果；图像淡变与收尾是staging，秒数是编排建议，未实机测量。
+  - from: 同一次性拾取物的再次调查
+    nodes: [can_entry, empty_can]
+    note: 为避免重复奖励补充状态保护与短UI反馈，未增加新剧情对白。

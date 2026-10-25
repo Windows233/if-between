@@ -12,7 +12,7 @@
       320,
       180
     ],
-    "coordinate_system": "原点左上，x向右y向下，所有at为地图逻辑脚底；没有绑定的走廊/教室交互用anchor binding=null，禁止冒写坐标。",
+    "coordinate_system": "原点左上，x向右y向下，所有at为地图逻辑脚底；走廊已取消，未绑定的教室交互用anchor binding=null，禁止冒写坐标。",
     "scenes": [
       {
         "id": "school_gate",
@@ -240,7 +240,7 @@
         },
         "objects": [],
         "camera_notes": "实际视口320×180；player_scale=0.5；相机按地图标尺，不能当底图全景。",
-        "scene_notes": "是教室，不是走廊；底图已有黑板、镜子、桌上书和家具，JSON却无actor及家具碰撞，必须用编辑器补；不把整图空旷可走当最终验收。",
+        "scene_notes": "是教室，不是走廊；底图已有黑板、镜子、桌上书和家具，JSON却无actor及家具碰撞，必须用编辑器补；走廊已砍，教学楼门直通教室为本版设定。",
         "integration": {
           "notes": "只输出接入说明，不修改地图JSON。新增actor/碰撞/portal均在现有编辑器创建。"
         }
@@ -485,24 +485,6 @@
         "integration": {
           "notes": "只输出接入说明，不修改地图JSON。新增actor/碰撞/portal均在现有编辑器创建。"
         }
-      },
-      {
-        "id": "teaching_hall_planned",
-        "map_file": null,
-        "background": null,
-        "map_size": null,
-        "inspection": {
-          "data": "unverified",
-          "visual": "not_viewed",
-          "runtime": "not_run",
-          "notes": "main没有独立教学楼楼梯/走廊地图；这是制作需求ID，不是游戏现有scene。"
-        },
-        "objects": [],
-        "camera_notes": "待地图落地后核实320×180裁切；不编造镜头坐标。",
-        "scene_notes": "必须容纳楼梯集合点、公告栏、雾镜、六年二班门；不能把教室背景改口叫走廊。",
-        "integration": {
-          "notes": "地图编辑器新增独立走廊；从校门教学楼门接入走廊，再由带钥匙的门进classroom。坐标与碰撞待编辑器保存并重查。"
-        }
       }
     ]
   },
@@ -594,17 +576,17 @@
     },
     {
       "id": "hall_notice",
-      "name": "走廊公告栏（待建）",
+      "name": "已取消：走廊公告栏",
       "kind": "prop"
     },
     {
       "id": "hall_mirror",
-      "name": "走廊镜子（待建）",
+      "name": "已取消：走廊雾镜",
       "kind": "prop"
     },
     {
       "id": "class_door",
-      "name": "六年二班门（待建）",
+      "name": "教学楼门上的六年二班入口交互（待绑）",
       "kind": "prop"
     },
     {
@@ -616,6 +598,11 @@
       "id": "diary_desk",
       "name": "右侧有打开书本的课桌（待绑交互）",
       "kind": "prop"
+    },
+    {
+      "id": "school_gate_teaching_door_pending",
+      "name": "校门地图教学楼门（待地图编辑器绑定）",
+      "kind": "pending_interaction_anchor"
     }
   ],
   "assets": [
@@ -899,13 +886,9 @@
   "decisions": [
     {
       "id": "hall_geometry",
-      "question": "独立教学楼走廊的地图、楼梯集合点、镜子、公告栏、班级门尚未落地，如何绑定？",
+      "question": "教学楼走廊已取消；校门底图未登记教学楼门交互物件。需通过地图编辑器绑定门交互后，才能接入钥匙检查与直达教室流程。",
       "blocking": true,
       "affects": [
-        "to_hall",
-        "hall_c_talk",
-        "hall_notice_read",
-        "hall_mirror_read",
         "class_door_check",
         "door_locked"
       ],
@@ -970,7 +953,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -1046,7 +1029,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -1263,7 +1246,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -1328,7 +1311,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [],
@@ -1366,7 +1349,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -1442,7 +1425,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -1562,7 +1545,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -1622,7 +1605,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [],
@@ -1650,7 +1633,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -1811,7 +1794,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -1942,7 +1925,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -1996,7 +1979,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -2058,7 +2041,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [],
@@ -2095,7 +2078,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -2248,7 +2231,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -2314,7 +2297,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -2507,7 +2490,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -2576,7 +2559,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -2799,7 +2782,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -2854,7 +2837,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [],
@@ -2883,7 +2866,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -4132,7 +4115,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -4375,7 +4358,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -4423,7 +4406,7 @@
           {
             "id": "ready",
             "label": "准备好了",
-            "next": "to_hall"
+            "next": "class_door_check"
           },
           {
             "id": "later",
@@ -4452,7 +4435,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -4521,7 +4504,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -4600,393 +4583,17 @@
       "integration_notes": "铁链摇动音尚未核实可循环资源，首版省声音；不能循环复用未知一次音效。"
     },
     {
-      "id": "to_hall",
-      "title": "出发到教学楼二楼",
-      "sources": [
-        "v12",
-        "approved_qte",
-        "runtime"
-      ],
-      "scene": "teaching_hall_planned",
-      "trigger": {
-        "type": "flow"
-      },
-      "control": "cutscene",
-      "repeat": "guarded",
-      "repeat_notes": "首次与重复调查按变量分流；once不是引擎自动防重入。已获物不得再赠；追逐/救援重试只重置本会话。",
-      "setup": {
-        "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
-        "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
-        "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
-      },
-      "cues": [
-        {
-          "id": "hall_p421_0",
-          "kind": "dialogue",
-          "origin": "source",
-          "sources": [
-            "v12",
-            "runtime"
-          ],
-          "description": "台词：好哦，那我们出发咯~",
-          "completion": "confirm",
-          "params": {
-            "speaker": "c",
-            "mode": "spoken",
-            "text": "好哦，那我们出发咯~",
-            "side": "right",
-            "portrait": "c_neutral"
-          },
-          "engine": {
-            "status": "existing",
-            "steps": [
-              {
-                "do": "say",
-                "lines": [
-                  {
-                    "text": "好哦，那我们出发咯~",
-                    "speaker": "C",
-                    "side": "right",
-                    "portrait": "c/neutral"
-                  }
-                ]
-              }
-            ],
-            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。"
-          }
-        },
-        {
-          "id": "hall_p433_0",
-          "kind": "dialogue",
-          "origin": "source",
-          "sources": [
-            "v12",
-            "runtime"
-          ],
-          "description": "台词：我们分开找线索吧，后面就在楼梯这集合",
-          "completion": "confirm",
-          "params": {
-            "speaker": "c",
-            "mode": "spoken",
-            "text": "我们分开找线索吧，后面就在楼梯这集合",
-            "side": "right",
-            "portrait": "c_neutral"
-          },
-          "engine": {
-            "status": "existing",
-            "steps": [
-              {
-                "do": "say",
-                "lines": [
-                  {
-                    "text": "我们分开找线索吧，后面就在楼梯这集合",
-                    "speaker": "C",
-                    "side": "right",
-                    "portrait": "c/neutral"
-                  }
-                ]
-              }
-            ],
-            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。"
-          }
-        },
-        {
-          "id": "hall_c_wait",
-          "kind": "actor",
-          "origin": "staging",
-          "sources": [
-            "v12",
-            "runtime"
-          ],
-          "description": "C停留在楼梯集合点，主角获自由探索；NPC不跨图自动跟随",
-          "completion": "finished",
-          "params": {
-            "operation": "show",
-            "position": {
-              "space": "anchor",
-              "name": "stairs_wait",
-              "binding": null
-            },
-            "facing": "player"
-          },
-          "engine": {
-            "status": "requires_work",
-            "steps": [],
-            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。",
-            "plan": "先新增独立走廊地图与楼梯可站锚点，再用npc id=c创建talk=走廊问询事件；课堂切换移除旧C。"
-          },
-          "target": "c"
-        }
-      ],
-      "exit": {
-        "type": "return_control",
-        "handoff": "关闭对话和临时大图，focus无at恢复跟随；保留场上C及当前地图音乐；恢复行走和调查。"
-      },
-      "integration_notes": "不编造楼层地图坐标；用编辑器补教学楼走廊、楼梯集合点、公告栏、镜子、班级门及往返。"
-    },
-    {
-      "id": "hall_c_talk",
-      "title": "楼梯口C可重复问询",
-      "sources": [
-        "v12",
-        "approved_qte",
-        "runtime"
-      ],
-      "scene": "teaching_hall_planned",
-      "trigger": {
-        "type": "interact",
-        "target": "c"
-      },
-      "control": "cutscene",
-      "repeat": "guarded",
-      "repeat_notes": "首次与重复调查按变量分流；once不是引擎自动防重入。已获物不得再赠；追逐/救援重试只重置本会话。",
-      "setup": {
-        "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
-        "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
-        "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
-      },
-      "cues": [
-        {
-          "id": "hall_c_p437_0",
-          "kind": "dialogue",
-          "origin": "source",
-          "sources": [
-            "v12",
-            "runtime"
-          ],
-          "description": "台词：是有找到什么线索吗，可以和我分享一下哦",
-          "completion": "confirm",
-          "params": {
-            "speaker": "c",
-            "mode": "spoken",
-            "text": "是有找到什么线索吗，可以和我分享一下哦",
-            "side": "right",
-            "portrait": "c_neutral"
-          },
-          "engine": {
-            "status": "existing",
-            "steps": [
-              {
-                "do": "say",
-                "lines": [
-                  {
-                    "text": "是有找到什么线索吗，可以和我分享一下哦",
-                    "speaker": "C",
-                    "side": "right",
-                    "portrait": "c/neutral"
-                  }
-                ]
-              }
-            ],
-            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。"
-          }
-        }
-      ],
-      "exit": {
-        "type": "return_control",
-        "handoff": "关闭对话和临时大图，focus无at恢复跟随；保留场上C及当前地图音乐；恢复行走和调查。"
-      }
-    },
-    {
-      "id": "hall_notice_read",
-      "title": "走廊公告栏",
-      "sources": [
-        "v12",
-        "approved_qte",
-        "runtime"
-      ],
-      "scene": "teaching_hall_planned",
-      "trigger": {
-        "type": "interact",
-        "target": "hall_notice"
-      },
-      "control": "cutscene",
-      "repeat": "guarded",
-      "repeat_notes": "首次与重复调查按变量分流；once不是引擎自动防重入。已获物不得再赠；追逐/救援重试只重置本会话。",
-      "setup": {
-        "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
-        "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
-        "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
-      },
-      "cues": [
-        {
-          "id": "hall_notice_p441_0",
-          "kind": "dialogue",
-          "origin": "source",
-          "sources": [
-            "v12",
-            "runtime"
-          ],
-          "description": "台词：贴满旧通知，日期都是同一天：6月 ？日",
-          "completion": "confirm",
-          "params": {
-            "speaker": null,
-            "mode": "narration",
-            "text": "贴满旧通知，日期都是同一天：6月 ？日",
-            "side": "none",
-            "portrait": null
-          },
-          "engine": {
-            "status": "existing",
-            "steps": [
-              {
-                "do": "say",
-                "lines": [
-                  {
-                    "text": "贴满旧通知，日期都是同一天：6月 ？日"
-                  }
-                ]
-              }
-            ],
-            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。"
-          }
-        },
-        {
-          "id": "hall_notice_p442_0",
-          "kind": "dialogue",
-          "origin": "source",
-          "sources": [
-            "v12",
-            "runtime"
-          ],
-          "description": "台词：六年二班XX同学，请到图书馆。你的猫在等你",
-          "completion": "confirm",
-          "params": {
-            "speaker": null,
-            "mode": "narration",
-            "text": "六年二班XX同学，请到图书馆。你的猫在等你",
-            "side": "none",
-            "portrait": null
-          },
-          "engine": {
-            "status": "existing",
-            "steps": [
-              {
-                "do": "say",
-                "lines": [
-                  {
-                    "text": "六年二班XX同学，请到图书馆。你的猫在等你"
-                  }
-                ]
-              }
-            ],
-            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。"
-          }
-        }
-      ],
-      "exit": {
-        "type": "return_control",
-        "handoff": "关闭对话和临时大图，focus无at恢复跟随；保留场上C及当前地图音乐；恢复行走和调查。"
-      }
-    },
-    {
-      "id": "hall_mirror_read",
-      "title": "走廊雾镜",
-      "sources": [
-        "v12",
-        "approved_qte",
-        "runtime"
-      ],
-      "scene": "teaching_hall_planned",
-      "trigger": {
-        "type": "interact",
-        "target": "hall_mirror"
-      },
-      "control": "cutscene",
-      "repeat": "guarded",
-      "repeat_notes": "首次与重复调查按变量分流；once不是引擎自动防重入。已获物不得再赠；追逐/救援重试只重置本会话。",
-      "setup": {
-        "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
-        "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
-        "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
-      },
-      "cues": [
-        {
-          "id": "hall_mirror_p445_0",
-          "kind": "dialogue",
-          "origin": "source",
-          "sources": [
-            "v12",
-            "runtime"
-          ],
-          "description": "台词：镜子上的雾气里有一行字",
-          "completion": "confirm",
-          "params": {
-            "speaker": null,
-            "mode": "narration",
-            "text": "镜子上的雾气里有一行字",
-            "side": "none",
-            "portrait": null
-          },
-          "engine": {
-            "status": "existing",
-            "steps": [
-              {
-                "do": "say",
-                "lines": [
-                  {
-                    "text": "镜子上的雾气里有一行字"
-                  }
-                ]
-              }
-            ],
-            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。"
-          }
-        },
-        {
-          "id": "mirror_words",
-          "kind": "dialogue",
-          "origin": "source",
-          "sources": [
-            "v12",
-            "runtime"
-          ],
-          "description": "台词：猫是人类的好朋友，猫怎么会无缘无故伤害你呢",
-          "completion": "confirm",
-          "params": {
-            "speaker": null,
-            "mode": "narration",
-            "text": "猫是人类的好朋友，猫怎么会无缘无故伤害你呢",
-            "side": "none",
-            "portrait": null
-          },
-          "engine": {
-            "status": "existing",
-            "steps": [
-              {
-                "do": "say",
-                "lines": [
-                  {
-                    "text": "猫是人类的好朋友，猫怎么会无缘无故伤害你呢"
-                  }
-                ]
-              }
-            ],
-            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。"
-          }
-        }
-      ],
-      "exit": {
-        "type": "return_control",
-        "handoff": "关闭对话和临时大图，focus无at恢复跟随；保留场上C及当前地图音乐；恢复行走和调查。"
-      }
-    },
-    {
       "id": "class_door_check",
-      "title": "检查钥匙后才进六年二班",
+      "title": "在教学楼门检查钥匙后进六年二班",
       "sources": [
         "v12",
         "approved_qte",
         "runtime"
       ],
-      "scene": "teaching_hall_planned",
+      "scene": "school_gate",
       "trigger": {
         "type": "interact",
-        "target": "class_door"
+        "target": "school_gate_teaching_door_pending"
       },
       "control": "cutscene",
       "repeat": "guarded",
@@ -4994,7 +4601,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "绑定school_gate底图中的教学楼门；走廊已取消，不借用教室冒充走廊。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -5080,7 +4687,7 @@
         ],
         "default": "door_locked"
       },
-      "integration_notes": "必须teamed且拿到币后才接此主线路径；调查门后读取item/key，不消耗，不用钥匙打不开时引导回校门找罐子。"
+      "integration_notes": "阻塞：school_gate底图的教学楼门尚无可引用actor。需经编辑器创建并确认ID，再绑定本交互；钥匙检查成功后直达classroom，不经过走廊。"
     },
     {
       "id": "door_locked",
@@ -5090,7 +4697,7 @@
         "approved_qte",
         "runtime"
       ],
-      "scene": "teaching_hall_planned",
+      "scene": "school_gate",
       "trigger": {
         "type": "flow"
       },
@@ -5100,7 +4707,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "绑定school_gate底图中的教学楼门；走廊已取消，不借用教室冒充走廊。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -5142,7 +4749,7 @@
       ],
       "exit": {
         "type": "return_control",
-        "handoff": "留在走廊，允许返回操场/校门找钥匙；不永久封死主线。"
+        "handoff": "留在教学楼门前，允许返回操场/校门找钥匙；不永久封死主线。"
       }
     },
     {
@@ -5163,7 +4770,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -5175,7 +4782,7 @@
             "v12",
             "runtime"
           ],
-          "description": "从走廊班级门切到真实classroom/from_gate",
+          "description": "从教学楼门切到真实classroom/from_gate",
           "completion": "finished",
           "params": {
             "operation": "goto",
@@ -5220,9 +4827,9 @@
       ],
       "exit": {
         "type": "return_control",
-        "handoff": "主角脚底192,277，C留在走廊楼梯口不跟进；可调查黑板和日记课桌。"
+        "handoff": "主角脚底192,277，C留在教学楼门口不跟进；可调查黑板和日记课桌。"
       },
-      "integration_notes": "现classroom没有actors和家具碰撞；黑板、日记课桌须在编辑器按底图绑交互。不能把教学楼门直通教室的现状当二楼走廊已做。"
+      "integration_notes": "现classroom没有actors和家具碰撞；黑板、日记课桌须在编辑器按底图绑交互。走廊已砍，教学楼门直通教室为本版设定。"
     },
     {
       "id": "board_read",
@@ -5243,7 +4850,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -5407,7 +5014,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [],
@@ -5445,7 +5052,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -5633,7 +5240,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -5725,7 +5332,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -5957,7 +5564,7 @@
         "type": "next",
         "next": "escape_choice"
       },
-      "integration_notes": "遵照用户本轮“双QTE可赢，C门口接应”：移除P474的“C同时在教室门口”；他最后已知位置是楼梯口，失联台词才成立。教室切图不额外创建C。"
+      "integration_notes": "遵照用户本轮“双QTE可赢，C门口接应”：移除P474的“C同时在教室门口”；他最后已知位置是教学楼门口（走廊段落已砍，原楼梯口说法作废），失联台词才成立。教室切图不额外创建C。"
     },
     {
       "id": "escape_choice",
@@ -5977,7 +5584,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -6046,7 +5653,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -6113,7 +5720,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -6180,7 +5787,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -6269,7 +5876,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -6336,7 +5943,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -6556,7 +6163,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -6795,7 +6402,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角near_classroom=[62,114]脚底朝下；黑雾猫在后方追近；C尚未露面。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -6957,7 +6564,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角由玩家移动；黑雾在后，成功后拉开追逐差距；C不在该点。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -7039,7 +6646,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角由玩家移动；黑雾在后，成功后拉开追逐差距；C不在该点。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -7121,7 +6728,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -7201,7 +6808,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "C脚底365,164侧向主角；主角停在353,164；仅单个C，暂未泄露决策币定位。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -7461,7 +7068,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角from_school_gate=[233,296]；C=[251,296]，面朝室内/主角，站在入口侧边不堵门。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -7695,7 +7302,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承233,296；C继承251,296；不跑入下段剧情。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [],
@@ -7722,7 +7329,7 @@
       "setup": {
         "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
         "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
-        "environment": "复用已查地图背景、遮挡；若为teaching_hall_planned则等待独立走廊地图，不借用教室冒充。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
         "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
       },
       "cues": [
@@ -8696,22 +8303,6 @@
       "source_text": "if③"
     },
     {
-      "from": "v12:P421",
-      "nodes": [
-        "to_hall"
-      ],
-      "note": "原台词/旁白逐句保留，动作与制作备注转为cue或接入要求。",
-      "source_text": "C：“好哦，那我们出发咯~”"
-    },
-    {
-      "from": "v12:P422",
-      "nodes": [
-        "to_hall"
-      ],
-      "note": "原台词/旁白逐句保留，动作与制作备注转为cue或接入要求。",
-      "source_text": "（直接跳转到 地图-教学楼对应的传送交互点）"
-    },
-    {
       "from": "v12:P424",
       "nodes": [
         "c_later"
@@ -8758,94 +8349,6 @@
       ],
       "note": "原台词/旁白逐句保留，动作与制作备注转为cue或接入要求。",
       "source_text": "主角：“....是风吧，一定是风，对”"
-    },
-    {
-      "from": "v12:P432",
-      "nodes": [
-        "to_hall"
-      ],
-      "note": "原台词/旁白逐句保留，动作与制作备注转为cue或接入要求。",
-      "source_text": "（互动 交互传送点 交互后将传送到地图-教学楼对应的传送交互点）"
-    },
-    {
-      "from": "v12:P433",
-      "nodes": [
-        "to_hall"
-      ],
-      "note": "原台词/旁白逐句保留，动作与制作备注转为cue或接入要求。",
-      "source_text": "C：“我们分开找线索吧，后面就在楼梯这集合”"
-    },
-    {
-      "from": "v12:P435",
-      "nodes": [
-        "to_hall"
-      ],
-      "note": "原台词/旁白逐句保留，动作与制作备注转为cue或接入要求。",
-      "source_text": "（出现完对话后，C对应的立绘就在楼梯口原处不动，当作一个可交互的NPC）"
-    },
-    {
-      "from": "v12:P436",
-      "nodes": [
-        "hall_c_talk"
-      ],
-      "note": "原台词/旁白逐句保留，动作与制作备注转为cue或接入要求。",
-      "source_text": "（互动 人物C）"
-    },
-    {
-      "from": "v12:P437",
-      "nodes": [
-        "hall_c_talk"
-      ],
-      "note": "原台词/旁白逐句保留，动作与制作备注转为cue或接入要求。",
-      "source_text": "C：“是有找到什么线索吗，可以和我分享一下哦”"
-    },
-    {
-      "from": "v12:P440",
-      "nodes": [
-        "hall_notice_read"
-      ],
-      "note": "原台词/旁白逐句保留，动作与制作备注转为cue或接入要求。",
-      "source_text": "（互动 公告栏）"
-    },
-    {
-      "from": "v12:P441",
-      "nodes": [
-        "hall_notice_read"
-      ],
-      "note": "原台词/旁白逐句保留，动作与制作备注转为cue或接入要求。",
-      "source_text": "【贴满旧通知，日期都是同一天：6月 ？日】"
-    },
-    {
-      "from": "v12:P442",
-      "nodes": [
-        "hall_notice_read"
-      ],
-      "note": "原台词/旁白逐句保留，动作与制作备注转为cue或接入要求。",
-      "source_text": "【六年二班XX同学，请到图书馆。你的猫在等你】"
-    },
-    {
-      "from": "v12:P444",
-      "nodes": [
-        "hall_mirror_read"
-      ],
-      "note": "原台词/旁白逐句保留，动作与制作备注转为cue或接入要求。",
-      "source_text": "（互动 走廊·镜子）"
-    },
-    {
-      "from": "v12:P445",
-      "nodes": [
-        "hall_mirror_read"
-      ],
-      "note": "原台词/旁白逐句保留，动作与制作备注转为cue或接入要求。",
-      "source_text": "【镜子上的雾气里有一行字】"
-    },
-    {
-      "from": "v12:P446",
-      "nodes": [
-        "hall_mirror_read"
-      ],
-      "note": "原台词/旁白逐句保留，动作与制作备注转为cue或接入要求。",
-      "source_text": "“猫是人类的好朋友，猫怎么会无缘无故伤害你呢”"
     },
     {
       "from": "v12:P449",
@@ -9322,7 +8825,7 @@
   ],
   "readiness": {
     "ready_parts": "现有校门/操场的文字与资源映射、救援后完整对话、已有地图上的双QTE+门口接应+入馆结构",
-    "blocked_parts": "独立走廊空间，以及教室新交互与家具碰撞须编辑器落地；所以整段为draft，不把空间未做标为ready。",
+    "blocked_parts": "教学楼走廊已取消；校门地图教学楼门钥匙检查、教室调查交互与家具碰撞仍须编辑器落地，所以整段为draft。",
     "scope": "文件是需求与原生指令对应，不自动加载，不修改游戏事件/地图；本轮不是完整玩法实现。"
   },
   "lifecycle": {
@@ -9336,5 +8839,393 @@
     "student_id": "（备注：失去了脸我还能哭泣吗， 失去了手我还能拉住你吗）",
     "charm_display_as_coin": "（备注：正或反，天堂还是地狱，都在这一念之间）",
     "diary": "（备注：你走了我在哭，回来了我却只会哭，眼泪是吞没我的海啸）"
-  }
+  },
+  "retired_history": [
+    {
+      "id": "to_hall",
+      "title": "已取消（历史留档）：出发到教学楼二楼",
+      "sources": [
+        "v12",
+        "approved_qte",
+        "runtime"
+      ],
+      "scene": "teaching_hall_planned",
+      "trigger": {
+        "type": "flow"
+      },
+      "control": "cutscene",
+      "repeat": "guarded",
+      "repeat_notes": "首次与重复调查按变量分流；once不是引擎自动防重入。已获物不得再赠；追逐/救援重试只重置本会话。",
+      "setup": {
+        "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
+        "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
+        "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
+      },
+      "cues": [
+        {
+          "id": "hall_p421_0",
+          "kind": "dialogue",
+          "origin": "source",
+          "sources": [
+            "v12",
+            "runtime"
+          ],
+          "description": "台词：好哦，那我们出发咯~",
+          "completion": "confirm",
+          "params": {
+            "speaker": "c",
+            "mode": "spoken",
+            "text": "好哦，那我们出发咯~",
+            "side": "right",
+            "portrait": "c_neutral"
+          },
+          "engine": {
+            "status": "existing",
+            "steps": [
+              {
+                "do": "say",
+                "lines": [
+                  {
+                    "text": "好哦，那我们出发咯~",
+                    "speaker": "C",
+                    "side": "right",
+                    "portrait": "c/neutral"
+                  }
+                ]
+              }
+            ],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。"
+          }
+        },
+        {
+          "id": "hall_p433_0",
+          "kind": "dialogue",
+          "origin": "source",
+          "sources": [
+            "v12",
+            "runtime"
+          ],
+          "description": "台词：我们分开找线索吧，后面就在楼梯这集合",
+          "completion": "confirm",
+          "params": {
+            "speaker": "c",
+            "mode": "spoken",
+            "text": "我们分开找线索吧，后面就在楼梯这集合",
+            "side": "right",
+            "portrait": "c_neutral"
+          },
+          "engine": {
+            "status": "existing",
+            "steps": [
+              {
+                "do": "say",
+                "lines": [
+                  {
+                    "text": "我们分开找线索吧，后面就在楼梯这集合",
+                    "speaker": "C",
+                    "side": "right",
+                    "portrait": "c/neutral"
+                  }
+                ]
+              }
+            ],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。"
+          }
+        },
+        {
+          "id": "hall_c_wait",
+          "kind": "actor",
+          "origin": "staging",
+          "sources": [
+            "v12",
+            "runtime"
+          ],
+          "description": "C停留在楼梯集合点，主角获自由探索；NPC不跨图自动跟随",
+          "completion": "finished",
+          "params": {
+            "operation": "show",
+            "position": {
+              "space": "anchor",
+              "name": "stairs_wait",
+              "binding": null
+            },
+            "facing": "player"
+          },
+          "engine": {
+            "status": "cancelled",
+            "steps": [],
+            "notes": "节点已取消；历史来源留档，不制作或接入。"
+          },
+          "target": "c"
+        }
+      ],
+      "exit": {
+        "type": "return_control",
+        "handoff": "关闭对话和临时大图，focus无at恢复跟随；保留场上C及当前地图音乐；恢复行走和调查。"
+      },
+      "integration_notes": "已取消：教学楼走廊不制作；本节点仅保留来源台词供追溯，不接入游戏。规则提示由escape_rule_reminder兜底。",
+      "status": "cancelled",
+      "implementation_status": "retired_history_only"
+    },
+    {
+      "id": "hall_c_talk",
+      "title": "楼梯口C可重复问询",
+      "sources": [
+        "v12",
+        "approved_qte",
+        "runtime"
+      ],
+      "scene": "teaching_hall_planned",
+      "trigger": {
+        "type": "interact",
+        "target": "c"
+      },
+      "control": "cutscene",
+      "repeat": "guarded",
+      "repeat_notes": "首次与重复调查按变量分流；once不是引擎自动防重入。已获物不得再赠；追逐/救援重试只重置本会话。",
+      "setup": {
+        "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
+        "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
+        "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
+      },
+      "cues": [
+        {
+          "id": "hall_c_p437_0",
+          "kind": "dialogue",
+          "origin": "source",
+          "sources": [
+            "v12",
+            "runtime"
+          ],
+          "description": "台词：是有找到什么线索吗，可以和我分享一下哦",
+          "completion": "confirm",
+          "params": {
+            "speaker": "c",
+            "mode": "spoken",
+            "text": "是有找到什么线索吗，可以和我分享一下哦",
+            "side": "right",
+            "portrait": "c_neutral"
+          },
+          "engine": {
+            "status": "existing",
+            "steps": [
+              {
+                "do": "say",
+                "lines": [
+                  {
+                    "text": "是有找到什么线索吗，可以和我分享一下哦",
+                    "speaker": "C",
+                    "side": "right",
+                    "portrait": "c/neutral"
+                  }
+                ]
+              }
+            ],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。"
+          }
+        }
+      ],
+      "exit": {
+        "type": "return_control",
+        "handoff": "关闭对话和临时大图，focus无at恢复跟随；保留场上C及当前地图音乐；恢复行走和调查。"
+      },
+      "status": "cancelled",
+      "implementation_status": "retired_history_only",
+      "integration_notes": "已取消：教学楼走廊不制作；本节点仅保留来源台词供追溯，不接入游戏。规则提示由escape_rule_reminder兜底。"
+    },
+    {
+      "id": "hall_notice_read",
+      "title": "走廊公告栏",
+      "sources": [
+        "v12",
+        "approved_qte",
+        "runtime"
+      ],
+      "scene": "teaching_hall_planned",
+      "trigger": {
+        "type": "interact",
+        "target": "hall_notice"
+      },
+      "control": "cutscene",
+      "repeat": "guarded",
+      "repeat_notes": "首次与重复调查按变量分流；once不是引擎自动防重入。已获物不得再赠；追逐/救援重试只重置本会话。",
+      "setup": {
+        "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
+        "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
+        "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
+      },
+      "cues": [
+        {
+          "id": "hall_notice_p441_0",
+          "kind": "dialogue",
+          "origin": "source",
+          "sources": [
+            "v12",
+            "runtime"
+          ],
+          "description": "台词：贴满旧通知，日期都是同一天：6月 ？日",
+          "completion": "confirm",
+          "params": {
+            "speaker": null,
+            "mode": "narration",
+            "text": "贴满旧通知，日期都是同一天：6月 ？日",
+            "side": "none",
+            "portrait": null
+          },
+          "engine": {
+            "status": "existing",
+            "steps": [
+              {
+                "do": "say",
+                "lines": [
+                  {
+                    "text": "贴满旧通知，日期都是同一天：6月 ？日"
+                  }
+                ]
+              }
+            ],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。"
+          }
+        },
+        {
+          "id": "hall_notice_p442_0",
+          "kind": "dialogue",
+          "origin": "source",
+          "sources": [
+            "v12",
+            "runtime"
+          ],
+          "description": "台词：六年二班XX同学，请到图书馆。你的猫在等你",
+          "completion": "confirm",
+          "params": {
+            "speaker": null,
+            "mode": "narration",
+            "text": "六年二班XX同学，请到图书馆。你的猫在等你",
+            "side": "none",
+            "portrait": null
+          },
+          "engine": {
+            "status": "existing",
+            "steps": [
+              {
+                "do": "say",
+                "lines": [
+                  {
+                    "text": "六年二班XX同学，请到图书馆。你的猫在等你"
+                  }
+                ]
+              }
+            ],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。"
+          }
+        }
+      ],
+      "exit": {
+        "type": "return_control",
+        "handoff": "关闭对话和临时大图，focus无at恢复跟随；保留场上C及当前地图音乐；恢复行走和调查。"
+      },
+      "status": "cancelled",
+      "implementation_status": "retired_history_only",
+      "integration_notes": "已取消：教学楼走廊不制作；本节点仅保留来源台词供追溯，不接入游戏。规则提示由escape_rule_reminder兜底。"
+    },
+    {
+      "id": "hall_mirror_read",
+      "title": "走廊雾镜",
+      "sources": [
+        "v12",
+        "approved_qte",
+        "runtime"
+      ],
+      "scene": "teaching_hall_planned",
+      "trigger": {
+        "type": "interact",
+        "target": "hall_mirror"
+      },
+      "control": "cutscene",
+      "repeat": "guarded",
+      "repeat_notes": "首次与重复调查按变量分流；once不是引擎自动防重入。已获物不得再赠；追逐/救援重试只重置本会话。",
+      "setup": {
+        "camera": "保持当前地图比例；原地调查不瞬移主角；焦点结束显式恢复跟随。",
+        "characters": "主角继承当前脚底位置；C仅在本节点说明的地图出现；不假设跨地图自动跟随。",
+        "environment": "复用当前实际地图背景与遮挡；教学楼走廊已取消，不属于待制作场景。",
+        "audio": "继承当前地图音乐；一次音效不循环；阅读/选项不附加隐藏惩罚计时。"
+      },
+      "cues": [
+        {
+          "id": "hall_mirror_p445_0",
+          "kind": "dialogue",
+          "origin": "source",
+          "sources": [
+            "v12",
+            "runtime"
+          ],
+          "description": "台词：镜子上的雾气里有一行字",
+          "completion": "confirm",
+          "params": {
+            "speaker": null,
+            "mode": "narration",
+            "text": "镜子上的雾气里有一行字",
+            "side": "none",
+            "portrait": null
+          },
+          "engine": {
+            "status": "existing",
+            "steps": [
+              {
+                "do": "say",
+                "lines": [
+                  {
+                    "text": "镜子上的雾气里有一行字"
+                  }
+                ]
+              }
+            ],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。"
+          }
+        },
+        {
+          "id": "mirror_words",
+          "kind": "dialogue",
+          "origin": "source",
+          "sources": [
+            "v12",
+            "runtime"
+          ],
+          "description": "台词：猫是人类的好朋友，猫怎么会无缘无故伤害你呢",
+          "completion": "confirm",
+          "params": {
+            "speaker": null,
+            "mode": "narration",
+            "text": "猫是人类的好朋友，猫怎么会无缘无故伤害你呢",
+            "side": "none",
+            "portrait": null
+          },
+          "engine": {
+            "status": "existing",
+            "steps": [
+              {
+                "do": "say",
+                "lines": [
+                  {
+                    "text": "猫是人类的好朋友，猫怎么会无缘无故伤害你呢"
+                  }
+                ]
+              }
+            ],
+            "notes": "复用当前原生指令；落地时由实现者转换本结构稿。"
+          }
+        }
+      ],
+      "exit": {
+        "type": "return_control",
+        "handoff": "关闭对话和临时大图，focus无at恢复跟随；保留场上C及当前地图音乐；恢复行走和调查。"
+      },
+      "status": "cancelled",
+      "implementation_status": "retired_history_only",
+      "integration_notes": "已取消：教学楼走廊不制作；本节点仅保留来源台词供追溯，不接入游戏。规则提示由escape_rule_reminder兜底。"
+    }
+  ]
 }

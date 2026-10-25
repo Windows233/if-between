@@ -374,6 +374,34 @@
       ],
       "sort_collider": 0,
       "sprite": "res://art/props/library_library_reading_desk_cover.png"
+    },
+    {
+      "collision": [
+        [
+          3,
+          17,
+          33,
+          14
+        ]
+      ],
+      "cover": true,
+      "id": "box",
+      "label": "宝箱",
+      "reach_local": [
+        0,
+        0,
+        40,
+        40
+      ],
+      "rect": [
+        271,
+        103,
+        40,
+        40
+      ],
+      "sort_collider": 0,
+      "sort_offset": 2,
+      "sprite": "res://art/props/ch2_box_closed_2.png"
     }
   ],
   "background": "res://art/map/library.png",

@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-24",
+  "baseline_commit": "0c42428",
+  "terrain_cell_before": 0.5,
+  "terrain_cell_after": 0.25,
+  "actor_cell_unchanged": 0.25,
+  "shadow_cell_unchanged": 0.5,
+  "window": [
+    1280,
+    720
+  ],
+  "comparison": "Same map/spawn/camera, native crops without resizing; existing source assets unchanged.",
+  "gpu": {
+    "adapter": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "failed": 0,
+    "passed": 25
+  },
+  "all_map_gpu": {
+    "passed": 157,
+    "failed": 0,
+    "maps": 14
+  },
+  "worktree_tests": {
+    "game": [
+      4385,
+      4385
+    ],
+    "plugin": [
+      4507,
+      4507
+    ],
+    "data": "14/19/5/7",
+    "smoke_exit": 0
+  },
+  "diagnostics": "Existing data notices and negative-case/engine diagnostics retained; no script or shader errors."
+}

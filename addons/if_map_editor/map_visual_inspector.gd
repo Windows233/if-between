@@ -9,6 +9,8 @@ const LAYERS := ["back", "auto", "front"]
 var model
 var actor_index := -1
 var selection: Array[int] = []
+var _variant_id_input: LineEdit
+var _variant_path_input: LineEdit
 
 
 func configure(source, index: int, selected: Array[int] = []) -> void:
@@ -40,6 +42,7 @@ func configure(source, index: int, selected: Array[int] = []) -> void:
 	note.text = "变换会同步局部碰撞与交互区。部件矩形相对物件左上角；自动层使用物件基线加偏移。"
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(note)
+	_build_sprite_variants()
 	var parts: Array = model.actor_field(index, "visual_parts", [])
 	for part_index: int in parts.size():
 		if parts[part_index] is Dictionary:
@@ -48,6 +51,136 @@ func configure(source, index: int, selected: Array[int] = []) -> void:
 	add.text = "添加视觉部件"
 	add.pressed.connect(add_part)
 	add_child(add)
+
+
+func _build_sprite_variants() -> void:
+	var section := VBoxContainer.new()
+	section.add_child(_text("同一物件的贴图状态"))
+	var variants: Variant = model.actor_field(actor_index, "sprite_variants", {})
+	if not variants is Dictionary:
+		variants = {}
+	var keys: Array = variants.keys()
+	keys.sort()
+	var default_row := HFlowContainer.new()
+	default_row.add_child(_text("默认贴图"))
+	var default_picker := OptionButton.new()
+	default_picker.action_mode = BaseButton.ACTION_MODE_BUTTON_RELEASE
+	default_picker.add_item("基础贴图")
+	for variant_id: Variant in keys:
+		default_picker.add_item(str(variant_id))
+	var active := str(model.actor_field(actor_index, "sprite_variant", ""))
+	default_picker.select(0 if active.is_empty() else maxi(keys.find(active) + 1, 0))
+	default_picker.item_selected.connect(func(option: int) -> void:
+		set_default_sprite_variant("" if option == 0 else str(keys[option - 1])))
+	default_row.add_child(default_picker)
+	section.add_child(default_row)
+	for variant_id: Variant in keys:
+		_add_sprite_variant_row(section, str(variant_id), str(variants[variant_id]))
+	var add_row := HFlowContainer.new()
+	_variant_id_input = LineEdit.new()
+	_variant_id_input.placeholder_text = "变体 ID"
+	_variant_id_input.custom_minimum_size.x = 90
+	add_row.add_child(_variant_id_input)
+	_variant_path_input = LineEdit.new()
+	_variant_path_input.placeholder_text = "res:// 贴图路径"
+	_variant_path_input.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	add_row.add_child(_variant_path_input)
+	var add := Button.new()
+	add.text = "添加变体"
+	add.pressed.connect(func() -> void:
+		if add_sprite_variant(_variant_id_input.text, _variant_path_input.text):
+			rebuild_requested.emit())
+	add_row.add_child(add)
+	section.add_child(add_row)
+	add_child(section)
+
+
+func _text(value: String) -> Label:
+	var label := Label.new()
+	label.text = value
+	return label
+
+
+func _add_sprite_variant_row(parent: Control, variant_id: String, sprite_path: String) -> void:
+	var row := HFlowContainer.new()
+	var identity := LineEdit.new()
+	identity.text = variant_id
+	identity.custom_minimum_size.x = 90
+	row.add_child(identity)
+	var texture := LineEdit.new()
+	texture.text = sprite_path
+	texture.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(texture)
+	var apply := Button.new()
+	apply.text = "应用"
+	apply.pressed.connect(func() -> void:
+		if update_sprite_variant(variant_id, identity.text, texture.text):
+			rebuild_requested.emit())
+	row.add_child(apply)
+	var remove := Button.new()
+	remove.text = "删除"
+	remove.pressed.connect(func() -> void:
+		if remove_sprite_variant(variant_id):
+			rebuild_requested.emit())
+	row.add_child(remove)
+	parent.add_child(row)
+
+
+func add_sprite_variant(variant_id: String, sprite_path: String) -> bool:
+	var variants: Dictionary = model.actor_field(actor_index, "sprite_variants", {}).duplicate(true)
+	var key := variant_id.strip_edges()
+	var path := sprite_path.strip_edges()
+	if key.is_empty() or variants.has(key) or not _valid_sprite_path(path):
+		return false
+	variants[key] = path
+	model.set_actor_field(actor_index, "sprite_variants", variants)
+	if str(model.actor_field(actor_index, "sprite_variant", "")).is_empty():
+		model.set_actor_field(actor_index, "sprite_variant", key)
+	edited.emit()
+	return true
+
+
+func update_sprite_variant(old_id: String, new_id: String, sprite_path: String) -> bool:
+	var variants: Dictionary = model.actor_field(actor_index, "sprite_variants", {}).duplicate(true)
+	var old_key := old_id.strip_edges()
+	var new_key := new_id.strip_edges()
+	var path := sprite_path.strip_edges()
+	if not variants.has(old_key) or new_key.is_empty() \
+			or (new_key != old_key and variants.has(new_key)) or not _valid_sprite_path(path):
+		return false
+	variants.erase(old_key)
+	variants[new_key] = path
+	model.set_actor_field(actor_index, "sprite_variants", variants)
+	if str(model.actor_field(actor_index, "sprite_variant", "")) == old_key:
+		model.set_actor_field(actor_index, "sprite_variant", new_key)
+	edited.emit()
+	return true
+
+
+func remove_sprite_variant(variant_id: String) -> bool:
+	var variants: Dictionary = model.actor_field(actor_index, "sprite_variants", {}).duplicate(true)
+	var key := variant_id.strip_edges()
+	if not variants.has(key):
+		return false
+	variants.erase(key)
+	model.set_actor_field(actor_index, "sprite_variants", variants)
+	if str(model.actor_field(actor_index, "sprite_variant", "")) == key:
+		model.set_actor_field(actor_index, "sprite_variant", "")
+	edited.emit()
+	return true
+
+
+func set_default_sprite_variant(variant_id: String) -> bool:
+	var variants: Dictionary = model.actor_field(actor_index, "sprite_variants", {})
+	if not variant_id.is_empty() and not variants.has(variant_id):
+		return false
+	model.set_actor_field(actor_index, "sprite_variant", variant_id)
+	edited.emit()
+	return true
+
+
+func _valid_sprite_path(path: String) -> bool:
+	return path.begins_with("res://") and FileAccess.file_exists(path)
 
 
 func _build_part(index: int, part: Dictionary) -> void:

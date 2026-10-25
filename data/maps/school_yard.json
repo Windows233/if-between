@@ -80,6 +80,40 @@
       ]
     },
     {
+      "collision": [
+        [
+          33,
+          155,
+          103,
+          10
+        ],
+        [
+          178,
+          155,
+          111,
+          10
+        ]
+      ],
+      "cover": true,
+      "cover_y": 155,
+      "id": "yard_gate",
+      "label": "操场门",
+      "reach_local": [
+        0,
+        0,
+        316,
+        209
+      ],
+      "rect": [
+        0,
+        0,
+        316,
+        209
+      ],
+      "sort_collider": 0,
+      "sprite": "res://art/props/操场抠图_upscayl_4x_upscayl_standard_4x.png"
+    },
+    {
       "cover": true,
       "cover_y": 81,
       "id": "new_actor",
@@ -107,12 +141,12 @@
     },
     {
       "cover": true,
-      "cover_y": 156,
+      "cover_y": 155,
       "id": "new_actor_3",
       "label": "围墙遮挡",
       "rect": [
         0,
-        0,
+        -1,
         316,
         211
       ],

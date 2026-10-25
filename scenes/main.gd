@@ -474,6 +474,7 @@ func enter_map(map_id: StringName, spawn_name: StringName,
 	player.global_position = def.spawn_point(spawn_name)
 	# 保留地图坐标中的美术标尺及碰撞；相机以倒数投影，屏幕上的主角始终等高。
 	player.scale = Vector2(def.player_scale, def.player_scale)
+	player.configure_environment(def)
 	player.velocity = Vector2.ZERO
 	# 脚步的锚点跟着落地重置：不重置的话，从上一个场景攒下来的那一段距离
 	# 会在进门的头一帧就凑够一次脚步（人刚站定就踩了一脚）。
@@ -529,6 +530,12 @@ func enter_map(map_id: StringName, spawn_name: StringName,
 ## 「有没有在响」听不出来也看不出来，只能问这一处。
 func current_music() -> String:
 	return _bgm_path
+
+
+## 切换当前地图中一个 Actor 的命名贴图变体。
+## 变体只替换主贴图，不改变物件位置、碰撞、交互或遮挡。
+func set_actor_sprite_variant(actor_id: StringName, variant_id: StringName) -> bool:
+	return map_view != null and map_view.set_actor_sprite_variant(actor_id, variant_id)
 
 
 ## 换场景时切背景音乐。曲子在 `data/maps/*.json` 的 `music` 字段里。

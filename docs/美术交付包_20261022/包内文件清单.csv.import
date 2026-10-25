@@ -1,0 +1,19 @@
+[remap]
+
+importer="csv_translation"
+type="Translation"
+uid="uid://csw17wuqrb1ar"
+
+[deps]
+
+files=["res://docs/美术交付包_20261022/包内文件清单.字节数.translation", "res://docs/美术交付包_20261022/包内文件清单.SHA256.translation"]
+
+source_file="res://docs/美术交付包_20261022/包内文件清单.csv"
+dest_files=["res://docs/美术交付包_20261022/包内文件清单.字节数.translation", "res://docs/美术交付包_20261022/包内文件清单.SHA256.translation"]
+
+[params]
+
+compress=1
+delimiter=0
+unescape_keys=false
+unescape_translations=true
