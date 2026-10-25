@@ -31,7 +31,7 @@
   "checked_versions": {
     "main_baseline": "f8288a5",
     "primary_branch": "main",
-    "scope": "2026-10-25发布候选从origin/main基线f8288a5独立整理；包含图书馆后段策划、教室黑板/日记摆放、撬棍与黑板素材，不含游戏EXE、学校压缩包及原工作区main其余未发布历史。Godot 4.7.2已完成导入、全量测试与真窗口烟测，三条命令退出码均为0；check_data.py通过。推送前origin/main仍为f8288a5。原工作区main保留18个未发布提交和大文件历史，未直接推送；stash中的卧室/图书馆/操场地图改动和未跟踪素材仍保留，不代表已交付"
+    "scope": "2026-10-25发布内容已从origin/main基线f8288a5独立整理，并由5d22bd6快进推送到origin/main；包含图书馆后段策划、教室黑板/日记摆放、撬棍与黑板素材，不含游戏EXE、学校压缩包及原工作区main其余未发布历史。Godot 4.7.2已完成导入、全量测试与真窗口烟测，三条命令退出码均为0；check_data.py通过。原工作区main保留18个未发布提交和大文件历史，未直接推送；其他本地地图改动和素材仍保留，不代表已交付"
   },
   "counts": {
     "maps": 14,
@@ -274,7 +274,7 @@
       "name": "教室四调查与日记流程",
       "owner": "程序/文案",
       "production": "教室黑板、日记actor摆放和黑板新图已合并到本地main；交互绑定未完成",
-      "delivery": "已进入本地main合并提交0b99155，尚未推送GitHub；日记底图按用户此前要求待补包，不重复制作",
+      "delivery": "classroom.json的黑板/日记摆放已随5d22bd6推送到GitHub main；日记美术底图仍按用户此前要求待补包，不重复制作",
       "integration": "classroom.json已有黑板/日记actor；当前仍未找到ch2_diary.json或ch2_class_door.json，素材摆放不等于剧情已可触发",
       "acceptance": "待验收",
       "evidence": [
@@ -394,7 +394,7 @@
       "name": "撬棍/盒子/合照/童话新页",
       "owner": "两名美术",
       "production": "用户2026-10-25补交撬棍素材；合照/童话新页其他项交付仍待确认",
-      "delivery": "crowbar.png已复制到art/props/ch2_crowbar.png并完成Godot 4.7.2 headless editor导入；当前待GitHub交付；其余缺项未确认",
+      "delivery": "撬棍已入art/props/ch2_crowbar.png并随5d22bd6推送到GitHub main；其余缺项未确认",
       "integration": "撬棍已入项目素材目录，尚无地图/事件绑定；其他项尚待接入",
       "acceptance": "撬棍图片格式/尺寸/透明通道和Godot资源导入已通过，游戏显示待验；其他项待验收",
       "evidence": [
