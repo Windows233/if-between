@@ -1,0 +1,849 @@
+{
+  "date": "2026-10-25",
+  "archive": "图书馆.rar",
+  "archive_sha256": "996a314b918f4e04354047f5cc080cb32f6d745ab3826b05137a601829de2053",
+  "base_commit": "24740c9",
+  "assets": [
+    {
+      "source": "图书馆/小猫抠图_对齐原图.png",
+      "target": "art/props/library_cat_cover.png",
+      "sha256": "c6762be7d4d0dac3377cc5ad118f3ce7ac8353d3238a159bf65dfcd65e43fde7",
+      "size": [
+        2880,
+        2112
+      ],
+      "mode": "RGBA",
+      "status": "source_preserved_and_reused_as_cat_layer",
+      "note": "正式猫层art/fx/library/cat_layer.png，保持原图像素；绑定矩形[158,136,150,110]，不使用旧JSON的过大参考矩形。"
+    },
+    {
+      "source": "图书馆/图书馆2_upscayl_4x_upscayl-standard-4x.png",
+      "target": "art/map/library_with_blood.png",
+      "sha256": "e6a21bc6b354ab2c256e412f02bce62f13d8a4d891b795f8da59783deee90b96",
+      "size": [
+        5608,
+        4488
+      ],
+      "mode": "RGB",
+      "status": "reference_only_blood_extracted_separately",
+      "note": "带入口血迹的完整场景，5608×4488 RGB；不是独立血迹透明层。和现用图存在全图纹理/色彩差异，不能把整幅差分自动当血迹遮罩。"
+    }
+  ],
+  "archive_inventory": [
+    {
+      "name": "书柜_upscayl_4x_upscayl-standard-4x.png",
+      "sha256": "b6ef0ed8bd2843f82fdc5261937c8e6d27b1c2a0d63aebd8981971843bc05df9",
+      "bytes": 6160280,
+      "size": [
+        4608,
+        3688
+      ],
+      "mode": "RGBA",
+      "alpha_bbox": [
+        485,
+        466,
+        4135,
+        3191
+      ],
+      "existing_archive_path": "学校/图书馆/书柜_upscayl_4x_upscayl-standard-4x.png",
+      "already_archived_identical": true
+    },
+    {
+      "name": "图书馆1_upscayl_4x_upscayl-standard-4x.png",
+      "sha256": "835a18ed382b80cb1b35751b89efa75c6355f91cf91605a5a8a2efdd88b224b4",
+      "bytes": 25677823,
+      "size": [
+        5608,
+        4488
+      ],
+      "mode": "RGB",
+      "alpha_bbox": null,
+      "existing_archive_path": "学校/图书馆/图书馆1_upscayl_4x_upscayl-standard-4x.png",
+      "already_archived_identical": true
+    },
+    {
+      "name": "图书馆2_upscayl_4x_upscayl-standard-4x.png",
+      "sha256": "e6a21bc6b354ab2c256e412f02bce62f13d8a4d891b795f8da59783deee90b96",
+      "bytes": 25560819,
+      "size": [
+        5608,
+        4488
+      ],
+      "mode": "RGB",
+      "alpha_bbox": null,
+      "existing_archive_path": "学校/图书馆/图书馆2_upscayl_4x_upscayl-standard-4x.png",
+      "already_archived_identical": true
+    },
+    {
+      "name": "墙_upscayl_4x_upscayl-standard-4x.png",
+      "sha256": "9650c83e08502f38ed8576e88831a7df296fc277a40e5464b45140a486b20af0",
+      "bytes": 10500050,
+      "size": [
+        4608,
+        3688
+      ],
+      "mode": "RGBA",
+      "alpha_bbox": [
+        281,
+        176,
+        4349,
+        3447
+      ],
+      "existing_archive_path": "学校/图书馆/墙_upscayl_4x_upscayl-standard-4x.png",
+      "already_archived_identical": true
+    },
+    {
+      "name": "小人正面.png",
+      "sha256": "eede99fd69687bd65738a4a12c432d389cb364b1a693e0e3ac6b155e33e483da",
+      "bytes": 294683,
+      "size": [
+        343,
+        624
+      ],
+      "mode": "RGBA",
+      "alpha_bbox": [
+        0,
+        0,
+        343,
+        624
+      ],
+      "existing_archive_path": "学校/图书馆/小人正面.png",
+      "already_archived_identical": true
+    },
+    {
+      "name": "小猫抠图_对齐原图.png",
+      "sha256": "c6762be7d4d0dac3377cc5ad118f3ce7ac8353d3238a159bf65dfcd65e43fde7",
+      "bytes": 4593005,
+      "size": [
+        2880,
+        2112
+      ],
+      "mode": "RGBA",
+      "alpha_bbox": [
+        0,
+        0,
+        2880,
+        2112
+      ],
+      "existing_archive_path": "学校/图书馆/小猫抠图_对齐原图.png",
+      "already_archived_identical": true
+    },
+    {
+      "name": "底墙_upscayl_4x_upscayl-standard-4x.png",
+      "sha256": "1a49a5a2cdf46c8f1f10168ac495db7875f78711b7d63b3834e53e7007561d90",
+      "bytes": 3036298,
+      "size": [
+        4608,
+        3688
+      ],
+      "mode": "RGBA",
+      "alpha_bbox": [
+        281,
+        2771,
+        4349,
+        3446
+      ],
+      "existing_archive_path": "学校/图书馆/底墙_upscayl_4x_upscayl-standard-4x.png",
+      "already_archived_identical": true
+    },
+    {
+      "name": "提取的walls.json",
+      "sha256": "f090395f4b568e72d215f0491ea6c61be64cb3869c5bb8f1f7a6a7a5ac918bb1",
+      "bytes": 2444,
+      "json": [
+        [
+          389,
+          34,
+          48,
+          32
+        ],
+        [
+          390,
+          67,
+          48,
+          13
+        ],
+        [
+          246,
+          81,
+          192,
+          16
+        ],
+        [
+          114,
+          88,
+          103,
+          9
+        ],
+        [
+          52,
+          98,
+          385,
+          2
+        ],
+        [
+          52,
+          100,
+          63,
+          16
+        ],
+        [
+          217,
+          100,
+          32,
+          7
+        ],
+        [
+          389,
+          100,
+          48,
+          31
+        ],
+        [
+          50,
+          118,
+          23,
+          36
+        ],
+        [
+          390,
+          132,
+          48,
+          23
+        ],
+        [
+          390,
+          155,
+          21,
+          2
+        ],
+        [
+          413,
+          155,
+          25,
+          3
+        ],
+        [
+          50,
+          156,
+          23,
+          2
+        ],
+        [
+          390,
+          157,
+          20,
+          2
+        ],
+        [
+          414,
+          158,
+          23,
+          2
+        ],
+        [
+          50,
+          159,
+          4,
+          2
+        ],
+        [
+          50,
+          161,
+          3,
+          7
+        ],
+        [
+          59,
+          161,
+          14,
+          7
+        ],
+        [
+          390,
+          161,
+          21,
+          7
+        ],
+        [
+          416,
+          161,
+          21,
+          6
+        ],
+        [
+          50,
+          169,
+          23,
+          4
+        ],
+        [
+          390,
+          169,
+          48,
+          4
+        ],
+        [
+          321,
+          171,
+          29,
+          15
+        ],
+        [
+          117,
+          173,
+          30,
+          14
+        ],
+        [
+          390,
+          173,
+          22,
+          2
+        ],
+        [
+          413,
+          173,
+          24,
+          2
+        ],
+        [
+          50,
+          174,
+          23,
+          102
+        ],
+        [
+          390,
+          175,
+          48,
+          89
+        ],
+        [
+          118,
+          261,
+          29,
+          14
+        ],
+        [
+          321,
+          261,
+          30,
+          16
+        ],
+        [
+          408,
+          265,
+          30,
+          3
+        ],
+        [
+          408,
+          269,
+          30,
+          5
+        ],
+        [
+          389,
+          270,
+          15,
+          5
+        ],
+        [
+          50,
+          277,
+          28,
+          2
+        ],
+        [
+          81,
+          277,
+          4,
+          2
+        ],
+        [
+          50,
+          279,
+          35,
+          26
+        ],
+        [
+          390,
+          279,
+          48,
+          25
+        ],
+        [
+          278,
+          304,
+          159,
+          5
+        ],
+        [
+          32,
+          305,
+          157,
+          5
+        ],
+        [
+          191,
+          305,
+          2,
+          3
+        ],
+        [
+          195,
+          305,
+          3,
+          2
+        ],
+        [
+          203,
+          305,
+          2,
+          4
+        ],
+        [
+          270,
+          305,
+          3,
+          2
+        ],
+        [
+          263,
+          306,
+          3,
+          3
+        ],
+        [
+          267,
+          306,
+          2,
+          2
+        ],
+        [
+          200,
+          309,
+          5,
+          2
+        ],
+        [
+          263,
+          309,
+          6,
+          2
+        ],
+        [
+          263,
+          311,
+          175,
+          6
+        ],
+        [
+          32,
+          316,
+          172,
+          13
+        ],
+        [
+          263,
+          318,
+          173,
+          11
+        ],
+        [
+          32,
+          329,
+          404,
+          17
+        ],
+        [
+          32,
+          346,
+          173,
+          4
+        ]
+      ],
+      "existing_archive_path": "学校/图书馆/提取的walls.json",
+      "already_archived_identical": false,
+      "usage": "历史数据参考，未应用到现行地图/碰撞/事件"
+    },
+    {
+      "name": "猫_upscayl_4x_upscayl-standard-4x.png",
+      "sha256": "d5a244aef6554a01aaf36f1b5ae0a3e8a07942818f061d46c37e4b6fa73ac4c9",
+      "bytes": 8435715,
+      "size": [
+        4608,
+        3688
+      ],
+      "mode": "RGBA",
+      "alpha_bbox": [
+        862,
+        382,
+        3834,
+        3386
+      ],
+      "existing_archive_path": "学校/图书馆/猫_upscayl_4x_upscayl-standard-4x.png",
+      "already_archived_identical": true
+    },
+    {
+      "name": "碰撞箱核对图.png",
+      "sha256": "457eec5365ec95c0dcf29d80d3b9c5a42bbb7e40c2435fc1149c40010618fe55",
+      "bytes": 341801,
+      "size": [
+        1868,
+        1496
+      ],
+      "mode": "RGB",
+      "alpha_bbox": null,
+      "existing_archive_path": "学校/图书馆/碰撞箱核对图.png",
+      "already_archived_identical": true
+    },
+    {
+      "name": "重新生成的library.json",
+      "sha256": "157b9520ff9f39bf479d85c7193884b41cbce42b6cf44b8abf661210cd5aea2a",
+      "bytes": 2746,
+      "json": {
+        "id": "library",
+        "name": "图书馆",
+        "size": [
+          467,
+          374
+        ],
+        "background": "res://art/map/library.png",
+        "overlay": "res://art/map/library_wall.png",
+        "indoor": true,
+        "spawns": {
+          "from_school_gate": [
+            233,
+            296
+          ],
+          "start": [
+            233,
+            296
+          ]
+        },
+        "walls": [
+          [
+            52,
+            81,
+            386,
+            19
+          ],
+          [
+            52,
+            100,
+            63,
+            16
+          ],
+          [
+            50,
+            118,
+            23,
+            187
+          ],
+          [
+            389,
+            34,
+            48,
+            270
+          ],
+          [
+            32,
+            304,
+            157,
+            46
+          ],
+          [
+            263,
+            304,
+            173,
+            46
+          ],
+          [
+            117,
+            173,
+            30,
+            14
+          ],
+          [
+            321,
+            171,
+            30,
+            15
+          ],
+          [
+            118,
+            261,
+            29,
+            14
+          ],
+          [
+            321,
+            261,
+            30,
+            16
+          ],
+          [
+            217,
+            100,
+            32,
+            7
+          ],
+          [
+            195,
+            304,
+            4,
+            4
+          ],
+          [
+            0,
+            0,
+            467,
+            34
+          ],
+          [
+            0,
+            0,
+            32,
+            374
+          ],
+          [
+            437,
+            0,
+            30,
+            374
+          ],
+          [
+            0,
+            350,
+            467,
+            24
+          ]
+        ],
+        "actors": [
+          {
+            "id": "shelf_a",
+            "label": "书柜",
+            "rect": [
+              115,
+              110,
+              35,
+              79
+            ],
+            "sprite": "res://art/props/library_shelf_a_cover.png",
+            "cover": true,
+            "line": "书柜。"
+          },
+          {
+            "id": "shelf_b",
+            "label": "书柜",
+            "rect": [
+              318,
+              111,
+              35,
+              78
+            ],
+            "sprite": "res://art/props/library_shelf_b_cover.png",
+            "cover": true,
+            "line": "书柜。"
+          },
+          {
+            "id": "shelf_c",
+            "label": "书柜",
+            "rect": [
+              115,
+              202,
+              35,
+              78
+            ],
+            "sprite": "res://art/props/library_shelf_c_cover.png",
+            "cover": true,
+            "line": "书柜。"
+          },
+          {
+            "id": "shelf_d",
+            "label": "书柜",
+            "rect": [
+              318,
+              202,
+              35,
+              77
+            ],
+            "sprite": "res://art/props/library_shelf_d_cover.png",
+            "cover": true,
+            "line": "书柜。"
+          },
+          {
+            "id": "cat_monster",
+            "label": "小猫怪兽",
+            "rect": [
+              112,
+              104,
+              240,
+              176
+            ],
+            "line": "……"
+          },
+          {
+            "id": "cat_cover",
+            "label": "猫遮挡",
+            "rect": [
+              112,
+              104,
+              240,
+              176
+            ],
+            "sprite": "res://art/props/library_cat_cover.png",
+            "cover": true
+          }
+        ]
+      },
+      "existing_archive_path": "学校/图书馆/重新生成的library.json",
+      "already_archived_identical": false,
+      "usage": "历史数据参考，未应用到现行地图/碰撞/事件"
+    }
+  ],
+  "duplicates": "包内原始文件已存在于学校/图书馆归档；本轮只把两张关键素材提升为art正式可调用路径，不重复加入整个包。",
+  "background_check": {
+    "current": "art/map/library.png",
+    "source": "图书馆1_upscayl_4x_upscayl-standard-4x.png",
+    "same_rgb_pixels": true,
+    "comparison_size": [
+      5608,
+      4488
+    ],
+    "blood_variant_changed_pixels": 24242360,
+    "blood_variant_diff_bbox": [
+      0,
+      0,
+      5608,
+      4488
+    ]
+  },
+  "not_replaced": [
+    "art/map/library.png",
+    "art/map/library_wall.png",
+    "已有墙体和书架碰撞",
+    "旧包JSON未覆盖现行地图"
+  ],
+  "remaining": [
+    "正式推倒/翻越与追赶动作动画",
+    "教室可动窗框/人物/硬币分层",
+    "图书馆专用BGM",
+    "整章人工连续游玩及难度验收"
+  ],
+  "publication": "local_commit_only_no_push",
+  "verification": {
+    "import": "Godot 4.7.2 exit 0",
+    "data": "14/32/7/11 PASS",
+    "game_tests": "4917/4917 PASS",
+    "rendering": "Four real-rendered library states PASS",
+    "route": "Real-window physical traversal from dodge_success to End7 PASS; not entire-chapter human playthrough",
+    "smoke": "First-chapter real-window smoke PASS",
+    "diagnostics": "Existing negative-case and engine diagnostics retained"
+  },
+  "completed_at": "2026-10-26",
+  "user_authorization": "没有，你可以自行拆分出所需素材；图层完成后继续完成剧情，缺素材用占位",
+  "derived_layers": {
+    "date": "2026-10-26",
+    "user_authorization": "没有，你可以自行拆分出所需素材",
+    "base_size": [
+      5608,
+      4488
+    ],
+    "cat_visual_map_rect": [
+      158,
+      136,
+      150,
+      110
+    ],
+    "blood_region_source_pixels": [
+      2370,
+      3200,
+      3330,
+      4488
+    ],
+    "clean_patch_generated": "art/map/candidates/library_carpet_clean_generated_20261026.png",
+    "clean_patch_method": "内置imagegen移除猫/烟雾，仅修复原地毯选区；房间建筑与家具布局不变",
+    "cat_method": "复用包内原始透明猫，不重画猫；保持原始宽高比，放置于同一地毯中央",
+    "blood_method": "从带血整图入口局部按血迹色差提透明层，限定门口范围排除灯具墙面",
+    "generated_prompt": "Edit image 1 carpet crop: remove black cat, black smoke/fragments and magical fissures; reconstruct burgundy cloth using clean-carpet reference; preserve border, floor, layout, exposure; no additions.",
+    "derived": [
+      {
+        "path": "art/map/library_no_cat.png",
+        "size": [
+          5608,
+          4488
+        ],
+        "mode": "RGB",
+        "sha256": "3a3acde7e1ea107b9fef66b92b9cba579abe7ac46e0d13e80ef41d21fdd9fdd2"
+      },
+      {
+        "path": "art/fx/library/cat_layer.png",
+        "size": [
+          2880,
+          2112
+        ],
+        "mode": "RGBA",
+        "sha256": "c6762be7d4d0dac3377cc5ad118f3ce7ac8353d3238a159bf65dfcd65e43fde7"
+      },
+      {
+        "path": "art/fx/library/blood_entrance.png",
+        "size": [
+          960,
+          1288
+        ],
+        "mode": "RGBA",
+        "sha256": "64c2501c75f8a36f5564e28ab4bcfcddfa4f99b3887b07a2ab4df4247904fea9"
+      },
+      {
+        "path": "art/fx/library/hidden.png",
+        "size": [
+          1,
+          1
+        ],
+        "mode": "RGBA",
+        "sha256": "c2153f77e11087fcb078ae38527fa83bef29791e3700e30cc87fec4405a66d0f"
+      }
+    ]
+  },
+  "generation_prompt": "Edit target is image 1, a square crop of the actual game library carpet. Image 2 is supporting clean carpet pattern reference only. Remove the entire black cat, smoke, fragments, red/orange magical fissures; reconstruct worn burgundy carpet and restrained gold filigree. Preserve outer border, blue tiles, placement, lighting and exposure. Do not create a new room, furniture, words or symbols.",
+  "local_composite": {
+    "source_background": "art/map/library.png",
+    "source_crop_xyxy": [
+      1760,
+      1240,
+      3880,
+      3360
+    ],
+    "resized_patch": [
+      2120,
+      2120
+    ],
+    "mask_rectangle_in_patch": [
+      210,
+      215,
+      1885,
+      1970
+    ],
+    "mask_blur_px": 5,
+    "method": "Only generated carpet patch blended into original map; outside mask room geometry retained. No claim of pixel-exact reconstruction under removed cat."
+  },
+  "blood_extraction": {
+    "region_xyxy": [
+      2370,
+      3200,
+      3330,
+      4488
+    ],
+    "method": "Entrance-only color matte, door polygon, lamp/wall exclusions, median filter; not whole-map difference.",
+    "transparent": true
+  },
+  "map_changes": [
+    "无猫背景与独立猫/血迹装饰层",
+    "血迹调查点移到入口",
+    "新增默认隐藏倒架占位；运行时按shelf_fallen启用碰撞",
+    "教室窗下reach_local扩展，保留窗户rect与其他墙体"
+  ]
+}

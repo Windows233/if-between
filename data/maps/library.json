@@ -127,54 +127,54 @@
           "label": "接近小猫"
         }
       ],
+      "id": "cat_monster",
       "if": {
         "any": [
           {
             "all": [
               {
-                "var": "ch2/library/first_betrayal",
                 "op": "!=",
-                "value": true
+                "value": true,
+                "var": "ch2/library/first_betrayal"
               },
               {
-                "var": "ch2/library/blood_seen",
                 "op": "==",
-                "value": true
+                "value": true,
+                "var": "ch2/library/blood_seen"
               },
               {
-                "var": "ch2/library/shelf_seen",
                 "op": "==",
-                "value": true
+                "value": true,
+                "var": "ch2/library/shelf_seen"
               }
             ]
           },
           {
             "all": [
               {
-                "var": "ch2/library/rewound",
                 "op": "==",
-                "value": true
+                "value": true,
+                "var": "ch2/library/rewound"
               },
               {
-                "var": "ch2/library/blood_second_seen",
                 "op": "==",
-                "value": true
+                "value": true,
+                "var": "ch2/library/blood_second_seen"
               },
               {
-                "var": "ch2/library/fairy_tale_second",
                 "op": "==",
-                "value": true
+                "value": true,
+                "var": "ch2/library/fairy_tale_second"
               },
               {
-                "var": "ch2/library/box_opened",
                 "op": "==",
-                "value": true
+                "value": true,
+                "var": "ch2/library/box_opened"
               }
             ]
           }
         ]
       },
-      "id": "cat_monster",
       "label": "小猫怪兽",
       "line": "……",
       "reach": [
@@ -443,6 +443,13 @@
       "sprite": "res://art/props/library_library_reading_desk_cover.png"
     },
     {
+      "actions": [
+        {
+          "event": "ch2_library_box",
+          "id": "open",
+          "label": "查看上锁盒子"
+        }
+      ],
       "collision": [
         [
           3,
@@ -469,18 +476,11 @@
       "sort_collider": 0,
       "sort_offset": 2,
       "sprite": "res://art/props/ch2_box_closed_2.png",
+      "sprite_variant": "closed",
       "sprite_variants": {
         "closed": "res://art/props/ch2_box_closed_2.png",
         "open": "res://art/props/ch2_box_open.png"
-      },
-      "sprite_variant": "closed",
-      "actions": [
-        {
-          "event": "ch2_library_box",
-          "id": "open",
-          "label": "查看上锁盒子"
-        }
-      ]
+      }
     },
     {
       "actions": [
@@ -492,15 +492,76 @@
       ],
       "id": "library_blood",
       "label": "墙边的血迹",
+      "reach_local": [
+        -8,
+        -5,
+        64,
+        37
+      ],
       "rect": [
-        77,
-        264,
-        42,
-        20
+        210,
+        270,
+        48,
+        30
       ]
+    },
+    {
+      "cover": false,
+      "decor": true,
+      "id": "library_cat_visual",
+      "label": "中央黑猫图层",
+      "rect": [
+        158,
+        136,
+        150,
+        110
+      ],
+      "sprite": "res://art/fx/library/cat_layer.png",
+      "sprite_variant": "visible",
+      "sprite_variants": {
+        "hidden": "res://art/fx/library/hidden.png",
+        "visible": "res://art/fx/library/cat_layer.png"
+      }
+    },
+    {
+      "cover": false,
+      "decor": true,
+      "id": "library_blood_visual",
+      "label": "入口血迹图层",
+      "rect": [
+        197.359129814551,
+        266.666666666667,
+        79.9429386590585,
+        107.333333333333
+      ],
+      "sprite": "res://art/fx/library/blood_entrance.png",
+      "sprite_variant": "visible",
+      "sprite_variants": {
+        "hidden": "res://art/fx/library/hidden.png",
+        "visible": "res://art/fx/library/blood_entrance.png"
+      }
+    },
+    {
+      "cover": false,
+      "decor": true,
+      "id": "escape_shelf_barrier",
+      "label": "倒塌书架（临时复用）",
+      "quarter_turns": 1,
+      "rect": [
+        201,
+        215,
+        64,
+        28
+      ],
+      "sprite": "res://art/fx/library/hidden.png",
+      "sprite_variant": "hidden",
+      "sprite_variants": {
+        "fallen": "res://art/props/library_shelf_a_cover.png",
+        "hidden": "res://art/fx/library/hidden.png"
+      }
     }
   ],
-  "background": "res://art/map/library.png",
+  "background": "res://art/map/library_no_cat.png",
   "id": "library",
   "indoor": true,
   "music": "res://audio/bgm/reclamation.mp3",

@@ -38,6 +38,8 @@ func check(label: String, actual: Variant, expected: Variant) -> void:
 func new_main() -> Node2D:
 	var packed: PackedScene = load("res://scenes/main.tscn")
 	var main: Node2D = packed.instantiate()
+	# 异步用例入树后不能让 _ready 再弹标题，覆盖测试刚安排的场景。
+	main.start_at_title = false
 	root.add_child(main)
 	# --script 模式下 _ready 不会同步触发，显式拉起来
 	main.boot()

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-25",
+  "updated_at": "2026-10-26",
   "project": "IF：如果之间",
   "constraints": {
     "start_date": "2026-10-22",
@@ -35,17 +35,17 @@
     ]
   },
   "checked_versions": {
-    "main_baseline": "7a2eb77",
-    "primary_branch": "main",
-    "scope": "2026-10-25非EXE文件树快照已由f822ec1推送至origin/main；247个文件包含D4地图/素材、地图编辑器功能、学校素材归档和策划；排除573771104字节游戏EXE及其历史。其余归档单文件均低于GitHub 100MB限制。Godot 4.7.2导入、游戏/地图编辑器测试、探针、烟测、数据/计划/stage校验均通过。原工作区旧main历史另保留备份，不直接推送",
+    "main_baseline": "24740c9",
+    "primary_branch": "codex/library-art-20261025",
+    "scope": "本轮按用户要求补图书馆图层并继续剧情；保留既定团队任务单、D1-D6制作/D7-D9润色及取消工时排产约束。",
     "art_drop_4_baseline": "0a600ec；本轮仅素材/引用及策划约束更新，不将旧进度账当作最新完整功能验收",
-    "latest_runtime_evidence": "本轮先快进34e9d74→0a600ec，包含9b56f8f后段路线实现；此证据覆盖旧账中“事件链尚未实现”的历史判断，但实机通关/视觉验收仍未确认。本轮不重排今日任务。"
+    "latest_runtime_evidence": "2026-10-26：先拉远端main至24740c9；独立图层及背刺成功后的两图追逐本地实现，后段真窗口自动试走至End7通过；本轮仅本地提交，未推送，不代表main已含这些改动。"
   },
   "counts": {
     "maps": 14,
-    "events": 19,
-    "registered_endings": 5,
-    "registered_items": 7,
+    "events": 32,
+    "registered_endings": 7,
+    "registered_items": 11,
     "meaning": "仅文件登记数量，不是可完整游玩内容数量"
   },
   "user_updates": [
@@ -121,6 +121,23 @@
       "affected_ids": [
         "DIARY-ART",
         "ART-DROP-4"
+      ]
+    },
+    {
+      "date": "2026-10-25",
+      "report": "用户提供图书馆.rar，要求先拉远端main后按需接入并本地提交。已快进24740c9。透明猫和带血迹整图已整理为art路径；两张底图都带猫，包内没有无猫补地或独立透明血迹。仅接收可用素材，不覆盖队友地图/碰撞/剧情，不推送。",
+      "affected_ids": [
+        "LIB-LAYERS"
+      ]
+    },
+    {
+      "date": "2026-10-26",
+      "report": "用户允许自行拆分猫/血迹和补地；完成图层后继续完成后段剧情，缺素材先用占位。本地实现与试走通过，尚未推送。",
+      "affected_ids": [
+        "LIB-LAYERS",
+        "CHASE",
+        "WINDOW",
+        "ENDING"
       ]
     }
   ],
@@ -253,10 +270,10 @@
       "id": "KEY",
       "name": "钥匙与教室门条件",
       "owner": "程序",
-      "production": "钥匙领取已做，门条件待接",
-      "delivery": "领取已提交",
-      "integration": "部分入main",
-      "acceptance": "需补门口两态验收",
+      "production": "钥匙领取及门检查已实现",
+      "delivery": "main 24740c9已有，后段逃跑复核钥匙",
+      "integration": "main 24740c9已有，后段逃跑复核钥匙",
+      "acceptance": "有/无钥匙回归通过；入口仍是portal特判",
       "evidence": [
         {
           "date": "2026-10-24",
@@ -265,18 +282,22 @@
         {
           "date": "2026-10-25",
           "reference": "当前data/maps/school_gate.json的to_classroom仍是直通教室的portal；地图无教学楼门交互actor，当前工作区未找到data/events/ch2_class_door.json"
+        },
+        {
+          "date": "2026-10-26",
+          "reference": "本地24740c9基线 + docs/素材接入_图书馆rar_20261025.md；tests 4917/4917；docs/screenshots/library_escape_20261026/。较旧证据仅保留历史，不作为当前缺口判断。"
         }
       ],
-      "next_action": "先用地图编辑器创建/绑定教学楼门交互并处理直通portal；验有钥匙开门声并入教室、无钥匙留在校门且可返回其他区域"
+      "next_action": "学校前段整段人工实走；不重复派门钥匙制作"
     },
     {
       "id": "C-READY",
       "name": "C准备好了与再逛逛分支",
       "owner": "程序/文案",
-      "production": "已有再逛逛，出发待接",
-      "delivery": "部分已交",
-      "integration": "部分入main",
-      "acceptance": "待验收",
+      "production": "两种回答及二次准备不传回操场已实现",
+      "delivery": "9414023已进入main 24740c9",
+      "integration": "9414023已进入main 24740c9",
+      "acceptance": "回归通过；与教学楼门的连贯体验待人工验收",
       "evidence": [
         {
           "date": "2026-10-24",
@@ -285,50 +306,62 @@
         {
           "date": "2026-10-25",
           "reference": "当前本地事件仍只有later选项；操场portal使用action=overworld，退出会到大地图；需按新稿改为操场-校门路线并验证C在教学楼门口等待"
+        },
+        {
+          "date": "2026-10-26",
+          "reference": "本地24740c9基线 + docs/素材接入_图书馆rar_20261025.md；tests 4917/4917；docs/screenshots/library_escape_20261026/。较旧证据仅保留历史，不作为当前缺口判断。"
         }
       ],
-      "next_action": "按已审核新稿补准备好了/我再逛逛状态分支；C不跟随进教室，在校门教学楼门口等待；实测返回操场后仍可再次出发"
+      "next_action": "实玩确认重复准备提问的措辞，不重做已完成分支"
     },
     {
       "id": "CLASSROOM",
       "name": "教室四调查与日记流程",
       "owner": "程序/文案",
-      "production": "教室黑板、日记actor摆放和黑板新图已合并到本地main；交互绑定未完成",
-      "delivery": "classroom.json黑板/日记摆放随5d22bd6推送；本次非EXE候选另含卧室、图书馆、操场地图；日记美术底图仍按用户此前要求待补包，不重复制作",
-      "integration": "classroom.json已有黑板/日记actor；当前仍未找到ch2_diary.json或ch2_class_door.json，素材摆放不等于剧情已可触发",
-      "acceptance": "待验收",
+      "production": "黑板、日记和校规事件已实现",
+      "delivery": "main已有绑定；本轮扩展窗下可站立交互范围",
+      "integration": "main已有绑定；本轮扩展窗下可站立交互范围",
+      "acceptance": "窗边实际移动与交互至抛币通过；黑板日记全段人工验收待做",
       "evidence": [
         {
           "date": "2026-10-25",
           "reference": "本地main合并提交0b99155包含data/maps/classroom.json、art/props/ch2_blackboard_2.png和.import；当前origin/main尚未更新，actors仍未绑定剧情事件"
+        },
+        {
+          "date": "2026-10-26",
+          "reference": "本地24740c9基线 + docs/素材接入_图书馆rar_20261025.md；tests 4917/4917；docs/screenshots/library_escape_20261026/。较旧证据仅保留历史，不作为当前缺口判断。"
         }
       ],
-      "next_action": "程序使用地图编辑器核验actor触发范围/碰撞并接入黑板和日记事件；完成Godot验证后再同步远端"
+      "next_action": "完整学校路线实玩，窗边可动分层只作后续润色"
     },
     {
       "id": "LIB-MAP",
       "name": "图书馆地图与往返",
       "owner": "程序",
-      "production": "独立地图已有",
-      "delivery": "已提交",
-      "integration": "用户确认尚未接入正式剧情",
-      "acceptance": "独立区域不算主线可达验收",
+      "production": "剧情可入馆及往返已实现",
+      "delivery": "main已有开放状态与绑定；本轮独立图层已接本地分支",
+      "integration": "main已有开放状态与绑定；本轮独立图层已接本地分支",
+      "acceptance": "两图逃跑的出入口实际试走通过；首遍入馆全段待人工验收",
       "evidence": [
         {
           "date": "2026-10-24",
           "reference": "data/maps/library.json已有14个actors；school_gate读取ch2/library_open，main无赋值"
+        },
+        {
+          "date": "2026-10-26",
+          "reference": "本地24740c9基线 + docs/素材接入_图书馆rar_20261025.md；tests 4917/4917；docs/screenshots/library_escape_20261026/。较旧证据仅保留历史，不作为当前缺口判断。"
         }
       ],
-      "next_action": "教室日记完成后启动校门追逐；两QTE通过并到达图书馆接近区才写开放与切图"
+      "next_action": "不再按独立地图未接剧情派重做"
     },
     {
       "id": "LIB-STORY",
       "name": "图书馆首遍与二遍调查",
       "owner": "程序/文案",
-      "production": "main 9b56f8f已有图书馆后段事件实现；待整段实机验收",
-      "delivery": "已随队友提交进入main，本轮已同步0a600ec",
-      "integration": "现有事件与地图绑定已进入工作区；不将自动测试视为完整通关",
-      "acceptance": "待验收",
+      "production": "首/二遍调查与背刺分支已实现，独立猫显隐本地补齐",
+      "delivery": "首/二遍事件已在main；图层及后段追逐在本地分支",
+      "integration": "首/二遍事件已在main；图层及后段追逐在本地分支",
+      "acceptance": "后段背刺成功至End7真实自动试走通过；首遍调查与回溯全段待实玩",
       "evidence": [
         {
           "date": "2026-10-24",
@@ -341,18 +374,22 @@
         {
           "date": "2026-10-25",
           "reference": "本轮fetch并快进0a600ec；9b56f8f含ch2_library_*、ch2_classroom_window、ch2_market_b_end等事件和地图绑定。"
+        },
+        {
+          "date": "2026-10-26",
+          "reference": "本地24740c9基线 + docs/素材接入_图书馆rar_20261025.md；tests 4917/4917；docs/screenshots/library_escape_20261026/。较旧证据仅保留历史，不作为当前缺口判断。"
         }
       ],
-      "next_action": "按程序任务接日记介入、首次背刺回溯、二次线索/合照、第二次闪避分支及已确认的夜市B尾声；猫/血迹/决策币/窗边素材与场景绑定仍待补齐和验收"
+      "next_action": "团队连续实玩整章，核对文本/画面与难度"
     },
     {
       "id": "REWIND",
       "name": "背刺回溯与背包快照",
       "owner": "程序",
-      "production": "第二章未接",
-      "delivery": "有原文和既有回溯表现",
-      "integration": "未入游戏",
-      "acceptance": "待验收",
+      "production": "个人锚点与背包恢复已实现",
+      "delivery": "main已有；本地补独立猫恢复、血迹保留",
+      "integration": "main已有；本地补独立猫恢复、血迹保留",
+      "acceptance": "状态与存读档回归通过，图层回溯四状态真实渲染通过",
       "evidence": [
         {
           "date": "2026-10-24",
@@ -361,41 +398,53 @@
         {
           "date": "2026-10-25",
           "reference": "依据R2和1.2整理到docs/staged_scripts/v1.2_library_after/；程序实现与存读档回归尚未开始"
+        },
+        {
+          "date": "2026-10-26",
+          "reference": "本地24740c9基线 + docs/素材接入_图书馆rar_20261025.md；tests 4917/4917；docs/screenshots/library_escape_20261026/。较旧证据仅保留历史，不作为当前缺口判断。"
         }
       ],
-      "next_action": "恢复完整物品快照，不只加回日记；阻止重复发晶石/玩偶"
+      "next_action": "首次背刺至二次调查人工连贯实玩；不要重派回溯实现"
     },
     {
       "id": "CHASE",
       "name": "两段追逐与闪避",
       "owner": "程序/策划",
-      "production": "校门两点QTE方案已具体化；用户确认新稿取消走廊并保留校门追逐目标",
-      "delivery": "规则/路线/触发与黑雾图交付",
-      "integration": "追逐控制器和圈式QTE尚待程序实现",
-      "acceptance": "路线静态通过；玩法未实机实现",
+      "production": "首次双QTE已实现；背刺后实际追逐、主动隐蔽、倒架碰撞本地补齐",
+      "delivery": "前段已在main；后段位于codex/library-art-20261025待后续合入",
+      "integration": "前段已在main；后段位于codex/library-art-20261025待后续合入",
+      "acceptance": "后段两图实际物理试走、失败/重试、暂停/失焦、存读档通过；手感待人工验收",
       "evidence": [
         {
           "date": "2026-10-24",
           "reference": "救援小游戏不能代表追逐已做；正文要求猫追逐及C追逐/隐蔽/抛御守"
+        },
+        {
+          "date": "2026-10-26",
+          "reference": "本地24740c9基线 + docs/素材接入_图书馆rar_20261025.md；tests 4917/4917；docs/screenshots/library_escape_20261026/。较旧证据仅保留历史，不作为当前缺口判断。"
         }
       ],
-      "next_action": "先独立原型验证两点、实时倒计时和清理，再串入日记→图书馆"
+      "next_action": "按用户确认后处理合入；正式动作动画后续替换占位"
     },
     {
       "id": "ENDING",
       "name": "章末交付与End6/End7",
       "owner": "程序/文案",
-      "production": "未接",
-      "delivery": "正文已定主线",
-      "integration": "未登记完整章末",
-      "acceptance": "待验收",
+      "production": "End6/End7事件和章末交付已有实现",
+      "delivery": "main已有；本地后段追逐连接尾声完成",
+      "integration": "main已有；本地后段追逐连接尾声完成",
+      "acceptance": "背刺成功→教室抛币→B→委托屋→End7真窗口自动试走通过，道具移除正确",
       "evidence": [
         {
           "date": "2026-10-24",
           "reference": "正文End6闪避失败、End7未到的明天；main只有5个结局登记，end4_iron对应正文End5"
+        },
+        {
+          "date": "2026-10-26",
+          "reference": "本地24740c9基线 + docs/素材接入_图书馆rar_20261025.md；tests 4917/4917；docs/screenshots/library_escape_20261026/。较旧证据仅保留历史，不作为当前缺口判断。"
         }
       ],
-      "next_action": "按已确认时序实现P747吊坠、P748夜幕之泪交给B、老人收玩偶、10银币及End7闭环；核对End6稳定ID，不随意改名"
+      "next_action": "整章人工实玩与音画润色，不重写已完成结局链"
     },
     {
       "id": "CORRIDOR",
@@ -433,33 +482,45 @@
       "id": "LIB-LAYERS",
       "name": "猫补地与血迹分层",
       "owner": "两名美术",
-      "production": "无猫整图候选已入库，但非正式尺寸且为JPG；猫透明层/补地与血迹透明层未交",
-      "delivery": "候选参考在main；正式可叠加层待交",
-      "integration": "尚未正式分层",
-      "acceptance": "待验收",
+      "production": "美术透明猫复用，AI局部补无猫地毯，透明血迹已拆出",
+      "delivery": "art/map/library_no_cat.png及art/fx/library/三张状态图已入本地分支",
+      "integration": "art/map/library_no_cat.png及art/fx/library/三张状态图已入本地分支",
+      "acceptance": "猫显示/隐藏/回溯恢复与血迹保留真实渲染和回归通过",
       "evidence": [
         {
           "date": "2026-10-24",
           "reference": "library.png为5608x4488且中央猫烘焙在底图；library_no_cat_20261024.jpg为2400x1792 RGB候选，不能逐像素对位或作透明层；main无正式独立血迹图"
+        },
+        {
+          "date": "2026-10-25",
+          "reference": "art/catalogs/library_delivery_20261025.json；图书馆.rar两张整图均含猫，血迹只在第二张整图"
+        },
+        {
+          "date": "2026-10-26",
+          "reference": "本地24740c9基线 + docs/素材接入_图书馆rar_20261025.md；tests 4917/4917；docs/screenshots/library_escape_20261026/。较旧证据仅保留历史，不作为当前缺口判断。"
         }
       ],
-      "next_action": "按美术任务优先交猫/补地层和血迹透明层，提供原图坐标、源文件及叠图预览；不重画猫或整馆"
+      "next_action": "团队看图验收补地、猫大小与血迹边缘，不再派缺图重做"
     },
     {
       "id": "WINDOW",
       "name": "教室窗口局部",
       "owner": "主美术",
-      "production": "有整图窗边候选作构图参考，未收到能对位现教室的独立窗框/人物/硬币层",
-      "delivery": "候选已入main；正式分层待交",
-      "integration": "正式教室底图未接入窗户，抛币演出未绑定",
-      "acceptance": "待验收",
+      "production": "抛币静态CG已交；可动窗框/人物/硬币分层仍未交",
+      "delivery": "已用ch2_coin_throw.png接事件，本地窗下交互可实际到达",
+      "integration": "已用ch2_coin_throw.png接事件，本地窗下交互可实际到达",
+      "acceptance": "真实移动到窗下并触发抛币通过；静态CG不冒充三层动画",
       "evidence": [
         {
           "date": "2026-10-24",
           "reference": "classroom.png为4608x3688 RGBA；classroom_with_window_20261024.png为1152x922 RGB完整构图候选，不能直接充当透明局部层"
+        },
+        {
+          "date": "2026-10-26",
+          "reference": "本地24740c9基线 + docs/素材接入_图书馆rar_20261025.md；tests 4917/4917；docs/screenshots/library_escape_20261026/。较旧证据仅保留历史，不作为当前缺口判断。"
         }
       ],
-      "next_action": "按美术任务确认窗位并交付对位窗框、室内抛币角色层及独立硬币层；不重画全教室"
+      "next_action": "可动分层为润色，不阻断当前路线"
     },
     {
       "id": "LOCAL-PROPS",
@@ -567,23 +628,24 @@
     }
   ],
   "pending_inputs": [
-    "图书馆猫层/无猫底图、血迹层、教室窗边抛币分层仍需交付；正式决策币正反面及抛币静态CG已由4.zip交付，不重新派制作",
-    "图书馆调查点/宝箱和夜市B接应脚点、触发范围需在地图编辑器绑定并实走",
-    "P741-P749程序录入前逐段对照1.2校对稿；吊坠ID和图已确认复用item/pendant及art/item/pendant.png",
-    "后段事件与绑定已随9b56f8f进入main；完整实走、视觉与音频表现仍待验收，本轮仅素材替换，不重派程序整段重写"
+    "整章从校门探索到End7的人工连续实玩与难度验收；本轮真实自动试走仅覆盖第二次闪避成功之后。",
+    "正式倒架/翻越动作、窗边可动分层和图书馆专用BGM可后补，当前占位/复用可运行。",
+    "学校入口仍通过portal特判钥匙事件；是否改独立门actor由策划确认。",
+    "原有教室自动寻路贴桌角可能卡顿；默认鼠标自动走关闭，本轮实走采用中间过道，不阻断WASD到窗下。",
+    "当前修改只在本地codex/library-art-20261025提交；用户另行授权后再推送或合入main。"
   ],
   "verification": {
-    "scope": "2026-10-25先推送图书馆后段策划/素材，再从7a2eb77将本地main全部非EXE文件树差异整理为247文件快照；图书馆后段程序/美术任务整合stage演出与阻断说明，不按工时排产；策划稿不是代码实现或完整通关验收",
-    "route": "当前school_yard出口action=overworld会返回大地图；school_gate有直通classroom portal且无门actor，钥匙门控未接；路线实测待做",
-    "assets": "合并进main的撬棍128x128 RGBA与黑板图已登记；图书馆候选无猫JPG和教室候选整图尺寸均不匹配正式底图；猫/补地层、血迹层、决策币、窗边分层未完成",
-    "game_tests": "Godot 4.7.2 tests/run_tests.gd退出码0；执行器没有捕获用例数",
+    "scope": "2026-10-26本地图层+后段实际追逐；不是整章人工通关验收",
+    "route": "真窗口物理移动跑过图书馆→校门→教室窗下→夜市B→委托屋→End7，约28.5秒；检查点存读档与失败重试回归通过",
+    "assets": "同尺寸无猫背景、独立透明猫与入口血迹已入库绑定；决策币/抛币CG已交；窗边可动分层、正式动作和专用BGM仍待后补",
+    "game_tests": "Godot 4.7.2 4917/4917 PASS；首帧/异步漏跑已修正",
     "map_editor_tests": "Godot 4.7.2 tests/run_map_editor_tests.gd与tests/probe_map_editor.gd均退出码0",
-    "smoke_run": "Godot 4.7.2真窗口tests/smoke_run.gd退出码0；执行器没有捕获逐步输出",
-    "data_check": "python -X utf8 tools/check_data.py退出0，统计14图/19事件/5结局/7物品；保留cat_doll、night_tear图鉴未登记及end4_iron无剧情可达三条既有提醒",
-    "stage": "图书馆后段stage结构校验通过：11节点，draft；End6失败台词、market_night/from_overworld[278,279]、P747吊坠和P748夜幕之泪交付时序已确认；猫/血迹/决策币/窗边素材及地图对象绑定未完成，不代表场景运行或通关验证",
+    "smoke_run": "第一章真实窗口烟测PASS；图书馆四状态GPU PASS；后段真实窗口自动试走PASS",
+    "data_check": "PASS 14图/32剧情/7结局/11物品",
+    "stage": "ch2_library_cat接入ch2_escape_run，主动F隐蔽、两图跑动、真实倒架碰撞、失败重试、旧选择存档迁移；猫身份与结局规则不改",
     "daily_budget": "本日按用户要求拆为程序与美术两个任务文件，不按时间安排工作量",
     "doc": "程序任务与美术任务两份Markdown已更新；阻断说明已并入程序任务；不按时间安排，未生成Word或day_plan.json",
-    "diagnostics": "既有负面测试与引擎诊断保留，不宣称日志全净",
+    "diagnostics": "既有负面测试和引擎诊断保留；教室自动寻路贴桌角问题待修正，不宣称日志全净",
     "art_drop_4_20261025": {
       "resource_import": "PASS Godot 4.7.2 editor import, exit 0",
       "textures": "PASS 7/7 Texture2D load and exact dimensions",

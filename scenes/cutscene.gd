@@ -69,6 +69,9 @@ func consume_click() -> bool:
 ## 收干净。切场景、取消剧情时调用。
 func cancel() -> void:
 	_generation += 1
+	if main != null and main.get("escape_session") != null:
+		# 先使本轮失效，再唤醒等待的逃跑协程，避免取消时继续推进旧剧情。
+		main.escape_session.cancel()
 	if main != null and main.get("rescue_panel") != null:
 		main.rescue_panel.close()
 	_waiting = false
@@ -303,7 +306,7 @@ func _perform(step: StageStep) -> void:
 ## - `wait` / `wait_click`：补演是瞬时的，等时间、等点击都说不通
 const REPLAY_SKIP: Array[StringName] = [
 	&"say", &"goto", &"place_player", &"play_sound", &"wait", &"wait_click",
-	&"save", &"rescue",
+	&"save", &"rescue", &"ch2_escape_run",
 ]
 
 
@@ -376,6 +379,13 @@ func _apply(step: StageStep) -> void:
 		&"ch2_dodge_qte":
 			var dodge_success: bool = await main.chase_session.run_dodge_qte(StringName(step.text("key")))
 			main.flags.set_value(&"ch2/dodge_succeeded", dodge_success)
+		&"ch2_escape_run":
+			var generation := _generation
+			var escaped := true
+			if not instant:
+				escaped = await main.escape_session.run(step.text("phase"))
+			if generation == _generation:
+				main.flags.set_value(&"ch2/escape_succeeded", escaped)
 		&"npc":
 			await _npc(step)
 		&"npc_move":

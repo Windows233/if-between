@@ -9,7 +9,31 @@ static func run(h: TestHarness) -> void:
 	test_anchor_personal_flags(h)
 	test_checkpoint_keeps_persistent_state(h)
 	test_new_stage_steps(h)
+	test_library_art_restoration(h)
 	await test_cancelled_dodge_qte_can_restart(h)
+
+
+static func test_library_art_restoration(h: TestHarness) -> void:
+	var main := h.new_main()
+	main.enter_map(&"library", &"from_school_gate", true)
+	var cat := _actor(main.current_map, &"library_cat_visual")
+	var blood := _actor(main.current_map, &"library_blood_visual")
+	h.check("独立猫图层存在且不抢交互", cat != null and cat.decor, true)
+	h.check("独立血迹图层存在且不挡路", blood != null and blood.decor and not blood.solid, true)
+	if cat == null or blood == null:
+		main.queue_free()
+		return
+	h.check("首次入馆猫可见", cat.sprite_variant, "visible")
+	h.check("首次调查前旧血迹已可见", blood.sprite_variant, "visible")
+	h.check("图书馆个人锚点捕获", main.capture_personal_anchor(), true)
+	main.flags.set_value(&"ch2/personal/library_cat_hidden", true)
+	main.refresh_scene()
+	h.check("净化后恢复正确隐藏图层", _actor(main.current_map, &"library_cat_visual").sprite_variant, "hidden")
+	h.check("个人回溯成功", main.restore_personal_anchor(), true)
+	h.check("回溯后猫回到锚点外观", _actor(main.current_map, &"library_cat_visual").sprite_variant, "visible")
+	h.check("地图血迹标记未随个人回溯消失", main.flags.get_value(&"map_blood/library/entrance"), true)
+	h.check("回溯后地图血迹仍可见", _actor(main.current_map, &"library_blood_visual").sprite_variant, "visible")
+	main.queue_free()
 
 
 static func test_events_and_endings(h: TestHarness) -> void:
@@ -154,9 +178,11 @@ static func test_checkpoint_keeps_persistent_state(h: TestHarness) -> void:
 static func test_cancelled_dodge_qte_can_restart(h: TestHarness) -> void:
 	var main := h.new_main()
 	main.enter_map(&"library", &"from_school_gate", true)
-	var first_task: Variant = main.chase_session.run_dodge_qte(&"q")
+	var first_result: Array[bool] = []
+	var second_result: Array[bool] = []
+	_collect_dodge(main, first_result)
 	main.chase_session.cancel()
-	var second_task: Variant = main.chase_session.run_dodge_qte(&"q")
+	_collect_dodge(main, second_result)
 	var restarted := false
 	for _frame: int in 20:
 		await h.root.get_tree().process_frame
@@ -165,12 +191,14 @@ static func test_cancelled_dodge_qte_can_restart(h: TestHarness) -> void:
 			break
 	h.check("取消后的独立闪避 QTE 可以重启", restarted, true)
 	main.chase_session.cancel()
-	var first_result: bool = await first_task
-	var second_result: bool = await second_task
-	h.check("取消后的旧 QTE 正常结束", first_result, false)
-	h.check("取消后的新 QTE 正常结束", second_result, false)
+	h.check("取消后的旧 QTE 正常结束", first_result, [false])
+	h.check("取消后的新 QTE 正常结束", second_result, [false])
 	h.check("取消后的 QTE 状态已清理", main.chase_session.qte_pending, false)
 	main.queue_free()
+
+
+static func _collect_dodge(main: Variant, result: Array[bool]) -> void:
+	result.append(await main.chase_session.run_dodge_qte(&"q"))
 
 
 static func test_new_stage_steps(h: TestHarness) -> void:

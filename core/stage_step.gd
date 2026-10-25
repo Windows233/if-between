@@ -40,6 +40,7 @@ const KINDS: Dictionary = {
 	&"ch2_chase_arrive": [],
 	&"ch2_chase_mist_retreat": [],
 	&"ch2_dodge_qte": ["key"],
+	&"ch2_escape_run": ["phase"], # 第二次背刺后的手动逃离，结果写入 ch2/escape_succeeded
 	&"npc": ["id", "sprite", "at"],  # 在地图上放一个临时角色
 	                                # 可选 `z`：盖住家具的层级。站在会挡人的
 	                                # 家具（书桌）**前面**时要给，否则被家具切掉
@@ -214,8 +215,10 @@ func validate() -> Array[String]:
 		if not (raw_lines is Array) or (raw_lines as Array).is_empty():
 			problems.append("演出指令 caption 的 lines 得是一个非空的数组")
 	if kind in [&"ch2_checkpoint_save", &"ch2_checkpoint_restore", &"ch2_checkpoint_clear"] \
-			and text("checkpoint") not in ["rescue", "chase", "route"]:
-		problems.append("演出指令 %s 的 checkpoint 只能是 rescue、chase 或 route" % kind)
+			and text("checkpoint") not in ["rescue", "chase", "route", "escape"]:
+		problems.append("演出指令 %s 的 checkpoint 只能是 rescue、chase、route 或 escape" % kind)
+	if kind == &"ch2_escape_run" and text("phase") not in ["library", "gate"]:
+		problems.append("后段逃跑的 phase 只能是 library 或 gate")
 	if kind == &"ch2_chase_qte" and text("key") not in ["q", "e"]:
 		problems.append("追逐QTE的key只能是q或e")
 	if kind == &"ch2_chase_qte" and number("trigger_x") <= 0.0:

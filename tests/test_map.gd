@@ -294,6 +294,7 @@ static func test_camera_shrink(h: TestHarness) -> void:
 static func test_overworld_tooltip(h: TestHarness) -> void:
 	var packed: PackedScene = load("res://scenes/main.tscn")
 	var main: Node2D = packed.instantiate()
+	main.start_at_title = false
 	h.root.add_child(main)
 	main.boot()
 

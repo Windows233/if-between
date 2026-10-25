@@ -1,0 +1,10 @@
+Godot Engine v4.7.2.stable.steam.ed1daf0bf - https://godotengine.org
+OpenGL API 3.3.0 NVIDIA 616.92 - Compatibility - Using Device: NVIDIA - NVIDIA GeForce RTX 4060 Laptop GPU
+
+[实走进度] school_gate/escape_gate_run at (227.4014, 161.6001) move=true focus=true
+[实走进度] classroom/ at (192.0, 269.0) move=true focus=true
+[实走进度] market_night/lose_tear_apply at (317.1994, 262.2003) move=false focus=true
+[实走进度] desk_shop/ending_reaction at (223.0, 308.0) move=false focus=true
+[实走进度] desk_shop/ending_reaction at (223.0, 308.0) move=false focus=true
+[结局] 达成 end7_rewritten（未到的明天）· 文字由剧本自己演
+[后段实走] {"coin_removed":0.0,"doll_delivered":0.0,"failures":[],"final_state":true,"route":{"B":true,"gate":{"from":"(353.0, 128.0)","to":"(62.0, 110.0)"},"library":{"from":"(233.0, 258.0)","to":"(233.0, 296.0)"},"window":true},"seconds":28.5147540000002,"tear_removed":0.0}

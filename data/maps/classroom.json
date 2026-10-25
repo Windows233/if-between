@@ -119,8 +119,6 @@
       "sprite": "res://art/props/墙壁_2.png"
     },
     {
-      "cover": true,
-      "cover_y": 153,
       "actions": [
         {
           "event": "ch2_diary",
@@ -128,6 +126,8 @@
           "label": "阅读日记"
         }
       ],
+      "cover": true,
+      "cover_y": 153,
       "id": "diary_desk",
       "label": "日记",
       "rect": [
@@ -139,7 +139,6 @@
       "sprite": "res://art/props/ch2_diary_blank.png"
     },
     {
-      "decor": false,
       "actions": [
         {
           "event": "ch2_blackboard",
@@ -147,6 +146,7 @@
           "label": "查看黑板"
         }
       ],
+      "decor": false,
       "id": "blackboard",
       "label": "黑板",
       "rect": [
@@ -173,6 +173,12 @@
         44,
         36
       ],
+      "reach_local": [
+        -38,
+        72,
+        36,
+        24
+      ],
       "rect": [
         330,
         64,
@@ -189,10 +195,10 @@
   "player_scale": 1,
   "portals": [
     {
-      "id": "back_gate",
-      "label": "学校大门",
       "blocked_by": "ch2/personal/stealth_started",
       "blocked_text": "现在还不能从后门离开，先把定位决策币丢到窗外。",
+      "id": "back_gate",
+      "label": "学校大门",
       "rect": [
         172,
         263,

@@ -121,11 +121,19 @@
       "id": "cat_reward",
       "stage": [
         {
+          "do": "map_actor_variant",
+          "actor": "library_cat_visual",
+          "variant": "hidden"
+        },
+        {
           "do": "say",
           "text": "猫的身影缩进黑暗，地上留下两件东西。"
         }
       ],
-      "next": "first_tear_show"
+      "next": "first_tear_show",
+      "set": {
+        "ch2/personal/library_cat_hidden": true
+      }
     },
     {
       "id": "first_tear_show",
@@ -534,6 +542,20 @@
           ]
         }
       ],
+      "next": "second_cat_disappear"
+    },
+    {
+      "id": "second_cat_disappear",
+      "set": {
+        "ch2/personal/library_cat_hidden": true
+      },
+      "stage": [
+        {
+          "do": "map_actor_variant",
+          "actor": "library_cat_visual",
+          "variant": "hidden"
+        }
+      ],
       "next": "night_tear_show"
     },
     {
@@ -777,7 +799,7 @@
           ]
         }
       ],
-      "next": "stealth_choice"
+      "next": "escape_prepare"
     },
     {
       "id": "crowbar_missing",
@@ -800,54 +822,7 @@
           ]
         }
       ],
-      "next": "stealth_choice"
-    },
-    {
-      "id": "stealth_choice",
-      "stage": [
-        {
-          "do": "say",
-          "lines": [
-            {
-              "speaker": "我",
-              "text": "要被追上了！！怎么办。。。怎么办，我不能就这么死·在·这·里",
-              "side": "left",
-              "portrait": "protagonist/shocked"
-            },
-            {
-              "speaker": "我",
-              "text": "夜幕之泪在手里发冷。它可以遮住你的痕迹，但需要你主动驱动。",
-              "side": "left",
-              "portrait": "protagonist/thinking"
-            }
-          ]
-        }
-      ],
-      "choices": [
-        {
-          "id": "activate_stealth",
-          "label": "主动驱动夜幕之泪",
-          "set": {
-            "ch2/personal/stealth_started": true
-          },
-          "next": "stealth_escape"
-        },
-        {
-          "id": "run_without",
-          "label": "直接逃跑",
-          "next": "stealth_refused"
-        }
-      ]
-    },
-    {
-      "id": "stealth_refused",
-      "stage": [
-        {
-          "do": "say",
-          "text": "没有隐蔽能力，你的脚步立刻被 C 捕捉到了。"
-        }
-      ],
-      "next": "stealth_choice"
+      "next": "escape_prepare"
     },
     {
       "id": "stealth_escape",
@@ -856,11 +831,30 @@
       },
       "stage": [
         {
+          "do": "ch2_checkpoint_clear",
+          "checkpoint": "escape"
+        },
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.25
+        },
+        {
+          "do": "goto",
+          "map": "classroom",
+          "spawn": "from_gate"
+        },
+        {
+          "do": "fade",
+          "to": "clear",
+          "time": 0.25
+        },
+        {
           "do": "say",
           "lines": [
             {
               "speaker": "我",
-              "text": "我驱动夜幕之泪，藏住自己的气息。",
+              "text": "夜幕之泪遮住了身影，C 的脚步终于落在身后。",
               "side": "left",
               "portrait": "protagonist/guarded"
             },
@@ -872,7 +866,7 @@
             },
             {
               "speaker": "C",
-              "text": "竟然选择跳窗逃跑吗，年轻人就是有活力",
+              "text": "竟然躲进教室了吗，年轻人就是有活力。",
               "side": "right",
               "portrait": "c/neutral"
             },
@@ -891,15 +885,197 @@
           ]
         },
         {
-          "do": "goto",
-          "map": "classroom",
-          "spawn": "from_gate"
-        },
-        {
           "do": "location",
           "text": "？月 ？日 教室 深夜"
+        },
+        {
+          "do": "hint",
+          "text": "走到右上方窗边，把决策币抛出去。"
         }
       ]
+    },
+    {
+      "id": "escape_prepare",
+      "set": {
+        "ch2/personal/stealth_started": false
+      },
+      "stage": [
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.25
+        },
+        {
+          "do": "place_player",
+          "at": [
+            233,
+            258
+          ],
+          "facing": [
+            0,
+            1
+          ]
+        },
+        {
+          "do": "npc",
+          "id": "c",
+          "sprite": "res://art/npc/c",
+          "at": [
+            233,
+            190
+          ],
+          "height": 45,
+          "pose": "idle_down"
+        },
+        {
+          "do": "fade",
+          "to": "clear",
+          "time": 0.25
+        },
+        {
+          "do": "say",
+          "text": "C 正绕过书架逼近。先向下逃出图书馆，再绕过喷泉回到左上方教学楼。\nWASD 移动；逃跑时按 F 主动驱动夜幕之泪；靠近门按 E。\n隐蔽只能减慢追踪，决策币仍会暴露方向。"
+        },
+        {
+          "do": "ch2_checkpoint_save",
+          "checkpoint": "escape"
+        }
+      ],
+      "next": "escape_library_run"
+    },
+    {
+      "id": "escape_library_run",
+      "stage": [
+        {
+          "do": "music",
+          "path": "res://audio/bgm/RUN!（鱼姐追逐战）.wav"
+        },
+        {
+          "do": "ch2_escape_run",
+          "phase": "library"
+        }
+      ],
+      "next": "escape_caught",
+      "next_when": {
+        "if": {
+          "var": "ch2/escape_succeeded",
+          "op": "==",
+          "value": true
+        },
+        "next": "escape_gate_transition"
+      }
+    },
+    {
+      "id": "escape_gate_transition",
+      "stage": [
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.25
+        },
+        {
+          "do": "goto",
+          "map": "school_gate",
+          "spawn": "from_library"
+        },
+        {
+          "do": "fade",
+          "to": "clear",
+          "time": 0.25
+        }
+      ],
+      "next": "escape_gate_run"
+    },
+    {
+      "id": "escape_gate_run",
+      "stage": [
+        {
+          "do": "music",
+          "path": "res://audio/bgm/RUN!（鱼姐追逐战）.wav"
+        },
+        {
+          "do": "ch2_escape_run",
+          "phase": "gate"
+        }
+      ],
+      "next": "escape_caught",
+      "next_when": {
+        "if": {
+          "var": "ch2/escape_succeeded",
+          "op": "==",
+          "value": true
+        },
+        "next": "stealth_escape"
+      }
+    },
+    {
+      "id": "escape_caught",
+      "stage": [
+        {
+          "do": "music",
+          "path": ""
+        },
+        {
+          "do": "image",
+          "path": "res://art/cg/ch2_end6_guilt.png",
+          "fade": 0.2,
+          "wait_click": false,
+          "hide": false
+        },
+        {
+          "do": "say",
+          "text": "脚步声追到了身后。C 扣住了你的肩膀。"
+        }
+      ],
+      "choices": [
+        {
+          "id": "retry_escape",
+          "label": "从逃跑开始重试",
+          "next": "escape_retry"
+        },
+        {
+          "id": "accept_end6",
+          "label": "接受结局",
+          "next": "escape_end6"
+        }
+      ]
+    },
+    {
+      "id": "escape_end6",
+      "stage": [
+        {
+          "do": "image_hide",
+          "fade": 0.2
+        }
+      ],
+      "ending": "end6_sin"
+    },
+    {
+      "id": "escape_retry",
+      "set": {
+        "ch2/personal/stealth_started": false
+      },
+      "stage": [
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.25
+        },
+        {
+          "do": "image_hide",
+          "fade": 0.1
+        },
+        {
+          "do": "ch2_checkpoint_restore",
+          "checkpoint": "escape"
+        },
+        {
+          "do": "fade",
+          "to": "clear",
+          "time": 0.25
+        }
+      ],
+      "next": "escape_library_run"
     }
   ]
 }

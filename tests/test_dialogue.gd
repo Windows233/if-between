@@ -123,6 +123,7 @@ static func test_line_font_and_shake(h: TestHarness) -> void:
 static func test_interact_and_dialogue(h: TestHarness) -> void:
 	var packed: PackedScene = load("res://scenes/main.tscn")
 	var main: Node2D = packed.instantiate()
+	main.start_at_title = false
 	h.root.add_child(main)
 	main.boot()
 
@@ -260,6 +261,7 @@ static func test_actor_actions_and_menu(h: TestHarness) -> void:
 static func test_interaction_picks_menu(h: TestHarness) -> void:
 	var packed: PackedScene = load("res://scenes/main.tscn")
 	var main: Node2D = packed.instantiate()
+	main.start_at_title = false
 	h.root.add_child(main)
 	main.boot()
 

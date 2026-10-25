@@ -14,6 +14,11 @@ extends SceneTree
 
 
 func _initialize() -> void:
+	# 首帧后根节点才入树；提前运行会令异步用例 get_tree() 为空而被跳过。
+	_run_all.call_deferred()
+
+
+func _run_all() -> void:
 	print("=== IF：如果之间 测试 ===")
 
 	var h := TestHarness.new()
@@ -38,6 +43,7 @@ func _initialize() -> void:
 	await preload("res://tests/test_rescue_integration.gd").run(h)
 	preload("res://tests/test_library_access.gd").run(h)
 	await preload("res://tests/test_library_after.gd").run(h)
+	await preload("res://tests/test_ch2_escape.gd").run(h)
 	h.section("背包")
 	TestInventory.run(h)
 	h.section("结局与存档")

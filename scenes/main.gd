@@ -21,6 +21,7 @@ const START_SPAWN: StringName = &"start"
 const PERSONAL_ANCHOR_SCRIPT = preload("res://core/personal_anchor.gd")
 const CHASE_OVERLAY_SCRIPT = preload("res://ui/chase_overlay.gd")
 const CHASE_SESSION_SCRIPT = preload("res://scenes/ch2_chase_session.gd")
+const ESCAPE_SESSION_SCRIPT = preload("res://scenes/ch2_escape_session.gd")
 ## 从「出门」连接进入的大地图
 const OVERWORLD_MAP: StringName = &"overworld"
 
@@ -55,6 +56,7 @@ var choice_menu: ChoiceMenu
 var rescue_panel: RescuePanel
 var chase_overlay: ChaseOverlay
 var chase_session: Ch2ChaseSession
+var escape_session: Ch2EscapeSession
 var tooltip: MapTooltip
 
 ## IF 条件框。剧情里「观察」之后弹出来的那个。
@@ -300,6 +302,10 @@ func boot() -> void:
 	chase_session.name = "Ch2ChaseSession"
 	add_child(chase_session)
 	chase_session.setup(self, chase_overlay)
+	escape_session = ESCAPE_SESSION_SCRIPT.new()
+	escape_session.name = "Ch2EscapeSession"
+	add_child(escape_session)
+	escape_session.setup(self)
 
 	tooltip = MapTooltip.new()
 	tooltip.name = "MapTooltip"
@@ -452,7 +458,7 @@ func _set_process_modes() -> void:
 	# 它的推进靠 `await`，要停得另想办法，见 `Cutscene` 里的 `_sleep`。
 	for node: Node in [map_view, stage_view, player, camera,
 			stage_overlay, stage_curtain, dialogue, choice_menu, tooltip, rescue_panel,
-			chase_overlay, chase_session]:
+			chase_overlay, chase_session, escape_session]:
 		if node != null:
 			node.process_mode = Node.PROCESS_MODE_PAUSABLE
 
@@ -485,9 +491,12 @@ func enter_map(map_id: StringName, spawn_name: StringName,
 
 	if chase_session != null:
 		chase_session.cancel()
+	if escape_session != null and escape_session.active:
+		story.cancel()
 	current_map = def
 	map_triggers.configure(def.id, def.triggers, flags, _map_trigger_event_exists, _start_map_trigger)
 	current_spawn = spawn_name
+	preload("res://scenes/library_visuals.gd").prepare(def, flags)
 	map_view.build(def, flags)
 	_sync_library_box_visual()
 	player.global_position = def.spawn_point(spawn_name)
@@ -572,6 +581,7 @@ func _sync_library_box_visual() -> void:
 	if current_map != null and current_map.id == &"library" \
 			and flags.get_value(&"ch2/library/box_opened") == true:
 		set_actor_sprite_variant(&"box", &"open")
+	preload("res://scenes/library_visuals.gd").sync(self)
 
 
 ## 换场景时切背景音乐。曲子在 `data/maps/*.json` 的 `music` 字段里。
@@ -967,6 +977,7 @@ func update_player_control() -> void:
 	# 光看 `ui_host` 会让角色在黑屏里走来走去。
 	var cutscene_locked := story.is_active()
 	var chase_movement := chase_session != null and chase_session.can_move_player()
+	chase_movement = chase_movement or (escape_session != null and escape_session.can_move_player())
 	# 大图（CG）摆着 —— 背包图标要让开，理由见下面那一段。
 	var picture_up := stage_overlay != null and stage_overlay.has_image()
 
@@ -1143,6 +1154,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			var ui_key := event as InputEventKey
 			if ui_key.pressed and not ui_key.echo:
 				ui_host.handle_key(ui_key.physical_keycode)
+		return
+
+	if escape_session != null and escape_session.active:
+		escape_session.handle_input(event)
 		return
 
 	# 过场里**不接受动作输入**。只认「继续」那一下 ——
@@ -1557,8 +1572,9 @@ func _jump_to(map_id: StringName, spawn_name: StringName) -> void:
 		stage_curtain.snap_up()
 	if stage_overlay != null:
 		stage_overlay.clear()
-	if cutscene != null:
-		cutscene.cancel()
+	# 先终止导演，再唤醒追逐等待；否则旧协程可能在读档时推进旧节点。
+	if story != null:
+		story.cancel()
 	enter_map(map_id, spawn_name)
 
 
@@ -1712,6 +1728,8 @@ func _on_inventory_button() -> void:
 ## —— 开标题、开存档菜单 —— 入口该有一个地方列全，而不是散在两个文件里。
 ## 每个转发三行，比让调用方先去查「这个在 menu_flow 还是 main」便宜。
 func show_title() -> void:
+	if escape_session != null and escape_session.active:
+		story.cancel()
 	if chase_session != null:
 		chase_session.cancel()
 	# 标题放**它自己的曲子**，不是上一个场景的。
@@ -1787,6 +1805,8 @@ func quit_game() -> void:
 ##
 ## **图鉴不动** —— 那是跨存档的全局记录，开新局不该把「你见过几个结局」清掉。
 func new_game(start_map: StringName = &"", start_spawn: StringName = &"") -> void:
+	if escape_session != null and escape_session.active:
+		story.cancel()
 	if chase_session != null:
 		chase_session.cancel()
 	map_triggers.reset()
@@ -1911,7 +1931,7 @@ func clear_ch2_checkpoint(checkpoint_id: String) -> void:
 
 func _sync_ch2_checkpoints_from_flags() -> void:
 	ch2_checkpoints.clear()
-	for checkpoint_id: String in ["rescue", "chase", "route"]:
+	for checkpoint_id: String in ["rescue", "chase", "route", "escape"]:
 		var saved: Variant = flags.get_value(
 			StringName("ch2/retry_checkpoint/" + checkpoint_id))
 		if saved is Dictionary:
@@ -1950,6 +1970,7 @@ func restore_personal_anchor() -> bool:
 	player.global_position = snapshot.player_position
 	player.facing = snapshot.facing
 	player.velocity = Vector2.ZERO
+	_sync_library_box_visual()
 	update_camera()
 	update_cover()
 	return true
@@ -2034,6 +2055,15 @@ func load_game(slot: int = -1) -> bool:
 			resume_node = &"restart_chase"
 			resume_step = 0
 			resume_spoke = false
+		if data.story_event == &"ch2_library_cat" and resume_node in [
+				&"escape_library_run", &"escape_gate_transition", &"escape_gate_run"]:
+			resume_node = &"escape_retry"
+			resume_step = 0
+			resume_spoke = false
+		if data.story_event == &"ch2_library_cat" and resume_node in [&"stealth_choice", &"stealth_refused"]:
+			resume_node = &"escape_prepare"
+			resume_step = 0
+			resume_spoke = false
 		start_story(data.story_event, resume_node, resume_step, resume_spoke)
 	# **把场上的人摆回来。** 放在 `start_story` **之后** ——
 	# 剧情自己会摆的（节点里的 `npc`）优先级更高，`restore_actors` 会跳过同名的人。
@@ -2056,5 +2086,6 @@ func delete_save(slot: int = -1) -> bool:
 func refresh_scene() -> void:
 	if current_map == null or map_view == null:
 		return
+	preload("res://scenes/library_visuals.gd").prepare(current_map, flags)
 	map_view.build(current_map, flags)
 	_sync_library_box_visual()
