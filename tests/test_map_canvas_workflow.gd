@@ -90,6 +90,7 @@ static func run(h: TestHarness) -> void:
 	test_marquee(h)
 	test_marquee_groups_and_handles(h)
 	test_grid_and_resize(h)
+	test_pick_uses_interaction_bounds(h)
 	test_duplicate(h)
 	test_nested_duplicate(h)
 	test_edit_layers(h)
@@ -219,6 +220,25 @@ static func test_duplicate(h: TestHarness) -> void:
 	h.check("撤销恢复物件和组", model.data, before)
 	h.check("Alt复制可一笔重做", model.redo(), true)
 	h.check("重做仍保留新ID", model.actor_field(3, "id"), "desk_2")
+	canvas.free()
+
+
+static func test_pick_uses_interaction_bounds(h: TestHarness) -> void:
+	var canvas = new_canvas(h)
+	var actor := geometry_actor()
+	actor["reach_local"] = [10, 80, 30, 20]
+	canvas.model.data["actors"] = [actor]
+	canvas.model.reset_history()
+	h.check("缩小绿框后贴图上方不再命中物件",
+		canvas._hit_item(canvas.to_screen(Vector2(150, 100))), Vector2i(-1, -1))
+	h.check("绿框内部仍能命中物件",
+		canvas._hit_item(canvas.to_screen(Vector2(120, 170))), Vector2i(Model.Kind.ACTOR, 0))
+	canvas._drag_new_rect = Rect2(140, 90, 20, 10)
+	canvas._finish_marquee()
+	h.check("贴图范围内但交互框外的框选不选中物件", canvas.selected_actors(), [])
+	canvas._drag_new_rect = Rect2(110, 160, 30, 20)
+	canvas._finish_marquee()
+	h.check("框选绿色交互范围可选中物件", canvas.selected_actors(), [0])
 	canvas.free()
 
 
@@ -404,7 +424,10 @@ static func test_visual_parts(h: TestHarness) -> void:
 	h.check("子部件局部rect换为世界rect", parts[0]["rect"], Rect2(90, 100, 60, 30))
 	h.check("多个子部件属于同一actor", [parts[0]["actor_index"], parts[1]["actor_index"]], [0, 0])
 	h.check("子部件保留前后层和偏移", [parts[0]["layer"], parts[1]["layer"], parts[1]["sort_offset"]], ["back", "front", 6.0])
-	h.check("点击Actor框外的子部件仍拾取整个Actor", canvas._hit_item(canvas.to_screen(Vector2(95, 110))), Vector2i(Model.Kind.ACTOR, 0))
+	h.check("点击绿框外的子部件不会选中Actor",
+		canvas._hit_item(canvas.to_screen(Vector2(95, 110))), Vector2i(-1, -1))
+	h.check("点击绿框内即使没有贴图也能选中Actor",
+		canvas._hit_item(canvas.to_screen(Vector2(120, 150))), Vector2i(Model.Kind.ACTOR, 0))
 	canvas.model.set_actor_field(0, "visual_parts", [])
 	parts = canvas.actor_visual_items(0)
 	h.check("空visual_parts保留旧sprite路径", [parts.size(), parts[0]["sprite"], parts[0]["rect"]], [1, "legacy.png", Rect2(100, 80, 120, 100)])

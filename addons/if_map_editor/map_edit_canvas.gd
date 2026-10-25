@@ -1182,11 +1182,7 @@ func _finish_marquee() -> void:
 		for index in model.count(Kind.ACTOR):
 			if actor_is_hidden(index) or actor_is_locked(index):
 				continue
-			var intersects: bool = _drag_new_rect.intersects(model.rect_of(Kind.ACTOR, index)) \
-				or _drag_new_rect.intersects(model.interaction_rect_of(index))
-			for part: Dictionary in actor_visual_items(index):
-				intersects = intersects or _drag_new_rect.intersects(part["rect"])
-			if not intersects:
+			if not _drag_new_rect.intersects(model.interaction_rect_of(index)):
 				continue
 			var hit_selection: Array[int] = [index]
 			var members: Array[int] = model.expand_group_selection(hit_selection)
@@ -1397,13 +1393,7 @@ func _hit_cover_actor(pos: Vector2) -> int:
 
 
 func _actor_hit(index: int, pos: Vector2) -> bool:
-	if _rect_hit(model.rect_of(Kind.ACTOR, index), pos) \
-			or _rect_hit(model.interaction_rect_of(index), pos):
-		return true
-	for part: Dictionary in actor_visual_items(index):
-		if _rect_hit(part["rect"], pos):
-			return true
-	return false
+	return _rect_hit(model.interaction_rect_of(index), pos)
 
 
 func _rect_hit(r: Rect2, pos: Vector2, slop := 0.0) -> bool:

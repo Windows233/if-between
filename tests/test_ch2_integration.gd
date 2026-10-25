@@ -165,7 +165,18 @@ static func _test_events_and_maps(harness: TestHarness) -> void:
 	var wait_flags := WorldState.new()
 	harness.check("准备出发不依赖走廊配置", wait_node.choices[0].is_available(wait_flags), true)
 	harness.check("C始终允许玩家继续探索", wait_node.choices[1].is_available(wait_flags), true)
+	var ready_check := _node(c_wait, &"ready_check")
+	harness.check("准备选择先检查C所在位置",
+		wait_node.choices[0].next_id, &"ready_check")
+	harness.check("操场首次准备仍进入出发节点",
+		ready_check.resolved_next(wait_flags), &"depart")
+	var arrived_flags := WorldState.new()
+	arrived_flags.set_value(&"ch2/c_at_school_gate", true)
+	harness.check("校门再次准备进入后续节点",
+		ready_check.resolved_next(arrived_flags), &"departed")
 	var depart := _node(c_wait, &"depart")
+	harness.check("首次准备记录C已到校门", depart.effects.get(&"ch2/c_at_school_gate"), true)
+	harness.check("取消走廊连接的旧出发台词不再执行", depart.stage[0].kind, &"fade")
 	var depart_goto: StageStep = null
 	for step: StageStep in depart.stage:
 		if step.kind == &"goto":
@@ -174,6 +185,17 @@ static func _test_events_and_maps(harness: TestHarness) -> void:
 	if depart_goto != null:
 		harness.check("C出发不经过走廊", depart_goto.text("map"), "school_gate")
 		harness.check("C出发落到校门操场侧", depart_goto.text("spawn"), "near_yard")
+	var arrived_node := _node(c_wait, &"departed")
+	var arrived_gotos := 0
+	for step: StageStep in arrived_node.stage:
+		if step.kind == &"goto":
+			arrived_gotos += 1
+	harness.check("校门再次准备不会循环传送", arrived_gotos, 0)
+	harness.check("校门准备后恢复地图控制",
+		arrived_node.stage[0].kind, &"focus")
+	harness.check("校门后续仍由教学楼门事件检查钥匙",
+		_node(StoryEvent.from_dictionary(_json("res://data/events/ch2_class_door.json")),
+			&"key_check").resolved_next(arrived_flags), &"door_locked")
 	harness.check("教学楼门事件保留开门音效",
 		_node(StoryEvent.from_dictionary(_json("res://data/events/ch2_class_door.json")), &"class_enter").stage[0].text("path"),
 		"res://audio/sfx/door_open.wav")

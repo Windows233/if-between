@@ -96,13 +96,14 @@
       ],
       "cover": true,
       "cover_y": 155,
+      "decor": true,
       "id": "yard_gate",
       "label": "操场门",
       "reach_local": [
         0,
-        0,
+        133,
         316,
-        209
+        46
       ],
       "rect": [
         0,
@@ -116,10 +117,17 @@
     {
       "cover": true,
       "cover_y": 81,
+      "decor": true,
       "id": "new_actor",
       "label": "旗杆遮挡",
+      "reach_local": [
+        52,
+        21,
+        49,
+        76
+      ],
       "rect": [
-        43,
+        42,
         24,
         154,
         97
@@ -138,19 +146,6 @@
         38
       ],
       "sprite": "res://art/props/秋千.png"
-    },
-    {
-      "cover": true,
-      "cover_y": 155,
-      "id": "new_actor_3",
-      "label": "围墙遮挡",
-      "rect": [
-        0,
-        -1,
-        316,
-        211
-      ],
-      "sprite": "res://art/props/操场抠图_upscayl_4x_upscayl_standard_4x.png"
     }
   ],
   "background": "res://art/map/school_yard.png",
@@ -166,6 +161,7 @@
   "player_scale": 0.5,
   "portals": [
     {
+      "id": "to_school_gate",
       "label": "校门",
       "rect": [
         144,
@@ -173,9 +169,8 @@
         26,
         60
       ],
-      "id": "to_school_gate",
-      "to": "school_gate",
-      "spawn": "near_yard"
+      "spawn": "near_yard",
+      "to": "school_gate"
     }
   ],
   "size": [

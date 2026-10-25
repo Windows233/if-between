@@ -21,7 +21,7 @@
         {
           "id": "ready",
           "label": "准备好了",
-          "next": "depart"
+          "next": "ready_check"
         },
         {
           "id": "later",
@@ -29,6 +29,19 @@
           "next": "later"
         }
       ]
+    },
+    {
+      "id": "ready_check",
+      "stage": [],
+      "next": "depart",
+      "next_when": {
+        "if": {
+          "var": "ch2/c_at_school_gate",
+          "op": "==",
+          "value": true
+        },
+        "next": "departed"
+      }
     },
     {
       "id": "later",
@@ -49,17 +62,6 @@
     {
       "id": "depart",
       "stage": [
-        {
-          "do": "say",
-          "lines": [
-            {
-              "speaker": "C",
-              "portrait": "c/neutral",
-              "side": "right",
-              "text": "好哦，那我们出发咯~"
-            }
-          ]
-        },
         {
           "do": "fade",
           "to": "black",

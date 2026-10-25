@@ -84,16 +84,23 @@
     },
     {
       "cover": true,
-      "cover_y": 220,
+      "decor": true,
       "id": "new_actor",
       "label": "围墙遮挡",
       "over": false,
+      "reach_local": [
+        0,
+        183,
+        421,
+        72
+      ],
       "rect": [
         0,
         0,
         421,
         281
       ],
+      "sort_offset": -60.9999964104006,
       "sprite": "res://art/props/校门扣图_3.png"
     }
   ],
@@ -149,10 +156,10 @@
       "id": "to_gatehouse",
       "label": "门卫室",
       "rect": [
-        330,
-        226,
+        328,
+        236,
         21,
-        18
+        17
       ],
       "spawn": "start",
       "to": "gatehouse"
@@ -285,7 +292,7 @@
       259,
       219,
       159,
-      22
+      23
     ],
     [
       298,

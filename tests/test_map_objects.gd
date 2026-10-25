@@ -130,9 +130,9 @@ static func test_groups(h: TestHarness) -> void:
 	canvas.zoom = 1.0
 	canvas.pan = Vector2.ZERO
 	canvas.edited.connect(model.record_history)
-	canvas._press(Vector2(70, 50))
+	canvas._press(Vector2(70, 100))
 	var motion := InputEventMouseMotion.new()
-	motion.position = Vector2(80, 60)
+	motion.position = Vector2(80, 110)
 	canvas._gui_input(motion)
 	canvas._release()
 	h.check("拖动组员会整体移动", [model.rect_of(Model.Kind.ACTOR, 0).position,
@@ -402,7 +402,8 @@ static func test_editor_state(h: TestHarness) -> void:
 	canvas.zoom = 1.0
 	canvas.pan = Vector2.ZERO
 	var motion := InputEventMouseMotion.new()
-	var actor_point := Vector2(100, 60)
+	var actor_point := Vector2(100, 100)
+	var cover_point := Vector2(100, 70)
 	var handle_point := Vector2(54, 82)
 	var edit_attempts: Array[Dictionary] = [
 		{"name": "移动", "tool": Canvas.Tool.SELECT,
@@ -417,7 +418,7 @@ static func test_editor_state(h: TestHarness) -> void:
 	canvas.select_actors(selected_actor)
 	h.check("未受限物件可拾取", canvas._hit_item(actor_point), Vector2i(Model.Kind.ACTOR, 0))
 	h.check("未受限物件可命中尺寸手柄", canvas._hit_handle(handle_point), 0)
-	h.check("未受限物件可命中遮挡基线", canvas._hit_cover_actor(actor_point), 0)
+	h.check("未受限物件可命中遮挡基线", canvas._hit_cover_actor(cover_point), 0)
 	for state_name: String in ["隐藏", "锁定"]:
 		canvas.set_actor_editor_state({"desk": true} if state_name == "隐藏" else {},
 			{"desk": true} if state_name == "锁定" else {})
@@ -428,11 +429,12 @@ static func test_editor_state(h: TestHarness) -> void:
 		canvas.tool = Canvas.Tool.SELECT
 		canvas.select_actors(selected_actor)
 		h.check("%s物件不能命中尺寸手柄" % state_name, canvas._hit_handle(handle_point), -1)
-		h.check("%s物件不能命中遮挡基线" % state_name, canvas._hit_cover_actor(actor_point), -1)
+		h.check("%s物件不能命中遮挡基线" % state_name, canvas._hit_cover_actor(cover_point), -1)
 		for attempt: Dictionary in edit_attempts:
 			canvas.tool = attempt["tool"]
 			canvas.select_actors(selected_actor)
-			canvas._press(attempt["start"])
+			var start: Vector2 = cover_point if attempt["name"] == "拉基线" else attempt["start"]
+			canvas._press(start)
 			h.check("%s物件阻止%s起手" % [state_name, attempt["name"]], canvas._drag_mode, 0)
 			motion.position = attempt["end"]
 			canvas._gui_input(motion)
@@ -482,7 +484,7 @@ static func test_editor_state(h: TestHarness) -> void:
 	h.check("换地图范围后可恢复尺寸手柄", canvas._hit_handle(handle_point), 0)
 	h.check("换地图范围后可恢复基线拾取", canvas._hit_cover_actor(actor_point), 0)
 	canvas._press(actor_point)
-	motion.position = Vector2(120, 80)
+	motion.position = Vector2(120, 120)
 	canvas._gui_input(motion)
 	canvas._release()
 	h.check("换地图范围后可恢复实际拖动", other_model.rect_of(Model.Kind.ACTOR, 0),
@@ -506,7 +508,7 @@ static func test_editor_state(h: TestHarness) -> void:
 		h.check("%s上层物件后可穿透拾取下层" % state_name,
 			canvas._hit_item(actor_point), Vector2i(Model.Kind.ACTOR, 0))
 		h.check("%s上层物件后基线拾取穿透到下层" % state_name,
-			canvas._hit_cover_actor(actor_point), 0)
+			canvas._hit_cover_actor(cover_point), 0)
 		overlap_model.data["actors"].reverse()
 		h.check("%s状态随物件ID而不是数组下标" % state_name,
 			[canvas.actor_is_hidden(0), canvas.actor_is_locked(0),
