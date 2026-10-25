@@ -29,9 +29,9 @@
     ]
   },
   "checked_versions": {
-    "main_baseline": "0b99155",
+    "main_baseline": "f8288a5",
     "primary_branch": "main",
-    "scope": "2026-10-25游戏/素材核查基线为本地main合并提交0b99155；策划文件更新已在main本地提交。git ls-remote复核origin/main仍为f8288a5，本地main含18个未推送提交。历史含573771104字节IF如果之间.exe及学校.rar，整支推送受GitHub文件限制；当前环境无Godot 4.7.2，验证闸门未全过，不能推送。合并前stash中的卧室/图书馆/操场地图改动和未跟踪素材仍保留在工作区，不代表已交付"
+    "scope": "2026-10-25发布候选从origin/main基线f8288a5独立整理；包含图书馆后段策划、教室黑板/日记摆放、撬棍与黑板素材，不含游戏EXE、学校压缩包及原工作区main其余未发布历史。Godot 4.7.2已完成导入、全量测试与真窗口烟测，三条命令退出码均为0；check_data.py通过。推送前origin/main仍为f8288a5。原工作区main保留18个未发布提交和大文件历史，未直接推送；stash中的卧室/图书馆/操场地图改动和未跟踪素材仍保留，不代表已交付"
   },
   "counts": {
     "maps": 14,
@@ -533,12 +533,12 @@
     "图书馆后段事件链、回溯与存档闭环尚未实现；当前游戏测试和烟测没有有效用例统计，不能视为通过"
   ],
   "verification": {
-    "scope": "2026-10-25将codex/story-library-crowbar-20261025合并至本地main 0b99155，并以5dc6de3提交图书馆后段程序/美术两份任务；整合stage演出与阻断说明，不按工时排产；策划稿不是代码实现或完整通关验收",
+    "scope": "2026-10-25将图书馆后段策划、教室黑板/日记摆放、撬棍与黑板素材整理到从origin/main独立派生的发布候选；整合stage演出与阻断说明，不按工时排产；策划稿不是代码实现或完整通关验收",
     "route": "当前school_yard出口action=overworld会返回大地图；school_gate有直通classroom portal且无门actor，钥匙门控未接；路线实测待做",
     "assets": "合并进main的撬棍128x128 RGBA与黑板图已登记；图书馆候选无猫JPG和教室候选整图尺寸均不匹配正式底图；猫/补地层、血迹层、决策币、窗边分层未完成",
-    "game_tests": "当前执行环境不存在交接文档指定的Godot 4.7.2可执行文件，无法运行run_tests.gd；此前相同命令也未产生用例统计，不能认定全量测试通过",
-    "smoke_run": "当前执行环境找不到Godot可执行文件，无法运行smoke_run.gd；尚无本轮真实窗口剧情运行证据",
-    "data_check": "本地合并工作区python tools/check_data.py退出0，统计14图/19事件/5结局/7物品；仅保留cat_doll、night_tear图鉴未登记及end4_iron无剧情可达三条既有提醒",
+    "game_tests": "Godot 4.7.2 run_tests.gd退出码0；此执行器未捕获测试用例计数输出",
+    "smoke_run": "Godot 4.7.2真窗口smoke_run.gd退出码0；此执行器未捕获逐步输出",
+    "data_check": "python -X utf8 tools/check_data.py退出0，统计14图/19事件/5结局/7物品；保留cat_doll、night_tear图鉴未登记及end4_iron无剧情可达三条既有提醒",
     "stage": "图书馆后段stage稿为draft；End6失败台词、market_night/from_overworld[278,279]、P747吊坠和P748夜幕之泪交付时序已确认；猫/血迹/决策币/窗边素材及地图对象绑定未完成，不代表场景运行或通关验证",
     "daily_budget": "本日按用户要求拆为程序与美术两个任务文件，不按时间安排工作量",
     "doc": "程序任务与美术任务两份Markdown已更新；阻断说明已并入程序任务；不按时间安排，未生成Word或day_plan.json",
