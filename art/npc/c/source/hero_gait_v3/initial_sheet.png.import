@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://fli2s53fhw6p"
-path="res://.godot/imported/side7.png-2a1ad5fabb6d349fdaaa1b8202749bfe.ctex"
+uid="uid://8ws4rjmgdyxc"
+path="res://.godot/imported/initial_sheet.png-553835fb62f588a6d7a683ce91aadf38.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/npc/c/side7.png"
-dest_files=["res://.godot/imported/side7.png-2a1ad5fabb6d349fdaaa1b8202749bfe.ctex"]
+source_file="res://art/npc/c/source/hero_gait_v3/initial_sheet.png"
+dest_files=["res://.godot/imported/initial_sheet.png-553835fb62f588a6d7a683ce91aadf38.ctex"]
 
 [params]
 

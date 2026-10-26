@@ -1,4 +1,4 @@
-## 侧走专用实机核验：重复追兵更新下帧推进、左右镜像、实际移动与八相位截图。
+## 侧走专用实机核验：重复追兵更新下帧推进、左右镜像、实际移动与四相位截图。
 ## 截图逐相位取自真实渲染器；原速/慢放动图由交付整理工具按步周期编排。
 extends SceneTree
 
@@ -44,12 +44,12 @@ func _run() -> void:
 		visited[left.frame]=true
 		if tick==12: await _shot("native_cycle")
 	report.visited_frames=visited.keys()
-	if visited.size()!=8: report.failures.append("实际播放没有经过全部8帧")
+	if visited.size()!=4: report.failures.append("实际播放没有经过全部4帧")
 	if left.flip_h or not right.flip_h: report.failures.append("左右镜像错误")
 	report["fps"]=left.sprite_frames.get_animation_speed(&"walk_side")
 	left.pause()
 	right.pause()
-	for index: int in 8:
+	for index: int in 4:
 		left.frame=index
 		right.frame=index
 		await _shot("phase_%02d"%index)

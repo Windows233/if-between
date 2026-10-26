@@ -1,0 +1,7 @@
+{
+  "game_tests": "4976/4976",
+  "data": "14 maps/32 events/7 endings/11 items",
+  "smoke": "PASS real-window first chapter",
+  "GPU": "hero and C native frame index synchronized at 8FPS, chase updates do not reset; left/right actual movement finishes in idle",
+  "scope": "not whole-chapter manual playthrough"
+}

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dwiliklq1pb86"
-path="res://.godot/imported/side8.png-ed54a7e5a233aac9c2b9d41aac40db83.ctex"
+uid="uid://cds16swxqtpmc"
+path="res://.godot/imported/four_phases.png-f8d333e33ba79fbb24d44a57ba1d7180.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/npc/c/side8.png"
-dest_files=["res://.godot/imported/side8.png-ed54a7e5a233aac9c2b9d41aac40db83.ctex"]
+source_file="res://docs/screenshots/c_hero_gait_20261026/four_phases.png"
+dest_files=["res://.godot/imported/four_phases.png-f8d333e33ba79fbb24d44a57ba1d7180.ctex"]
 
 [params]
 

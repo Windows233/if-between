@@ -1,6 +1,6 @@
 """导出 imagegen 已绘制的 C 帧表，只做切帧、等比缩放和脚底对齐。
 
-不绘制或仿造运动帧。主源表负责正背步态和站姿，侧走采用修正的八相位源表。
+不绘制或仿造运动帧。主源表负责正背步态/站姿，侧面采用主角动作模板的四帧源表。
 所有输出258×360，与主角相同。每个朝向内共享缩放系数，避免逐帧变大变小。
 """
 from pathlib import Path
@@ -32,8 +32,8 @@ def build():
             parts.append((entry['col'], part, box))
         factor = VISIBLE_HEIGHT / max(box[3]-box[1] for _,_,box in parts)
         for col, part, box in parts:
-            if direction == 'side' and col > 0:
-                # 旧源表的侧走没有交替步态，禁止再次导出覆盖修正版。
+            if direction == 'side':
+                # 整套侧面（含站姿）由主角动作模板派生，旧侧面全部退出导出。
                 continue
             # 以头部中心固定水平锚点；步态允许手、外套和脚自然摆动。
             head_bottom = round(box[1]+(box[3]-box[1])*.41)
@@ -52,9 +52,9 @@ def build():
 
 
 def build_side_walk():
-    """八阶段侧走：共同缩放/地面基线，保留足部真实抬落，不逐帧拉伸。"""
-    source_dir = OUT / 'source/side_walk_v2'
-    sheet = Image.open(source_dir/'side_walk8.png').convert('RGBA')
+    """主角同款：收脚、迈步A、收脚、迈步B；第1/3帧复用同一站姿。"""
+    source_dir = OUT / 'source/hero_gait_v3'
+    sheet = Image.open(source_dir/'c_hero_side_sheet.png').convert('RGBA')
     entries = json.loads((source_dir/'regions.json').read_text(encoding='utf-8'))
     parts=[]
     for entry in entries:
@@ -63,7 +63,6 @@ def build_side_walk():
         box=part.getchannel('A').point(lambda a:255 if a>=128 else 0).getbbox()
         parts.append((entry,part,box))
     factor=VISIBLE_HEIGHT/max(box[3]-box[1] for _,_,box in parts)
-    baselines={row:max(box[3] for e,_,box in parts if e['row']==row) for row in [0,1]}
     result=[]
     for entry,part,box in parts:
         head_bottom=round(box[1]+(box[3]-box[1])*.41)
@@ -71,12 +70,24 @@ def build_side_walk():
         head_x=(head_box[0]+head_box[2])/2
         scaled=part.resize((round(part.width*factor),round(part.height*factor)),Image.Resampling.NEAREST)
         at_x=round(FRAME_SIZE[0]/2-head_x*factor)
-        at_y=round(FRAME_SIZE[1]-baselines[entry['row']]*factor)
+        at_y=round(FRAME_SIZE[1]-box[3]*factor)
         frame=Image.new('RGBA',FRAME_SIZE)
         frame.alpha_composite(scaled,(at_x,at_y))
         name=f"side{entry['frame']}.png"
         frame.save(OUT/name)
+        if entry['frame']==1:
+            frame.save(OUT/'side3.png')
+            frame.save(OUT/'idle_side.png')
         result.append({'path':f'art/npc/c/{name}','phase':entry['phase'],'source':str(source_dir.relative_to(ROOT)).replace('\\','/'),'source_cell':entry['cell'],'scale':factor,'size':list(FRAME_SIZE),'alpha_bbox':list(frame.getchannel('A').point(lambda a:255 if a>=128 else 0).getbbox())})
+        if entry['frame']==1:
+            for alias in ('side3.png','idle_side.png'):
+                result.append(dict(result[-1],path=f'art/npc/c/{alias}',same_as='side1.png'))
+    # 仅移除本轮被替代的四张多余侧帧，防止其他目录扫描者播放过时八帧。
+    for index in range(5,9):
+        for suffix in ('.png','.png.import'):
+            stale=OUT/f'side{index}{suffix}'
+            assert stale.parent.resolve()==OUT.resolve()
+            if stale.exists(): stale.unlink()
     return result
 
 

@@ -1,0 +1,331 @@
+{
+  "date": "2026-10-26",
+  "baseline": "5acd727",
+  "branch": "codex/c-hero-gait-20261026",
+  "status": "current, local only; no push authorized",
+  "reason": "用户反馈八相位僵硬，要求跟主角一样；按主角实际四帧重画侧走。",
+  "source": "art/npc/c/source/hero_gait_v3/c_hero_side_sheet.png",
+  "reference": [
+    "art/npc/c/source/hero_gait_v3/hero_pose_guide.png",
+    "art/npc/c/source/hero_gait_v3/c_identity_reference.png"
+  ],
+  "prompts": [
+    "art/npc/c/source/hero_gait_v3/01_generate.txt",
+    "art/npc/c/source/hero_gait_v3/02_scarf_fit.txt"
+  ],
+  "generation": "built-in imagegen, followed by targeted scarf-length edit",
+  "postprocess": "crop, shared nearest-neighbor scale, horizontal head registration, foot baseline; repeat neutral frame exactly like hero; no procedural limb drawing",
+  "fps": 8,
+  "frame_order": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "phases": [
+    "neutral",
+    "stride_a",
+    "neutral",
+    "stride_b"
+  ],
+  "identical_frames": [
+    "side1.png",
+    "side3.png",
+    "idle_side.png"
+  ],
+  "dimensions": [
+    258,
+    360
+  ],
+  "NPC_height": 45,
+  "exports": [
+    {
+      "path": "art/npc/c/idle_down.png",
+      "source_row": 0,
+      "source_column": 0,
+      "scale": 0.9613259668508287,
+      "size": [
+        258,
+        360
+      ],
+      "alpha_bbox": [
+        34,
+        14,
+        224,
+        360
+      ]
+    },
+    {
+      "path": "art/npc/c/down1.png",
+      "source_row": 0,
+      "source_column": 1,
+      "scale": 0.9613259668508287,
+      "size": [
+        258,
+        360
+      ],
+      "alpha_bbox": [
+        34,
+        13,
+        223,
+        360
+      ]
+    },
+    {
+      "path": "art/npc/c/down2.png",
+      "source_row": 0,
+      "source_column": 2,
+      "scale": 0.9613259668508287,
+      "size": [
+        258,
+        360
+      ],
+      "alpha_bbox": [
+        34,
+        12,
+        226,
+        360
+      ]
+    },
+    {
+      "path": "art/npc/c/down3.png",
+      "source_row": 0,
+      "source_column": 3,
+      "scale": 0.9613259668508287,
+      "size": [
+        258,
+        360
+      ],
+      "alpha_bbox": [
+        34,
+        12,
+        223,
+        360
+      ]
+    },
+    {
+      "path": "art/npc/c/down4.png",
+      "source_row": 0,
+      "source_column": 4,
+      "scale": 0.9613259668508287,
+      "size": [
+        258,
+        360
+      ],
+      "alpha_bbox": [
+        36,
+        13,
+        222,
+        360
+      ]
+    },
+    {
+      "path": "art/npc/c/idle_up.png",
+      "source_row": 1,
+      "source_column": 0,
+      "scale": 0.9858356940509915,
+      "size": [
+        258,
+        360
+      ],
+      "alpha_bbox": [
+        35,
+        15,
+        222,
+        360
+      ]
+    },
+    {
+      "path": "art/npc/c/up1.png",
+      "source_row": 1,
+      "source_column": 1,
+      "scale": 0.9858356940509915,
+      "size": [
+        258,
+        360
+      ],
+      "alpha_bbox": [
+        36,
+        16,
+        222,
+        360
+      ]
+    },
+    {
+      "path": "art/npc/c/up2.png",
+      "source_row": 1,
+      "source_column": 2,
+      "scale": 0.9858356940509915,
+      "size": [
+        258,
+        360
+      ],
+      "alpha_bbox": [
+        35,
+        12,
+        222,
+        360
+      ]
+    },
+    {
+      "path": "art/npc/c/up3.png",
+      "source_row": 1,
+      "source_column": 3,
+      "scale": 0.9858356940509915,
+      "size": [
+        258,
+        360
+      ],
+      "alpha_bbox": [
+        32,
+        14,
+        225,
+        360
+      ]
+    },
+    {
+      "path": "art/npc/c/up4.png",
+      "source_row": 1,
+      "source_column": 4,
+      "scale": 0.9858356940509915,
+      "size": [
+        258,
+        360
+      ],
+      "alpha_bbox": [
+        35,
+        14,
+        223,
+        360
+      ]
+    },
+    {
+      "path": "art/npc/c/side1.png",
+      "phase": "neutral",
+      "source": "art/npc/c/source/hero_gait_v3",
+      "source_cell": [
+        81,
+        0,
+        505,
+        741
+      ],
+      "scale": 0.4887640449438202,
+      "size": [
+        258,
+        360
+      ],
+      "alpha_bbox": [
+        38,
+        15,
+        225,
+        360
+      ]
+    },
+    {
+      "path": "art/npc/c/side3.png",
+      "phase": "neutral",
+      "source": "art/npc/c/source/hero_gait_v3",
+      "source_cell": [
+        81,
+        0,
+        505,
+        741
+      ],
+      "scale": 0.4887640449438202,
+      "size": [
+        258,
+        360
+      ],
+      "alpha_bbox": [
+        38,
+        15,
+        225,
+        360
+      ],
+      "same_as": "side1.png"
+    },
+    {
+      "path": "art/npc/c/idle_side.png",
+      "phase": "neutral",
+      "source": "art/npc/c/source/hero_gait_v3",
+      "source_cell": [
+        81,
+        0,
+        505,
+        741
+      ],
+      "scale": 0.4887640449438202,
+      "size": [
+        258,
+        360
+      ],
+      "alpha_bbox": [
+        38,
+        15,
+        225,
+        360
+      ],
+      "same_as": "side1.png"
+    },
+    {
+      "path": "art/npc/c/side2.png",
+      "phase": "stride_a",
+      "source": "art/npc/c/source/hero_gait_v3",
+      "source_cell": [
+        573,
+        0,
+        1038,
+        741
+      ],
+      "scale": 0.4887640449438202,
+      "size": [
+        258,
+        360
+      ],
+      "alpha_bbox": [
+        24,
+        14,
+        225,
+        360
+      ]
+    },
+    {
+      "path": "art/npc/c/side4.png",
+      "phase": "stride_b",
+      "source": "art/npc/c/source/hero_gait_v3",
+      "source_cell": [
+        574,
+        741,
+        1051,
+        1483
+      ],
+      "scale": 0.4887640449438202,
+      "size": [
+        258,
+        360
+      ],
+      "alpha_bbox": [
+        25,
+        12,
+        225,
+        360
+      ]
+    }
+  ],
+  "source_sha256": "e56ed5fd614fcf093a0fa6a72d0de52ff525f071859010342af838164ed9c949",
+  "frame_sha256": {
+    "idle_side.png": "1d24bd4362d1bfb0c4b392bb61cd39c6683fa5ad8493c3782f6ae1695fef6981",
+    "side1.png": "1d24bd4362d1bfb0c4b392bb61cd39c6683fa5ad8493c3782f6ae1695fef6981",
+    "side2.png": "dce716c75b2ce7d50713623be62598615547ec84f7bd7d0992bb53563881f4ba",
+    "side3.png": "1d24bd4362d1bfb0c4b392bb61cd39c6683fa5ad8493c3782f6ae1695fef6981",
+    "side4.png": "85d9a4498f5aee45142324dec86c9cc2335709d0bf165be410eea4851d4d8ce6"
+  },
+  "verification": {
+    "game_tests": "4976/4976",
+    "data": "14 maps/32 events/7 endings/11 items",
+    "smoke": "PASS real-window first chapter",
+    "GPU": "hero and C native frame index synchronized at 8FPS, chase updates do not reset; left/right actual movement finishes in idle",
+    "scope": "not whole-chapter manual playthrough"
+  },
+  "preview": "docs/screenshots/c_hero_gait_20261026/hero_c_normal.gif"
+}

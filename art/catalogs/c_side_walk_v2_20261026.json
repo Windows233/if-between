@@ -114,5 +114,6 @@
     "specific_asset_checks": "near lighter boot leads on frame1 and trails on frame5; narrow passing stances on3/7; near boot raised in7 compared to planted3"
   },
   "preview": "real GPU phase screenshots arranged at configured 16fps (0.5s loop), plus quarter-speed preview; runtime frame advancement checked separately",
-  "publication": "local_commit_only_no_push"
+  "publication": "local_commit_only_no_push",
+  "status": "historical; superseded by c_hero_gait_20261026.json after user feedback that motion was stiff"
 }
