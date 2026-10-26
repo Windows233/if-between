@@ -10,7 +10,7 @@
 @tool
 extends Control
 
-enum Tool { SELECT, WALL, PORTAL, BASELINE, COLLISION }
+enum Tool { SELECT, WALL, PORTAL, BASELINE, COLLISION, TEXTURE }
 
 const Kind := preload("res://addons/if_map_editor/map_edit_model.gd").Kind
 const ObjectTransform := preload("res://addons/if_map_editor/map_object_transform.gd")
@@ -25,6 +25,7 @@ const PORTAL_FILL := Color(0.20, 0.70, 0.85, 0.32)
 const PORTAL_EDGE := Color(0.25, 0.78, 0.95, 1.0)
 const ACTOR_FILL := Color(0.30, 0.80, 0.40, 0.22)
 const ACTOR_EDGE := Color(0.35, 0.85, 0.45, 1.0)
+const TEXTURE_EDGE := Color(0.25, 0.75, 1.0, 1.0)
 const BASE_AUTO := Color(1.00, 0.86, 0.20, 1.0)
 const BASE_MANUAL := Color(1.00, 0.50, 0.10, 1.0)
 const SPAWN_COLOR := Color(0.90, 0.45, 0.95, 1.0)
@@ -115,8 +116,12 @@ var _collision_index := -1
 var _collision_actor := -1
 var _collision_actor_id := ""
 var _collision_drag_source: Dictionary = {}
+var _texture_drag_source: Dictionary = {}
+var _texture_drag_model: RefCounted
+var _texture_actor := -1
+var _texture_actor_id := ""
 
-var _drag_mode := 0            # 0 无 / 1 移动 / 2 改尺寸 / 3 画新框 / 4 拉基线
+var _drag_mode := 0            # 0 无 / 1 移动 / 2 改交互尺寸 / 3 画新框 / 4 拉基线 / 10 只调贴图
 var _drag_start_game := Vector2.ZERO
 var _drag_start_rect := Rect2()
 var _drag_handle := -1
@@ -264,6 +269,95 @@ func _collision_editable() -> bool:
 	return selected.size() == 1 and selected[0] == sel_index \
 		and model.expand_group_selection(selected).size() == 1 \
 		and _actor_selection_block_reason().is_empty()
+
+
+## 对已选物件显示独立贴图框；不扩大普通选择工具的绿色拾取范围。
+func begin_texture_edit() -> bool:
+	if not _texture_editable():
+		status.emit("调贴图需要单选一个可见、未锁定且带贴图的独立物件，请先选择或解组。")
+		return false
+	tool = Tool.TEXTURE
+	_clear_collision_selection()
+	queue_redraw()
+	return true
+
+
+func _texture_editable() -> bool:
+	if not _collision_editable():
+		return false
+	var actor := MapDef._actor_from(model.actor_dict(sel_index))
+	for path: String in actor.visual_sprites():
+		if not path.is_empty():
+			return true
+	return false
+
+
+func _texture_drag_valid() -> bool:
+	return _drag_mode == 10 and model == _texture_drag_model and _texture_editable() \
+		and _texture_actor == sel_index \
+		and str(model.actor_field(sel_index, "id", "")) == _texture_actor_id \
+		and model.actor_dict(sel_index) == _texture_drag_source
+
+
+func _press_texture(pos: Vector2) -> void:
+	if not _texture_editable():
+		status.emit("请先选择一个可见、未锁定且带贴图的独立物件。")
+		return
+	var rect: Rect2 = model.rect_of(Kind.ACTOR, sel_index)
+	var handle := -1
+	var points := _handle_points(rect)
+	for index: int in points.size():
+		if points[index].distance_to(pos) <= HANDLE_SIZE:
+			handle = index
+			break
+	if handle < 0 and not _rect_hit(rect, pos):
+		status.emit("拖蓝色贴图框的边角调整大小；拖框内仅移动贴图。选择其他物件请切回选择工具。")
+		return
+	_texture_drag_source = model.actor_dict(sel_index).duplicate(true)
+	_texture_drag_model = model
+	_texture_actor = sel_index
+	_texture_actor_id = str(model.actor_field(sel_index, "id", ""))
+	_drag_start_game = to_game(pos)
+	_drag_start_rect = rect
+	_drag_new_rect = rect
+	_drag_handle = handle
+	_drag_mode = 10
+	queue_redraw()
+
+
+func _update_texture_drag(pos: Vector2) -> void:
+	if not _texture_drag_valid():
+		cancel_interaction()
+		return
+	if _drag_handle >= 0:
+		_drag_new_rect = _resized_rect(pos)
+	else:
+		_drag_new_rect = Rect2(_drag_start_rect.position + _snap(to_game(pos) - _drag_start_game),
+			_drag_start_rect.size)
+	queue_redraw()
+
+
+func _release_texture_drag() -> void:
+	if not _texture_drag_valid():
+		cancel_interaction()
+		return
+	if _drag_new_rect == _drag_start_rect:
+		cancel_interaction()
+		return
+	var updated := ObjectTransform.resized_actor(_texture_drag_source, _drag_new_rect)
+	var index := _texture_actor
+	cancel_interaction()
+	if ObjectTransform.write_actor(model, index, updated):
+		invalidate_def()
+		edited.emit()
+		selection_changed.emit()
+	queue_redraw()
+
+
+func _visual_actor_dict(index: int) -> Dictionary:
+	if index == _texture_actor and _texture_drag_valid():
+		return ObjectTransform.resized_actor(_texture_drag_source, _drag_new_rect)
+	return model.actor_dict(index)
 
 
 func _collision_owner_valid() -> bool:
@@ -635,7 +729,7 @@ func _snap(p: Vector2) -> Vector2:
 
 
 func _can_drop_data(at_position: Vector2, data: Variant) -> bool:
-	if model == null or tool != Tool.SELECT or not is_kind_editable(Kind.ACTOR) \
+	if model == null or tool not in [Tool.SELECT, Tool.TEXTURE] or not is_kind_editable(Kind.ACTOR) \
 			or map_size.x <= 0.0 or map_size.y <= 0.0:
 		return false
 	if not Rect2(Vector2.ZERO, map_size).has_point(to_game(at_position)):
@@ -679,10 +773,11 @@ func _drop_data(at_position: Vector2, data: Variant) -> void:
 	model.set_actor_field(index, "rect", [position.x, position.y, size.x, size.y])
 	select_actors([index])
 	_drag_mode = 0
+	begin_texture_edit()
 	edited.emit()
 	selection_changed.emit()
 	queue_redraw()
-	status.emit("已按背景原图像素比例放置 %s（%.2f×%.2f 地图单位），可继续手动缩放。" % [path.get_file().get_basename(), size.x, size.y])
+	status.emit("已放置 %s（%.2f×%.2f 地图单位）；拖动蓝框调整贴图，绿色交互区域可分别设置。" % [path.get_file().get_basename(), size.x, size.y])
 
 
 # ---------------------------------------------------------------- 绘制
@@ -748,7 +843,8 @@ func _draw() -> void:
 							and (_drag_mode == 5 or _drag_mode == 6) and _collision_drag_valid():
 						shape = _drag_new_rect
 					_draw_rect_game(shape, WALL_FILL, WALL_EDGE, 2.0)
-				_draw_rect_game(r, Color.TRANSPARENT, SELECT_COLOR, 2.0)
+					_draw_rect_game(r, Color.TRANSPARENT,
+						ACTOR_EDGE if tool == Tool.TEXTURE else SELECT_COLOR, 2.0)
 
 	# 出生点（紫点 + 名字）
 	if is_kind_visible(Kind.SPAWN):
@@ -776,15 +872,21 @@ func _draw() -> void:
 			and not (sel_kind == Kind.ACTOR and actor_is_hidden(sel_index)):
 		var r: Rect2 = overlay_game_rect() if sel_kind == Kind.OVERLAY else \
 			model.interaction_rect_of(sel_index) if sel_kind == Kind.ACTOR else model.rect_of(sel_kind, sel_index)
-		_draw_rect_game(r, Color(0, 0, 0, 0), SELECT_COLOR, 2.0)
+		var selection_color := SELECT_COLOR
+		if tool == Tool.TEXTURE and sel_kind == Kind.ACTOR:
+			r = _drag_new_rect if _texture_drag_valid() else model.rect_of(Kind.ACTOR, sel_index)
+			selection_color = TEXTURE_EDGE
+		_draw_rect_game(r, Color(0, 0, 0, 0), selection_color, 2.0)
 		# 出生点是个点、前景层整张拉伸 —— 都没有「改尺寸」这回事，不给手柄
-		if tool == Tool.SELECT and is_kind_editable(sel_kind) \
+		if (tool == Tool.SELECT or tool == Tool.TEXTURE and _texture_editable()) and is_kind_editable(sel_kind) \
 				and sel_kind != Kind.SPAWN and sel_kind != Kind.OVERLAY \
 				and selected_actors().size() <= 1 and _actor_selection_block_reason().is_empty() \
 				and not _has_collision_selection():
 			for h in _handle_points(r):
 				draw_rect(Rect2(h - Vector2(HANDLE_SIZE, HANDLE_SIZE) * 0.5,
-					Vector2(HANDLE_SIZE, HANDLE_SIZE)), SELECT_COLOR, true)
+					Vector2(HANDLE_SIZE, HANDLE_SIZE)), selection_color, true)
+		if tool == Tool.TEXTURE and sel_kind == Kind.ACTOR:
+			_label(r.position + Vector2(2, -3), "贴图范围（蓝）；交互区仍为绿色", TEXTURE_EDGE)
 	if (tool == Tool.SELECT or tool == Tool.COLLISION) and _has_collision_selection():
 		var collision_rect := _drag_new_rect if _drag_mode == 5 or _drag_mode == 6 \
 			else _collision_rect_at(_collision_index)
@@ -830,8 +932,8 @@ func actor_visual_items(index: int) -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	if model == null or index < 0 or index >= model.count(Kind.ACTOR):
 		return result
-	var actor: Dictionary = model.actor_dict(index)
-	var rect: Rect2 = model.rect_of(Kind.ACTOR, index)
+	var actor: Dictionary = _visual_actor_dict(index)
+	var rect := ObjectTransform.rect_from(actor.get("rect"))
 	var parts: Variant = actor.get("visual_parts", [])
 	if parts is Array and not parts.is_empty():
 		for part: Variant in parts:
@@ -1003,6 +1105,7 @@ func _gui_input(event: InputEvent) -> void:
 			var command: String = {KEY_C: "copy", KEY_V: "paste", KEY_D: "duplicate",
 				KEY_Y: "redo", KEY_Z: "redo" if key.shift_pressed else "undo"}.get(key.keycode, "")
 			if command != "":
+				cancel_interaction()
 				_clear_collision_selection()
 				command_requested.emit(command)
 				accept_event()
@@ -1026,6 +1129,7 @@ func _route_shortcut(event: InputEvent) -> void:
 	var command := str(shortcuts.action_for(event))
 	if command.is_empty():
 		return
+	cancel_interaction()
 	_clear_collision_selection()
 	if command == "cancel" and _drag_mode == 8:
 		_drag_mode = 0
@@ -1036,6 +1140,8 @@ func _route_shortcut(event: InputEvent) -> void:
 
 func _update_pointer_drag(pos: Vector2) -> void:
 	match _drag_mode:
+		10:
+			_update_texture_drag(pos)
 		9:
 			_view_touched = true
 			pan = pos - _drag_start_game
@@ -1075,6 +1181,9 @@ func _update_pointer_drag(pos: Vector2) -> void:
 func _press(pos: Vector2, additive := false, toggle := false, duplicate := false) -> void:
 	_duplicate_on_drag = false
 	selected_trigger = -1
+	if tool == Tool.TEXTURE:
+		_press_texture(pos)
+		return
 	if (tool == Tool.SELECT or tool == Tool.COLLISION) and not duplicate \
 			and (not additive and not toggle or _hit_collision_handle(pos) >= 0) and _press_collision(pos):
 		return
@@ -1229,6 +1338,9 @@ func _duplicate_drag_selection() -> void:
 
 
 func _release() -> void:
+	if _drag_mode == 10:
+		_release_texture_drag()
+		return
 	if _drag_mode >= 5 and _drag_mode <= 7:
 		_release_collision_drag()
 		return
@@ -1259,7 +1371,13 @@ func _release() -> void:
 
 
 func cancel_interaction() -> void:
-	pass
+	if _drag_mode == 10:
+		_drag_mode = 0
+	_texture_drag_source.clear()
+	_texture_drag_model = null
+	_texture_actor = -1
+	_texture_actor_id = ""
+	queue_redraw()
 
 
 func _zoom_at(pos: Vector2, factor: float) -> void:

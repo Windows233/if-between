@@ -113,7 +113,7 @@ static func run(harness: TestHarness) -> void:
 	dock.canvas.select_actors(selected)
 	dock._on_selection_changed()
 	await _frames(harness.root)
-	harness.check("属性卡只保留三种地图全局工具", dock._tool_buttons.size(), 3)
+	harness.check("属性卡提供选择、贴图、墙及传送区工具", dock._tool_buttons.size(), 4)
 	harness.check("素材预览已连接画布", dock._asset_list.canvas, dock.canvas)
 	harness.check("单选属性卡可见", dock._panel_scroll.visible, true)
 	var geometry = dock._object_inspector

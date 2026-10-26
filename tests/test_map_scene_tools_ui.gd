@@ -209,6 +209,7 @@ static func run(harness: TestHarness) -> void:
 			template = child
 	harness.check("选中物件挂载视觉与模板属性卡", visual != null and template != null, true)
 	if visual != null:
+		await _tap(visual.find_child("AdvancedAppearanceToggle", true, false), dock._panel_scroll)
 		await _tap(_button(visual, "添加视觉部件"), dock._panel_scroll)
 		harness.check("视觉部件按钮真实点击修改内存模型", dock.model.actor_field(0, "visual_parts", []).size(), 1)
 		dock.model.undo()

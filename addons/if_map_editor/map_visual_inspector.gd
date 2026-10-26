@@ -1,11 +1,16 @@
+## 贴图位置与大小的独立入口；使用现有几何变换保留世界交互区和碰撞。
+## 数值提交后就地刷新，只有视觉部件结构变化才请求重建属性卡。
+## 面板字段名供GUI回归使用；等比锁只影响当前面板，不写入地图。
 @tool
 extends VBoxContainer
 
 signal edited
 signal rebuild_requested
+signal tool_requested(which: int)
 
 const Transform := preload("res://addons/if_map_editor/map_object_transform.gd")
 const MapDef := preload("res://core/map_def.gd")
+const Canvas := preload("res://addons/if_map_editor/map_edit_canvas.gd")
 const LAYERS := ["back", "auto", "front"]
 var model
 var actor_index := -1
@@ -14,7 +19,13 @@ var _variant_id_input: LineEdit
 var _variant_path_input: LineEdit
 var _texture_width: SpinBox
 var _texture_height: SpinBox
+var _texture_x: SpinBox
+var _texture_y: SpinBox
+var _texture_aspect_lock: CheckBox
 var _texture_scale: SpinBox
+var _texture_tool_button: Button
+var _part_geometry_fields: Dictionary = {}
+var _part_offset_fields: Dictionary = {}
 
 
 func configure(source, index: int, selected: Array[int] = []) -> void:
@@ -22,9 +33,17 @@ func configure(source, index: int, selected: Array[int] = []) -> void:
 	actor_index = index
 	selection.assign(selected if not selected.is_empty() else [index])
 	var title := Label.new()
-	title.text = "视觉部件与变换"
+	title.text = "贴图大小与外观"
 	add_child(title)
 	_build_texture_size()
+	_texture_tool_button = Button.new()
+	_texture_tool_button.name = "EditTextureOnCanvas"
+	_texture_tool_button.text = "在画布调整贴图"
+	_texture_tool_button.toggle_mode = true
+	_texture_tool_button.disabled = selection.size() != 1
+	_texture_tool_button.tooltip_text = "拖动青色贴图框或手柄，只调整贴图；绿色交互框和红色碰撞保持原位。"
+	_texture_tool_button.pressed.connect(func() -> void: tool_requested.emit(Canvas.Tool.TEXTURE))
+	add_child(_texture_tool_button)
 	var tools := HFlowContainer.new()
 	for action: Array in [["水平翻转", "flip_h"], ["垂直翻转", "flip_v"], ["顺时针 90°", "rotate_cw"], ["逆时针 90°", "rotate_ccw"]]:
 		var button := Button.new()
@@ -47,9 +66,10 @@ func configure(source, index: int, selected: Array[int] = []) -> void:
 	tools.add_child(apply)
 	add_child(tools)
 	var note := Label.new()
-	note.text = "绿色框为交互区，红框为碰撞；贴图变换不改变两者范围。部件矩形相对物件左上角。"
+	note.text = "本栏只改贴图。交互区域在下方单独调节，红色碰撞区域也保持原大小。部件矩形相对贴图左上角。"
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(note)
+	var advanced_start := get_child_count()
 	_build_sprite_variants()
 	var parts: Array = model.actor_field(index, "visual_parts", [])
 	for part_index: int in parts.size():
@@ -59,21 +79,45 @@ func configure(source, index: int, selected: Array[int] = []) -> void:
 	add.text = "添加视觉部件"
 	add.pressed.connect(add_part)
 	add_child(add)
+	var advanced_children := get_children().slice(advanced_start)
+	var advanced := VBoxContainer.new()
+	advanced.name = "AdvancedAppearance"
+	advanced.visible = false
+	for child: Node in advanced_children:
+		remove_child(child)
+		advanced.add_child(child)
+	var toggle := Button.new()
+	toggle.name = "AdvancedAppearanceToggle"
+	toggle.text = "更多外观（贴图状态与部件）"
+	toggle.toggle_mode = true
+	toggle.toggled.connect(func(expanded: bool) -> void: advanced.visible = expanded)
+	add_child(toggle)
+	add_child(advanced)
 
 
 func _build_texture_size() -> void:
 	var section := VBoxContainer.new()
 	section.name = "TextureSize"
-	section.add_child(_text("贴图框大小（地图单位）"))
+	section.add_child(_text("贴图位置与大小（地图单位）"))
+	var position_row := HFlowContainer.new()
+	_texture_x = _geometry_field(position_row, "X", 0)
+	_texture_x.name = "TextureX"
+	_texture_y = _geometry_field(position_row, "Y", 1)
+	_texture_y.name = "TextureY"
+	section.add_child(position_row)
 	var row := HFlowContainer.new()
-	_texture_width = _size_field(row, "宽")
+	_texture_width = _geometry_field(row, "宽", 2)
 	_texture_width.name = "TextureWidth"
-	_texture_height = _size_field(row, "高")
+	_texture_height = _geometry_field(row, "高", 3)
 	_texture_height.name = "TextureHeight"
-	var rect := Transform.rect_from(model.actor_field(actor_index, "rect", []))
-	_texture_width.set_value_no_signal(rect.size.x)
-	_texture_height.set_value_no_signal(rect.size.y)
+	_sync_texture_fields()
 	section.add_child(row)
+	_texture_aspect_lock = CheckBox.new()
+	_texture_aspect_lock.name = "TextureAspectLock"
+	_texture_aspect_lock.text = "锁定贴图宽高比例"
+	_texture_aspect_lock.button_pressed = true
+	_texture_aspect_lock.tooltip_text = "开启时修改宽或高会等比调整另一边；关闭后可分别拉伸。交互区和碰撞不变。"
+	section.add_child(_texture_aspect_lock)
 	var restore := Button.new()
 	restore.text = "恢复背景 1:1"
 	restore.name = "RestoreTextureSize"
@@ -83,29 +127,61 @@ func _build_texture_size() -> void:
 	section.add_child(restore)
 	add_child(section)
 	if selection.size() != 1:
-		_texture_width.editable = false
-		_texture_height.editable = false
-		_texture_width.tooltip_text = "精确尺寸需单选一件物件。"
-		_texture_height.tooltip_text = "精确尺寸需单选一件物件。"
+		for field: SpinBox in [_texture_x, _texture_y, _texture_width, _texture_height]:
+			field.editable = false
+			field.tooltip_text = "精确位置和尺寸需单选一件物件。"
+		_texture_aspect_lock.disabled = true
 
 
-func _size_field(parent: Control, caption: String) -> SpinBox:
+func _geometry_field(parent: Control, caption: String, component: int) -> SpinBox:
 	parent.add_child(_text(caption))
 	var field := SpinBox.new()
-	field.min_value = 0.01
+	field.min_value = 0.01 if component >= 2 else -100000
 	field.max_value = 100000
 	field.step = 0.01
 	field.update_on_text_changed = false
 	field.custom_minimum_size.x = 100
-	field.value_changed.connect(_on_texture_size_changed)
+	field.value_changed.connect(_on_texture_geometry_changed.bind(component))
 	parent.add_child(field)
 	return field
 
 
-func _on_texture_size_changed(_value := 0.0) -> void:
+func _on_texture_geometry_changed(_value: float, component: int) -> void:
 	if selection.size() != 1 or _texture_width == null or _texture_height == null:
 		return
-	_apply_texture_size(Vector2(_texture_width.value, _texture_height.value))
+	var previous := Transform.rect_from(model.actor_field(actor_index, "rect", []))
+	var size := Vector2(_texture_width.value, _texture_height.value)
+	if _texture_aspect_lock != null and _texture_aspect_lock.button_pressed and previous.has_area():
+		if component == 2:
+			size.y = size.x * previous.size.y / previous.size.x
+		elif component == 3:
+			size.x = size.y * previous.size.x / previous.size.y
+	var target := Rect2(Vector2(_texture_x.value, _texture_y.value), size)
+	_apply_texture_rect(target)
+
+
+func _sync_texture_fields() -> void:
+	var rect := Transform.rect_from(model.actor_field(actor_index, "rect", []))
+	_texture_x.set_value_no_signal(rect.position.x)
+	_texture_y.set_value_no_signal(rect.position.y)
+	_texture_width.set_value_no_signal(rect.size.x)
+	_texture_height.set_value_no_signal(rect.size.y)
+	var parts: Array = model.actor_field(actor_index, "visual_parts", [])
+	for part_index: Variant in _part_geometry_fields:
+		if int(part_index) >= parts.size() or not parts[part_index] is Dictionary:
+			continue
+		var part: Dictionary = parts[part_index]
+		var values: Array = part.get("rect", [0, 0, 1, 1])
+		var fields: Array = _part_geometry_fields[part_index]
+		for component: int in fields.size():
+			(fields[component] as SpinBox).set_value_no_signal(float(values[component]))
+		if _part_offset_fields.has(part_index):
+			(_part_offset_fields[part_index] as SpinBox).set_value_no_signal(float(part.get("sort_offset", 0)))
+
+
+func sync_tool(which: int) -> void:
+	if _texture_tool_button != null:
+		_texture_tool_button.set_pressed_no_signal(which == Canvas.Tool.TEXTURE)
 
 
 func _restore_texture_size() -> void:
@@ -114,8 +190,7 @@ func _restore_texture_size() -> void:
 		return
 	if int(model.actor_field(actor_index, "quarter_turns", 0)) % 2 != 0:
 		size = Vector2(size.y, size.x)
-	if _apply_texture_size(size):
-		rebuild_requested.emit()
+	_apply_texture_size(size)
 
 
 func _source_texture_size() -> Vector2:
@@ -138,10 +213,15 @@ func _apply_texture_size(size: Vector2) -> bool:
 	if not size.is_finite() or size.x <= 0.0 or size.y <= 0.0:
 		return false
 	var rect := Transform.rect_from(model.actor_field(actor_index, "rect", []))
-	var target := Rect2(rect.position, size)
+	return _apply_texture_rect(Rect2(rect.position, size))
+
+
+func _apply_texture_rect(target: Rect2) -> bool:
 	var updated := Transform.resized_actor(model.actor_dict(actor_index), target)
 	if not Transform.write_actor(model, actor_index, updated):
+		_sync_texture_fields()
 		return false
+	_sync_texture_fields()
 	edited.emit()
 	return true
 
@@ -304,6 +384,7 @@ func _build_part(index: int, part: Dictionary) -> void:
 	box.add_child(texture)
 	var geometry := HFlowContainer.new()
 	var rect: Array = part.get("rect", [0, 0, 1, 1])
+	var fields: Array[SpinBox] = []
 	for component: int in 4:
 		var label := Label.new()
 		label.text = ["x", "y", "宽", "高"][component]
@@ -319,6 +400,8 @@ func _build_part(index: int, part: Dictionary) -> void:
 			updated[component] = value
 			set_part(index, "rect", updated))
 		geometry.add_child(spin)
+		fields.append(spin)
+	_part_geometry_fields[index] = fields
 	box.add_child(geometry)
 	var baseline := HBoxContainer.new()
 	var baseline_label := Label.new()
@@ -331,6 +414,7 @@ func _build_part(index: int, part: Dictionary) -> void:
 	offset.value = float(part.get("sort_offset", 0))
 	offset.value_changed.connect(func(value: float) -> void: set_part(index, "sort_offset", value))
 	baseline.add_child(offset)
+	_part_offset_fields[index] = offset
 	box.add_child(baseline)
 	add_child(box)
 
@@ -375,5 +459,5 @@ func remove_part(index: int) -> void:
 
 func _transform(operation: String, value: Variant = null) -> void:
 	if Transform.apply(model, selection, operation, value, false):
+		_sync_texture_fields()
 		edited.emit()
-		rebuild_requested.emit()

@@ -43,6 +43,7 @@ static func run(harness: TestHarness) -> void:
 			(rect.get_center() - Vector2(210, 160)).length() <= 1.0, true)
 		harness.check("画布选中新创建的物件", canvas.selected_actors(), [canvas.sel_index])
 	harness.check("三个缩放级别各创建一件", model.count(Model.Kind.ACTOR), initial_actor_count + 3)
+	harness.check("连续素材拖入后仍处于独立贴图调整模式", canvas.tool, Canvas.Tool.TEXTURE)
 	harness.check("落在地图外不接收素材", canvas._can_drop_data(canvas.to_screen(Vector2(-10, -10)), payload), false)
 	var background_path := model.background_path()
 	model.data["background"] = "res://art/map/missing_background.png"

@@ -1,3 +1,6 @@
+## 交互区域与碰撞的独立属性卡；交互区域优先显示，贴图由视觉属性卡负责。
+## 局部坐标保持兼容旧地图，写入通过model清理旧的世界reach表示。
+## 数值修改只发edited，不重建面板，避免正在编辑的输入框失去焦点。
 @tool
 extends VBoxContainer
 
@@ -16,6 +19,8 @@ var baseline_auto: Button
 var _tool_buttons: Dictionary = {}
 var _offset: SpinBox
 var _syncing := false
+var _reach_fields: Array[SpinBox] = []
+var _collision_fields: Dictionary = {}
 
 
 func configure(source, actor_index: int) -> void:
@@ -24,9 +29,10 @@ func configure(source, actor_index: int) -> void:
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mouse_filter = Control.MOUSE_FILTER_PASS
 	var caption := Label.new()
-	caption.text = "物件局部属性（坐标相对贴图左上角）"
+	caption.text = "交互区域大小（独立于贴图）"
 	caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(caption)
+	_build_reach(model.actor_dict(index))
 	var tools := HFlowContainer.new()
 	for entry: Array in [["拉遮挡基线", Canvas.Tool.BASELINE], ["画物件碰撞", Canvas.Tool.COLLISION]]:
 		var button := Button.new()
@@ -51,7 +57,6 @@ func configure(source, actor_index: int) -> void:
 		add_child(convert)
 	else:
 		_build_collisions(item)
-	_build_reach(item)
 	var offset_row := HFlowContainer.new()
 	var offset_label := Label.new()
 	offset_label.text = "排序偏移 Y（相对自动基线）"
@@ -99,6 +104,22 @@ func _refresh_baseline() -> void:
 	if _offset != null:
 		_offset.value = float(model.actor_field(index, "sort_offset", 0))
 	_syncing = false
+	sync_geometry_fields()
+
+
+func sync_geometry_fields() -> void:
+	var actor := MapDef._actor_from(model.actor_dict(index))
+	var local := Rect2(actor.reach.position - actor.rect.position, actor.reach.size)
+	_sync_rect_fields(_reach_fields, [local.position.x, local.position.y, local.size.x, local.size.y])
+	var shapes: Array = model.actor_field(index, "collision", [])
+	for shape_index: Variant in _collision_fields:
+		if int(shape_index) < shapes.size() and shapes[shape_index] is Array:
+			_sync_rect_fields(_collision_fields[shape_index], shapes[shape_index])
+
+
+func _sync_rect_fields(fields: Array, values: Array) -> void:
+	for component: int in mini(fields.size(), values.size()):
+		(fields[component] as SpinBox).set_value_no_signal(float(values[component]))
 
 
 func set_active_tool(which: int) -> void:
@@ -119,6 +140,7 @@ func _build_collisions(item: Dictionary) -> void:
 				_refresh_baseline()
 				edited.emit())
 		section.name = "Collision%d" % shape_index
+		_collision_fields[shape_index] = _fields_in(section)
 		var remove := Button.new()
 		remove.text = "删除碰撞 #%d" % shape_index
 		remove.pressed.connect(func() -> void:
@@ -166,22 +188,47 @@ func _build_collisions(item: Dictionary) -> void:
 
 
 func _build_reach(item: Dictionary) -> void:
+	var edit_on_canvas := Button.new()
+	edit_on_canvas.name = "EditReachOnCanvas"
+	edit_on_canvas.text = "在画布调整交互区（绿框）"
+	edit_on_canvas.toggle_mode = true
+	edit_on_canvas.set_meta("object_tool", Canvas.Tool.SELECT)
+	edit_on_canvas.pressed.connect(func() -> void: tool_requested.emit(Canvas.Tool.SELECT))
+	_tool_buttons[Canvas.Tool.SELECT] = edit_on_canvas
+	add_child(edit_on_canvas)
 	var actor := MapDef._actor_from(item)
 	var local_reach: Array = item.get("reach_local", [
 		actor.reach.position.x - actor.rect.position.x,
 		actor.reach.position.y - actor.rect.position.y,
 		actor.reach.size.x, actor.reach.size.y])
-	var reach := _rect_fields("交互区", local_reach, func(values: Array) -> void:
-		model.set_actor_field(index, "reach_local", values)
+	var reach := _rect_fields("交互区域位置与大小（相对贴图左上角）", local_reach, func(values: Array) -> void:
+		var rect: Rect2 = model.rect_of(model.Kind.ACTOR, index)
+		model.set_interaction_rect(index, Rect2(rect.position + Vector2(values[0], values[1]),
+			Vector2(values[2], values[3])))
 		edited.emit())
 	reach.name = "Reach"
+	_reach_fields.assign(_fields_in(reach))
 	add_child(reach)
+	var note := Label.new()
+	note.text = "绿色框决定在哪里可以调查或交谈。修改这里只改变交互区域，不拉伸贴图，也不改变碰撞。"
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	add_child(note)
+
+
+func _fields_in(section: Node) -> Array[SpinBox]:
+	var fields: Array[SpinBox] = []
+	for field_name: String in ["X", "Y", "Width", "Height"]:
+		var field := section.find_child(field_name, true, false) as SpinBox
+		if field != null:
+			fields.append(field)
+	return fields
 
 
 func _rect_fields(title: String, values: Array, changed: Callable) -> VBoxContainer:
 	var section := VBoxContainer.new()
 	var label := Label.new()
 	label.text = title
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	section.add_child(label)
 	var grid := GridContainer.new()
 	grid.columns = 2
@@ -208,6 +255,7 @@ func _spin(value: float, dimension: bool) -> SpinBox:
 	field.min_value = 0.01 if dimension else -1000000
 	field.max_value = 1000000
 	field.step = 0.01
+	field.update_on_text_changed = false
 	field.value = value
 	field.custom_minimum_size.x = 110
 	return field

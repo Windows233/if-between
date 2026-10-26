@@ -137,12 +137,22 @@ static func _test_buttons(h: TestHarness, dock, viewport: SubViewport, folder: S
 	if width == null or height == null or resize == null or native == null:
 		return
 	var before := MapDef._actor_from(dock.model.actor_dict(0))
+	var aspect_lock := dock._actor_panel.find_child("TextureAspectLock", true, false) as CheckBox
+	h.check("贴图默认提供等比锁", aspect_lock != null and aspect_lock.button_pressed, true)
+	var width_instance := width.get_instance_id()
 	width.value = 150
+	h.check("锁定比例时高度跟随宽度", height.value, 150.0 * before.rect.size.y / before.rect.size.x)
+	h.check("改贴图尺寸不重建正在操作的输入框", dock._actor_panel.find_child("TextureWidth", true, false).get_instance_id(), width_instance)
+	aspect_lock.button_pressed = false
 	height.value = 90
 	h.check("精确宽高编辑修改贴图尺寸", dock.model.rect_of(Dock.Kind.ACTOR, 0).size, Vector2(150, 90))
 	var after_manual := MapDef._actor_from(dock.model.actor_dict(0))
 	h.check("精确贴图尺寸不改变碰撞", after_manual.collision_rects(), before.collision_rects())
 	h.check("精确贴图尺寸不改变交互区", after_manual.reach, before.reach)
+	var texture_x := dock._actor_panel.find_child("TextureX", true, false) as SpinBox
+	texture_x.value += 10
+	h.check("移动贴图X不改变世界交互范围", MapDef._actor_from(dock.model.actor_dict(0)).reach, before.reach)
+	h.check("移动贴图X不改变世界碰撞", MapDef._actor_from(dock.model.actor_dict(0)).collision_rects(), before.collision_rects())
 	var scale := dock._actor_panel.find_child("TextureScale", true, false) as SpinBox
 	h.check("比例缩放提供比例数值", scale != null, true)
 	if scale == null:
@@ -166,6 +176,14 @@ static func _test_buttons(h: TestHarness, dock, viewport: SubViewport, folder: S
 
 static func _test_protected_selection(h: TestHarness, dock) -> void:
 	var before: Dictionary = dock.model.data.duplicate(true)
+	var multi: Array[int] = [0, 1]
+	dock.canvas.select_actors(multi)
+	dock._on_selection_changed()
+	var multi_width := dock._actor_panel.find_child("TextureWidth", true, false) as SpinBox
+	h.check("同一主选物件切到多选也禁用精确尺寸", multi_width.editable, false)
+	var single: Array[int] = [0]
+	dock.canvas.select_actors(single)
+	dock._on_selection_changed()
 	dock.canvas.set_actor_editor_state({}, {"desk": true})
 	dock.canvas.selection_changed.emit()
 	var width := dock._actor_panel.find_child("TextureWidth", true, false) as SpinBox

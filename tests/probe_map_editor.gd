@@ -77,8 +77,12 @@ func _initialize() -> void:
 	assert(dock._asset_list != null and dock._asset_list.item_count > 0)
 	dock._asset_filter.text = "gatehouse_desk"
 	dock._refresh_assets()
-	assert(dock._asset_list.item_count == 1)
-	assert(str(dock._asset_list.get_item_metadata(0)) == "res://art/props/gatehouse_desk.png")
+	var matched_paths: Array[String] = []
+	for index: int in dock._asset_list.item_count:
+		var filtered_path := str(dock._asset_list.get_item_metadata(index))
+		assert(filtered_path.get_file().get_basename().contains("gatehouse_desk"))
+		matched_paths.append(filtered_path)
+	assert(matched_paths.has("res://art/props/gatehouse_desk.png"))
 	dock._asset_filter.text = ""
 	dock._refresh_assets()
 	print("③ 五种工具切换正常；物件列表与检查器已构造")

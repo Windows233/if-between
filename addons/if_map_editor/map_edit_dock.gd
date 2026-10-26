@@ -51,11 +51,13 @@ var _syncing := false
 ## 「物件属性」面板：只在选中物件时出现。**每次换选中项才重建** ——
 ## 每敲一个字都重建会把光标弄丢。
 var _actor_panel: VBoxContainer
+var _visual_inspector: VBoxContainer
 var _panel_scroll: ScrollContainer
 var _panel_kind := -1
 var _panel_index := -1
 var _panel_locked := false
 var _panel_id_readonly := false
+var _panel_selection: Array[int] = []
 var _object_tree: Tree
 var _hierarchy_actor_items: Dictionary = {}
 var _hierarchy_group_items: Array[TreeItem] = []
@@ -124,6 +126,7 @@ func _build() -> void:
 	var tools := HFlowContainer.new()
 	tools.add_child(_text("工具："))
 	for item in [["选择 / 移动", Canvas.Tool.SELECT],
+			["调整贴图（蓝框）", Canvas.Tool.TEXTURE],
 			["画墙", Canvas.Tool.WALL],
 			["画传送区", Canvas.Tool.PORTAL]]:
 		var b := Button.new()
@@ -1660,19 +1663,26 @@ func _refresh_dirty() -> void:
 # ---------------------------------------------------------------- 交互
 
 func _on_tool(which: int) -> void:
-	if which in [Canvas.Tool.BASELINE, Canvas.Tool.COLLISION]:
+	if which in [Canvas.Tool.BASELINE, Canvas.Tool.COLLISION, Canvas.Tool.TEXTURE]:
 		if canvas.sel_kind != Kind.ACTOR or canvas.selected_actors().size() != 1 \
 				or not _allow_selection_edit():
 			_status.text = "请先单选一件未锁定物件，再使用属性卡里的工具。"
 			return
+	if which == Canvas.Tool.TEXTURE and not canvas.begin_texture_edit():
+		_status.text = "请先单选一件可见、未锁定、未编组的物件，再调整贴图。"
+		return
 	canvas.tool = which
 	for button: Button in _tool_buttons:
 		button.set_pressed_no_signal(int(button.get_meta("map_tool")) == which)
 	if is_instance_valid(_object_inspector):
 		_object_inspector.set_active_tool(which)
+	if is_instance_valid(_visual_inspector):
+		_visual_inspector.sync_tool(which)
 	match which:
 		Canvas.Tool.SELECT:
-			_status.text = "选择：拖动物件；移动会带动交互区和碰撞。绿色框调整交互区，红色框调整碰撞；贴图尺寸见「视觉部件与变换」。"
+			_status.text = "选择：拖动物件整体移动；绿色框手柄只调整交互区域。切换「调整贴图（蓝框）」可单独缩放图片。"
+		Canvas.Tool.TEXTURE:
+			_status.text = "蓝色框只调整贴图位置和尺寸，绿色交互区与红色碰撞不变；拖动手柄缩放，Esc 取消。"
 		Canvas.Tool.WALL:
 			_status.text = "画墙：在图上按住左键拖出一个框，松手就加进 walls。"
 		Canvas.Tool.PORTAL:
@@ -1925,7 +1935,7 @@ func _on_base_auto() -> void:
 
 func _on_selection_changed() -> void:
 	_texture_request_serial += 1
-	if canvas.tool in [Canvas.Tool.BASELINE, Canvas.Tool.COLLISION] \
+	if canvas.tool in [Canvas.Tool.BASELINE, Canvas.Tool.COLLISION, Canvas.Tool.TEXTURE] \
 			and (canvas.sel_kind != Kind.ACTOR or canvas.selected_actors().size() != 1):
 		_on_tool(Canvas.Tool.SELECT)
 	_refresh_selection()
@@ -1988,6 +1998,9 @@ func _refresh_selection() -> void:
 			_base_spin.tooltip_text = "独立物件：碰撞箱上边缘；旧物件：贴图底边。橙线表示手动调整。"
 	_syncing = false
 	_sync_actor_panel()
+	_sync_object_geometry_fields()
+	for button: Button in _tool_buttons:
+		button.set_pressed_no_signal(int(button.get_meta("map_tool")) == canvas.tool)
 	if kind == Kind.ACTOR and is_instance_valid(_object_inspector):
 		for object_tool: int in _object_inspector._tool_buttons:
 			var button: Button = _object_inspector._tool_buttons[object_tool]
@@ -2066,6 +2079,7 @@ func _on_edited() -> void:
 	canvas.invalidate_def()      # 数据改了，脚底框/可走格那边的 MapDef 要重建
 	_refresh_dirty()
 	_refresh_objects()
+	_sync_object_geometry_fields()
 	if canvas.sel_kind == Kind.ACTOR and is_instance_valid(_base_row) and _base_row.visible:
 		_syncing = true
 		_base_spin.set_value_no_signal(model.actor_cover_y(canvas.sel_index))
@@ -2073,6 +2087,17 @@ func _on_edited() -> void:
 		if is_instance_valid(_object_inspector):
 			_object_inspector._refresh_baseline()
 	canvas.queue_redraw()
+
+
+func _sync_object_geometry_fields() -> void:
+	if canvas.sel_kind != Kind.ACTOR or _panel_kind != Kind.ACTOR \
+			or _panel_index != canvas.sel_index:
+		return
+	if is_instance_valid(_object_inspector):
+		_object_inspector.sync_geometry_fields()
+	if is_instance_valid(_visual_inspector):
+		_visual_inspector._sync_texture_fields()
+		_visual_inspector.sync_tool(canvas.tool)
 
 
 func _on_canvas_edited() -> void:
@@ -2116,7 +2141,8 @@ func _sync_actor_panel() -> void:
 	var is_locked := _selection_has_locked_actor()
 	var id_readonly: bool = kind == Kind.ACTOR and canvas.actor_is_hidden(canvas.sel_index)
 	if _panel_kind == kind and _panel_index == canvas.sel_index \
-			and _panel_locked == is_locked and _panel_id_readonly == id_readonly:
+			and _panel_locked == is_locked and _panel_id_readonly == id_readonly \
+			and (kind != Kind.ACTOR or _panel_selection == canvas.selected_actors()):
 		_panel_scroll.visible = true
 		return
 	if kind == Kind.OVERLAY:
@@ -2170,8 +2196,18 @@ func _build_overlay_panel() -> void:
 
 
 func _build_actor_panel() -> void:
+	var advanced_open := false
+	var aspect_locked := true
+	if is_instance_valid(_visual_inspector) and _visual_inspector.actor_index == canvas.sel_index:
+		var previous_advanced := _visual_inspector.find_child("AdvancedAppearanceToggle", true, false) as Button
+		if previous_advanced != null:
+			advanced_open = previous_advanced.button_pressed
+		var previous_lock := _visual_inspector.find_child("TextureAspectLock", true, false) as CheckBox
+		if previous_lock != null:
+			aspect_locked = previous_lock.button_pressed
 	_panel_kind = Kind.ACTOR
 	_panel_index = canvas.sel_index
+	_panel_selection.assign(canvas.selected_actors())
 	_panel_locked = _selection_has_locked_actor()
 	_panel_id_readonly = canvas.actor_is_hidden(_panel_index)
 	for child in _actor_panel.get_children():
@@ -2221,6 +2257,18 @@ func _build_actor_panel() -> void:
 	row3.add_child(_bool_field("cover", "会挡人（按站位分前后）"))
 	row3.add_child(_bool_field("over", "永远画在角色之上"))
 	_actor_panel.add_child(row3)
+	var visuals := VisualInspector.new()
+	visuals.configure(model, _panel_index, canvas.selected_actors())
+	visuals.edited.connect(_on_edited)
+	visuals.rebuild_requested.connect(_rebuild_object_inspector)
+	visuals.tool_requested.connect(_on_tool)
+	visuals.sync_tool(canvas.tool)
+	_visual_inspector = visuals
+	_actor_panel.add_child(visuals)
+	(visuals.find_child("TextureAspectLock", true, false) as CheckBox).button_pressed = aspect_locked
+	var advanced_toggle := visuals.find_child("AdvancedAppearanceToggle", true, false) as Button
+	if advanced_open and advanced_toggle != null:
+		advanced_toggle.button_pressed = true
 	var geometry := ObjectInspector.new()
 	geometry.configure(model, _panel_index)
 	geometry.tool_requested.connect(_on_tool)
@@ -2234,11 +2282,6 @@ func _build_actor_panel() -> void:
 	_base_spin = geometry.baseline_spin
 	_base_auto_button = geometry.baseline_auto
 	_actor_panel.add_child(geometry)
-	var visuals := VisualInspector.new()
-	visuals.configure(model, _panel_index, canvas.selected_actors())
-	visuals.edited.connect(_on_edited)
-	visuals.rebuild_requested.connect(_rebuild_object_inspector)
-	_actor_panel.add_child(visuals)
 	var template := TemplateInspector.new()
 	template.configure(model, _library, _panel_index)
 	template.set_selection(canvas.selected_actors())
@@ -2503,7 +2546,7 @@ func _apply_actor_texture(index: int, path: String, keep_rect := true) -> bool:
 		_sprite_path_edit.text = path
 	_on_edited()
 	_refresh_selection()
-	_status.text = "贴图已更新，尺寸保持不变；到「视觉部件与变换」调整大小。" if keep_rect \
+	_status.text = "贴图已更新，尺寸保持不变；在「贴图大小与外观」或蓝框模式调整大小。" if keep_rect \
 		else "物件已按背景像素比例恢复原图尺寸。"
 	return true
 
@@ -2730,5 +2773,5 @@ func _import_and_create(source_path: String) -> void:
 	_on_edited()
 	_refresh_selection()
 	canvas.queue_redraw()
-	_on_tool(Canvas.Tool.SELECT)
-	_status.text = "已导入 %s；贴图尺寸可在「视觉部件与变换」中调整。" % res_path
+	_on_tool(Canvas.Tool.TEXTURE)
+	_status.text = "已导入 %s；拖动蓝框手柄调整贴图大小，绿色交互区大小在属性卡中单独设置。" % res_path
