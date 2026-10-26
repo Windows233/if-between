@@ -14,7 +14,73 @@ static func run(harness: TestHarness) -> void:
 	harness.section("第二章整合")
 	_test_events_and_maps(harness)
 	_test_assets(harness)
+	_test_bugfixes(harness)
 	await _test_save_and_caption(harness)
+
+
+static func _test_bugfixes(h: TestHarness) -> void:
+	var main := h.new_main()
+	main.cutscene.instant = true
+	main.enter_map(&"school_gate", &"near_classroom")
+	main.flags.set_value(&"ch2/diary_read", true)
+	main.flags.set_value(&"ch2/teamed_c", true)
+	ItemTable.add(main.flags, &"charm")
+	h.check("追逐可实际启动", main.chase_session.begin(), true)
+	var mist: Sprite2D = main.chase_session._mist
+	h.check("追逐猫贴图已加载", mist != null, true)
+	if mist != null:
+		var screen_height: float = mist.texture.get_height() * mist.scale.y * main.camera.zoom.y
+		var player_height: float = Player.DISPLAY_HEIGHT * main.player.scale.y * main.camera.zoom.y
+		h.check("高清追逐猫不超过主角两倍高", screen_height <= player_height * 2.0, true)
+		h.check("追逐猫脚底贴着追踪路径", mist.offset.y + mist.texture.get_height() * 0.5, 0.0)
+	main.chase_session.cancel()
+	# 正式入馆演出，再不调查直接往返；恢复应与初次入馆完全一致。
+	main.start_story(&"ch2_diary", &"library_enter")
+	var original: Array = main.cutscene.snapshot_actors()
+	h.check("正式入馆C在场", main.cutscene.actor_ids().has("c"), true)
+	main.enter_map(&"school_gate", &"from_library")
+	main.enter_map(&"library", &"from_school_gate")
+	h.check("未调查直接往返后C仍在场", main.cutscene.snapshot_actors(), original)
+	main.enter_map(&"school_gate", &"from_library")
+	main.enter_map(&"library", &"from_school_gate")
+	h.check("多次往返不重复生成C", main.cutscene.actor_ids(), ["c"])
+	var saved_actors: Array = original.duplicate(true)
+	saved_actors[0]["at"] = [225.0, 250.0]
+	main.cutscene.restore_actors(saved_actors)
+	h.check("入口补位不覆盖存档中的C位置", main.cutscene._actor("c").position, Vector2(225, 250))
+	main.flags.set_value(&"ch2/left_library", true)
+	main.enter_map(&"library", &"from_school_gate")
+	h.check("逃离完成后不复活追兵C", main.cutscene.actor_ids(), [])
+	# 普通物件、多部件与无切图物件都能完整放进对话框上方。
+	var actor := MapDef.Actor.new()
+	actor.rect = Rect2(50, 50, 10, 12)
+	actor.sprite = "res://art/props/ch2_blackboard.png"
+	var inter := MapDef.Interaction.new()
+	inter.dialogue = Dialogue.from_array([{"text": "调查物件。"}])
+	actor.interactions.append(inter)
+	main.begin_interaction(actor)
+	main.object_preview._process(0.0)
+	h.check("普通调查自动显示物件近景", main.object_preview.content != null, true)
+	var preview: Node2D = main.object_preview.content
+	if preview != null:
+		var area: Rect2 = preview.transform * main.object_preview.bounds
+		h.check("近景按可用高度放大", area.size.y > actor.rect.size.y, true)
+		h.check("近景完整位于对话框上方", area.end.y < main.dialogue.hold_top(), true)
+		h.check("近景横向不出屏", area.position.x >= 0 and area.end.x <= main.get_viewport_rect().size.x, true)
+	main.stage_overlay.show_image(actor.sprite, 0.0)
+	main.object_preview._process(0.0)
+	h.check("剧情专用道具图优先展示", preview.visible, false)
+	h.check("专用道具图也不被对话框压住", main.stage_overlay._image.position.y + main.stage_overlay._image.size.y < main.dialogue.hold_top(), true)
+	h.check("透明画布不会把物件压成小图", main.stage_overlay._image.texture.get_size().x < load(actor.sprite).get_width(), true)
+	main.stage_overlay.hide_image(0.0)
+	h.drain_dialogue(main.dialogue)
+	h.check("调查结束自动收起近景", main.object_preview.content, null)
+	actor.sprite = ""
+	main.begin_interaction(actor)
+	h.check("无独立切图时从背景裁取近景", main.object_preview.content != null, true)
+	main.enter_map(&"school_gate", &"from_library")
+	h.check("换图时清理物件近景", main.object_preview.content, null)
+	main.queue_free()
 
 
 static func _json(path: String) -> Dictionary:

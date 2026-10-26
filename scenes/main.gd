@@ -134,6 +134,7 @@ var endings := EndingTable.new()
 var items := ItemTable.new()
 var personal_anchor = PERSONAL_ANCHOR_SCRIPT.new()
 var ch2_checkpoints: Dictionary = {}
+var object_preview: CanvasLayer
 ## 结局图鉴的**全局记录**：跨存档、只增不减。跟存档分开，删档不带走它。
 var gallery := EndingGallery.new()
 ## 游戏设置：跨存档、跨局保留的偏好（目前只有文字速度）。
@@ -376,6 +377,10 @@ func boot() -> void:
 	# CG 摆上/收起来的时候重算一遍「谁能看见」—— 主要是右下角那个背包图标。
 	# 图挂在第 9 层、图标在 19 层，压不住它，只能靠这条把它收起来。
 	stage_overlay.picture_changed.connect(_on_picture_changed)
+	object_preview = preload("res://ui/object_preview.gd").new()
+	object_preview.name = "ObjectPreview"
+	object_preview.host = self
+	add_child(object_preview)
 
 	# 左上角的日期/地点。**不进 `ui_host`** —— 它不吃输入，
 	# 也不是「要收起来的界面」，只是一行常驻状态。
@@ -494,6 +499,8 @@ func enter_map(map_id: StringName, spawn_name: StringName,
 	if escape_session != null and escape_session.active:
 		story.cancel()
 	current_map = def
+	if object_preview != null:
+		object_preview.clear()
 	map_triggers.configure(def.id, def.triggers, flags, _map_trigger_event_exists, _start_map_trigger)
 	current_spawn = spawn_name
 	preload("res://scenes/library_visuals.gd").prepare(def, flags)
@@ -522,6 +529,7 @@ func enter_map(map_id: StringName, spawn_name: StringName,
 	# 上一张图上的临时角色是上一张图的东西，别跟过来
 	if cutscene != null:
 		cutscene.clear_actors()
+		cutscene.restore_library_c()
 		if current_map.id == &"school_yard":
 			cutscene.restore_school_yard_c()
 			if spawn_name == &"from_gate" and flags.get_value(&"ch2/yard_entry_seen") != true:
@@ -1388,6 +1396,8 @@ const TALK_FOOT_HEIGHT := 16.0
 func begin_interaction(actor: MapDef.Actor) -> void:
 	if actor == null:
 		return
+	if object_preview != null:
+		object_preview.show_actor(actor, current_map)
 	if current_map.id == &"gatehouse" and actor.id == &"desk":
 		start_story(&"ch2_register")
 		return
@@ -1467,6 +1477,8 @@ func has_seen(event_id: StringName) -> bool:
 func _on_dialogue_finished() -> void:
 	if story.is_active():
 		story.on_dialogue_finished()
+	elif object_preview != null:
+		object_preview.clear()
 
 
 func _on_choice_chosen(id: StringName) -> void:
@@ -1585,6 +1597,8 @@ func _jump_to(map_id: StringName, spawn_name: StringName) -> void:
 ## 重画放在演出前面 —— 有些结局会让场景里的东西消失，
 ## 玩家先看到场景变了，再看结局文字，顺序才对得上。
 func _on_story_ended(ending_id: StringName) -> void:
+	if object_preview != null:
+		object_preview.clear()
 	# 剧情演完了，镜头还给角色
 	camera_focus = null
 	refresh_scene()

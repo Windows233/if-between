@@ -109,6 +109,32 @@ func place_c_at_school_gate_wait_spawn() -> bool:
 	return actor != null
 
 
+## 入馆演出留下的C在普通往返和旧存档入图时也要恢复；位置、朝向取正式演出。
+func restore_library_c() -> void:
+	if main == null or main.current_map == null or main.current_map.id != &"library" \
+			or main.flags.get_value(&"ch2/first_library_entry") != true \
+			or main.flags.get_value(&"ch2/left_library") == true:
+		return
+	if _actors.has("c") and is_instance_valid(_actors["c"]):
+		return
+	var event := DataLoader.load_event(&"ch2_diary")
+	if event == null:
+		return
+	for node: StoryNode in event.nodes:
+		if node.id != &"library_enter":
+			continue
+		for step: StageStep in node.stage:
+			if step.text("id") != "c":
+				continue
+			if step.kind == &"npc":
+				_npc(step)
+				var actor := _actor("c")
+				if actor != null:
+					actor.set_meta(&"library_reentry_fallback", true)
+			elif step.kind == &"npc_pose":
+				_npc_pose(step)
+
+
 func restore_school_yard_c() -> void:
 	if main == null or main.current_map == null \
 			or main.current_map.id != &"school_yard":
@@ -231,6 +257,9 @@ func restore_actors(entries: Array) -> void:
 			continue
 		var item := raw as Dictionary
 		var id := str(item.get("id", ""))
+		# 入口补位让旧空快照可恢复C；有真实人物快照时仍以存档为准。
+		if _actors.has(id) and _actors[id].get_meta(&"library_reentry_fallback", false):
+			_drop_actor(id)
 		if id == "" or _actors.has(id):
 			continue
 		var at := Vector2.ZERO

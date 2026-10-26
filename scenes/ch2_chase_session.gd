@@ -276,6 +276,11 @@ func _create_mist() -> void:
 	_mist = Sprite2D.new()
 	_mist.name = "ch2_chase_mist"
 	_mist.texture = texture
+	# 素材是高清原图；沿用人物/地图标尺，限制在主角约1.5倍高度内。
+	var height: float = Player.DISPLAY_HEIGHT * main.current_map.player_scale * 1.5
+	var ratio := height / maxf(texture.get_height(), 1.0)
+	_mist.scale = Vector2.ONE * ratio
+	_mist.offset.y = -texture.get_height() * 0.5
 	_mist.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_mist.z_index = 30
 	_mist.global_position = main.player.global_position

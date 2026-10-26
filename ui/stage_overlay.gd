@@ -46,8 +46,8 @@ const CAPTION_SEPARATION := 10
 const CAPTION_GAP := 0.35
 
 ## 大图在屏幕上最多占多大。留边是为了看得出它是「一张图」，不是换了个场景。
-const IMAGE_MAX_WIDTH_RATIO := 0.62
-const IMAGE_MAX_HEIGHT_RATIO := 0.66
+const IMAGE_MAX_WIDTH_RATIO := 0.9
+const IMAGE_MARGIN := 6.0
 
 ## 破碎切成多少块。16x9 = 144 片，够碎，又不至于卡。
 const SHATTER_COLS := 16
@@ -294,6 +294,15 @@ func show_image(path: String, fade: float = 0.4, fill: bool = false) -> bool:
 	var texture := _load_texture(path)
 	if texture == null:
 		return false
+	if not fill:
+		var pixels := texture.get_image()
+		if pixels != null:
+			var used := pixels.get_used_rect()
+			if used.has_area() and used.size != pixels.get_size():
+				var crop := AtlasTexture.new()
+				crop.atlas = texture
+				crop.region = Rect2(used)
+				texture = crop
 
 	var view := _view_size()
 	var picture := texture.get_size()
@@ -302,13 +311,17 @@ func show_image(path: String, fade: float = 0.4, fill: bool = false) -> bool:
 		_image.stretch_mode = TextureRect.STRETCH_SCALE
 		drawn = view
 	else:
-		var limit := Vector2(view.x * IMAGE_MAX_WIDTH_RATIO, view.y * IMAGE_MAX_HEIGHT_RATIO)
+		_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		# 道具近景完整放在对话框上方；最大面板高度也不能压住图片下半截。
+		var limit := Vector2(view.x * IMAGE_MAX_WIDTH_RATIO,
+			maxf(view.y - DialogueBox.BOX_MAX_HEIGHT - IMAGE_MARGIN * 2.0, 1.0))
 		var factor := minf(limit.x / maxf(picture.x, 1.0), limit.y / maxf(picture.y, 1.0))
 		drawn = picture * factor
 
 	_image.texture = texture
 	_image.size = drawn
-	_image.position = Vector2.ZERO if fill else (view - drawn) * 0.5
+	_image.position = Vector2.ZERO if fill else Vector2((view.x - drawn.x) * 0.5,
+		(view.y - DialogueBox.BOX_MAX_HEIGHT - drawn.y) * 0.5)
 	_image.visible = true
 	_image.modulate.a = 0.0
 	# **图一摆上就报信**，不等淡完 —— 别的东西（背包图标）要在它开始浮现的
