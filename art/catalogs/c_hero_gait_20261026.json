@@ -2,7 +2,7 @@
   "date": "2026-10-26",
   "baseline": "5acd727",
   "branch": "codex/c-hero-gait-20261026",
-  "status": "current, local only; no push authorized",
+  "status": "current; user approved release to main on 2026-10-26",
   "reason": "用户反馈八相位僵硬，要求跟主角一样；按主角实际四帧重画侧走。",
   "source": "art/npc/c/source/hero_gait_v3/c_hero_side_sheet.png",
   "reference": [
@@ -327,5 +327,6 @@
     "GPU": "hero and C native frame index synchronized at 8FPS, chase updates do not reset; left/right actual movement finishes in idle",
     "scope": "not whole-chapter manual playthrough"
   },
-  "preview": "docs/screenshots/c_hero_gait_20261026/hero_c_normal.gif"
+  "preview": "docs/screenshots/c_hero_gait_20261026/hero_c_normal.gif",
+  "release_target": "main"
 }

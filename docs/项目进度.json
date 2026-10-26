@@ -36,10 +36,16 @@
   },
   "checked_versions": {
     "main_baseline": "24740c9",
-    "primary_branch": "codex/c-hero-gait-20261026",
+    "primary_branch": "main",
     "scope": "本轮按用户要求补图书馆图层并继续剧情；保留既定团队任务单、D1-D6制作/D7-D9润色及取消工时排产约束。",
     "art_drop_4_baseline": "0a600ec；本轮仅素材/引用及策划约束更新，不将旧进度账当作最新完整功能验收",
-    "latest_runtime_evidence": "C侧走按主角四帧模板重画并用同款8FPS；4976/4976与真GPU同步/左右实际移动通过；仅本地未推送"
+    "latest_runtime_evidence": "C侧走按主角四帧模板重画并用同款8FPS；4976/4976与真GPU同步/左右实际移动通过；用户确认的main发布版本",
+    "release_20261026": {
+      "approved_by": "用户确认当前C动作版本并要求接入、提交main",
+      "feature_commit": "8d6eb2048830fd2df194e31ae426f602370fb031",
+      "remote_baseline": "24740c90bec1fe27d0979e52b46a9d3da8622564",
+      "scope": "C重绘/主角同款侧走/NPC统一大小，承接此前已完成的图书馆分层与后段追逐；不含无关未跟踪文件"
+    }
   },
   "counts": {
     "maps": 14,
@@ -187,9 +193,9 @@
       "name": "C立绘小人及救援UI",
       "owner": "美术",
       "production": "12走路帧+3站姿；侧走依主角实际姿势重画为四帧",
-      "delivery": "已接入本地codex/c-hero-gait-20261026，未推送",
+      "delivery": "已纳入用户确认的本轮main发布版本（2026-10-26）",
       "integration": "side1..4，8FPS，与Player帧序一致；side1/3/idle_side相同，正背面与NPC高度45保持",
-      "acceptance": "4976/4976、真GPU主角/C并排同步、持续追兵更新与左右实际移动及站姿切换通过；观感待用户反馈",
+      "acceptance": "4976/4976、真GPU主角/C并排同步、持续追兵更新与左右实际移动及站姿切换通过；用户已确认采用本版",
       "evidence": [
         {
           "date": "2026-10-24",
@@ -423,8 +429,8 @@
       "name": "两段追逐与闪避",
       "owner": "程序/策划",
       "production": "首次双QTE已实现；背刺后实际追逐、主动隐蔽、倒架碰撞本地补齐",
-      "delivery": "前段已在main；后段位于codex/library-art-20261025待后续合入",
-      "integration": "前段已在main；后段位于codex/library-art-20261025待后续合入",
+      "delivery": "前后段均纳入本轮main发布版本",
+      "integration": "后段主动隐蔽、两图实际追逐及倒架碰撞已合入main；整章人工通关仍待验收",
       "acceptance": "后段两图实际物理试走、失败/重试、暂停/失焦、存读档通过；手感待人工验收",
       "evidence": [
         {
@@ -495,8 +501,8 @@
       "name": "猫补地与血迹分层",
       "owner": "两名美术",
       "production": "美术透明猫复用，AI局部补无猫地毯，透明血迹已拆出",
-      "delivery": "art/map/library_no_cat.png及art/fx/library/三张状态图已入本地分支",
-      "integration": "art/map/library_no_cat.png及art/fx/library/三张状态图已入本地分支",
+      "delivery": "已纳入用户确认的本轮main发布版本（2026-10-26）",
+      "integration": "art/map/library_no_cat.png及art/fx/library/三张状态图已合入main",
       "acceptance": "猫显示/隐藏/回溯恢复与血迹保留真实渲染和回归通过",
       "evidence": [
         {
@@ -587,7 +593,7 @@
       "name": "统一人物标尺及像素清晰度",
       "owner": "并行程序工作",
       "production": "统一标尺与高清像素采样已合入main；进一步人物环境融合在并行分支",
-      "delivery": "main基线72626e0已含标尺与清晰度；并行工作另见codex/world-pixel-cohesion",
+      "delivery": "已纳入用户确认的本轮main发布版本（2026-10-26）",
       "integration": "主角与A/B/C/老人统一45；旧存档32/40/42归一，姿势差异保留",
       "acceptance": "4970/4970及真实GPU每个NPC均45；原地图脚点不迁移",
       "evidence": [
@@ -644,7 +650,7 @@
     "正式倒架/翻越动作、窗边可动分层和图书馆专用BGM可后补，当前占位/复用可运行。",
     "学校入口仍通过portal特判钥匙事件；是否改独立门actor由策划确认。",
     "原有教室自动寻路贴桌角可能卡顿；默认鼠标自动走关闭，本轮实走采用中间过道，不阻断WASD到窗下。",
-    "当前修改只在本地codex/library-art-20261025提交；用户另行授权后再推送或合入main。"
+    "2026-10-26用户已授权当前版本发布至main；此前本地分支等待授权的记录为历史状态。"
   ],
   "verification": {
     "scope": "2026-10-26本地图层+后段实际追逐；不是整章人工通关验收",
@@ -673,7 +679,7 @@
       "NPC_height": "A/B/C/老人45，旧存档归一",
       "GPU": "同框、操场、校门与束缚对齐通过",
       "source": "内置imagegen；原始透明表和提示词已归档",
-      "scope": "只本地提交；整章人工通关仍待完成"
+      "scope": "本轮main发布包含C重绘与统一尺寸；整章人工通关仍待完成"
     },
     "c_side_walk_fix": {
       "source": "内置imagegen生成+定向腿部修正",
@@ -687,7 +693,7 @@
       "data": "14 maps/32 events/7 endings/11 items",
       "smoke": "PASS real-window first chapter",
       "GPU": "hero and C native frame index synchronized at 8FPS, chase updates do not reset; left/right actual movement finishes in idle",
-      "scope": "not whole-chapter manual playthrough",
+      "scope": "用户确认的main发布版本；不代表整章人工通关",
       "gait": "主角同款收脚/迈步A/收脚/迈步B，4帧8FPS",
       "source": "art/npc/c/source/hero_gait_v3/c_hero_side_sheet.png"
     }
