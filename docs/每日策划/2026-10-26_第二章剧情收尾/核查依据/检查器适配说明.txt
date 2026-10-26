@@ -1,0 +1,1 @@
+本脚本复制自本次读取的script-to-stage/scripts/validate_stage.py。唯一适配：命令/字段名正则从([a-z_]+)改为([a-z][a-z0-9_]*),以识别工程真实的ch2_dodge_qte/ch2_escape_run/ch2_checkpoint_*；未添加虚构指令，未跳过场景或引用检查，未改安装技能或游戏。

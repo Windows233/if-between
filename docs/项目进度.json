@@ -35,7 +35,7 @@
     ]
   },
   "checked_versions": {
-    "main_baseline": "24740c9",
+    "main_baseline": "ae1a7bd",
     "primary_branch": "main",
     "scope": "本轮按用户要求补图书馆图层并继续剧情；保留既定团队任务单、D1-D6制作/D7-D9润色及取消工时排产约束。",
     "art_drop_4_baseline": "0a600ec；本轮仅素材/引用及策划约束更新，不将旧进度账当作最新完整功能验收",
@@ -45,6 +45,13 @@
       "feature_commit": "8d6eb2048830fd2df194e31ae426f602370fb031",
       "remote_baseline": "24740c90bec1fe27d0979e52b46a9d3da8622564",
       "scope": "C重绘/主角同款侧走/NPC统一大小，承接此前已完成的图书馆分层与后段追逐；不含无关未跟踪文件"
+    },
+    "story_finish_audit_20261026": {
+      "remote_main": "ae1a7bd42039a1171b3b2882787116c85752532b",
+      "inspection": "逐张查看底图/CG/道具，实际GPU查看四图；WalkGrid静态路径与关键站位检查，不是整章手玩",
+      "pending_workspace": "主工作区classroom/school_yard地图和两张雕塑贴图在并行修改；未纳入本轮代码或提交",
+      "story_source": "已审核R2规则全文P518—P784；已确认的10/25后段规则与当前main事件",
+      "target": "今天收齐首次入馆至End7正文、演出、分支、存读档与连续通关验收；不重造已实现追逐"
     }
   },
   "counts": {
@@ -145,6 +152,18 @@
         "WINDOW",
         "ENDING"
       ]
+    },
+    {
+      "date": "2026-10-26",
+      "source": "user_message",
+      "report": "今天推进并完成后半章剧情，要求程序文本与不阻塞程序的美术任务；继续取消每日两小时排产",
+      "scope": "目标，不是已完成实绩"
+    },
+    {
+      "date": "2026-10-26",
+      "source": "user_message",
+      "report": "今天推进并完成后半章剧情，要求程序文本与不阻塞程序的美术任务；继续取消每日两小时排产",
+      "scope": "目标，不是已完成实绩"
     }
   ],
   "items": [
@@ -212,9 +231,17 @@
         {
           "date": "2026-10-26",
           "reference": "用户反馈僵硬并要求跟主角一样；docs/C主角同款侧走_20261026.md；art/catalogs/c_hero_gait_20261026.json"
+        },
+        {
+          "date": "2026-10-26",
+          "reference": "docs/每日策划/2026-10-26_第二章剧情收尾/核查记录.json；main ae1a7bd，实际图片与事件逐项核对"
+        },
+        {
+          "date": "2026-10-26",
+          "reference": "docs/每日策划/2026-10-26_第二章剧情收尾/核查记录.json；main ae1a7bd，实际图片与事件逐项核对"
         }
       ],
-      "next_action": "以主角同款正常速度GIF及实玩反馈验收；v2八相位已撤下"
+      "next_action": "沿用用户确认的主角同款四帧，不重新制作"
     },
     {
       "id": "SCHOOL-ART",
@@ -348,6 +375,14 @@
         {
           "date": "2026-10-26",
           "reference": "本地24740c9基线 + docs/素材接入_图书馆rar_20261025.md；tests 4917/4917；docs/screenshots/library_escape_20261026/。较旧证据仅保留历史，不作为当前缺口判断。"
+        },
+        {
+          "date": "2026-10-26",
+          "reference": "docs/每日策划/2026-10-26_第二章剧情收尾/核查记录.json；main ae1a7bd，实际图片与事件逐项核对"
+        },
+        {
+          "date": "2026-10-26",
+          "reference": "docs/每日策划/2026-10-26_第二章剧情收尾/核查记录.json；main ae1a7bd，实际图片与事件逐项核对"
         }
       ],
       "next_action": "完整学校路线实玩，窗边可动分层只作后续润色"
@@ -376,10 +411,10 @@
       "id": "LIB-STORY",
       "name": "图书馆首遍与二遍调查",
       "owner": "程序/文案",
-      "production": "首/二遍调查与背刺分支已实现，独立猫显隐本地补齐",
-      "delivery": "首/二遍事件已在main；图层及后段追逐在本地分支",
-      "integration": "首/二遍事件已在main；图层及后段追逐在本地分支",
-      "acceptance": "后段背刺成功至End7真实自动试走通过；首遍调查与回溯全段待实玩",
+      "production": "事件主干已实现；原文补齐、道具选择、虚化演出与线索正文仍需修正",
+      "delivery": "main已有后段事件，今日补齐稿不等于代码完成",
+      "integration": "复用ch2_library_blood/shelf/box/cat；修正文案、时序与展示",
+      "acceptance": "四图GPU查看/静态交互路径已核；整章连续实玩仍待验收",
       "evidence": [
         {
           "date": "2026-10-24",
@@ -396,9 +431,17 @@
         {
           "date": "2026-10-26",
           "reference": "本地24740c9基线 + docs/素材接入_图书馆rar_20261025.md；tests 4917/4917；docs/screenshots/library_escape_20261026/。较旧证据仅保留历史，不作为当前缺口判断。"
+        },
+        {
+          "date": "2026-10-26",
+          "reference": "docs/每日策划/2026-10-26_第二章剧情收尾/核查记录.json；main ae1a7bd，实际图片与事件逐项核对"
+        },
+        {
+          "date": "2026-10-26",
+          "reference": "docs/每日策划/2026-10-26_第二章剧情收尾/核查记录.json；main ae1a7bd，实际图片与事件逐项核对"
         }
       ],
-      "next_action": "团队连续实玩整章，核对文本/画面与难度"
+      "next_action": "按今日程序文档逐节点补齐和通关，不从零重建后段"
     },
     {
       "id": "REWIND",
@@ -440,6 +483,14 @@
         {
           "date": "2026-10-26",
           "reference": "本地24740c9基线 + docs/素材接入_图书馆rar_20261025.md；tests 4917/4917；docs/screenshots/library_escape_20261026/。较旧证据仅保留历史，不作为当前缺口判断。"
+        },
+        {
+          "date": "2026-10-26",
+          "reference": "docs/每日策划/2026-10-26_第二章剧情收尾/核查记录.json；main ae1a7bd，实际图片与事件逐项核对"
+        },
+        {
+          "date": "2026-10-26",
+          "reference": "docs/每日策划/2026-10-26_第二章剧情收尾/核查记录.json；main ae1a7bd，实际图片与事件逐项核对"
         }
       ],
       "next_action": "按用户确认后处理合入；正式动作动画后续替换占位"
@@ -448,7 +499,7 @@
       "id": "ENDING",
       "name": "章末交付与End6/End7",
       "owner": "程序/文案",
-      "production": "End6/End7事件和章末交付已有实现",
+      "production": "夜市B、委托屋和End7正文及事件已在main",
       "delivery": "main已有；本地后段追逐连接尾声完成",
       "integration": "main已有；本地后段追逐连接尾声完成",
       "acceptance": "背刺成功→教室抛币→B→委托屋→End7真窗口自动试走通过，道具移除正确",
@@ -460,9 +511,17 @@
         {
           "date": "2026-10-26",
           "reference": "本地24740c9基线 + docs/素材接入_图书馆rar_20261025.md；tests 4917/4917；docs/screenshots/library_escape_20261026/。较旧证据仅保留历史，不作为当前缺口判断。"
+        },
+        {
+          "date": "2026-10-26",
+          "reference": "docs/每日策划/2026-10-26_第二章剧情收尾/核查记录.json；main ae1a7bd，实际图片与事件逐项核对"
+        },
+        {
+          "date": "2026-10-26",
+          "reference": "docs/每日策划/2026-10-26_第二章剧情收尾/核查记录.json；main ae1a7bd，实际图片与事件逐项核对"
         }
       ],
-      "next_action": "整章人工实玩与音画润色，不重写已完成结局链"
+      "next_action": "修正B贴墙脚点、主角桌后站位、奖励幂等与结尾显示；完整实走"
     },
     {
       "id": "CORRIDOR",
@@ -516,6 +575,14 @@
         {
           "date": "2026-10-26",
           "reference": "本地24740c9基线 + docs/素材接入_图书馆rar_20261025.md；tests 4917/4917；docs/screenshots/library_escape_20261026/。较旧证据仅保留历史，不作为当前缺口判断。"
+        },
+        {
+          "date": "2026-10-26",
+          "reference": "docs/每日策划/2026-10-26_第二章剧情收尾/核查记录.json；main ae1a7bd，实际图片与事件逐项核对"
+        },
+        {
+          "date": "2026-10-26",
+          "reference": "docs/每日策划/2026-10-26_第二章剧情收尾/核查记录.json；main ae1a7bd，实际图片与事件逐项核对"
         }
       ],
       "next_action": "团队看图验收补地、猫大小与血迹边缘，不再派缺图重做"
@@ -524,9 +591,9 @@
       "id": "WINDOW",
       "name": "教室窗口局部",
       "owner": "主美术",
-      "production": "抛币静态CG已交；可动窗框/人物/硬币分层仍未交",
+      "production": "抛币静态CG和事件已具备；地图可见窗及分层尚缺",
       "delivery": "已用ch2_coin_throw.png接事件，本地窗下交互可实际到达",
-      "integration": "已用ch2_coin_throw.png接事件，本地窗下交互可实际到达",
+      "integration": "main旧窗锚与本地待交左侧新锚并存；按actor ID解析，禁止硬编码右上提示",
       "acceptance": "真实移动到窗下并触发抛币通过；静态CG不冒充三层动画",
       "evidence": [
         {
@@ -536,9 +603,17 @@
         {
           "date": "2026-10-26",
           "reference": "本地24740c9基线 + docs/素材接入_图书馆rar_20261025.md；tests 4917/4917；docs/screenshots/library_escape_20261026/。较旧证据仅保留历史，不作为当前缺口判断。"
+        },
+        {
+          "date": "2026-10-26",
+          "reference": "docs/每日策划/2026-10-26_第二章剧情收尾/核查记录.json；main ae1a7bd，实际图片与事件逐项核对"
+        },
+        {
+          "date": "2026-10-26",
+          "reference": "docs/每日策划/2026-10-26_第二章剧情收尾/核查记录.json；main ae1a7bd，实际图片与事件逐项核对"
         }
       ],
-      "next_action": "可动分层为润色，不阻断当前路线"
+      "next_action": "程序用标记+现有CG完成，日后替换窗模块，不等待美术"
     },
     {
       "id": "LOCAL-PROPS",
@@ -696,7 +771,12 @@
       "scope": "用户确认的main发布版本；不代表整章人工通关",
       "gait": "主角同款收脚/迈步A/收脚/迈步B，4帧8FPS",
       "source": "art/npc/c/source/hero_gait_v3/c_hero_side_sheet.png"
+    },
+    "story_delivery_20261026": {
+      "stage": "47节点/297cue；121句原对白/心声全部覆盖，素材路径与原生命令校验通过",
+      "scope": "只有文档与素材审计，未执行今日程序修正",
+      "baseline_tests": "main ae1a7bd副本4976/4976；数据14/32/7/11；不是本稿47节点已实现"
     }
   },
-  "active_daily_plan": "docs/每日策划/2026-10-25_图书馆后段策划/"
+  "active_daily_plan": "docs/每日策划/2026-10-26_第二章剧情收尾/"
 }
