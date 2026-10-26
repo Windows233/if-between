@@ -1,0 +1,118 @@
+{
+  "date": "2026-10-26",
+  "baseline": "d959114",
+  "branch": "codex/c-side-gait-fix-20261026",
+  "reason": "Previous four side frames repeated one leg arrangement; file uniqueness and facing tests did not prove alternating gait.",
+  "source": "art/npc/c/source/side_walk_v2/side_walk8.png",
+  "prompts": [
+    "art/npc/c/source/side_walk_v2/01_generate.txt",
+    "art/npc/c/source/side_walk_v2/02_correct_leg_depth.txt"
+  ],
+  "generation_mode": "built-in image_gen, followed by targeted leg-depth edit",
+  "postprocess": "Slice only, shared scale across all eight poses, one ground baseline per source row, horizontal head registration; no procedural limb drawing.",
+  "source_size": [
+    1330,
+    1182
+  ],
+  "frames": [
+    {
+      "frame": 1,
+      "near_boot_center": [
+        64.92254134029591,
+        329.1044386422976
+      ],
+      "foot_span": 214,
+      "sha256": "0232d10e48cf920bf9e3d8ed619f02492156101a8709dba5b2de17d295da8481"
+    },
+    {
+      "frame": 2,
+      "near_boot_center": [
+        105.70454545454545,
+        339.7623106060606
+      ],
+      "foot_span": 162,
+      "sha256": "c500fb164aabbcd67b0272e683ce2dfb0ce9c2397959938fc0c19e2b7b0fcba1"
+    },
+    {
+      "frame": 3,
+      "near_boot_center": [
+        126.71274509803922,
+        339.51960784313724
+      ],
+      "foot_span": 124,
+      "sha256": "0714db75ec36982cf358a0269c2d1718e3492880391e6cba67f86de7201be974"
+    },
+    {
+      "frame": 4,
+      "near_boot_center": [
+        196.7941507311586,
+        333.94600674915637
+      ],
+      "foot_span": 202,
+      "sha256": "1bd68bc5abd3beb95db189e3677e0be6df0e7cbfbf3695e3f007b23616bb9b9b"
+    },
+    {
+      "frame": 5,
+      "near_boot_center": [
+        204.32374866879658,
+        335.6719914802982
+      ],
+      "foot_span": 211,
+      "sha256": "7f13407f73b48c6071760a3ec103d305b04c3d6814fa7c603b5103f58d0a23bf"
+    },
+    {
+      "frame": 6,
+      "near_boot_center": [
+        162.583951449764,
+        323.7242076871207
+      ],
+      "foot_span": 171,
+      "sha256": "e860286eba5e6308133fbbad95d98ee25840118887a8aa6b2c4194fa9fdcc18e"
+    },
+    {
+      "frame": 7,
+      "near_boot_center": [
+        125.06144256455921,
+        319.6251113089938
+      ],
+      "foot_span": 117,
+      "sha256": "f62e6bacbd0f66bb54fe7c71889e859bcb0031ef6e01e74ce1f8aed483ab051a"
+    },
+    {
+      "frame": 8,
+      "near_boot_center": [
+        70.81935975609755,
+        329.4786585365854
+      ],
+      "foot_span": 207,
+      "sha256": "edc0cff704d7d50b3c4f378fa6d11f23729ee2dd3794b80ec8e8cb846ec566be"
+    }
+  ],
+  "runtime": {
+    "count": 8,
+    "fps": 16,
+    "cycle_seconds": 0.5,
+    "native_order": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "faces": "left base / right mirrored",
+    "standing": "existing idle_side.png unchanged"
+  },
+  "unchanged": "down1..4, up1..4 and all three idle PNGs byte-identical to d959114; human NPC height45 unchanged",
+  "verification": {
+    "tests": "4985/4985 PASS",
+    "data": "14/32/7/11 PASS",
+    "native": "repeated chaser updates visited all 8 frames; both directions actually moved and returned to idle",
+    "smoke": "real-window first-chapter smoke PASS",
+    "specific_asset_checks": "near lighter boot leads on frame1 and trails on frame5; narrow passing stances on3/7; near boot raised in7 compared to planted3"
+  },
+  "preview": "real GPU phase screenshots arranged at configured 16fps (0.5s loop), plus quarter-speed preview; runtime frame advancement checked separately",
+  "publication": "local_commit_only_no_push"
+}

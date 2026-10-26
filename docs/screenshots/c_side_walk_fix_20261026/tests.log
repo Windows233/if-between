@@ -1,0 +1,373 @@
+Godot Engine v4.7.2.stable.steam.ed1daf0bf - https://godotengine.org
+
+=== IF：如果之间 测试 ===
+
+--- 规则引擎
+
+--- 地图与场景
+ERROR: [地图] 找不到文件：res://data/maps/没有这个地图.json
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] _read_json_object (res://scenes/data_loader.gd:81)
+       [1] load_map (res://scenes/data_loader.gd:19)
+       [2] test_data_loader (res://tests/test_map.gd:350)
+       [3] run (res://tests/test_map.gd:22)
+       [4] _run_all (res://tests/run_tests.gd:30)
+ERROR: [剧情] 找不到文件：res://data/events/没有这个剧情.json
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] _read_json_object (res://scenes/data_loader.gd:81)
+       [1] load_event (res://scenes/data_loader.gd:30)
+       [2] test_data_loader (res://tests/test_map.gd:355)
+       [3] run (res://tests/test_map.gd:22)
+       [4] _run_all (res://tests/run_tests.gd:30)
+
+--- 对话与选项
+
+--- 剧情事件
+[结局] 达成 end1_calm（平静即死亡）· 文字由剧本自己演
+
+--- 演出指令与过场
+ERROR: [剧情] 节点 market_invite 第 6 条演出指令：临时角色「a」还没放出来就被使唤了
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] load_event (res://scenes/data_loader.gd:36)
+       [1] test_ch2_scene_data (res://tests/test_cutscene.gd:1638)
+       [2] run (res://tests/test_cutscene.gd:36)
+       [3] _run_all (res://tests/run_tests.gd:39)
+ERROR: [剧情] 节点 market_invite 第 6 条演出指令：临时角色「a」还没放出来就被使唤了
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] load_event (res://scenes/data_loader.gd:36)
+       [1] test_blackout_before_hiding_cg (res://tests/test_cutscene.gd:1234)
+       [2] run (res://tests/test_cutscene.gd:37)
+       [3] _run_all (res://tests/run_tests.gd:39)
+ERROR: [剧情] 节点 distrust 第 2 条演出指令：临时角色「b」还没放出来就被使唤了
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] load_event (res://scenes/data_loader.gd:36)
+       [1] test_blackout_before_hiding_cg (res://tests/test_cutscene.gd:1234)
+       [2] run (res://tests/test_cutscene.gd:37)
+       [3] _run_all (res://tests/run_tests.gd:39)
+ERROR: [剧情] 节点 pendant 第 7 条演出指令：临时角色「b」还没放出来就被使唤了
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] load_event (res://scenes/data_loader.gd:36)
+       [1] test_blackout_before_hiding_cg (res://tests/test_cutscene.gd:1234)
+       [2] run (res://tests/test_cutscene.gd:37)
+       [3] _run_all (res://tests/run_tests.gd:39)
+ERROR: [剧情] 节点 market_invite 第 6 条演出指令：临时角色「a」还没放出来就被使唤了
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] load_event (res://scenes/data_loader.gd:36)
+       [1] test_cg_stays_long_enough (res://tests/test_cutscene.gd:1384)
+       [2] run (res://tests/test_cutscene.gd:39)
+       [3] _run_all (res://tests/run_tests.gd:39)
+ERROR: [剧情] 节点 distrust 第 2 条演出指令：临时角色「b」还没放出来就被使唤了
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] load_event (res://scenes/data_loader.gd:36)
+       [1] test_cg_stays_long_enough (res://tests/test_cutscene.gd:1384)
+       [2] run (res://tests/test_cutscene.gd:39)
+       [3] _run_all (res://tests/run_tests.gd:39)
+ERROR: [剧情] 节点 pendant 第 7 条演出指令：临时角色「b」还没放出来就被使唤了
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] load_event (res://scenes/data_loader.gd:36)
+       [1] test_cg_stays_long_enough (res://tests/test_cutscene.gd:1384)
+       [2] run (res://tests/test_cutscene.gd:39)
+       [3] _run_all (res://tests/run_tests.gd:39)
+ERROR: [剧情] 节点 market_invite 第 6 条演出指令：临时角色「a」还没放出来就被使唤了
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] load_event (res://scenes/data_loader.gd:36)
+       [1] test_ending_cg_and_music (res://tests/test_cutscene.gd:1426)
+       [2] run (res://tests/test_cutscene.gd:40)
+       [3] _run_all (res://tests/run_tests.gd:39)
+ERROR: [剧情] 节点 distrust 第 2 条演出指令：临时角色「b」还没放出来就被使唤了
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] load_event (res://scenes/data_loader.gd:36)
+       [1] test_ending_cg_and_music (res://tests/test_cutscene.gd:1426)
+       [2] run (res://tests/test_cutscene.gd:40)
+       [3] _run_all (res://tests/run_tests.gd:39)
+ERROR: [剧情] 节点 pendant 第 7 条演出指令：临时角色「b」还没放出来就被使唤了
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] load_event (res://scenes/data_loader.gd:36)
+       [1] test_ending_cg_and_music (res://tests/test_cutscene.gd:1426)
+       [2] run (res://tests/test_cutscene.gd:40)
+       [3] _run_all (res://tests/run_tests.gd:39)
+ERROR: [剧情] 节点 market_invite 第 6 条演出指令：临时角色「a」还没放出来就被使唤了
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] load_event (res://scenes/data_loader.gd:36)
+       [1] test_transient_talks (res://tests/test_cutscene.gd:1893)
+       [2] run (res://tests/test_cutscene.gd:41)
+       [3] _run_all (res://tests/run_tests.gd:39)
+ERROR: [剧情] 节点 distrust 第 2 条演出指令：临时角色「b」还没放出来就被使唤了
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] load_event (res://scenes/data_loader.gd:36)
+       [1] test_transient_talks (res://tests/test_cutscene.gd:1913)
+       [2] run (res://tests/test_cutscene.gd:41)
+       [3] _run_all (res://tests/run_tests.gd:39)
+ERROR: [剧情] 节点 pendant 第 7 条演出指令：临时角色「b」还没放出来就被使唤了
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] load_event (res://scenes/data_loader.gd:36)
+       [1] test_transient_talks (res://tests/test_cutscene.gd:1913)
+       [2] run (res://tests/test_cutscene.gd:41)
+       [3] _run_all (res://tests/run_tests.gd:39)
+[结局] 达成 end1_calm（平静即死亡）· 文字由剧本自己演
+[结局] 达成 end1_calm（平静即死亡）· 文字由剧本自己演
+[结局] 达成 end1_calm（平静即死亡）· 文字由剧本自己演
+[结局] 达成 end1_calm（平静即死亡）· 文字由剧本自己演
+[调试] free_roam_after_ending 开着 —— 结局之后不回主界面，控制权还给玩家
+
+--- 第二章整合
+
+--- 救援判定与面板
+
+--- 第二章C救援整合
+
+--- 图书馆条件入口与往返
+
+--- 背包
+
+--- 结局与存档
+[结局] 达成 end1_calm（平静即死亡）· 文字由剧本自己演
+ERROR: [剧情] 节点 distrust 第 2 条演出指令：临时角色「b」还没放出来就被使唤了
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] load_event (res://scenes/data_loader.gd:36)
+       [1] start_story (res://scenes/main.gd:1457)
+       [2] test_load_does_not_replay (res://tests/test_ending_save.gd:347)
+       [3] run (res://tests/test_ending_save.gd:24)
+       [4] _run_all (res://tests/run_tests.gd:51)
+       [5] run (res://tests/test_ch2_escape.gd:87)
+       [6] _test_escape_save_retry (res://tests/test_ch2_escape.gd:124)
+ERROR: [剧情] 节点 pendant 第 7 条演出指令：临时角色「b」还没放出来就被使唤了
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] load_event (res://scenes/data_loader.gd:36)
+       [1] start_story (res://scenes/main.gd:1457)
+       [2] test_load_does_not_replay (res://tests/test_ending_save.gd:347)
+       [3] run (res://tests/test_ending_save.gd:24)
+       [4] _run_all (res://tests/run_tests.gd:51)
+       [5] run (res://tests/test_ch2_escape.gd:87)
+       [6] _test_escape_save_retry (res://tests/test_ch2_escape.gd:124)
+ERROR: [剧情] 节点 distrust 第 2 条演出指令：临时角色「b」还没放出来就被使唤了
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] load_event (res://scenes/data_loader.gd:36)
+       [1] start_story (res://scenes/main.gd:1457)
+       [2] load_game (res://scenes/main.gd:2067)
+       [3] test_load_does_not_replay (res://tests/test_ending_save.gd:366)
+       [4] run (res://tests/test_ending_save.gd:24)
+       [5] _run_all (res://tests/run_tests.gd:51)
+       [6] run (res://tests/test_ch2_escape.gd:87)
+       [7] _test_escape_save_retry (res://tests/test_ch2_escape.gd:124)
+ERROR: [剧情] 节点 pendant 第 7 条演出指令：临时角色「b」还没放出来就被使唤了
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] load_event (res://scenes/data_loader.gd:36)
+       [1] start_story (res://scenes/main.gd:1457)
+       [2] load_game (res://scenes/main.gd:2067)
+       [3] test_load_does_not_replay (res://tests/test_ending_save.gd:366)
+       [4] run (res://tests/test_ending_save.gd:24)
+       [5] _run_all (res://tests/run_tests.gd:51)
+       [6] run (res://tests/test_ch2_escape.gd:87)
+       [7] _test_escape_save_retry (res://tests/test_ch2_escape.gd:124)
+WARNING: [演出] 临时角色「b」还没放出来
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] _actor (res://scenes/cutscene.gd:1520)
+       [1] _npc_remove (res://scenes/cutscene.gd:1012)
+       [2] _apply (res://scenes/cutscene.gd:408)
+       [3] _perform (res://scenes/cutscene.gd:308)
+       [4] run (res://scenes/cutscene.gd:299)
+       [5] _run (res://core/story_director.gd:181)
+       [6] choose (res://core/story_director.gd:144)
+       [7] _on_choice_chosen (res://scenes/main.gd:1475)
+       [8] _confirm (res://ui/choice_menu.gd:229)
+       [9] confirm (res://ui/choice_menu.gd:216)
+       [10] pick (res://tests/test_harness.gd:81)
+       [11] test_load_does_not_replay (res://tests/test_ending_save.gd:375)
+       [12] run (res://tests/test_ending_save.gd:24)
+       [13] _run_all (res://tests/run_tests.gd:51)
+       [14] run (res://tests/test_ch2_escape.gd:87)
+       [15] _test_escape_save_retry (res://tests/test_ch2_escape.gd:124)
+ERROR: [剧情] 节点 distrust 第 2 条演出指令：临时角色「b」还没放出来就被使唤了
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] load_event (res://scenes/data_loader.gd:36)
+       [1] start_story (res://scenes/main.gd:1457)
+       [2] test_save_menu_does_not_close_choices (res://tests/test_ending_save.gd:428)
+       [3] run (res://tests/test_ending_save.gd:26)
+       [4] _run_all (res://tests/run_tests.gd:51)
+       [5] run (res://tests/test_ch2_escape.gd:87)
+       [6] _test_escape_save_retry (res://tests/test_ch2_escape.gd:124)
+ERROR: [剧情] 节点 pendant 第 7 条演出指令：临时角色「b」还没放出来就被使唤了
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] load_event (res://scenes/data_loader.gd:36)
+       [1] start_story (res://scenes/main.gd:1457)
+       [2] test_save_menu_does_not_close_choices (res://tests/test_ending_save.gd:428)
+       [3] run (res://tests/test_ending_save.gd:26)
+       [4] _run_all (res://tests/run_tests.gd:51)
+       [5] run (res://tests/test_ch2_escape.gd:87)
+       [6] _test_escape_save_retry (res://tests/test_ch2_escape.gd:124)
+WARNING: [演出] 临时角色「b」还没放出来
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] _actor (res://scenes/cutscene.gd:1520)
+       [1] _npc_remove (res://scenes/cutscene.gd:1012)
+       [2] _apply (res://scenes/cutscene.gd:408)
+       [3] _perform (res://scenes/cutscene.gd:308)
+       [4] run (res://scenes/cutscene.gd:299)
+       [5] _run (res://core/story_director.gd:181)
+       [6] choose (res://core/story_director.gd:144)
+       [7] _on_choice_chosen (res://scenes/main.gd:1475)
+       [8] _confirm (res://ui/choice_menu.gd:229)
+       [9] confirm (res://ui/choice_menu.gd:216)
+       [10] pick (res://tests/test_harness.gd:81)
+       [11] test_save_menu_does_not_close_choices (res://tests/test_ending_save.gd:439)
+       [12] run (res://tests/test_ending_save.gd:26)
+       [13] _run_all (res://tests/run_tests.gd:51)
+       [14] run (res://tests/test_ch2_escape.gd:87)
+       [15] _test_escape_save_retry (res://tests/test_ch2_escape.gd:124)
+[结局] 达成 end3_nothing（碌碌而无为）· 文字由剧本自己演
+
+--- 结局图鉴
+ERROR: Parse JSON failed. Error at line 0: Unexpected character
+   at: parse_string (core/io/json.cpp:629)
+   GDScript backtrace (most recent call first):
+       [0] load_records (res://scenes/ending_gallery.gd:42)
+       [1] test_gallery_file (res://tests/test_gallery.gd:77)
+       [2] run (res://tests/test_gallery.gd:13)
+       [3] _run_all (res://tests/run_tests.gd:53)
+       [4] run (res://tests/test_ch2_escape.gd:87)
+       [5] _test_escape_save_retry (res://tests/test_ch2_escape.gd:124)
+ERROR: [图鉴] 记录文件不是合法的 JSON 对象：user://endings.json
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] load_records (res://scenes/ending_gallery.gd:44)
+       [1] test_gallery_file (res://tests/test_gallery.gd:77)
+       [2] run (res://tests/test_gallery.gd:13)
+       [3] _run_all (res://tests/run_tests.gd:53)
+       [4] run (res://tests/test_ch2_escape.gd:87)
+       [5] _test_escape_save_retry (res://tests/test_ch2_escape.gd:124)
+ERROR: [图鉴] 记录文件不是合法的 JSON 对象：user://endings.json
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] load_records (res://scenes/ending_gallery.gd:44)
+       [1] test_gallery_file (res://tests/test_gallery.gd:82)
+       [2] run (res://tests/test_gallery.gd:13)
+       [3] _run_all (res://tests/run_tests.gd:53)
+       [4] run (res://tests/test_ch2_escape.gd:87)
+       [5] _test_escape_save_retry (res://tests/test_ch2_escape.gd:124)
+[结局] 达成 end1_calm（平静即死亡）· 文字由剧本自己演
+[结局] 达成 end1_calm（平静即死亡）· 文字由剧本自己演
+
+--- 标题与菜单
+[调试] 新游戏不演开场：skip_opening=false debug_start_map=
+[调试] 新游戏不演开场：skip_opening=true debug_start_map=
+[结局] 达成 end1_calm（平静即死亡）· 文字由剧本自己演
+[调试] 新游戏不演开场：skip_opening=true debug_start_map=
+
+--- 表现层
+ERROR: Parse JSON failed. Error at line 0: Unexpected character
+   at: parse_string (core/io/json.cpp:629)
+   GDScript backtrace (most recent call first):
+       [0] load_settings (res://scenes/game_settings.gd:77)
+       [1] test_speed_settings (res://tests/test_presentation.gd:211)
+       [2] run (res://tests/test_presentation.gd:15)
+       [3] _run_all (res://tests/run_tests.gd:57)
+       [4] run (res://tests/test_ch2_escape.gd:87)
+       [5] _test_escape_save_retry (res://tests/test_ch2_escape.gd:124)
+ERROR: [设置] 不是合法的 JSON 对象：user://settings.json
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] load_settings (res://scenes/game_settings.gd:79)
+       [1] test_speed_settings (res://tests/test_presentation.gd:211)
+       [2] run (res://tests/test_presentation.gd:15)
+       [3] _run_all (res://tests/run_tests.gd:57)
+       [4] run (res://tests/test_ch2_escape.gd:87)
+       [5] _test_escape_save_retry (res://tests/test_ch2_escape.gd:124)
+
+--- 音频
+ERROR: [剧情] 节点 distrust 第 2 条演出指令：临时角色「b」还没放出来就被使唤了
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] load_event (res://scenes/data_loader.gd:36)
+       [1] test_meet_b_stops_music (res://tests/test_audio.gd:337)
+       [2] run (res://tests/test_audio.gd:16)
+       [3] _run_all (res://tests/run_tests.gd:59)
+       [4] run (res://tests/test_ch2_escape.gd:87)
+       [5] _test_escape_save_retry (res://tests/test_ch2_escape.gd:124)
+ERROR: [剧情] 节点 pendant 第 7 条演出指令：临时角色「b」还没放出来就被使唤了
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] load_event (res://scenes/data_loader.gd:36)
+       [1] test_meet_b_stops_music (res://tests/test_audio.gd:337)
+       [2] run (res://tests/test_audio.gd:16)
+       [3] _run_all (res://tests/run_tests.gd:59)
+       [4] run (res://tests/test_ch2_escape.gd:87)
+       [5] _test_escape_save_retry (res://tests/test_ch2_escape.gd:124)
+ERROR: [剧情] 节点 distrust 第 2 条演出指令：临时角色「b」还没放出来就被使唤了
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] load_event (res://scenes/data_loader.gd:36)
+       [1] start_story (res://scenes/main.gd:1457)
+       [2] test_meet_b_stops_music (res://tests/test_audio.gd:366)
+       [3] run (res://tests/test_audio.gd:16)
+       [4] _run_all (res://tests/run_tests.gd:59)
+       [5] run (res://tests/test_ch2_escape.gd:87)
+       [6] _test_escape_save_retry (res://tests/test_ch2_escape.gd:124)
+ERROR: [剧情] 节点 pendant 第 7 条演出指令：临时角色「b」还没放出来就被使唤了
+   at: push_error (core/variant/variant_utility.cpp:1023)
+   GDScript backtrace (most recent call first):
+       [0] load_event (res://scenes/data_loader.gd:36)
+       [1] start_story (res://scenes/main.gd:1457)
+       [2] test_meet_b_stops_music (res://tests/test_audio.gd:366)
+       [3] run (res://tests/test_audio.gd:16)
+       [4] _run_all (res://tests/run_tests.gd:59)
+       [5] run (res://tests/test_ch2_escape.gd:87)
+       [6] _test_escape_save_retry (res://tests/test_ch2_escape.gd:124)
+WARNING: [演出] 临时角色「b」还没放出来
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] _actor (res://scenes/cutscene.gd:1520)
+       [1] _npc_remove (res://scenes/cutscene.gd:1012)
+       [2] _apply (res://scenes/cutscene.gd:408)
+       [3] _perform (res://scenes/cutscene.gd:308)
+       [4] run (res://scenes/cutscene.gd:299)
+       [5] _run (res://core/story_director.gd:181)
+       [6] choose (res://core/story_director.gd:144)
+       [7] _on_choice_chosen (res://scenes/main.gd:1475)
+       [8] _confirm (res://ui/choice_menu.gd:229)
+       [9] confirm (res://ui/choice_menu.gd:216)
+       [10] pick (res://tests/test_harness.gd:81)
+       [11] test_meet_b_stops_music (res://tests/test_audio.gd:367)
+       [12] run (res://tests/test_audio.gd:16)
+       [13] _run_all (res://tests/run_tests.gd:59)
+       [14] run (res://tests/test_ch2_escape.gd:87)
+       [15] _test_escape_save_retry (res://tests/test_ch2_escape.gd:124)
+
+--- 全场景统一主角标尺
+
+--- 地图与角色像素采样
+
+--- 人物与环境统一表现
+
+--- 救援判定与面板
+
+--- 第二章C救援整合
+
+--- 地图触发区域与事件绑定
+[调试] 新游戏不演开场：skip_opening=true debug_start_map=
+[调试] 新游戏不演开场：skip_opening=true debug_start_map=
+
+通过 4985 / 4985
+全部通过。

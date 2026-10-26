@@ -1457,6 +1457,9 @@ func _actor_frames(folder: String) -> SpriteFrames:
 		frames.add_animation(walk)
 		# 帧率和玩家取同一个值：同一段路，步子快慢该一致
 		frames.set_animation_speed(walk, Player.WALK_FPS)
+		# C 侧走有八个完整步态，半秒一轮，与四帧正/背面保持同样步周期。
+		if folder.trim_suffix("/") == "res://art/npc/c" and direction == "side":
+			frames.set_animation_speed(walk, Player.WALK_FPS * 2.0)
 		frames.set_animation_loop(walk, true)
 		for number: int in numbers:
 			var texture: Resource = load("%s/%s%d.png" % [folder, direction, number])

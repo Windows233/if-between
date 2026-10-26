@@ -410,5 +410,11 @@
     "smoke": "first-chapter real-window smoke PASS",
     "human_review": "new style and gait can still be adjusted after user review"
   },
-  "publication": "local_commit_only_no_push"
+  "publication": "local_commit_only_no_push",
+  "side_animation_superseded": {
+    "baseline": "d959114",
+    "reason": "four distinct images did not alternate legs",
+    "current": "art/catalogs/c_side_walk_v2_20261026.json",
+    "note": "side frame hashes and four-frame gait entry in this original record are historical; current side animation has8 frames at16fps"
+  }
 }

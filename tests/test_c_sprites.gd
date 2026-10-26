@@ -11,20 +11,22 @@ static func run(h: TestHarness) -> void:
 		var idle := StringName("idle_"+direction)
 		var walk := StringName("walk_"+direction)
 		var frames: SpriteFrames = actor.sprite_frames
-		h.check("C四帧行走："+direction, frames.get_frame_count(walk), 4)
+		var count := 8 if direction == "side" else 4
+		h.check("C完整行走帧数："+direction, frames.get_frame_count(walk), count)
 		h.check("C独立站姿："+direction, frames.get_frame_count(idle), 1)
 		var idle_texture := frames.get_frame_texture(idle,0)
 		h.check("C站姿不误用迈步姿势："+direction, idle_texture.resource_path.ends_with("/idle_"+direction+".png"), true)
 		h.check("C站姿精度匹配主角："+direction, idle_texture.get_size(), Vector2(258,360))
 		var hashes := {}
-		for index: int in 4:
+		for index: int in count:
 			var texture := frames.get_frame_texture(walk,index)
 			h.check("C行走画布匹配主角：%s%d" % [direction,index], texture.get_size(), Vector2(258,360))
 			var image := texture.get_image()
 			h.check("C行走脚底与画布底边对齐：%s%d" % [direction,index], image.get_used_rect().end.y, 360)
 			hashes[hash(image.get_data())] = true
-		h.check("C四帧实际内容不同："+direction, hashes.size(), 4)
+		h.check("C各步态实际内容不同："+direction, hashes.size(), count)
 		main.cutscene._walk_actor(actor,actor.position+Vector2.UP*10)
+	_check_side_gait(h,actor.sprite_frames)
 	main.cutscene._walk_actor(actor,actor.position+Vector2.LEFT*10)
 	h.check("C向左使用侧面", actor.animation, &"walk_side")
 	h.check("C侧面原画向左，不翻面", actor.flip_h, false)
@@ -60,3 +62,39 @@ static func run(h: TestHarness) -> void:
 static func _height(actor: Node2D, zoom: Vector2) -> float:
 	var sprite := actor as AnimatedSprite2D
 	return sprite.sprite_frames.get_frame_texture(sprite.animation,sprite.frame).get_height()*sprite.global_scale.y*zoom.y
+
+
+static func _check_side_gait(h: TestHarness, frames: SpriteFrames) -> void:
+	h.check("八帧侧走保持半秒完整步周期", frames.get_animation_speed(&"walk_side"), 16.0)
+	var contact_a := _boot_metrics(frames.get_frame_texture(&"walk_side",0).get_image())
+	var passing_a := _boot_metrics(frames.get_frame_texture(&"walk_side",2).get_image())
+	var contact_b := _boot_metrics(frames.get_frame_texture(&"walk_side",4).get_image())
+	var passing_b := _boot_metrics(frames.get_frame_texture(&"walk_side",6).get_image())
+	# 浅棕近侧靴是同一条腿：前半轮在前/左，后半轮在后/右。
+	h.check("近侧脚在第一落脚相位领先",contact_a.x < 99.0,true)
+	h.check("近侧脚在另一落脚相位已退到后方",contact_b.x > 159.0,true)
+	h.check("近侧脚有完整前后行程，而非原地抖动",contact_b.x-contact_a.x > 80.0,true)
+	h.check("经过相位两脚确实收拢：前半轮",passing_a.span < contact_a.span-40,true)
+	h.check("经过相位两脚确实收拢：后半轮",passing_b.span < contact_b.span-40,true)
+	h.check("近侧脚从支撑落地变为提膝抬起",passing_a.y-passing_b.y > 10.0,true)
+
+
+static func _boot_metrics(image: Image) -> Dictionary:
+	var sum_x := 0.0
+	var sum_y := 0.0
+	var count := 0
+	var left := image.get_width()
+	var right := 0
+	for y: int in range(285,image.get_height()):
+		for x: int in image.get_width():
+			var color := image.get_pixel(x,y)
+			if color.a < 0.5:
+				continue
+			left=mini(left,x)
+			right=maxi(right,x)
+			if color.r-color.g > 8.0/255.0 and color.g-color.b > 1.0/255.0 \
+					and (color.r+color.g+color.b)/3.0 > 75.0/255.0:
+				sum_x+=x
+				sum_y+=y
+				count+=1
+	return {"x":sum_x/maxi(1,count),"y":sum_y/maxi(1,count),"span":right-left}

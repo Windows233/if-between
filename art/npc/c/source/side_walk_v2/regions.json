@@ -1,0 +1,90 @@
+[
+  {
+    "frame": 1,
+    "row": 0,
+    "phase": "near_contact",
+    "cell": [
+      16,
+      0,
+      344,
+      591
+    ]
+  },
+  {
+    "frame": 2,
+    "row": 0,
+    "phase": "near_down",
+    "cell": [
+      359,
+      0,
+      656,
+      591
+    ]
+  },
+  {
+    "frame": 3,
+    "row": 0,
+    "phase": "near_support_far_passing",
+    "cell": [
+      682,
+      0,
+      975,
+      591
+    ]
+  },
+  {
+    "frame": 4,
+    "row": 0,
+    "phase": "far_reach",
+    "cell": [
+      983,
+      0,
+      1302,
+      591
+    ]
+  },
+  {
+    "frame": 5,
+    "row": 1,
+    "phase": "far_contact",
+    "cell": [
+      16,
+      591,
+      339,
+      1182
+    ]
+  },
+  {
+    "frame": 6,
+    "row": 1,
+    "phase": "far_down",
+    "cell": [
+      360,
+      591,
+      665,
+      1182
+    ]
+  },
+  {
+    "frame": 7,
+    "row": 1,
+    "phase": "far_support_near_passing",
+    "cell": [
+      682,
+      591,
+      975,
+      1182
+    ]
+  },
+  {
+    "frame": 8,
+    "row": 1,
+    "phase": "near_reach",
+    "cell": [
+      987,
+      591,
+      1313,
+      1182
+    ]
+  }
+]

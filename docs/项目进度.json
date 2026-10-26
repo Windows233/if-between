@@ -36,10 +36,10 @@
   },
   "checked_versions": {
     "main_baseline": "24740c9",
-    "primary_branch": "codex/c-sprites-npc-scale-20261026",
+    "primary_branch": "codex/c-side-gait-fix-20261026",
     "scope": "本轮按用户要求补图书馆图层并继续剧情；保留既定团队任务单、D1-D6制作/D7-D9润色及取消工时排产约束。",
     "art_drop_4_baseline": "0a600ec；本轮仅素材/引用及策划约束更新，不将旧进度账当作最新完整功能验收",
-    "latest_runtime_evidence": "承接c8987b5；本轮C重绘与NPC统一标尺，本地未推送；4970/4970、GPU与后段至End7自动试走通过"
+    "latest_runtime_evidence": "d959114侧走被用户指出不交替，本轮重绘八相位并验证足部轨迹/实机播放，4985/4985；仅本地，未推送"
   },
   "counts": {
     "maps": 14,
@@ -186,10 +186,10 @@
       "id": "C-ART",
       "name": "C立绘小人及救援UI",
       "owner": "美术",
-      "production": "C地图小人已重绘：258x360、12步态+3独立站姿",
+      "production": "C当前16走路帧+3站姿；侧走由错误四帧修正为完整八相位",
       "delivery": "已接入本地codex/c-sprites-npc-scale-20261026，未推送",
-      "integration": "操场/校门/图书馆/追逐复用新C，束缚层宽高对齐；全人形NPC统一45",
-      "acceptance": "4970/4970与GPU同框/两地图通过；风格/步态待团队试玩反馈",
+      "integration": "side1..8，16FPS；其余C PNG字节保持，NPC高度45保持",
+      "acceptance": "4985/4985及专门GPU侧走/实际移动通过；原侧走验收已撤回，以新原速和慢放反馈为准",
       "evidence": [
         {
           "date": "2026-10-24",
@@ -198,9 +198,13 @@
         {
           "date": "2026-10-26",
           "reference": "docs/C重绘与NPC尺寸统一_20261026.md；art/catalogs/c_redraw_20261026.json"
+        },
+        {
+          "date": "2026-10-26",
+          "reference": "用户指出脚未交替；docs/C侧走纠错_20261026.md与art/catalogs/c_side_walk_v2_20261026.json"
         }
       ],
-      "next_action": "使用新版15帧，不重复派旧64像素素材；根据用户试玩反馈润色"
+      "next_action": "使用v2原速/慢放验收交替步态；旧四方向GIF的侧走不作为证据"
     },
     {
       "id": "SCHOOL-ART",
@@ -642,7 +646,7 @@
     "scope": "2026-10-26本地图层+后段实际追逐；不是整章人工通关验收",
     "route": "真窗口物理移动跑过图书馆→校门→教室窗下→夜市B→委托屋→End7，约28.5秒；检查点存读档与失败重试回归通过",
     "assets": "同尺寸无猫背景、独立透明猫与入口血迹已入库绑定；决策币/抛币CG已交；窗边可动分层、正式动作和专用BGM仍待后补",
-    "game_tests": "Godot 4.7.2 4970/4970 PASS",
+    "game_tests": "Godot4.7.2 4985/4985 PASS",
     "map_editor_tests": "Godot 4.7.2 tests/run_map_editor_tests.gd与tests/probe_map_editor.gd均退出码0",
     "smoke_run": "第一章真实窗口烟测PASS；图书馆四状态GPU PASS；后段真实窗口自动试走PASS",
     "data_check": "PASS 14图/32剧情/7结局/11物品",
@@ -666,6 +670,13 @@
       "GPU": "同框、操场、校门与束缚对齐通过",
       "source": "内置imagegen；原始透明表和提示词已归档",
       "scope": "只本地提交；整章人工通关仍待完成"
+    },
+    "c_side_walk_fix": {
+      "source": "内置imagegen生成+定向腿部修正",
+      "gait": "近/远腿互换支撑，8相位16FPS，0.5秒一轮",
+      "specific_checks": "近靴前后行程、经过相位收拢、落地与抬起高度差",
+      "native": "持续追兵更新不重置首帧，左右均实际移动并回站姿",
+      "scope": "本地未推送，用户可按新动图继续反馈"
     }
   },
   "active_daily_plan": "docs/每日策划/2026-10-25_图书馆后段策划/"

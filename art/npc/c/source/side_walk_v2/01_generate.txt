@@ -1,0 +1,18 @@
+Use case: identity-preserve.
+Asset type: replacement LEFT PROFILE walking sprite sheet for an existing pixel-art RPG.
+Input images: image 1 (C idle_side.png) is the exact identity, clothing, drawing style, proportion and pixel precision to preserve. Image 2 (C side1.png) illustrates the broken old animation: DO NOT REPEAT this single leg arrangement. Image 3 (protagonist side2.png) is a stride-anatomy and clean-pixel reference only, NOT C's clothes.
+Primary request: draw a CORRECT eight-frame alternating biped walk cycle for C, facing LEFT in every frame, with real foot and knee movement and opposing arm swing. The old sheet repeated essentially one split-leg pose and twitched; this must actually swap the leading leg.
+Layout: TWO rows of FOUR equal cells, eight complete isolated sprites, reading order left to right top then bottom. Transparent PNG, generously separated characters, common ground line per row, fixed body scale, small natural vertical bob only. At least about 360 pixels of drawn height per sprite. No labels, numbers, grid lines or background.
+C identity locked: tousled silver-white hair, grey eyes, light skin, long charcoal grey open coat ending around knees, grey scarf, black high-neck shirt and dark trousers, brown-charcoal boots. Same 258x360-style crisp pixel detail as reference 1; dark contour, subdued cool grey shading. No red scarf, no weapons.
+IMPORTANT LEG IDENTITY: the NEAR leg closest to camera must remain a slightly lighter grey with a visible boot highlight throughout; the FAR leg is naturally darker, not a different costume. This depth shading lets the viewer follow each leg. Allow the open coat to separate just enough to see knees and boots.
+Exact gait phases in reading order:
+1 CONTACT A: NEAR lighter leg stretched FORWARD to the LEFT, heel down and toe slightly up; FAR darker leg extended BACK to the RIGHT, toe down heel up. Near arm swings BACK/right.
+2 DOWN A: weight settles onto the NEAR front leg at left; knee bends; FAR back boot lifts at right starting its forward swing, toes no longer glued to the same place.
+3 PASSING A: NEAR supporting boot planted directly UNDER the hip; FAR knee/boot lifted and moving past the supporting leg toward the LEFT. Feet are close horizontally, not a wide split. Near arm passes neutral.
+4 UP A: NEAR supporting leg has moved BACK/right; FAR lifted leg reaches FORWARD/left with heel about to land. Near arm swings FORWARD/left.
+5 CONTACT B: FAR darker boot now leads at the LEFT with heel down; NEAR lighter boot trails at the RIGHT with toe down. This is the OPPOSITE LEG from frame 1. Near arm FORWARD/left. Do not duplicate frame 1.
+6 DOWN B: weight on FAR front leg; NEAR rear boot lifts at right beginning its forward swing.
+7 PASSING B: FAR supporting boot planted UNDER the hip; NEAR knee/boot raised and passing forward toward the LEFT. Narrow stance, visibly different leg depth from frame 3.
+8 UP B: FAR leg is trailing right; NEAR lifted leg reaches forward left, ready to land as frame 1. Near arm swings BACK/right.
+Motion constraints: the planted foot travels from front to rear relative to the torso through its support half-cycle; the other foot visibly rises, passes and returns forward. Clear alternation of lighter near boot and darker far boot at the LEFT leading position between frames 1 and 5. No repeated static V-shaped stance for all frames. Small coherent coat/scarf response, no whole-character leaning or horizontal jitter as a substitute for leg articulation. Keep hair/head/face and torso volume consistent. Never mirror alternate frames: ALL EIGHT face left.
+Preserve actual transparency. Avoid blur, soft painterly rendering, checkerboard pixels, cast shadows, captions and watermark.
