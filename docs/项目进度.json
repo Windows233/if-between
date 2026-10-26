@@ -32,7 +32,13 @@
     "current_task_documents": [
       "docs/每日策划/2026-10-25_图书馆后段策划/程序任务.md",
       "docs/每日策划/2026-10-25_图书馆后段策划/美术任务.md"
-    ]
+    ],
+    "audio_policy": {
+      "endings": "每个结局单独一首BGM；现有End1—3先保留，End4—7新增",
+      "scenes": "不同地图独立BGM；昼夜/梦境可共用动机但需独立编配文件",
+      "priority": "先图书馆/教室/End6/End7，再补End4/5及其他场景；这是完整需求库，不承诺一天内全交",
+      "story_dependency": "未交前按既有替代继续制作剧情，音频到件后替换并联验"
+    }
   },
   "checked_versions": {
     "main_baseline": "ae1a7bd",
@@ -164,6 +170,12 @@
       "source": "user_message",
       "report": "今天推进并完成后半章剧情，要求程序文本与不阻塞程序的美术任务；继续取消每日两小时排产",
       "scope": "目标，不是已完成实绩"
+    },
+    {
+      "date": "2026-10-26",
+      "source": "user_message",
+      "report": "需要列出音效缺口；结局各有配乐，图书馆和教室等不同场景分别有BGM",
+      "scope": "新增音频需求，不是已完成反馈"
     }
   ],
   "items": [
@@ -718,6 +730,22 @@
         }
       ],
       "next_action": "程序/美术实机核对阅读可读性与抛币静态表现；无需为这5张图重画"
+    },
+    {
+      "id": "AUDIO-UNIQUE-BGM",
+      "name": "分场景/分结局配乐与后段音效",
+      "owner": "音效音乐",
+      "production": "End1—3及既有通用曲已交；待新增4首结局曲、10首场景曲和10条主线动作音效，增强音效可选",
+      "delivery": "新曲与新动作音未交付；现有音频实查见同目录音频接入对照表.json",
+      "integration": "当前库/教室/校门/后巷共用reclamation；新曲交付后按稳定结局ID/地图ID接入，不能只传文件不调用",
+      "acceptance": "现有文件存在与引用核对通过；本轮未试听判定音乐风格或混音，新音听感/循环/触发待验收",
+      "evidence": [
+        {
+          "date": "2026-10-26",
+          "reference": "用户本轮音频需求；远端main=ae1a7bd；audio/bgms实际扫描及main.gd/事件引用"
+        }
+      ],
+      "next_action": "优先交scene_library、scene_classroom、ending_06_sin、ending_07_tomorrow，程序继续使用已注明占位"
     }
   ],
   "pending_inputs": [
