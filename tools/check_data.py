@@ -74,6 +74,11 @@ def check_object_geometry(where: str, actor: dict) -> None:
 
 
 def check_object_visuals(where: str, actor: dict) -> None:
+    if actor.get("draw_layer", "") not in ("", "back", "auto", "front", "above_overlay"):
+        note(where, "物件 %s 的 draw_layer 必须是继承/back/auto/front/above_overlay" % actor.get("id", "?"))
+    order = actor.get("draw_order", 0)
+    if not finite_number(order) or isinstance(order, bool) or int(order) != order:
+        note(where, "物件 %s 的 draw_order 必须是有限整数" % actor.get("id", "?"))
     turns = actor.get("quarter_turns", 0)
     if not isinstance(turns, int) or isinstance(turns, bool) or not 0 <= turns <= 3:
         note(where, "物件 %s 的 quarter_turns 必须是 0..3 的整数" % actor.get("id", "?"))

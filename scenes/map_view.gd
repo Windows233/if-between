@@ -99,6 +99,8 @@ const OVER_Z := 12
 ## 它是整张盖住画面的那种，不是一件家具。角色是 10，所以这一层之下
 ## 所有东西都被它按图上的形状切掉。
 const OVERLAY_Z := 13
+## 需覆盖整张前景的独立物件，例如地面血迹；与角色前层12明确分开。
+const ABOVE_OVERLAY_Z := 14
 
 var map_def: MapDef = null
 ## 当前的世界状态。用来判断哪些角色和连接「现在存在」。
@@ -172,7 +174,7 @@ func _build_room() -> void:
 	for wall: Rect2 in map_def.walls:
 		if not _has_picture:
 			_add_rect(wall, WALL_COLOR, 0)
-	for actor: MapDef.Actor in map_def.active_actors(_flags):
+	for actor: MapDef.Actor in MapDef.ordered_actors(map_def.active_actors(_flags)):
 		# 画在墙之上，不然站在墙前面会被挡住
 		_add_actor(actor)
 
@@ -220,6 +222,8 @@ func _add_actor(actor: MapDef.Actor) -> void:
 		node.transform = actor.visual_texture_transform(index, node.texture.get_size())
 		if layers[index] == "front":
 			node.z_index = OVER_Z
+		elif layers[index] == "above_overlay":
+			node.z_index = ABOVE_OVERLAY_Z
 		elif layers[index] == "auto":
 			_covers.append({"node": node, "cover_y": baselines[index]})
 	if drawn or not actor.visual_parts.is_empty():

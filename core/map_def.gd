@@ -9,6 +9,7 @@ class_name MapDef
 extends RefCounted
 
 const Trigger := preload("res://core/map_trigger.gd")
+const DRAW_LAYERS := ["", "back", "auto", "front", "above_overlay"]
 
 ## 场景类型。决定「怎么触发连接」和「角色能不能走」。
 enum Kind {
@@ -167,6 +168,10 @@ class Actor:
 	var sprite_variants: Dictionary = {}
 	## 默认及当前运行时使用的变体；空串表示使用 sprite。
 	var sprite_variant: String = ""
+	## 空串继承旧over/cover或各视觉部件设置；显式值覆盖此物件全部视觉部件。
+	var draw_layer: String = ""
+	## 同一实际绘制层内越大越靠前；相同值仍采用地图原来的物件次序。
+	var draw_order: int = 0
 	## 非空时替代旧 sprite。每段 rect 相对旋转后 actor.rect 左上角，几何已由编辑器烘焙。
 	var visual_parts: Array[VisualPart] = []
 	## 源纹理先沿局部轴翻转，再顺时针旋转 quarter_turns 个 90 度；不再变换碰撞或交互。
@@ -299,6 +304,10 @@ class Actor:
 	## 与世界矩形同序的 back/auto/front；旧物件由 over、cover 映射成同一协议。
 	func visual_layers() -> PackedStringArray:
 		var result := PackedStringArray()
+		if not draw_layer.is_empty():
+			for index: int in maxi(visual_parts.size(), 1):
+				result.append(draw_layer)
+			return result
 		if visual_parts.is_empty():
 			result.append("front" if over else ("auto" if cover else "back"))
 		else:
@@ -601,6 +610,8 @@ func validate() -> Array[String]:
 			problems.append("场景 %s 的角色 %s：%s" % [id, actor.id, problem])
 		if actor.quarter_turns < 0 or actor.quarter_turns > 3:
 			problems.append("角色 %s 的 quarter_turns 必须是 0..3 的整数" % actor.id)
+		if actor.draw_layer not in DRAW_LAYERS:
+			problems.append("角色 %s 的 draw_layer 必须是空串/back/auto/front/above_overlay" % actor.id)
 		if actor.sprite_variant != "" and not actor.sprite_variants.has(actor.sprite_variant):
 			problems.append("角色 %s 的默认贴图变体不存在：%s" % [actor.id, actor.sprite_variant])
 		if not actor.sprite_variants.is_empty() and not actor.visual_parts.is_empty():
@@ -642,6 +653,20 @@ func to_text() -> String:
 
 
 # ---------------------------------------------------------------- 转换工具
+
+## 返回副本，按同层绘制顺序升序排列；同值保留源数组次序，不能依赖非稳定sort。
+static func ordered_actors(source: Array[Actor]) -> Array[Actor]:
+	var indices: Array[int] = []
+	for index: int in source.size():
+		indices.append(index)
+	indices.sort_custom(func(first: int, second: int) -> bool:
+		var before := source[first].draw_order
+		var after := source[second].draw_order
+		return first < second if before == after else before < after)
+	var result: Array[Actor] = []
+	for index: int in indices:
+		result.append(source[index])
+	return result
 
 static func _to_vector2i(raw: Variant, fallback: Vector2i) -> Vector2i:
 	if raw is Array and (raw as Array).size() >= 2:
@@ -796,6 +821,19 @@ static func _actor_from(raw: Variant) -> Actor:
 	else:
 		actor._visual_problems.append("sprite_variants 必须是对象")
 	actor.sprite_variant = str(raw.get("sprite_variant", ""))
+	var raw_layer: Variant = raw.get("draw_layer", "")
+	if raw_layer is String:
+		actor.draw_layer = raw_layer
+	else:
+		actor._visual_problems.append("draw_layer 必须是字符串")
+	var raw_order: Variant = raw.get("draw_order", 0)
+	if raw_order is int:
+		actor.draw_order = raw_order
+	elif _finite_number(raw_order) and float(raw_order) == floorf(float(raw_order)) \
+			and float(raw_order) >= -9223372036854775808.0 and float(raw_order) < 9223372036854775808.0:
+		actor.draw_order = int(raw_order)
+	else:
+		actor._visual_problems.append("draw_order 必须是有限整数")
 	_visuals_from(actor, raw)
 	actor.solid = bool(raw.get("solid", false))
 	actor.cover = bool(raw.get("cover", false))

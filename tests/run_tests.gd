@@ -31,6 +31,7 @@ func _run_all() -> void:
 	TestWalkable.run(h)
 	preload("res://tests/test_map_geometry_runtime.gd").run(h)
 	preload("res://tests/test_map_visual_parts.gd").run(h)
+	preload("res://tests/test_map_draw_layers.gd").run(h)
 	h.section("对话与选项")
 	TestDialogue.run(h)
 	h.section("剧情事件")

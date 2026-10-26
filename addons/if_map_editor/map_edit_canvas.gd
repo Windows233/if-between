@@ -798,6 +798,7 @@ func _draw() -> void:
 				_draw_rect_game(model.interaction_rect_of(index), ACTOR_FILL, Color.TRANSPARENT)
 	_draw_visual_layer("back")
 	_draw_visual_layer("auto")
+	_draw_visual_layer("front")
 	if is_kind_visible(Kind.OVERLAY) and tex_overlay != null:
 		draw_texture_rect(tex_overlay, full, false, Color(1, 1, 1, overlay_alpha))
 		# 前景层不是物件，但它**恒在角色之上**（OVERLAY_Z 13）——
@@ -810,7 +811,7 @@ func _draw() -> void:
 			draw_dashed_line(band_screen.position + Vector2(band_screen.size.x, 0),
 				band_screen.position + band_screen.size, OVERLAY_MARK, 1.0, 5.0)
 			_label(band.position + Vector2(2, -3), "前景层：恒在角色之上", OVERLAY_MARK)
-	_draw_visual_layer("front")
+	_draw_visual_layer("above_overlay")
 	if show_walk and _walk_texture != null:
 		draw_texture_rect(_walk_texture, full, false)
 	if model == null:
@@ -933,24 +934,28 @@ func actor_visual_items(index: int) -> Array[Dictionary]:
 	if model == null or index < 0 or index >= model.count(Kind.ACTOR):
 		return result
 	var actor: Dictionary = _visual_actor_dict(index)
+	var definition := MapDef._actor_from(actor)
+	var effective_layers := definition.visual_layers()
 	var rect := ObjectTransform.rect_from(actor.get("rect"))
 	var parts: Variant = actor.get("visual_parts", [])
 	if parts is Array and not parts.is_empty():
-		for part: Variant in parts:
+		var visual_index := 0
+		for part_index: int in parts.size():
+			var part: Variant = parts[part_index]
 			if not part is Dictionary:
 				continue
 			var local := ObjectTransform.rect_from(part.get("rect"))
-			var layer := str(part.get("layer", "auto"))
+			var layer := effective_layers[visual_index] if visual_index < effective_layers.size() else "auto"
+			visual_index += 1
 			result.append({"actor_index": index, "sprite": str(part.get("sprite", "")),
 				"rect": Rect2(rect.position + local.position, local.size),
-				"layer": layer if layer in ["back", "auto", "front"] else "auto",
+				"layer": layer,
 				"sort_offset": float(part.get("sort_offset", 0.0))})
 	else:
-		var definition := MapDef._actor_from(actor)
 		var sprites := definition.visual_sprites()
 		var sprite := sprites[0] if not sprites.is_empty() else str(actor.get("sprite", ""))
 		result.append({"actor_index": index, "sprite": sprite,
-			"rect": rect, "layer": "front" if bool(actor.get("over", false)) else "auto",
+			"rect": rect, "layer": effective_layers[0],
 			"sort_offset": 0.0})
 	return result
 
@@ -958,7 +963,7 @@ func actor_visual_items(index: int) -> Array[Dictionary]:
 func _draw_visual_layer(layer: String) -> void:
 	if model == null or not is_kind_visible(Kind.ACTOR):
 		return
-	for index in model.count(Kind.ACTOR):
+	for index: int in ordered_actor_indices():
 		if actor_is_hidden(index):
 			continue
 		for item: Dictionary in actor_visual_items(index):
@@ -972,6 +977,20 @@ func _draw_visual_layer(layer: String) -> void:
 			draw_set_transform_matrix(ObjectTransform.visual_transform(screen, model.actor_dict(index)))
 			draw_texture_rect(texture, Rect2(-0.5, -0.5, 1, 1), false)
 			draw_set_transform_matrix(Transform2D.IDENTITY)
+
+
+## 与实际游戏复用稳定绘制顺序；原始物件数组和场景树整理顺序不变。
+func ordered_actor_indices() -> Array[int]:
+	var actors: Array[MapDef.Actor] = []
+	var source_indices: Dictionary = {}
+	for index: int in model.count(Kind.ACTOR):
+		var actor := MapDef._actor_from(model.actor_dict(index))
+		actors.append(actor)
+		source_indices[actor.get_instance_id()] = index
+	var result: Array[int] = []
+	for actor: MapDef.Actor in MapDef.ordered_actors(actors):
+		result.append(int(source_indices[actor.get_instance_id()]))
+	return result
 
 
 func _draw_rect_game(r: Rect2, fill: Color, edge: Color, width := 1.0) -> void:

@@ -20,6 +20,8 @@ const MapCreationDialog := preload("res://addons/if_map_editor/map_creation_dial
 const SceneHierarchy := preload("res://addons/if_map_editor/map_scene_hierarchy.gd")
 const SceneTreeControl := preload("res://addons/if_map_editor/map_scene_tree.gd")
 const VisualInspector := preload("res://addons/if_map_editor/map_visual_inspector.gd")
+const DrawLayerInspector := preload("res://addons/if_map_editor/map_draw_layer_inspector.gd")
+const DrawLayersPanel := preload("res://addons/if_map_editor/map_draw_layers_panel.gd")
 const TemplateInspector := preload("res://addons/if_map_editor/map_template_inspector.gd")
 const PreviewOptions := preload("res://addons/if_map_editor/map_preview_options.gd")
 const Shortcuts := preload("res://addons/if_map_editor/map_shortcuts.gd")
@@ -52,6 +54,9 @@ var _syncing := false
 ## 每敲一个字都重建会把光标弄丢。
 var _actor_panel: VBoxContainer
 var _visual_inspector: VBoxContainer
+var _draw_layer_inspector: VBoxContainer
+var _draw_layers_panel: VBoxContainer
+var _layer_checkboxes: Dictionary = {}
 var _panel_scroll: ScrollContainer
 var _panel_kind := -1
 var _panel_index := -1
@@ -272,6 +277,15 @@ func _build() -> void:
 	_refresh_templates()
 	_build_scene_tools()
 	_build_template_browser()
+	_draw_layers_panel = DrawLayersPanel.new()
+	_draw_layers_panel.configure(model, canvas)
+	_draw_layers_panel.name = "图层"
+	_draw_layers_panel.actor_selected.connect(_select_draw_actor)
+	_draw_layers_panel.overlay_selected.connect(_select_draw_overlay)
+	_draw_layers_panel.background_selected.connect(_select_draw_background)
+	_draw_layers_panel.visibility_requested.connect(func(prop: String, on: bool) -> void:
+		_on_layer(on, prop))
+	_asset_tabs.add_child(_draw_layers_panel)
 
 
 func _build_template_browser() -> void:
@@ -650,6 +664,8 @@ func _on_asset_list_gui_input(event: InputEvent) -> void:
 
 
 func _refresh_objects() -> void:
+	if is_instance_valid(_draw_layers_panel):
+		_draw_layers_panel.refresh()
 	if _object_tree == null:
 		return
 	var actor_ids := PackedStringArray()
@@ -1352,6 +1368,7 @@ func _row_layers() -> HFlowContainer:
 			["可走格", "show_walk"], ["脚底框（跟鼠标）", "show_foot"]]:
 		var cb := CheckBox.new()
 		cb.text = str(item[0])
+		_layer_checkboxes[str(item[1])] = cb
 		cb.button_pressed = bool(canvas.get(str(item[1])))
 		cb.tooltip_text = "取消勾选：这一类既不显示，也点不中（底下压着的东西就能选中了）"
 		if str(item[1]) == "show_walk":
@@ -1695,6 +1712,10 @@ func _on_tool(which: int) -> void:
 
 func _on_layer(on: bool, prop: String) -> void:
 	canvas.set_layer_visible(prop, on)
+	for key: String in _layer_checkboxes:
+		(_layer_checkboxes[key] as CheckBox).set_pressed_no_signal(bool(canvas.get(key)))
+	if is_instance_valid(_draw_layers_panel):
+		_draw_layers_panel.refresh()
 	if prop == "show_walk":
 		if on:
 			_status.text = "可走格已开启：绿=脚底能站稳，红=会碰撞；修改碰撞后自动刷新。"
@@ -1702,6 +1723,29 @@ func _on_layer(on: bool, prop: String) -> void:
 			_status.text = "可走格已关闭。"
 	else:
 		_status.text = "「%s」%s —— 显示开关同时管能不能点中" % [prop, "开着" if on else "关掉了"]
+
+
+func _select_draw_actor(index: int) -> void:
+	var selected: Array[int] = [index]
+	canvas.select_actors(selected)
+	_on_selection_changed()
+	_frame_selection()
+
+
+func _select_draw_overlay() -> void:
+	var empty: Array[int] = []
+	canvas.select_actors(empty)
+	canvas.sel_kind = Kind.OVERLAY
+	canvas.sel_index = 0
+	_on_tool(Canvas.Tool.SELECT)
+	_refresh_selection()
+	_asset_tabs.current_tab = _draw_layers_panel.get_index()
+	_frame_selection()
+	_status.text = "整张前景 %s：含墙面、门柱或台阶等绘制内容；可在图层页临时隐藏对照。" % model.overlay_path().get_file()
+
+
+func _select_draw_background() -> void:
+	_status.text = "背景 %s 固定在最底层；画进背景的内容需独立贴图后才能单独调整层次。" % model.background_path().get_file()
 
 
 ## 删东西。**有跨文件关联的先问一句** —— 删掉就断了那条入口，
@@ -2098,6 +2142,8 @@ func _sync_object_geometry_fields() -> void:
 	if is_instance_valid(_visual_inspector):
 		_visual_inspector._sync_texture_fields()
 		_visual_inspector.sync_tool(canvas.tool)
+	if is_instance_valid(_draw_layer_inspector):
+		_draw_layer_inspector.sync_fields()
 
 
 func _on_canvas_edited() -> void:
@@ -2257,6 +2303,12 @@ func _build_actor_panel() -> void:
 	row3.add_child(_bool_field("cover", "会挡人（按站位分前后）"))
 	row3.add_child(_bool_field("over", "永远画在角色之上"))
 	_actor_panel.add_child(row3)
+	var draw_layer := DrawLayerInspector.new()
+	draw_layer.configure(model, _panel_index, canvas.selected_actors())
+	draw_layer.edited.connect(_on_edited)
+	draw_layer.overlay_selected.connect(_select_draw_overlay)
+	_draw_layer_inspector = draw_layer
+	_actor_panel.add_child(draw_layer)
 	var visuals := VisualInspector.new()
 	visuals.configure(model, _panel_index, canvas.selected_actors())
 	visuals.edited.connect(_on_edited)

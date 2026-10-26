@@ -21,6 +21,8 @@ func _run() -> void:
 	preload("res://tests/test_map_asset_scale.gd").run(harness)
 	preload("res://tests/test_map_texture_fit.gd").run(harness)
 	preload("res://tests/test_map_texture_canvas.gd").run(harness)
+	preload("res://tests/test_map_draw_layers.gd").run(harness)
+	preload("res://tests/test_map_draw_layers_ui.gd").run(harness)
 	preload("res://tests/test_map_load_safety.gd").run(harness)
 	preload("res://tests/test_map_preview.gd").run(harness)
 	preload("res://tests/test_map_scene_workflow.gd").run(harness)
