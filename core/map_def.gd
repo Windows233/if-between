@@ -142,6 +142,7 @@ class VisualPart:
 
 class Actor:
 	extends RefCounted
+	var raw: Dictionary = {}
 
 	var id: StringName = &""
 	## 物件本体：贴图按它摆，交互也默认按它算。
@@ -774,6 +775,7 @@ static func _actor_from(raw: Variant) -> Actor:
 	var actor := Actor.new()
 	if not (raw is Dictionary):
 		return actor
+	actor.raw = (raw as Dictionary).duplicate(true)
 
 	actor.id = StringName(str(raw.get("id", "")))
 	actor.rect = _to_rect(raw.get("rect"))

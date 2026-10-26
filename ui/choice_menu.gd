@@ -107,10 +107,10 @@ func _make_rect(node_name: String, color: Color) -> ColorRect:
 ##
 ## `box_top` 由 `DialogueBox.hold_top()` 给。稿子③：「选项框直接出现在
 ## 对话框上方一点」。整块水平居中、底边贴住面板上沿，自己带面板和外框。
-func open_above(options: Array[ChoiceOption], box_top: float) -> void:
+func open_above(options: Array[ChoiceOption], box_top: float, cancellable: bool = false) -> void:
 	_above = true
 	_above_bottom = box_top
-	_cancellable = false
+	_cancellable = cancellable
 	_open_menu("", options)
 
 

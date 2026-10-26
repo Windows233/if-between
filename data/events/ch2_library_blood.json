@@ -17,29 +17,51 @@
     },
     {
       "id": "first",
-      "set": {
-        "ch2/library/blood_seen": true,
-        "map_blood/library/entrance": true
-      },
       "stage": [
         {
           "do": "say",
           "lines": [
             {
               "speaker": "我",
-              "text": "墙边有一小片已经发黑的血迹。",
-              "side": "left",
-              "portrait": "protagonist/quiet"
-            },
-            {
-              "speaker": "我",
-              "text": "这里之前发生过什么？",
+              "text": "地上有一摊干涸的血。",
               "side": "left",
               "portrait": "protagonist/quiet"
             }
           ]
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "C",
+              "text": "......",
+              "side": "right",
+              "portrait": "c/neutral"
+            },
+            {
+              "speaker": "我",
+              "text": "怎么了？",
+              "side": "left",
+              "portrait": "protagonist/quiet"
+            },
+            {
+              "speaker": "C",
+              "text": "看来有人在这里出事，我们得小心一点了",
+              "side": "right",
+              "portrait": "c/neutral"
+            }
+          ]
         }
-      ]
+      ],
+      "next": "first_complete"
+    },
+    {
+      "id": "first_complete",
+      "set": {
+        "ch2/library/blood_seen": true,
+        "map_blood/library/entrance": true
+      },
+      "stage": []
     },
     {
       "id": "seen",
@@ -56,29 +78,47 @@
     },
     {
       "id": "second",
-      "set": {
-        "ch2/library/blood_second_seen": true
-      },
       "stage": [
         {
           "do": "say",
           "lines": [
             {
               "speaker": "我",
-              "text": "血迹还在，像是从来没有被回溯抹掉。",
+              "text": "原来这摊血就是我自己的",
               "side": "left",
               "portrait": "protagonist/thinking"
+            },
+            {
+              "speaker": "我",
+              "text": "呵，最大的危险好像就是你吧",
+              "side": "left",
+              "portrait": "protagonist/guarded"
             }
           ]
         }
-      ]
+      ],
+      "next": "second_complete"
+    },
+    {
+      "id": "second_complete",
+      "set": {
+        "ch2/library/blood_second_seen": true
+      },
+      "stage": []
     },
     {
       "id": "repeat",
       "stage": [
         {
           "do": "say",
-          "text": "血迹已经干了。"
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "血迹已经干了。",
+              "side": "left",
+              "portrait": "protagonist/quiet"
+            }
+          ]
         }
       ]
     }

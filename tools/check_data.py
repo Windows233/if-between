@@ -433,6 +433,11 @@ def main() -> int:
         if key.startswith("item/"):
             used_items.add(key[len("item/"):])
     used_items |= given
+    for event in events.values():
+        for node in event.get("nodes", []):
+            for step in node.get("stage", []):
+                if step.get("do") == "item_add_once" and step.get("item"):
+                    used_items.add(step["item"])
     for it in sorted(used_items):
         if it not in items:
             note("items.json", "用到没登记的物品 item/%s" % it)

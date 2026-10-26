@@ -31,6 +31,12 @@ const KINDS: Dictionary = {
 	&"personal_anchor": [],    # 记录首次入馆的个人与背包状态
 	&"personal_anchor_restore": [],
 	&"map_actor_variant": ["actor", "variant"],
+	&"map_actor_alpha": ["actor", "alpha"],
+	&"map_actor_marker": ["actor", "text"],
+	&"approach_actor": ["actor"],
+	&"inventory_select": ["result"],
+	&"choice_cancel": [],
+	&"item_add_once": ["item", "amount", "flag"],
 	&"ch2_checkpoint_save": ["checkpoint"],
 	&"ch2_checkpoint_restore": ["checkpoint"],
 	&"ch2_checkpoint_clear": ["checkpoint"],
@@ -227,6 +233,30 @@ func validate() -> Array[String]:
 		problems.append("闪避QTE的key只能是q或e")
 	if kind == &"map_actor_variant" and text("actor") == "":
 		problems.append("map_actor_variant 需要 actor")
+	if kind == &"map_actor_alpha":
+		if text("actor") == "":
+			problems.append("map_actor_alpha 需要 actor")
+		if number("alpha", -1.0) < 0.0 or number("alpha", -1.0) > 1.0:
+			problems.append("map_actor_alpha 的 alpha 必须在 0 到 1 之间")
+		if number("time", 0.0) < 0.0:
+			problems.append("map_actor_alpha 的 time 不能小于 0")
+	if kind == &"map_actor_marker" and text("actor") == "" and text("text") != "":
+		problems.append("map_actor_marker 清除标记时 text 必须为空")
+	if kind == &"approach_actor" and text("actor") == "":
+		problems.append("approach_actor 需要 actor")
+	if kind == &"approach_actor" and number("max_distance", -1.0) < 0.0:
+		problems.append("approach_actor 需要非负 max_distance")
+	if kind == &"inventory_select" and text("result") == "":
+		problems.append("inventory_select 需要 result")
+	if kind == &"item_add_once":
+		if text("item") == "":
+			problems.append("item_add_once 需要 item")
+		if number("amount", 0.0) <= 0.0:
+			problems.append("item_add_once 的 amount 必须大于 0")
+		elif not is_equal_approx(number("amount", 0.0), float(int(number("amount", 0.0)))):
+			problems.append("item_add_once 的 amount 必须是整数")
+		if text("flag") == "":
+			problems.append("item_add_once 需要 flag")
 	if kind == &"hint" and text("at") not in ["", "corner", "center"]:
 		problems.append("演出指令 hint 的 at 只能是 corner 或 center，写的是「%s」" % text("at"))
 	# 图存不存在**不在这里查** —— core 层不碰资源系统，

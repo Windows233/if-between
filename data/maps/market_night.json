@@ -105,23 +105,41 @@
       ],
       "id": "b_end_anchor",
       "if": {
-        "var": "ch2/left_veil_realm",
-        "op": "==",
-        "value": true
+        "all": [
+          {
+            "op": "==",
+            "value": true,
+            "var": "ch2/left_veil_realm"
+          },
+          {
+            "op": "!=",
+            "value": true,
+            "var": "ch2/cat_delivered"
+          }
+        ]
       },
       "label": "站在传送点旁的人",
-      "rect": [
-        310,
-        240,
-        40,
-        30
-      ],
+      "npc_height": 45,
+      "npc_pose": "down",
+      "person": true,
       "reach": [
         286,
         246,
         64,
         30
-      ]
+      ],
+      "rect": [
+        302,
+        217,
+        32,
+        45
+      ],
+      "solid": false,
+      "spawn_at": [
+        318,
+        262
+      ],
+      "sprite": "res://art/npc/b/down1.png"
     }
   ],
   "background": "res://art/map/market_night.png",

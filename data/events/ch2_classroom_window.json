@@ -4,7 +4,16 @@
   "nodes": [
     {
       "id": "check",
-      "stage": [],
+      "set": {
+        "ch2/window_marker_active": false
+      },
+      "stage": [
+        {
+          "do": "map_actor_marker",
+          "actor": "",
+          "text": ""
+        }
+      ],
       "next": "blocked",
       "next_when": {
         "if": {
@@ -35,11 +44,6 @@
     },
     {
       "id": "throw",
-      "set": {
-        "item/charm": 0,
-        "ch2/library/charm_thrown": true,
-        "ch2/left_veil_realm": true
-      },
       "stage": [
         {
           "do": "image",
@@ -57,18 +61,29 @@
               "text": "我走到窗边，把决策币抛了出去。",
               "side": "left",
               "portrait": "protagonist/quiet"
-            },
-            {
-              "text": "失去 决策币 x1"
-            },
-            {
-              "speaker": "我",
-              "text": "现在，离开这里。",
-              "side": "left",
-              "portrait": "protagonist/guarded"
             }
           ]
-        },
+        }
+      ],
+      "next": "throw_commit"
+    },
+    {
+      "id": "throw_commit",
+      "set": {
+        "item/charm": 0,
+        "ch2/library/charm_thrown": true
+      },
+      "stage": [
+        {
+          "do": "say",
+          "text": "失去 决策币 x1"
+        }
+      ],
+      "next": "c_misreads"
+    },
+    {
+      "id": "c_misreads",
+      "stage": [
         {
           "do": "fade",
           "to": "black",
@@ -79,6 +94,60 @@
           "fade": 0.2
         },
         {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "C",
+              "text": "竟然选择跳窗逃跑吗，年轻人就是有活力",
+              "side": "right",
+              "portrait": "c/neutral"
+            },
+            {
+              "speaker": "C",
+              "text": "不过，这下可就没地方藏了，哎",
+              "side": "right",
+              "portrait": "c/neutral"
+            }
+          ]
+        }
+      ],
+      "next": "footsteps"
+    },
+    {
+      "id": "footsteps",
+      "stage": [
+        {
+          "do": "play_sound",
+          "path": "res://audio/sfx/footstep_wood.ogg"
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "！果然有问题",
+              "side": "left",
+              "portrait": "protagonist/guarded"
+            },
+            {
+              "speaker": "我",
+              "text": "快走！",
+              "side": "left",
+              "portrait": "protagonist/guarded"
+            }
+          ]
+        }
+      ],
+      "next": "safe_departure"
+    },
+    {
+      "id": "safe_departure",
+      "set": {
+        "ch2/left_veil_realm": true,
+        "ch2/window_marker_active": false
+      },
+      "stage": [
+        {
           "do": "goto",
           "map": "market_night",
           "spawn": "from_overworld"
@@ -86,6 +155,10 @@
         {
           "do": "location",
           "text": "？月 ？日 集市 深夜"
+        },
+        {
+          "do": "music",
+          "path": "res://audio/bgm/集市音乐.wav"
         },
         {
           "do": "fade",

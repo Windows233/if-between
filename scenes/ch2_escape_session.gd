@@ -94,7 +94,8 @@ func handle_input(event: InputEvent) -> void:
 
 
 func activate_stealth() -> bool:
-	if not active or main.flags.get_value(&"ch2/personal/stealth_available") != true:
+	if not active or phase != "gate" \
+			or main.flags.get_value(&"ch2/personal/stealth_available") != true:
 		return false
 	main.flags.set_value(&"ch2/personal/stealth_started", true)
 	_refresh_stealth()
@@ -108,8 +109,13 @@ func try_exit() -> bool:
 	if main.player.global_position.distance_to(target) > 18.0 * main.current_map.player_scale:
 		return false
 	if phase == "gate":
+		if main.flags.get_value(&"ch2/personal/stealth_available") != true:
+			if _label != null:
+				_label.text = "先想办法甩开追踪，再找机会进教学楼。"
+			return false
 		if main.flags.get_value(&"ch2/personal/stealth_started") != true:
-			_label.text = "C 仍能看见你！按 F 主动隐蔽，再按 E 进教室"
+			if _label != null:
+				_label.text = "C 仍能看见你！按 F 主动隐蔽，再按 E 进教室"
 			return false
 		if not ItemTable.has(main.flags, &"key"):
 			_label.text = "教学楼门锁着。需要先取得教室钥匙。"
@@ -199,7 +205,10 @@ func _refresh_stealth() -> void:
 	main.player.modulate.a = _base_alpha * (0.45 if stealth else 1.0)
 	if _label != null:
 		var route := "向下逃到图书馆门口，靠近按 E" if phase == "library" else "绕过喷泉，向左上教学楼门逃跑，靠近按 E"
-		_label.text = route + "\nWASD 移动 · F 主动隐蔽 · ESC 暂停" + ("\n隐蔽已开启（决策币仍会暴露方向）" if stealth else "")
+		var controls := "\nWASD 移动 · ESC 暂停"
+		if phase == "gate" and main.flags.get_value(&"ch2/personal/stealth_available") == true:
+			controls = "\nWASD 移动 · F 主动隐蔽 · ESC 暂停"
+		_label.text = route + controls + ("\n隐蔽已开启（决策币仍会暴露方向）" if stealth else "")
 
 
 func _finish(success: bool) -> void:

@@ -5,7 +5,6 @@ extends RefCounted
 static func run(h: TestHarness) -> void:
 	var main := h.new_main()
 	main.enter_map(&"library", &"from_school_gate", true)
-	main.flags.set_value(&"ch2/personal/stealth_available", true)
 	main.flags.set_value(&"item/key", 1)
 	var barrier_at := Vector2(233, 238)
 	h.check("书架未倒时原通道可行走", WalkGrid.is_free(main.current_map, barrier_at), true)
@@ -31,10 +30,11 @@ static func run(h: TestHarness) -> void:
 	main.escape_session._notification(Node.NOTIFICATION_APPLICATION_FOCUS_IN)
 	var key := InputEventKey.new()
 	key.physical_keycode = KEY_F
+	key.keycode = KEY_F
 	key.pressed = true
 	main._unhandled_input(key)
-	h.check("F 键在逃跑中主动开启隐蔽", main.flags.get_value(&"ch2/personal/stealth_started"), true)
-	h.check("隐蔽有角色半透明反馈", main.player.modulate.a < 0.6, true)
+	h.check("图书馆逃跑中F不会提前解锁校门隐蔽",
+		main.flags.get_value(&"ch2/personal/stealth_started") == true, false)
 	main.player.global_position = main.current_map.spawn_point(&"from_school_gate")
 	h.check("馆门必须由交互确认后退出", main.escape_session.active, true)
 	h.check("靠近馆门可退出第一段", main.escape_session.try_exit(), true)
@@ -44,7 +44,19 @@ static func run(h: TestHarness) -> void:
 	main.player.global_position = main.current_map.spawn_point(&"near_classroom")
 	main.flags.set_value(&"ch2/personal/stealth_started", false)
 	h.check("不隐蔽不能甩开 C 进教室", main.escape_session.try_exit(), false)
-	main.escape_session.activate_stealth()
+	var gate_key := InputEventKey.new()
+	gate_key.physical_keycode = KEY_F
+	gate_key.keycode = KEY_F
+	gate_key.pressed = true
+	main._unhandled_input(gate_key)
+	h.check("驱动想法解锁前F不能提前开启隐蔽",
+		main.flags.get_value(&"ch2/personal/stealth_started") == true, false)
+	main.flags.set_value(&"ch2/personal/stealth_available", true)
+	h.check("校门段允许主动启动隐蔽", main.escape_session.activate_stealth(), true)
+	main._unhandled_input(gate_key)
+	h.check("读完驱动想法后F主动开启隐蔽",
+		main.flags.get_value(&"ch2/personal/stealth_started") == true, true)
+	h.check("隐蔽有角色半透明反馈", main.player.modulate.a < 0.6, true)
 	main.flags.set_value(&"item/key", 0)
 	h.check("逃跑不跳过教学楼钥匙检查", main.escape_session.try_exit(), false)
 	main.flags.set_value(&"item/key", 1)
@@ -81,10 +93,36 @@ static func run(h: TestHarness) -> void:
 	if window != null:
 		var path := WalkGrid.path_to(main.current_map, main.player.global_position, window.reach.get_center())
 		h.check("教室门口可走到窗下", not path.is_empty() and path[-1].distance_to(window.reach.get_center()) < 3, true)
+	var cat_map := DataLoader.load_map(&"library")
+	var cat_flags := WorldState.new()
+	var cat_path := WalkGrid.path_to(cat_map, cat_map.spawn_point(&"from_school_gate"), Vector2(251, 296))
+	h.check("猫事件预定脚点由WalkGrid可达", not cat_path.is_empty() and cat_path[-1].distance_to(Vector2(251, 296)) < 3, true)
+	var cat_landing := Vector2.ZERO
+	var landing_distance := INF
+	for point: Vector2 in WalkGrid.reachable(cat_map, Vector2(251, 296)):
+		if not WalkGrid.has_landing_room(cat_map, point):
+			continue
+		if MapDef.rect_distance(Rect2(Vector2(158, 136), Vector2(150, 110)), point) > 8.0:
+			continue
+		var distance := Vector2(251, 296).distance_to(point)
+		if distance < landing_distance:
+			cat_landing = point
+			landing_distance = distance
+	h.check("贴近猫的安全落点真实存在", landing_distance < INF, true)
+	var map_view := MapView.new()
+	map_view.build(cat_map, cat_flags)
+	h.check("猫图层产生独立Sprite供Alpha指令使用",
+		map_view._actor_variant_nodes.has(&"library_cat_visual"), true)
+	h.check("地图猫可淡至50%", map_view.set_actor_alpha(&"library_cat_visual", 0.5), true)
+	var cat_sprite := map_view._actor_variant_nodes.get(&"library_cat_visual") as Sprite2D
+	h.check("猫Alpha反馈达到0.5", cat_sprite != null and is_equal_approx(cat_sprite.modulate.a, 0.5), true)
+	h.check("取消或回溯复位猫Alpha", map_view.set_actor_alpha(&"library_cat_visual", 1.0), true)
+	h.check("猫Alpha复位为1", cat_sprite != null and is_equal_approx(cat_sprite.modulate.a, 1.0), true)
 	main.flags.set_value(&"ch2/personal/stealth_started", false)
 	h.check("逃跑指令拒绝未知路段", StageStep.from_dictionary({"do":"ch2_escape_run", "phase":"unknown"}).validate().is_empty(), false)
 	main.queue_free()
 	await _test_escape_save_retry(h)
+	await _test_escape_gate_unlock(h)
 
 
 static func _test_escape_save_retry(h: TestHarness) -> void:
@@ -94,12 +132,14 @@ static func _test_escape_save_retry(h: TestHarness) -> void:
 	main.flags.set_value(&"item/key", 1)
 	main.flags.set_value(&"item/charm", 1)
 	main.flags.set_value(&"item/night_tear", 1)
-	main.flags.set_value(&"ch2/personal/stealth_available", true)
 	main.flags.set_value(&"ch2/library/shelf_fallen", true)
+	main.refresh_scene()
 	main.capture_ch2_checkpoint("escape")
 	main.start_story(&"ch2_library_cat", &"escape_library_run")
 	h.check("剧情写倒架标记后开跑立即生成碰撞", WalkGrid.is_free(main.current_map, Vector2(233, 238)), false)
-	main.escape_session.activate_stealth()
+	h.check("首次逃跑开场不能提前F隐蔽", main.escape_session.activate_stealth(), false)
+	main.flags.set_value(&"ch2/personal/stealth_available", true)
+	h.check("图书馆段F不会提前启动校门隐蔽", main.escape_session.activate_stealth(), false)
 	h.check("逃跑中允许存档", main.save_game(2), true)
 	h.check("逃跑中读档成功", main.load_game(2), true)
 	await h.root.get_tree().create_timer(0.8).timeout
@@ -121,4 +161,31 @@ static func _test_escape_save_retry(h: TestHarness) -> void:
 	h.check("回标题会清理追逐和 HUD", main.escape_session.active, false)
 	h.check("回标题恢复角色透明度", main.player.modulate.a, 1.0)
 	main.delete_save(2)
+	main.queue_free()
+
+
+static func _test_escape_gate_unlock(h: TestHarness) -> void:
+	var main := h.new_main()
+	main.enter_map(&"school_gate", &"from_library", true)
+	main.flags.set_value(&"item/key", 1)
+	main.flags.set_value(&"ch2/personal/stealth_started", false)
+	main.flags.set_value(&"ch2/personal/stealth_available", false)
+	main.player.global_position = main.current_map.spawn_point(&"near_classroom")
+	h.check("校门段技能未解锁前不能进教室", main.escape_session.begin("gate"), true)
+	h.check("提前到门口仍被追踪拦住", main.escape_session.try_exit(), false)
+	h.check("提前到门口不登记逃脱成功", main.flags.get_value(&"ch2/escape_succeeded"), null)
+	main.escape_session._finish(false)
+	main.flags.set_value(&"ch2/personal/stealth_available", true)
+	main.flags.set_value(&"ch2/personal/stealth_started", false)
+	h.check("技能解锁后门口仍需主动F", main.escape_session.begin("gate"), true)
+	h.check("F测试时校门追逐仍激活", main.escape_session.active, true)
+	h.check("F测试时阶段为校门", main.escape_session.phase, "gate")
+	h.check("F测试时隐蔽能力已解锁",
+		main.flags.get_value(&"ch2/personal/stealth_available"), true)
+	h.check("解锁后尚未F仍不能进教室", main.escape_session.try_exit(), false)
+	h.check("未F时不会登记成功", main.flags.get_value(&"ch2/escape_succeeded"), null)
+	h.check("解锁后逃跑中可主动F隐蔽", main.escape_session.activate_stealth(), true)
+	h.check("按F后角色获得隐蔽透明度", main.player.modulate.a < 0.6, true)
+	h.check("主动F后才能成功离开校门追逐", main.escape_session.try_exit(), true)
+	main.escape_session._finish(false)
 	main.queue_free()
