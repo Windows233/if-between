@@ -44,6 +44,7 @@ func _run_all() -> void:
 	preload("res://tests/test_library_access.gd").run(h)
 	await preload("res://tests/test_library_after.gd").run(h)
 	await preload("res://tests/test_ch2_escape.gd").run(h)
+	preload("res://tests/test_c_sprites.gd").run(h)
 	h.section("背包")
 	TestInventory.run(h)
 	h.section("结局与存档")

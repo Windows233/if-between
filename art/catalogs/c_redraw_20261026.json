@@ -1,0 +1,414 @@
+{
+  "date": "2026-10-26",
+  "baseline_commit": "c8987b5",
+  "branch": "codex/c-sprites-npc-scale-20261026",
+  "generation_mode": "built-in image_gen; transparent PNG",
+  "prompt": "art/npc/c/source/prompt.txt",
+  "identity_reference": "art/npc/c/c小人.png",
+  "style_references": [
+    "art/player/down1.png",
+    "art/player/side1.png",
+    "art/player/up1.png"
+  ],
+  "source_sheet": {
+    "path": "art/npc/c/source/c_redraw_sheet_20261026.png",
+    "size": [
+      1402,
+      1122
+    ],
+    "sha256": "f21bab8affe9ff9e23847f8d01ce296f11cf73a66a7f0e402a80097aff89747e"
+  },
+  "export_tool": "tools/build_c_sprites.py",
+  "postprocess": "Slice generated poses, one nearest-neighbour scale per direction, head-centred horizontal pivot, ground baseline alignment. No procedural drawing or synthetic leg animation.",
+  "frames": [
+    {
+      "path": "art/npc/c/idle_down.png",
+      "source_row": 0,
+      "source_column": 0,
+      "scale": 0.9613259668508287,
+      "size": [
+        258,
+        360
+      ],
+      "alpha_bbox": [
+        34,
+        14,
+        224,
+        360
+      ],
+      "sha256": "ea0f198faa8147e109c16a0ee54aec3b26b4e81760342169fa468d3c684834e9"
+    },
+    {
+      "path": "art/npc/c/down1.png",
+      "source_row": 0,
+      "source_column": 1,
+      "scale": 0.9613259668508287,
+      "size": [
+        258,
+        360
+      ],
+      "alpha_bbox": [
+        34,
+        13,
+        223,
+        360
+      ],
+      "sha256": "633a86ab48254f186763278664d32f2def3f759a62aa7cdeaf715ad204c73dbf"
+    },
+    {
+      "path": "art/npc/c/down2.png",
+      "source_row": 0,
+      "source_column": 2,
+      "scale": 0.9613259668508287,
+      "size": [
+        258,
+        360
+      ],
+      "alpha_bbox": [
+        34,
+        12,
+        226,
+        360
+      ],
+      "sha256": "602100c3f2be2c9fd8bc8824cc73212436b2eeaad3b896079471a263013db09a"
+    },
+    {
+      "path": "art/npc/c/down3.png",
+      "source_row": 0,
+      "source_column": 3,
+      "scale": 0.9613259668508287,
+      "size": [
+        258,
+        360
+      ],
+      "alpha_bbox": [
+        34,
+        12,
+        223,
+        360
+      ],
+      "sha256": "894b6a6cd33ab80ed5d5fa9b323df21269c436360a01426b5d860a4e5859a7d6"
+    },
+    {
+      "path": "art/npc/c/down4.png",
+      "source_row": 0,
+      "source_column": 4,
+      "scale": 0.9613259668508287,
+      "size": [
+        258,
+        360
+      ],
+      "alpha_bbox": [
+        36,
+        13,
+        222,
+        360
+      ],
+      "sha256": "db98bb9800da2edb0c6703964e7af7720f2ddc22426d8aec66c9b0273d5c2e27"
+    },
+    {
+      "path": "art/npc/c/idle_up.png",
+      "source_row": 1,
+      "source_column": 0,
+      "scale": 0.9858356940509915,
+      "size": [
+        258,
+        360
+      ],
+      "alpha_bbox": [
+        35,
+        15,
+        222,
+        360
+      ],
+      "sha256": "4195b5fbf4d2a9bdb9e3714249168622fea171b3e9f4345383a7e1db1c56faf8"
+    },
+    {
+      "path": "art/npc/c/up1.png",
+      "source_row": 1,
+      "source_column": 1,
+      "scale": 0.9858356940509915,
+      "size": [
+        258,
+        360
+      ],
+      "alpha_bbox": [
+        36,
+        16,
+        222,
+        360
+      ],
+      "sha256": "0d9625d19cb3ac466bfc0a244736580f2e82ab56633937f7bb51f658ab4432bc"
+    },
+    {
+      "path": "art/npc/c/up2.png",
+      "source_row": 1,
+      "source_column": 2,
+      "scale": 0.9858356940509915,
+      "size": [
+        258,
+        360
+      ],
+      "alpha_bbox": [
+        35,
+        12,
+        222,
+        360
+      ],
+      "sha256": "8b70e6d6a094d78063021eb99a10bee8fd8cbdd7186baa2b08b80a61f3955c83"
+    },
+    {
+      "path": "art/npc/c/up3.png",
+      "source_row": 1,
+      "source_column": 3,
+      "scale": 0.9858356940509915,
+      "size": [
+        258,
+        360
+      ],
+      "alpha_bbox": [
+        32,
+        14,
+        225,
+        360
+      ],
+      "sha256": "825876bd69cfd6a4413d63933572d829971d6c4622f32b0879cb6db70b7e2575"
+    },
+    {
+      "path": "art/npc/c/up4.png",
+      "source_row": 1,
+      "source_column": 4,
+      "scale": 0.9858356940509915,
+      "size": [
+        258,
+        360
+      ],
+      "alpha_bbox": [
+        35,
+        14,
+        223,
+        360
+      ],
+      "sha256": "09e86d0b4bccee10d000ed5a0ec66906f219323eee9c7f5bf8fd0004021d9241"
+    },
+    {
+      "path": "art/npc/c/idle_side.png",
+      "source_row": 2,
+      "source_column": 0,
+      "scale": 0.9534246575342465,
+      "size": [
+        258,
+        360
+      ],
+      "alpha_bbox": [
+        35,
+        14,
+        226,
+        360
+      ],
+      "sha256": "4264c8d1b3c539eb6eaee0e034e217c319eea6d23952f74d3feae01d7366d9a7"
+    },
+    {
+      "path": "art/npc/c/side1.png",
+      "source_row": 2,
+      "source_column": 1,
+      "scale": 0.9534246575342465,
+      "size": [
+        258,
+        360
+      ],
+      "alpha_bbox": [
+        38,
+        13,
+        241,
+        360
+      ],
+      "sha256": "473fd14650f9d128ad689e015b2c8b7fa3386dc0471f5106c7577e5790bcadae"
+    },
+    {
+      "path": "art/npc/c/side2.png",
+      "source_row": 2,
+      "source_column": 2,
+      "scale": 0.9534246575342465,
+      "size": [
+        258,
+        360
+      ],
+      "alpha_bbox": [
+        38,
+        13,
+        248,
+        360
+      ],
+      "sha256": "d96d93c1a054d572dfaec30f996883e689e711dc941210890d55239528077491"
+    },
+    {
+      "path": "art/npc/c/side3.png",
+      "source_row": 2,
+      "source_column": 3,
+      "scale": 0.9534246575342465,
+      "size": [
+        258,
+        360
+      ],
+      "alpha_bbox": [
+        39,
+        12,
+        244,
+        360
+      ],
+      "sha256": "c02e459fe0b26edb2426a32df41fbe8ed32b49e10835e8a359cabd086b2598bc"
+    },
+    {
+      "path": "art/npc/c/side4.png",
+      "source_row": 2,
+      "source_column": 4,
+      "scale": 0.9534246575342465,
+      "size": [
+        258,
+        360
+      ],
+      "alpha_bbox": [
+        38,
+        15,
+        252,
+        360
+      ],
+      "sha256": "ed654ccf60d7f7eb8b579cfee3319c2623e663204328a7cc68f80c449f5b5752"
+    }
+  ],
+  "previous_frames": [
+    {
+      "path": "art/npc/c/down1.png",
+      "sha256": "83671630a04de1fa1c446e900f43af0d452f8bf79b132a79af44887de7958b92",
+      "canvas": [
+        64,
+        64
+      ]
+    },
+    {
+      "path": "art/npc/c/down2.png",
+      "sha256": "680402b5afa21bb7e4cba8b423caf7e03991650bc02484969d03cc3a24447c8c",
+      "canvas": [
+        64,
+        64
+      ]
+    },
+    {
+      "path": "art/npc/c/down3.png",
+      "sha256": "b2fb64c335c1e29d70e4fb376cd1f5ead83485db12ce440c66421893244a5836",
+      "canvas": [
+        64,
+        64
+      ]
+    },
+    {
+      "path": "art/npc/c/down4.png",
+      "sha256": "fb30871b46a6a55dcd6ae8dc36c1300df05532fea3d4633fd650552d41bf5af1",
+      "canvas": [
+        64,
+        64
+      ]
+    },
+    {
+      "path": "art/npc/c/up1.png",
+      "sha256": "5b42627791c8f1e619aa73e35f937889f3854937b59386e63c4a666bd59e8475",
+      "canvas": [
+        64,
+        64
+      ]
+    },
+    {
+      "path": "art/npc/c/up2.png",
+      "sha256": "25ba8bcd583e8a25f139da4bd6f53d8f0fa94cc6a27cbc5fe2f5ca160650c4ca",
+      "canvas": [
+        64,
+        64
+      ]
+    },
+    {
+      "path": "art/npc/c/up3.png",
+      "sha256": "e190fd2990b5756dfa94893f0eb82ffe9a733905fdb04d3d53f5f4d8b08a0f75",
+      "canvas": [
+        64,
+        64
+      ]
+    },
+    {
+      "path": "art/npc/c/up4.png",
+      "sha256": "9d415e2261c0f8a4a0fb07ef331b428c71495a4e0a65574781025fc95a281c0c",
+      "canvas": [
+        64,
+        64
+      ]
+    },
+    {
+      "path": "art/npc/c/side1.png",
+      "sha256": "4321a49a8309dd9c4945071a9750577f704af8a7b73914814d003b63037816e3",
+      "canvas": [
+        64,
+        64
+      ]
+    },
+    {
+      "path": "art/npc/c/side2.png",
+      "sha256": "8a84ce99fac8ca6e98dd59185826b64dc7da031d743f94f0eae1dfa83ff858b5",
+      "canvas": [
+        64,
+        64
+      ]
+    },
+    {
+      "path": "art/npc/c/side3.png",
+      "sha256": "3e6d4ba3df8e5325dff74d772cc52ae183a83e2eac889e713c3aaccc3a6c2677",
+      "canvas": [
+        64,
+        64
+      ]
+    },
+    {
+      "path": "art/npc/c/side4.png",
+      "sha256": "e39ad384b4e6e24d12d764bb0f3626cba72fd0913919fc08fc1f865910667d10",
+      "canvas": [
+        64,
+        64
+      ]
+    }
+  ],
+  "animation": {
+    "directions": [
+      "down",
+      "up",
+      "side"
+    ],
+    "idle_files": "idle_down.png / idle_up.png / idle_side.png",
+    "walk_files": "down1..4.png / up1..4.png / side1..4.png",
+    "fps": 8,
+    "side_faces": "left; mirror when moving right",
+    "cycle": "four source-drawn walking poses, independent stationary idle"
+  },
+  "runtime_size": {
+    "human_npcs": [
+      "a",
+      "b",
+      "c",
+      "elder"
+    ],
+    "nominal_screen_height": 45,
+    "same_as": "Player.DISPLAY_HEIGHT",
+    "old_C_height": 32,
+    "C_visible_standing_source_height": 346,
+    "hero_visible_standing_source_height": 346,
+    "old_saves": "canonical human frame folders normalize old requested height on creation and restore; feet coordinates unchanged",
+    "map_B": "shop B now uses existing down1 sprite at 45 high, old foot position and world collision preserved"
+  },
+  "verification": {
+    "game_tests": "4970/4970 PASS",
+    "data": "14 maps / 32 events / 7 endings / 11 items PASS",
+    "GPU": "all four human NPCs 45 screen units; C at school_yard/school_gate also 45; binding258x360; no failed measures",
+    "route": "real-window dodge success -> escape -> classroom coin -> B -> End7 PASS",
+    "smoke": "first-chapter real-window smoke PASS",
+    "human_review": "new style and gait can still be adjusted after user review"
+  },
+  "publication": "local_commit_only_no_push"
+}

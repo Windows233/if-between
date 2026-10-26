@@ -1,0 +1,36 @@
+{
+  "actors": [
+    {
+      "frame": "(202.0, 360.0)",
+      "id": "a",
+      "screen_height": 45.0
+    },
+    {
+      "frame": "(220.0, 360.0)",
+      "id": "b",
+      "screen_height": 45.0
+    },
+    {
+      "frame": "(258.0, 360.0)",
+      "id": "c",
+      "screen_height": 45.0
+    },
+    {
+      "frame": "(178.0, 360.0)",
+      "id": "elder",
+      "screen_height": 45.0
+    },
+    {
+      "frame": "(258.0, 360.0)",
+      "id": "school_yard",
+      "screen_height": 45.0
+    },
+    {
+      "frame": "(258.0, 360.0)",
+      "id": "school_gate",
+      "screen_height": 45.0
+    }
+  ],
+  "binding_canvas": "(258.0, 360.0)",
+  "failures": []
+}

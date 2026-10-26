@@ -1,0 +1,20 @@
+{
+  "coin_removed": 0.0,
+  "doll_delivered": 0.0,
+  "failures": [],
+  "final_state": true,
+  "route": {
+    "B": true,
+    "gate": {
+      "from": "(353.0, 128.0)",
+      "to": "(62.0, 110.0)"
+    },
+    "library": {
+      "from": "(233.0, 258.0)",
+      "to": "(233.0, 296.0)"
+    },
+    "window": true
+  },
+  "seconds": 28.5204069999988,
+  "tear_removed": 0.0
+}

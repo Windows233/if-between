@@ -36,10 +36,10 @@
   },
   "checked_versions": {
     "main_baseline": "24740c9",
-    "primary_branch": "codex/library-art-20261025",
+    "primary_branch": "codex/c-sprites-npc-scale-20261026",
     "scope": "本轮按用户要求补图书馆图层并继续剧情；保留既定团队任务单、D1-D6制作/D7-D9润色及取消工时排产约束。",
     "art_drop_4_baseline": "0a600ec；本轮仅素材/引用及策划约束更新，不将旧进度账当作最新完整功能验收",
-    "latest_runtime_evidence": "2026-10-26：先拉远端main至24740c9；独立图层及背刺成功后的两图追逐本地实现，后段真窗口自动试走至End7通过；本轮仅本地提交，未推送，不代表main已含这些改动。"
+    "latest_runtime_evidence": "承接c8987b5；本轮C重绘与NPC统一标尺，本地未推送；4970/4970、GPU与后段至End7自动试走通过"
   },
   "counts": {
     "maps": 14,
@@ -186,17 +186,21 @@
       "id": "C-ART",
       "name": "C立绘小人及救援UI",
       "owner": "美术",
-      "production": "仓库已交",
-      "delivery": "已提交",
-      "integration": "已入main",
-      "acceptance": "本次不重画",
+      "production": "C地图小人已重绘：258x360、12步态+3独立站姿",
+      "delivery": "已接入本地codex/c-sprites-npc-scale-20261026，未推送",
+      "integration": "操场/校门/图书馆/追逐复用新C，束缚层宽高对齐；全人形NPC统一45",
+      "acceptance": "4970/4970与GPU同框/两地图通过；风格/步态待团队试玩反馈",
       "evidence": [
         {
           "date": "2026-10-24",
           "reference": "art/portrait/c/；art/npc/c/；art/fx/rescue_c/；art/ui/rescue_c/"
+        },
+        {
+          "date": "2026-10-26",
+          "reference": "docs/C重绘与NPC尺寸统一_20261026.md；art/catalogs/c_redraw_20261026.json"
         }
       ],
-      "next_action": "只随程序最新版检查比例与线层状态"
+      "next_action": "使用新版15帧，不重复派旧64像素素材；根据用户试玩反馈润色"
     },
     {
       "id": "SCHOOL-ART",
@@ -576,8 +580,8 @@
       "owner": "并行程序工作",
       "production": "统一标尺与高清像素采样已合入main；进一步人物环境融合在并行分支",
       "delivery": "main基线72626e0已含标尺与清晰度；并行工作另见codex/world-pixel-cohesion",
-      "integration": "本轮核查基线eb2dc4a已包含统一标尺与高清采样",
-      "acceptance": "本轮4373/4373仅针对交付快照；并行分支另行验收",
+      "integration": "主角与A/B/C/老人统一45；旧存档32/40/42归一，姿势差异保留",
+      "acceptance": "4970/4970及真实GPU每个NPC均45；原地图脚点不迁移",
       "evidence": [
         {
           "date": "2026-10-24",
@@ -638,7 +642,7 @@
     "scope": "2026-10-26本地图层+后段实际追逐；不是整章人工通关验收",
     "route": "真窗口物理移动跑过图书馆→校门→教室窗下→夜市B→委托屋→End7，约28.5秒；检查点存读档与失败重试回归通过",
     "assets": "同尺寸无猫背景、独立透明猫与入口血迹已入库绑定；决策币/抛币CG已交；窗边可动分层、正式动作和专用BGM仍待后补",
-    "game_tests": "Godot 4.7.2 4917/4917 PASS；首帧/异步漏跑已修正",
+    "game_tests": "Godot 4.7.2 4970/4970 PASS",
     "map_editor_tests": "Godot 4.7.2 tests/run_map_editor_tests.gd与tests/probe_map_editor.gd均退出码0",
     "smoke_run": "第一章真实窗口烟测PASS；图书馆四状态GPU PASS；后段真实窗口自动试走PASS",
     "data_check": "PASS 14图/32剧情/7结局/11物品",
@@ -655,6 +659,13 @@
       "game_tests": "PASS 4664/4664; exit 0",
       "smoke": "PASS first-chapter real rendering smoke, isolated APPDATA; exit 0",
       "scope": "不等于第二章整段实走；新图的实际构图、可读性和抛币演出由团队实机验收"
+    },
+    "c_redraw_20261026": {
+      "precision": "C15帧258x360，与主角相同",
+      "NPC_height": "A/B/C/老人45，旧存档归一",
+      "GPU": "同框、操场、校门与束缚对齐通过",
+      "source": "内置imagegen；原始透明表和提示词已归档",
+      "scope": "只本地提交；整章人工通关仍待完成"
     }
   },
   "active_daily_plan": "docs/每日策划/2026-10-25_图书馆后段策划/"

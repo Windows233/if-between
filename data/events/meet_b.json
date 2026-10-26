@@ -390,7 +390,7 @@
           "id": "b",
           "sprite": "res://art/npc/b",
           "at": [192, 202],
-          "height": 42,
+          "height": 45,
           "z": 8,
           "pose": "down"
         },

@@ -194,8 +194,8 @@ static func _test_npc_scale_and_restore(h: TestHarness) -> void:
 	var scene: Cutscene = main.cutscene
 	var fixtures := [
 		{"id": "static", "sprite": "res://art/portrait/elder.png", "height": 42.0},
-		{"id": "c", "sprite": "res://art/npc/c", "height": 32.0},
-		{"id": "b", "sprite": "res://art/npc/b", "height": 42.0},
+		{"id": "c", "sprite": "res://art/npc/c", "height": 45.0, "requested_height": 32.0},
+		{"id": "b", "sprite": "res://art/npc/b", "height": 45.0, "requested_height": 42.0},
 		{"id": "elder", "sprite": "res://art/npc/elder", "height": 45.0},
 	]
 	for ratio: float in [0.5, 1.0, 2.0]:
@@ -206,7 +206,7 @@ static func _test_npc_scale_and_restore(h: TestHarness) -> void:
 		var zoom: Vector2 = main.camera.zoom
 		for fixture: Dictionary in fixtures:
 			var at: Vector2 = main.current_map.spawn_point(main.current_spawn)
-			var actor := scene.add_actor(str(fixture.id), str(fixture.sprite), at, float(fixture.height))
+			var actor := scene.add_actor(str(fixture.id), str(fixture.sprite), at, float(fixture.get("requested_height", fixture.height)))
 			h.check("比例 %s %s 创建成功" % [ratio, fixture.id], actor != null, true)
 			if actor == null:
 				continue

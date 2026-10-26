@@ -21,6 +21,9 @@ class_name Cutscene
 extends RefCounted
 
 const C_RESCUE_BINDING_SCRIPT = preload("res://scenes/c_rescue_binding.gd")
+const HUMAN_FRAME_DIRS: Array[String] = [
+	"res://art/npc/a", "res://art/npc/b", "res://art/npc/c", "res://art/npc/elder",
+]
 
 ## 玩家点了一下 / 按了空格，而且演出正在等这一下。
 signal clicked
@@ -102,7 +105,7 @@ func place_c_at_school_gate_wait_spawn() -> bool:
 	if not (spawn is Vector2) or not Vector2(spawn).is_finite():
 		return false
 	var actor := add_actor_with_talk("c", "res://art/npc/c",
-		main.current_map.spawn_point(&"near_classroom"), 32.0, 12, "down", "ch2_c_wait")
+		main.current_map.spawn_point(&"near_classroom"), Player.DISPLAY_HEIGHT, 12, "down", "ch2_c_wait")
 	return actor != null
 
 
@@ -115,7 +118,7 @@ func restore_school_yard_c() -> void:
 
 	var rescued := _c_is_rescued()
 	var talk := "ch2_c_wait" if rescued else "ch2_swing"
-	var c_height := 32.0
+	var c_height := Player.DISPLAY_HEIGHT
 	var actor := add_actor_with_talk("c", "res://art/npc/c",
 		Vector2(186, 88), c_height, 12, "down", talk)
 	if not rescued and actor != null \
@@ -141,6 +144,8 @@ func add_actor(id: String, sprite_path: String, at: Vector2,
 ## 玩家走到他跟前按交互键（或者点他）时才会起。见 `_talk`。
 func add_actor_with_talk(id: String, sprite_path: String, at: Vector2,
 		height: float, z: int, pose: String, talk: String) -> Node2D:
+	# 正式人形 NPC 共用主角标尺；旧剧情或旧存档的 32/40/42 也在入口归一。
+	height = _character_height(sprite_path, height)
 	# **同一个 id 已经站着的话先把旧的收掉。** 不然旧节点留在树里没人管
 	#（`_actors` 被覆盖了，`clear_actors` 再也找不到它）—— 读档恢复时
 	# 尤其明显：会看见两个同名角色叠在一起。
@@ -163,6 +168,13 @@ func add_actor_with_talk(id: String, sprite_path: String, at: Vector2,
 		"sprite": sprite_path, "height": height, "z": z, "pose": pose,
 	}
 	return sprite
+
+
+func _character_height(sprite_path: String, requested: float) -> float:
+	var path := sprite_path.trim_suffix("/")
+	if path in HUMAN_FRAME_DIRS or path.get_base_dir() in HUMAN_FRAME_DIRS:
+		return Player.DISPLAY_HEIGHT
+	return requested
 
 
 ## 把某个人从场上收掉（内部用；外面要收人走 `npc_remove` 那条指令）。
@@ -792,7 +804,7 @@ func _hide_player(step: StageStep) -> void:
 ## 用的是立绘 —— 没有专门的「行走小人」，把立绘缩到人物的高度顶上去。
 ## 真素材到位后只要换 `sprite` 路径，这一条指令不用改。
 func _npc(step: StageStep) -> void:
-	var height := step.number("height", 30.0)
+	var height := _character_height(step.text("sprite"), step.number("height", Player.DISPLAY_HEIGHT))
 	# `pose` 是出场时就摆好的姿势（`idle_<名字>`），不写就用他有的第一组。
 	# A 出场是蹲着的：「a 蹲在店铺门口修留声机」。
 	# `talk` 是「这人身上挂着哪段对话」—— 演出演完、控制权交回玩家之后，
@@ -830,9 +842,8 @@ func _add_c_rescue_binding(actor: Node2D, height: float) -> Sprite2D:
 	var binding_size: Vector2 = binding.texture.get_size()
 	# 束缚是 C 的子节点，地图/角色缩放会由父节点统一带下去。
 	# 这里只把两张源画布对齐，不能再除 actor.scale 抵消地图比例。
-	var binding_scale := frame.get_size().y / maxf(binding_size.y, 1.0)
 	binding.position = Vector2(0.0, -frame.get_size().y * 0.5)
-	binding.scale = Vector2.ONE * binding_scale
+	binding.scale = frame.get_size() / binding_size
 	binding.z_index = 1
 	animated.add_child(binding)
 	return binding
@@ -909,19 +920,25 @@ func _footstep_sound() -> String:
 
 ## 让临时角色**开始走**。静态立绘走到这里是空操作 —— 它没有动画，只会被平移。
 ##
-## 方向只看 `y`：屏幕坐标 y 变小就是往上走，露背面；其余都露正面。
+## 有侧面帧时按主移动轴选择方向；侧面素材面向左，向右时镜像。
 func _walk_actor(actor: Node2D, target: Vector2) -> void:
 	if not (actor is AnimatedSprite2D):
 		return
 	var sprite := actor as AnimatedSprite2D
-	var face := "up" if target.y < sprite.position.y else "down"
+	var direction := target - sprite.position
+	var face := "up" if direction.y < 0 else "down"
+	if absf(direction.x) > absf(direction.y) and sprite.sprite_frames.has_animation(&"walk_side") \
+			and sprite.sprite_frames.get_frame_count(&"walk_side") > 1:
+		face = "side"
+		sprite.flip_h = direction.x > 0.0
+	elif sprite.sprite_frames.has_animation(StringName("walk_" + face)):
+		sprite.flip_h = false
 	_play_if_any(sprite, StringName("walk_" + face))
 
 
 ## 走完了，换成站立帧。
 ##
-## `idle_*` 那一组用的就是 `walk_*` 的第 1 帧，而策划给的素材里 1 号是站姿，
-## 所以「停下 = 播 idle」正好落在对的那张上。
+## 有独立 idle_<方向>.png 时使用独立站姿；旧角色仍回退到行走首帧。
 func _stop_actor(actor: Node2D) -> void:
 	if not (actor is AnimatedSprite2D):
 		return
@@ -1451,7 +1468,9 @@ func _actor_frames(folder: String) -> SpriteFrames:
 		frames.add_animation(idle)
 		frames.set_animation_speed(idle, Player.WALK_FPS)
 		frames.set_animation_loop(idle, true)
-		frames.add_frame(idle, frames.get_frame_texture(walk, 0))
+		var idle_path := "%s/idle_%s.png" % [folder, direction]
+		var idle_texture := load(idle_path) as Texture2D if ResourceLoader.exists(idle_path) else null
+		frames.add_frame(idle, idle_texture if idle_texture != null else frames.get_frame_texture(walk, 0))
 		found += 1
 	return frames if found > 0 else null
 

@@ -1,11 +1,58 @@
 {
+  "actors": [
+    {
+      "actions": [
+        {
+          "event": "meet_b",
+          "id": "talk",
+          "label": "搭话"
+        }
+      ],
+      "collision": [
+        [
+          5.75,
+          37,
+          16,
+          8
+        ]
+      ],
+      "id": "b",
+      "if": {
+        "op": "==",
+        "value": true,
+        "var": "quest_cat"
+      },
+      "label": "神秘人B",
+      "person": true,
+      "rect": [
+        176.25,
+        81,
+        27.5,
+        45
+      ],
+      "sprite": "res://art/npc/b/down1.png"
+    }
+  ],
+  "background": "res://art/map/shop.png",
   "id": "shop",
   "name": "商店（神秘人的铺子）",
+  "portals": [
+    {
+      "label": "回集市",
+      "rect": [
+        16,
+        150,
+        40,
+        16
+      ],
+      "spawn": "from_overworld",
+      "to": "market"
+    }
+  ],
   "size": [
     320,
     180
   ],
-  "background": "res://art/map/shop.png",
   "spawns": {
     "from_market": [
       40,
@@ -37,43 +84,5 @@
       8,
       180
     ]
-  ],
-  "portals": [
-    {
-      "rect": [
-        16,
-        150,
-        40,
-        16
-      ],
-      "label": "回集市",
-      "to": "market",
-      "spawn": "from_overworld"
-    }
-  ],
-  "actors": [
-    {
-      "id": "b",
-      "rect": [
-        180,
-        92,
-        20,
-        34
-      ],
-      "label": "神秘人B",
-      "if": {
-        "var": "quest_cat",
-        "op": "==",
-        "value": true
-      },
-      "actions": [
-        {
-          "id": "talk",
-          "label": "搭话",
-          "event": "meet_b"
-        }
-      ],
-      "person": true
-    }
   ]
 }

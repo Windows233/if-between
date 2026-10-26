@@ -174,7 +174,7 @@ func _animate_chaser(direction: Vector2) -> void:
 	var animation := StringName("walk_" + suffix)
 	if sprite.sprite_frames.has_animation(animation):
 		sprite.play(animation)
-		sprite.flip_h = direction.x < 0 if suffix == "side" else false
+		sprite.flip_h = direction.x > 0 if suffix == "side" else false
 
 
 func _show_hud() -> void:
