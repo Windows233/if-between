@@ -400,38 +400,20 @@
       "stage": [
         {
           "do": "ch2_chase_qte",
-          "key": "q",
-          "trigger_x": 145
+          "key": "q"
         }
       ],
-      "next": "chase_caught",
-      "next_when": {
-        "if": {
-          "var": "ch2/chase_q1",
-          "op": "==",
-          "value": true
-        },
-        "next": "run_q2"
-      }
+      "next": "run_q2"
     },
     {
       "id": "run_q2",
       "stage": [
         {
           "do": "ch2_chase_qte",
-          "key": "e",
-          "trigger_x": 286
+          "key": "e"
         }
       ],
-      "next": "chase_caught",
-      "next_when": {
-        "if": {
-          "var": "ch2/chase_q2",
-          "op": "==",
-          "value": true
-        },
-        "next": "arrive"
-      }
+      "next": "arrive"
     },
     {
       "id": "arrive",
@@ -440,10 +422,10 @@
           "do": "ch2_chase_arrive"
         }
       ],
-      "next": "chase_caught",
+      "next": "library_direct",
       "next_when": {
         "if": {
-          "var": "ch2/chase_arrived",
+          "var": "ch2/chase_rescued",
           "op": "==",
           "value": true
         },
@@ -583,16 +565,6 @@
       "id": "c_door_cover",
       "stage": [
         {
-          "do": "place_player",
-          "facing": "up",
-          "path": [
-            [
-              353,
-              164
-            ]
-          ]
-        },
-        {
           "do": "npc",
           "id": "c",
           "sprite": "res://art/npc/c",
@@ -660,6 +632,64 @@
         }
       ],
       "next": "library_enter"
+    },
+    {
+      "id": "library_direct",
+      "stage": [
+        {
+          "do": "play_sound",
+          "path": "res://audio/sfx/door_open.wav"
+        },
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.25
+        },
+        {
+          "do": "goto",
+          "map": "library",
+          "spawn": "from_school_gate"
+        },
+        {
+          "do": "location",
+          "text": "？月 ？日 图书馆 深夜"
+        },
+        {
+          "do": "npc",
+          "id": "c",
+          "sprite": "res://art/npc/c",
+          "at": [
+            251,
+            296
+          ],
+          "height": 45,
+          "z": 12,
+          "pose": "side"
+        },
+        {
+          "do": "npc_pose",
+          "id": "c",
+          "pose": "side",
+          "flip": true
+        },
+        {
+          "do": "fade",
+          "to": "clear",
+          "time": 0.25
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "text": "他怎么能到得这么快，而且，他怎么知道我在这里",
+              "speaker": "我",
+              "portrait": "protagonist/quiet",
+              "side": "left"
+            }
+          ]
+        }
+      ],
+      "next": "library_state"
     },
     {
       "id": "library_enter",

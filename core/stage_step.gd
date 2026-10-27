@@ -42,7 +42,7 @@ const KINDS: Dictionary = {
 	&"ch2_checkpoint_clear": ["checkpoint"],
 	&"ch2_chase_validate": [],
 	&"ch2_chase_start": [],
-	&"ch2_chase_qte": ["key", "trigger_x"],
+	&"ch2_chase_qte": ["key"],
 	&"ch2_chase_arrive": [],
 	&"ch2_chase_mist_retreat": [],
 	&"ch2_dodge_qte": ["key"],
@@ -227,8 +227,6 @@ func validate() -> Array[String]:
 		problems.append("后段逃跑的 phase 只能是 library 或 gate")
 	if kind == &"ch2_chase_qte" and text("key") not in ["q", "e"]:
 		problems.append("追逐QTE的key只能是q或e")
-	if kind == &"ch2_chase_qte" and number("trigger_x") <= 0.0:
-		problems.append("追逐QTE需要有效的trigger_x")
 	if kind == &"ch2_dodge_qte" and text("key") not in ["q", "e"]:
 		problems.append("闪避QTE的key只能是q或e")
 	if kind == &"map_actor_variant" and text("actor") == "":

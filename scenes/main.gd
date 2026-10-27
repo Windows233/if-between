@@ -1301,7 +1301,11 @@ func _is_advance_event(event: InputEvent) -> bool:
 ## 优先级是「身边的角色 > 脚下的连接」。反过来的话，
 ## 站在门口跟人说话会变成直接出门。
 func interact() -> void:
-	if current_map == null or _map_trigger_busy() or (is_inside_tree() and get_tree().paused):
+	var chasing := chase_session != null and chase_session.active
+	if current_map == null or (_map_trigger_busy() and not chasing) \
+			or (is_inside_tree() and get_tree().paused):
+		return
+	if chasing and chase_session.confirm_door_interaction():
 		return
 
 	# 站在传送点上就直接走，**先于**看附近有没有人能说话。

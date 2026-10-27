@@ -159,12 +159,12 @@ func _physics_process(_delta: float) -> void:
 	play_animation(direction != Vector2.ZERO)
 
 
-func start_chase_burst(direction: Vector2) -> bool:
+func start_chase_burst(direction: Vector2, distance: float = CHASE_BURST_DISTANCE) -> bool:
 	if direction == Vector2.ZERO:
 		return false
 	var normalized := direction.normalized()
 	facing = normalized
-	_chase_burst_remaining = CHASE_BURST_DISTANCE * scale.x
+	_chase_burst_remaining = distance * scale.x
 	_chase_burst_distance = 0.0
 	_chase_burst_time_left = CHASE_BURST_DURATION
 	_chase_burst_elapsed = 0.0
@@ -181,6 +181,20 @@ func start_chase_burst(direction: Vector2) -> bool:
 
 func is_chase_bursting() -> bool:
 	return _chase_burst_time_left > 0.0
+
+
+## Returns the longest collision-free burst length in unscaled player units.
+func burst_clearance(direction: Vector2, limit: float) -> float:
+	if direction.is_zero_approx() or limit <= 0.0:
+		return 0.0
+	var unit := direction.normalized()
+	var distance := 0.0
+	while distance < limit:
+		var step := minf(6.0, limit - distance)
+		if test_move(global_transform, unit * step * scale.x):
+			break
+		distance += step
+	return distance
 
 
 ## 速度按统一显示尺度标定。地图坐标的步长随标尺变化，投影后始终 SPEED。

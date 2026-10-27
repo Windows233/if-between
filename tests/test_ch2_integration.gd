@@ -29,6 +29,7 @@ static func _test_bugfixes(h: TestHarness) -> void:
 	var mist: Sprite2D = main.chase_session._mist
 	h.check("追逐猫贴图已加载", mist != null, true)
 	if mist != null:
+		h.check("追逐猫以清晰间距从后方开始", main.chase_session._mist_gap(), 48.0)
 		var screen_height: float = mist.texture.get_height() * mist.scale.y * main.camera.zoom.y
 		var player_height: float = Player.DISPLAY_HEIGHT * main.player.scale.y * main.camera.zoom.y
 		h.check("高清追逐猫不超过主角两倍高", screen_height <= player_height * 2.0, true)
@@ -44,6 +45,24 @@ static func _test_bugfixes(h: TestHarness) -> void:
 			main.player.global_position.distance_to(mist.global_position) > mist_distance, true)
 		main.player.global_position = chase_start
 	main.chase_session.cancel()
+	var chase_event := DataLoader.load_event(&"ch2_diary", DataLoader.load_endings().ids())
+	var q1 := _node(chase_event, &"run_q1")
+	var q2 := _node(chase_event, &"run_q2")
+	var arrival := _node(chase_event, &"arrive")
+	var direct := _node(chase_event, &"library_direct")
+	h.check("追逐首个接近点使用实际距离而非路线坐标", q1.stage[0].data.has("trigger_x"), false)
+	h.check("第二次追逐可在门口交互前结束QTE", q2.next_id, &"arrive")
+	h.check("第三次追上分流到C救援", arrival.next_when.get("next"), &"c_door_cover")
+	h.check("未三次追上直接入馆", arrival.next_id, &"library_direct")
+	var direct_has_c := false
+	var direct_has_os := false
+	for step: StageStep in direct.stage:
+		direct_has_c = direct_has_c or (step.kind == &"npc" and step.text("id") == "c")
+		if step.kind == &"say":
+			var lines: Array = step.data.get("lines", [])
+			direct_has_os = direct_has_os or (lines.size() == 1 \
+				and str(lines[0].get("text", "")) == "他怎么能到得这么快，而且，他怎么知道我在这里")
+	h.check("普通入馆节点带有C和OS台词", direct_has_c and direct_has_os, true)
 	# 正式入馆演出，再不调查直接往返；恢复应与初次入馆完全一致。
 	main.start_story(&"ch2_diary", &"library_enter")
 	var original: Array = main.cutscene.snapshot_actors()
@@ -307,12 +326,10 @@ static func _test_events_and_maps(harness: TestHarness) -> void:
 	harness.check("旧走廊演出指令已移除",
 		StageStep.KINDS.has(&"ch2_enter_teaching_hall"), false)
 	var diary_event := StoryEvent.from_dictionary(_json("res://data/events/ch2_diary.json"))
-	var caught_node := _node(diary_event, &"chase_caught")
-	harness.check("QTE失败保留追逐重试类型",
-		caught_node.effects.get(&"ch2/end5_retry_kind"), "chase")
-	harness.check("QTE失败的重试目标独立于路线重试",
-		_choice_ids(_node(diary_event, &"end5_chase_outcome")),
-		[&"retry_chase", &"return_title"])
+	harness.check("QTE失败仍沿追逐流程进入后续判定",
+		_node(diary_event, &"run_q1").next_id, &"run_q2")
+	harness.check("追逐失败不再直接进入死亡CG节点",
+		_node(diary_event, &"arrive").next_id, &"library_direct")
 	var meet := StoryEvent.from_dictionary(_json("res://data/events/meet_b.json"))
 	var alley_entries := 0
 	var new_caption := false

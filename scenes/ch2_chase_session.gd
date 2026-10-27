@@ -7,7 +7,11 @@ signal qte_resolved(key: StringName, success: bool)
 signal door_confirmed
 
 const MIST_PATH := "res://art/npc/shadow_cat/chase_mist_right.png"
-const MIST_CHASE_SPEED := 104.0
+const MIST_CHASE_SPEED := 144.0
+const INITIAL_GAP := 48.0
+const QTE_CATCH_GAP := 26.0
+const RESCUE_BURST_LIMIT := 118.0
+const POST_QTE_GAP := 82.0
 
 var main: Variant
 var overlay: ChaseOverlay
@@ -19,14 +23,17 @@ var _waiting_for_trigger := false
 var _awaiting_door := false
 var _arrived := false
 var _door_area := Rect2()
+var _door_confirmed := false
+var _rescue_pending := false
+var _catch_count := 0
 var _expected_key: StringName = &""
-var _trigger_x := 0.0
 var _base_time_scale := 1.0
 var _base_zoom := Vector2.ONE
 var _trail: Array[Vector2] = []
 var _trail_total_distance := 0.0
 var _trail_start_distance := 0.0
 var _mist_trail_distance := 0.0
+var _mist_hold_until_msec := 0
 var _mist: Sprite2D
 
 
@@ -60,26 +67,36 @@ func begin() -> bool:
 	_waiting_for_trigger = false
 	_awaiting_door = false
 	_arrived = false
+	_door_confirmed = false
+	_rescue_pending = false
+	_catch_count = 0
 	_door_area = _library_door_area()
 	main.player.chase_input_locked = false
 	_base_time_scale = Engine.time_scale
 	_base_zoom = main.camera.zoom if main.camera != null else Vector2.ONE
+	_mist_hold_until_msec = 0
 	_trail.clear()
 	main.walk_and_use = false
 	main.player.walk_path.clear()
 	_trail.append(main.player.global_position)
 	_trail_total_distance = 0.0
 	_trail_start_distance = 0.0
-	_mist_trail_distance = 0.0
+	_mist_trail_distance = -INITIAL_GAP
 	main.flags.set_value(&"ch2/chase_q1", false)
 	main.flags.set_value(&"ch2/chase_q2", false)
 	main.flags.set_value(&"ch2/chase_arrived", false)
+	main.flags.set_value(&"ch2/chase_rescued", false)
 	_create_mist()
 	main.update_player_control()
 	return true
 
 
-func run_qte(key: StringName, trigger_x: float) -> bool:
+func run_qte(key: StringName) -> bool:
+	if _arrived:
+		main.flags.set_value(&"ch2/chase_q1" if key == &"q" else &"ch2/chase_q2", true)
+		return true
+	if _rescue_pending:
+		return true
 	if qte_pending and _cancelled:
 		while qte_pending:
 			if not is_inside_tree():
@@ -91,20 +108,24 @@ func run_qte(key: StringName, trigger_x: float) -> bool:
 		return false
 
 	_expected_key = key
-	_trigger_x = trigger_x
 	qte_pending = true
-	if main.player.global_position.x < trigger_x:
+	if not _arrived and _catch_count < 3 and _mist_gap() > QTE_CATCH_GAP:
 		_waiting_for_trigger = true
 		await trigger_reached
 		_waiting_for_trigger = false
+	if _arrived:
+		main.flags.set_value(&"ch2/chase_q1" if key == &"q" else &"ch2/chase_q2", true)
+		qte_pending = false
+		return true
 	if _cancelled:
 		qte_pending = false
 		return false
 
 	if overlay == null:
 		qte_pending = false
-		_finish_run(true)
-		return false
+		_rescue_pending = true
+		_rescue_cat()
+		return true
 
 	_qte_started = true
 	main.player.chase_input_locked = true
@@ -116,8 +137,9 @@ func run_qte(key: StringName, trigger_x: float) -> bool:
 		qte_pending = false
 		_qte_started = false
 		main.player.chase_input_locked = false
-		_finish_run(true)
-		return false
+		_rescue_pending = true
+		_rescue_cat()
+		return true
 	main.update_player_control()
 
 	var result: Array = await qte_resolved
@@ -141,8 +163,10 @@ func run_qte(key: StringName, trigger_x: float) -> bool:
 				if main.camera != null:
 					main.camera.clear_shake()
 					main.update_camera()
-				main.player.start_chase_burst(_direction_vector(StringName(direction_result[0])))
-				await _wait_for_burst()
+				success = main.player.start_chase_burst(
+					_direction_vector(StringName(direction_result[0])))
+				if success:
+					await _wait_for_burst()
 	qte_pending = false
 	_qte_started = false
 	main.player.chase_input_locked = false
@@ -151,10 +175,14 @@ func run_qte(key: StringName, trigger_x: float) -> bool:
 	if main.camera != null:
 		main.camera.clear_shake()
 		main.update_camera()
+	_catch_count += 1
 	if not success:
-		_finish_run(true)
-		return false
-
+		_rescue_pending = true
+		_rescue_cat()
+		return true
+	_mist_trail_distance = maxf(_mist_trail_distance - POST_QTE_GAP,
+		_trail_start_distance - INITIAL_GAP)
+	_mist_hold_until_msec = Time.get_ticks_msec() + 700
 	return true
 
 
@@ -203,17 +231,32 @@ func wait_for_arrival() -> bool:
 	if not active or _cancelled:
 		return false
 	_awaiting_door = true
-	if _door_area.has_point(main.player.global_position):
+	if _rescue_pending:
+		main.flags.set_value(&"ch2/chase_rescued", true)
+		_restore_world()
+		main.update_player_control()
+		return false
+	if not _arrived and _door_area.has_point(main.player.global_position):
 		_arrived = true
-	else:
+	elif not _arrived:
 		await door_reached
-	if _cancelled or not _arrived:
+	if _cancelled:
 		_awaiting_door = false
 		return false
-	main.player.chase_input_locked = true
-	if main.toast != null:
-		main.toast.show_text("到图书馆门口了，按空格进门")
-	await door_confirmed
+	if _rescue_pending:
+		_awaiting_door = false
+		main.flags.set_value(&"ch2/chase_rescued", true)
+		_restore_world()
+		main.update_player_control()
+		return false
+	if not _arrived:
+		_awaiting_door = false
+		return false
+	if not _door_confirmed:
+		main.player.chase_input_locked = true
+		if main.toast != null:
+			main.toast.show_text("到图书馆门口了，按空格进门")
+		await door_confirmed
 	_awaiting_door = false
 	if _cancelled:
 		main.player.chase_input_locked = false
@@ -232,13 +275,23 @@ func can_move_player() -> bool:
 
 
 func awaiting_door_interaction() -> bool:
-	return _awaiting_door and _arrived and not _cancelled
+	return active and not _cancelled and not _rescue_pending \
+		and (not qte_pending or _waiting_for_trigger) \
+		and _door_area.has_point(main.player.global_position)
 
 
 func confirm_door_interaction() -> bool:
 	if not awaiting_door_interaction():
 		return false
-	door_confirmed.emit()
+	_arrived = true
+	_door_confirmed = true
+	main.flags.set_value(&"ch2/chase_arrived", true)
+	if _waiting_for_trigger:
+		_waiting_for_trigger = false
+		trigger_reached.emit()
+	if _awaiting_door:
+		door_reached.emit()
+		door_confirmed.emit()
 	return true
 
 
@@ -267,9 +320,14 @@ func cancel() -> void:
 
 
 func retreat_mist(duration: float = 0.3) -> void:
+	if _rescue_pending:
+		await _push_player_clear_of_mist()
+		active = false
+		_restore_world()
+		main.update_player_control()
 	if _mist == null or not is_instance_valid(_mist):
 		return
-	var target: Vector2 = _point_on_trail(48.0)
+	var target: Vector2 = _point_on_trail_distance(_mist_trail_distance)
 	var tween := create_tween()
 	tween.tween_property(_mist, "global_position", target, duration)
 	tween.parallel().tween_property(_mist, "modulate:a", 0.0, duration)
@@ -296,18 +354,25 @@ func _process(delta: float) -> void:
 			_trail_start_distance += _trail[0].distance_to(_trail[1])
 			_trail.pop_front()
 
-	if _waiting_for_trigger and position.x >= _trigger_x:
+	if _waiting_for_trigger and _mist_gap() <= QTE_CATCH_GAP:
 		_waiting_for_trigger = false
 		trigger_reached.emit()
-	if _awaiting_door and _door_area.has_point(position):
+	if _awaiting_door and _door_area.has_point(position) and not _arrived:
 		_arrived = true
 		door_reached.emit()
 
-	if _mist != null and is_instance_valid(_mist):
-		_mist_trail_distance = minf(
-			_trail_total_distance,
-			_mist_trail_distance + MIST_CHASE_SPEED * main.player.scale.x * delta
-		)
+	if _awaiting_door and _catch_count >= 2 and _mist_gap() <= QTE_CATCH_GAP:
+		_rescue_pending = true
+		_awaiting_door = false
+		_rescue_cat()
+		door_reached.emit()
+
+	if _mist != null and is_instance_valid(_mist) and not _rescue_pending:
+		if Time.get_ticks_msec() >= _mist_hold_until_msec:
+			_mist_trail_distance = minf(
+				_trail_total_distance,
+				_mist_trail_distance + MIST_CHASE_SPEED * main.player.scale.x * delta
+			)
 		_mist.global_position = _point_on_trail_distance(_mist_trail_distance)
 		_mist.flip_h = _mist.global_position.x > position.x
 
@@ -365,28 +430,49 @@ func _create_mist() -> void:
 	_mist.offset.y = -texture.get_height() * 0.5
 	_mist.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_mist.z_index = 30
-	_mist.global_position = main.player.global_position
 	main.stage_view.add_child(_mist)
+	_mist.global_position = main.player.global_position - Vector2(INITIAL_GAP, 0.0)
 
 
-func _point_on_trail(distance_back: float) -> Vector2:
-	if _trail.is_empty():
-		return main.player.global_position
-	var remaining := distance_back
-	for index in range(_trail.size() - 1, 0, -1):
-		var end: Vector2 = _trail[index]
-		var start: Vector2 = _trail[index - 1]
-		var segment: Vector2 = end - start
-		var length: float = segment.length()
-		if length >= remaining and length > 0.0:
-			return end - segment / length * remaining
-		remaining -= length
-	return _trail[0]
+func _mist_gap() -> float:
+	if _mist == null or not is_instance_valid(_mist) or main == null or main.player == null:
+		return INF
+	return _mist.global_position.distance_to(main.player.global_position)
+
+
+func _rescue_cat() -> void:
+	if _mist != null and is_instance_valid(_mist):
+		_mist.modulate = Color(0.7, 0.7, 0.7, 1.0)
+
+
+func _push_player_clear_of_mist() -> void:
+	if _mist == null or not is_instance_valid(_mist) or main == null or main.player == null:
+		return
+	var away: Vector2 = (main.player.global_position - _mist.global_position).normalized()
+	if away.is_zero_approx():
+		away = Vector2.RIGHT
+	var perpendicular := Vector2(-away.y, away.x)
+	var positive: float = main.player.burst_clearance(perpendicular, RESCUE_BURST_LIMIT)
+	var negative: float = main.player.burst_clearance(-perpendicular, RESCUE_BURST_LIMIT)
+	var direction := perpendicular if positive >= negative else -perpendicular
+	var distance := maxf(positive, negative)
+	if distance <= 0.0:
+		return
+	if main.player.start_chase_burst(direction, distance):
+		main.update_player_control()
+		await _wait_for_burst()
 
 
 func _point_on_trail_distance(distance: float) -> Vector2:
 	if _trail.is_empty():
 		return main.player.global_position
+	if distance < _trail_start_distance:
+		var first_direction := Vector2.RIGHT
+		if _trail.size() > 1:
+			var first_segment: Vector2 = _trail[1] - _trail[0]
+			if not first_segment.is_zero_approx():
+				first_direction = first_segment.normalized()
+		return _trail[0] - first_direction * (_trail_start_distance - distance)
 	var remaining := clampf(distance - _trail_start_distance, 0.0,
 		_trail_total_distance - _trail_start_distance)
 	for index in range(1, _trail.size()):

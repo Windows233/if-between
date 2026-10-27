@@ -463,7 +463,7 @@ func _apply(step: StageStep) -> void:
 		&"ch2_chase_start":
 			main.chase_session.begin()
 		&"ch2_chase_qte":
-			await main.chase_session.run_qte(StringName(step.text("key")), step.number("trigger_x"))
+			await main.chase_session.run_qte(StringName(step.text("key")))
 		&"ch2_chase_arrive":
 			await main.chase_session.wait_for_arrival()
 		&"ch2_chase_mist_retreat":
