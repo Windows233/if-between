@@ -6,6 +6,7 @@ const Model := preload("res://addons/if_map_editor/map_edit_model.gd")
 const Canvas := preload("res://addons/if_map_editor/map_edit_canvas.gd")
 const Inspector := preload("res://addons/if_map_editor/map_draw_layer_inspector.gd")
 const LayersPanel := preload("res://addons/if_map_editor/map_draw_layers_panel.gd")
+const MapDef := preload("res://core/map_def.gd")
 
 
 func _initialize() -> void:
@@ -96,6 +97,14 @@ static func _test_inspector(h: TestHarness) -> void:
 	model.data.erase("overlay")
 	inspector.sync_fields()
 	h.check("没有整张前景时查看按钮禁用", (inspector.get_node("SelectOverlay") as Button).disabled, true)
+	model.set_actor_field(0, "draw_layer", "auto")
+	inspector.sync_fields()
+	h.check("自动遮挡提示角色脚底判定", str(inspector.get_node("LayerHint").text).contains("按人物脚底Y"), true)
+	var baseline_text := "%.1f" % MapDef._actor_from(model.actor_dict(0)).effective_cover_y()
+	h.check("自动遮挡提示展示有效阈值", str(inspector.get_node("LayerHint").text).contains(baseline_text), true)
+	(inspector.get_node("AboveOverlay") as Button).pressed.emit()
+	h.check("没有整张前景时仍提示最顶层会盖住角色",
+		str(inspector.get_node("LayerHint").text).contains("始终盖住角色"), true)
 	multi.free()
 	inspector.free()
 

@@ -23,6 +23,7 @@ static func run(h: TestHarness) -> void:
 	_test_order(h)
 	_test_parts(h)
 	_test_variants_and_reload(h)
+	_test_school_gate_fountain_sign(h)
 	_test_validation(h)
 
 
@@ -169,6 +170,39 @@ static func _test_variants_and_reload(h: TestHarness) -> void:
 	h.check("换贴图后绘制层保持", node.z_index, MapView.ABOVE_OVERLAY_Z)
 	h.check("换贴图后同层顺序保持", node.get_index(), before_index)
 	h.check("换贴图后仍是原节点", _node(view, &"variant"), node)
+	view.free()
+
+
+static func _test_school_gate_fountain_sign(h: TestHarness) -> void:
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/maps/school_gate.json"))
+	h.check("校门地图可读取遮挡回归数据", parsed is Dictionary, true)
+	if not parsed is Dictionary:
+		return
+	var definition := MapDef.from_dictionary(parsed)
+	var fountain: MapDef.Actor = null
+	var sign: MapDef.Actor = null
+	for actor: MapDef.Actor in definition.actors:
+		if actor.id == &"sg_fountain":
+			fountain = actor
+		if actor.sprite.contains("sculpture_inscription"):
+			sign = actor
+	h.check("校门喷泉存在", fountain != null, true)
+	h.check("喷泉铭牌贴图存在", sign != null, true)
+	if fountain == null or sign == null:
+		return
+	h.check("喷泉铭牌跟随角色脚底自动遮挡", sign.visual_layers(), PackedStringArray(["auto"]))
+	h.check("喷泉铭牌与喷泉共用遮挡基线", sign.effective_cover_y(), fountain.effective_cover_y())
+	h.check("喷泉铭牌绘制在喷泉前方", sign.draw_order > fountain.draw_order, true)
+	var view := _view(h, definition)
+	var sign_node := _node(view, sign.id)
+	var fountain_node := _node(view, fountain.id)
+	h.check("校门地图不靠整张前景遮挡", view.overlay_node(), null)
+	for player_y: float in [fountain.effective_cover_y() - 1.0, fountain.effective_cover_y() + 1.0]:
+		view.set_player_y(player_y)
+		var expected_z := MapView.COVER_Z if player_y < fountain.effective_cover_y() else MapView.PROP_Z
+		h.check("角色在喷泉后方时铭牌跟随自动切层 %.1f" % player_y, sign_node.z_index, expected_z)
+		h.check("角色在喷泉前方时喷泉跟随自动切层 %.1f" % player_y, fountain_node.z_index, expected_z)
+	h.check("同层自动遮挡下铭牌绘制晚于喷泉", sign_node.get_index() > fountain_node.get_index(), true)
 	view.free()
 
 
