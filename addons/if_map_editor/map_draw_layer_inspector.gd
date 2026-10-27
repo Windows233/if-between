@@ -7,8 +7,8 @@ extends VBoxContainer
 signal edited
 signal overlay_selected
 
-const LAYERS := ["", "back", "auto", "front", "above_overlay"]
-const CAPTIONS := ["沿用原设置（含视觉部件）", "固定在人物后方", "自动前后（按人物脚底）", "固定盖住人物", "最顶层（盖住人物与前景）"]
+const LAYERS := ["", "back", "map_under_player", "auto", "front", "above_overlay"]
+const CAPTIONS := ["沿用原设置（含视觉部件）", "普通物件层", "底图上方／角色后方", "自动前后（按人物脚底）", "固定盖住人物", "最顶层（盖住人物与前景）"]
 
 var model
 var actor_index := -1
@@ -108,6 +108,8 @@ func sync_fields() -> void:
 func _layer_guidance(overlay: String) -> String:
 	var actor := MapDef._actor_from(model.actor_dict(actor_index))
 	var layers := actor.visual_layers()
+	if layers.has("map_under_player"):
+		return "当前显示在底图与普通物件之上、角色之后；角色不会被它遮住，整张前景遮挡图仍可盖在上面。适合地面血迹等静态装饰。"
 	if layers.has("above_overlay"):
 		if overlay.is_empty():
 			return "当前为最顶层：此地图没有整张前景可越过，但它仍会始终盖住角色。只有需要固定压在角色前的物件才使用。"

@@ -797,6 +797,7 @@ func _draw() -> void:
 			if not actor_is_hidden(index):
 				_draw_rect_game(model.interaction_rect_of(index), ACTOR_FILL, Color.TRANSPARENT)
 	_draw_visual_layer("back")
+	_draw_visual_layer("map_under_player")
 	_draw_visual_layer("auto")
 	_draw_visual_layer("front")
 	if is_kind_visible(Kind.OVERLAY) and tex_overlay != null:

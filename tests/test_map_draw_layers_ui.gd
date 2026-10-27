@@ -60,7 +60,7 @@ static func _test_inspector(h: TestHarness) -> void:
 	h.check("构建图层卡不改地图", model.actor_dict(0), original)
 	(inspector.get_node("AboveOverlay") as Button).pressed.emit()
 	h.check("快速按钮把物件置于整张前景上", model.actor_field(0, "draw_layer"), "above_overlay")
-	h.check("快速切层同步下拉框", picker.selected, 4)
+	h.check("快速切层同步下拉框", picker.selected, 5)
 	h.check("快速切层只记录一笔修改", changes[0], 1)
 	var expected: Dictionary = original.duplicate(true)
 	expected["draw_layer"] = "above_overlay"
@@ -80,6 +80,11 @@ static func _test_inspector(h: TestHarness) -> void:
 	h.check("重做后顺序读数同步", order.value, -5.0)
 	picker.item_selected.emit(0)
 	h.check("切回沿用设置清除覆盖字段", model.actor_dict(0).has("draw_layer"), false)
+	picker.item_selected.emit(2)
+	h.check("底图上方层写入地图字段", model.actor_field(0, "draw_layer"), "map_under_player")
+	h.check("底图上方层说明角色不会被遮挡",
+		str(inspector.get_node("LayerHint").text).contains("角色不会被它遮住"), true)
+	picker.item_selected.emit(0)
 	(inspector.get_node("SelectOverlay") as Button).pressed.emit()
 	h.check("查看整张前景发出选择信号", overlay_requests[0], 1)
 	order.editable = false
@@ -146,6 +151,18 @@ static func _test_panel(h: TestHarness) -> void:
 	h.check("整张前景清楚显示素材文件名", overlay.get_text(0).contains("library_wall.png"), true)
 	h.check("背景清楚显示素材文件名", background.get_text(0).contains("library_no_cat.png"), true)
 	h.check("从前到后列表包含前景分界", items.find(above) < items.find(overlay) and items.find(overlay) < items.find(front), true)
+	model.set_actor_field(0, "draw_layer", "map_under_player")
+	panel.refresh()
+	var under_player := _find(_items(panel.tree.get_root()), "actor", 0)
+	h.check("底图上方层显示在图层列表", under_player != null, true)
+	h.check("底图上方层名称说明角色在前", under_player.get_parent().get_text(0).contains("角色后方"), true)
+	model.erase_actor_field(0, "draw_layer")
+	panel.refresh()
+	var refreshed := _items(panel.tree.get_root())
+	above = _find(refreshed, "actor", 0)
+	overlay = _find(refreshed, "overlay")
+	background = _find(refreshed, "background")
+	var before_visibility: Dictionary = model.data.duplicate(true)
 	above.select(0)
 	panel._on_selected()
 	h.check("图层列表可选择所指物件", selected.has(0), true)
@@ -160,7 +177,7 @@ static func _test_panel(h: TestHarness) -> void:
 	canvas.show_overlay = false
 	panel.refresh()
 	h.check("显隐状态刷新不反向回写或触发选择", (panel.find_child("ToggleOverlay", true, false) as CheckBox).button_pressed, false)
-	h.check("图层列表选择与显隐不修改地图数据", model.data, before)
+	h.check("图层列表选择与显隐不修改地图数据", model.data, before_visibility)
 	panel.free()
 	canvas.free()
 
