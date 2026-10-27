@@ -104,9 +104,13 @@
       "sprite": "res://art/props/school_gate_bottom_wall.png"
     },
     {
+      "cover": true,
       "decor": true,
+      "draw_layer": "auto",
+      "draw_order": 1,
       "id": "new_actor_2",
-      "label": "新物件",
+      "label": "喷泉铭牌",
+      "over": false,
       "reach_local": [
         -6,
         1,
@@ -119,7 +123,8 @@
         30,
         17
       ],
-      "sprite": "res://art/props/ch2_sculpture_inscription_3.png"
+      "sort_offset": 7,
+      "sprite": "res://art/props/ch2_sculpture_inscription_4.png"
     }
   ],
   "background": "res://art/map/school_gate.png",

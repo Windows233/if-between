@@ -86,6 +86,8 @@ const BORDER_THICKNESS := 32.0
 
 ## 场景里的物件画在第几层。角色是 10（见 `Player.create()`）。
 const PROP_Z := 5
+## 静态地图装饰：在普通物件和背景之上，但仍在角色与整张前景遮挡图之后。
+const MAP_UNDER_PLAYER_Z := 9
 ## 会挡人的家具（`MapDef.Actor.cover`）在「人在它后面」时升到这一层，
 ## 盖住角色的下半身。**必须大于角色的 10。**
 const COVER_Z := 11
@@ -226,6 +228,8 @@ func _add_actor(actor: MapDef.Actor) -> void:
 			node.z_index = OVER_Z
 		elif layers[index] == "above_overlay":
 			node.z_index = ABOVE_OVERLAY_Z
+		elif layers[index] == "map_under_player":
+			node.z_index = MAP_UNDER_PLAYER_Z
 		elif layers[index] == "auto":
 			_covers.append({"node": node, "cover_y": baselines[index]})
 	if drawn or not actor.visual_parts.is_empty():

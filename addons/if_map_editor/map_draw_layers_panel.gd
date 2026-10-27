@@ -10,9 +10,9 @@ signal background_selected
 signal visibility_requested(prop: String, on: bool)
 
 const MapDef := preload("res://core/map_def.gd")
-const BANDS := ["above_overlay", "front", "auto", "back"]
-const LABELS := {"above_overlay": "整张前景之上", "front": "人物之上／前景之下",
-	"auto": "自动遮挡", "back": "地面／人物后方"}
+const BANDS := ["above_overlay", "front", "auto", "map_under_player", "back"]
+const LABELS := {"above_overlay": "最顶层：盖住人物与前景", "front": "固定盖住人物／前景之下",
+	"auto": "自动前后：按人物脚底Y", "map_under_player": "底图上方：角色后方", "back": "普通物件层"}
 
 var model
 var canvas
@@ -48,7 +48,7 @@ func configure(source, source_canvas) -> void:
 	tree.item_selected.connect(_on_selected)
 	add_child(tree)
 	var note := Label.new()
-	note.text = "点图层查看对象或素材；显隐仅用于对照。自动遮挡物在画布按挡住人物的一面显示，游戏仍随站位变化。实际层次在物件的“图层上下关系”调整。"
+	note.text = "底图上方层始终在角色后面；自动前后按人物脚底Y切换；固定前层和最顶层会盖住人物。点“当前布局试走”可用真实角色验证。显隐只用于对照，不会保存。"
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	add_child(note)
 	refresh()

@@ -23,6 +23,8 @@ static func run(h: TestHarness) -> void:
 	_test_order(h)
 	_test_parts(h)
 	_test_variants_and_reload(h)
+	_test_school_gate_fountain_sign(h)
+	_test_library_blood_layer(h)
 	_test_validation(h)
 
 
@@ -65,16 +67,22 @@ static func _ids(actors: Array[MapDef.Actor]) -> Array[StringName]:
 
 static func _test_layers(h: TestHarness) -> void:
 	var actors: Array = []
-	for layer: String in ["back", "auto", "front", "above_overlay"]:
+	for layer: String in ["back", "auto", "map_under_player", "front", "above_overlay"]:
 		actors.append(_actor(layer, layer))
 	var definition := MapDef.from_dictionary(_map(actors))
-	h.check("四种绘制层定义合法", definition.validate(), [])
+	h.check("五种绘制层定义合法", definition.validate(), [])
 	var view := _view(h, definition)
 	for player_y: float in [0.0, 999.0]:
 		view.set_player_y(player_y)
 		h.check("普通后层不因角色站位改变 %.0f" % player_y, _node(view, &"back").z_index, MapView.PROP_Z)
 		h.check("自动层仍按遮挡基线切换 %.0f" % player_y, _node(view, &"auto").z_index,
 			MapView.COVER_Z if player_y < definition.actors[1].effective_cover_y() else MapView.PROP_Z)
+		h.check("底图上方层在角色下方且不随站位改变 %.0f" % player_y,
+			_node(view, &"map_under_player").z_index, MapView.MAP_UNDER_PLAYER_Z)
+		h.check("底图上方层不会盖住角色 %.0f" % player_y,
+			_node(view, &"map_under_player").z_index < 10, true)
+		h.check("底图上方层仍低于整张前景遮挡图 %.0f" % player_y,
+			_node(view, &"map_under_player").z_index < view.overlay_node().z_index, true)
 		h.check("角色前层仍低于整张前景 %.0f" % player_y,
 			_node(view, &"front").z_index < view.overlay_node().z_index, true)
 		h.check("前景之上可覆盖整张前景 %.0f" % player_y,
@@ -170,6 +178,59 @@ static func _test_variants_and_reload(h: TestHarness) -> void:
 	h.check("换贴图后同层顺序保持", node.get_index(), before_index)
 	h.check("换贴图后仍是原节点", _node(view, &"variant"), node)
 	view.free()
+
+
+static func _test_school_gate_fountain_sign(h: TestHarness) -> void:
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/maps/school_gate.json"))
+	h.check("校门地图可读取遮挡回归数据", parsed is Dictionary, true)
+	if not parsed is Dictionary:
+		return
+	var definition := MapDef.from_dictionary(parsed)
+	var fountain: MapDef.Actor = null
+	var sign: MapDef.Actor = null
+	for actor: MapDef.Actor in definition.actors:
+		if actor.id == &"sg_fountain":
+			fountain = actor
+		if actor.sprite.contains("sculpture_inscription"):
+			sign = actor
+	h.check("校门喷泉存在", fountain != null, true)
+	h.check("喷泉铭牌贴图存在", sign != null, true)
+	if fountain == null or sign == null:
+		return
+	h.check("喷泉铭牌跟随角色脚底自动遮挡", sign.visual_layers(), PackedStringArray(["auto"]))
+	h.check("喷泉铭牌与喷泉共用遮挡基线", sign.effective_cover_y(), fountain.effective_cover_y())
+	h.check("喷泉铭牌绘制在喷泉前方", sign.draw_order > fountain.draw_order, true)
+	var view := _view(h, definition)
+	var sign_node := _node(view, sign.id)
+	var fountain_node := _node(view, fountain.id)
+	h.check("校门地图不靠整张前景遮挡", view.overlay_node(), null)
+	for player_y: float in [fountain.effective_cover_y() - 1.0, fountain.effective_cover_y() + 1.0]:
+		view.set_player_y(player_y)
+		var expected_z := MapView.COVER_Z if player_y < fountain.effective_cover_y() else MapView.PROP_Z
+		h.check("角色在喷泉后方时铭牌跟随自动切层 %.1f" % player_y, sign_node.z_index, expected_z)
+		h.check("角色在喷泉前方时喷泉跟随自动切层 %.1f" % player_y, fountain_node.z_index, expected_z)
+	h.check("同层自动遮挡下铭牌绘制晚于喷泉", sign_node.get_index() > fountain_node.get_index(), true)
+	view.free()
+
+
+static func _test_library_blood_layer(h: TestHarness) -> void:
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://data/maps/library.json"))
+	h.check("图书馆地图可读取血迹图层", parsed is Dictionary, true)
+	if not parsed is Dictionary:
+		return
+	var definition := MapDef.from_dictionary(parsed)
+	for actor: MapDef.Actor in definition.actors:
+		if actor.id != &"library_blood_visual":
+			continue
+		h.check("入口血迹采用角色后方地图装饰层", actor.visual_layers(), PackedStringArray(["map_under_player"]))
+		var view := _view(h, definition)
+		var node := _node(view, actor.id)
+		h.check("入口血迹绘制在底图上方", node.z_index, MapView.MAP_UNDER_PLAYER_Z)
+		h.check("入口血迹位于角色绘制层下", node.z_index < 10, true)
+		h.check("入口血迹仍位于整张前景遮挡图下", node.z_index < view.overlay_node().z_index, true)
+		view.free()
+		return
+	h.check("图书馆地图包含入口血迹", false, true)
 
 
 static func _test_validation(h: TestHarness) -> void:

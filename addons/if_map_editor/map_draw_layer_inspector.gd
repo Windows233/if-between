@@ -7,8 +7,8 @@ extends VBoxContainer
 signal edited
 signal overlay_selected
 
-const LAYERS := ["", "back", "auto", "front", "above_overlay"]
-const CAPTIONS := ["沿用原设置（含视觉部件）", "地面／人物后方", "自动遮挡（随人物站位）", "人物之上／整张前景之下", "整张前景之上"]
+const LAYERS := ["", "back", "map_under_player", "auto", "front", "above_overlay"]
+const CAPTIONS := ["沿用原设置（含视觉部件）", "普通物件层", "底图上方／角色后方", "自动前后（按人物脚底）", "固定盖住人物", "最顶层（盖住人物与前景）"]
 
 var model
 var actor_index := -1
@@ -16,6 +16,7 @@ var selection: Array[int] = []
 var _layer_picker: OptionButton
 var _order: SpinBox
 var _overlay_path: Label
+var _layer_hint: Label
 var _select_overlay: Button
 var _mutating_controls: Array[Control] = []
 
@@ -63,11 +64,16 @@ func configure(source, index: int, selected: Array[int] = []) -> void:
 	add_child(buttons)
 	var above := Button.new()
 	above.name = "AboveOverlay"
-	above.text = "放到整张前景之上"
+	above.text = "固定压过前景与人物"
+	above.tooltip_text = "无论人物站在哪里都会压在人物上方；只有需要始终显示在最顶层的物件才使用。"
 	above.pressed.connect(_set_layer.bind("above_overlay"))
 	add_child(above)
 	_mutating_controls.append(above)
-	add_child(_label("同一绘制层内，顺序越大越靠前。自动遮挡仍会随人物站位改变；这与场景树中的编组排序不同。"))
+	_layer_hint = _label("")
+	_layer_hint.name = "LayerHint"
+	_layer_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	add_child(_layer_hint)
+	add_child(_label("同一绘制层内顺序越大越靠前；跨层时顺序值不生效。场景树编组顺序也不改变游戏绘制层。"))
 	_overlay_path = _label("")
 	_overlay_path.name = "OverlayPath"
 	add_child(_overlay_path)
@@ -89,6 +95,7 @@ func sync_fields() -> void:
 	_overlay_path.text = "整张前景：" + (overlay.get_file() if not overlay.is_empty() else "无")
 	_overlay_path.tooltip_text = overlay
 	_select_overlay.disabled = overlay.is_empty()
+	_layer_hint.text = _layer_guidance(overlay)
 	var readonly := selection.size() != 1
 	for control: Control in _mutating_controls:
 		# 主面板可能因锁定把控件设为只读，刷新不能把这层保护重新打开。
@@ -96,6 +103,22 @@ func sync_fields() -> void:
 			(control as SpinBox).editable = false
 		elif readonly and control is BaseButton:
 			(control as BaseButton).disabled = true
+
+
+func _layer_guidance(overlay: String) -> String:
+	var actor := MapDef._actor_from(model.actor_dict(actor_index))
+	var layers := actor.visual_layers()
+	if layers.has("map_under_player"):
+		return "当前显示在底图与普通物件之上、角色之后；角色不会被它遮住，整张前景遮挡图仍可盖在上面。适合地面血迹等静态装饰。"
+	if layers.has("above_overlay"):
+		if overlay.is_empty():
+			return "当前为最顶层：此地图没有整张前景可越过，但它仍会始终盖住角色。只有需要固定压在角色前的物件才使用。"
+		return "当前为最顶层：无论人物站位，都会盖住角色和整张前景。适合必须始终可见的覆盖物。"
+	if layers.has("front"):
+		return "当前固定盖住人物；整张前景仍会盖在它上面。若物件应随站位改变前后关系，请选自动前后。"
+	if layers.has("auto"):
+		return "当前按人物脚底Y自动前后：脚底Y小于 %.1f 时物件盖住人物；到达或超过基线时人物盖住物件。" % actor.effective_cover_y()
+	return "当前固定在人物后方。若物件应随站位改变前后关系，请选自动前后。"
 
 
 func _valid_index() -> bool:
