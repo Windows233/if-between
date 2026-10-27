@@ -11,7 +11,7 @@ const MIST_CHASE_SPEED := 144.0
 const INITIAL_GAP := 48.0
 const QTE_CATCH_GAP := 26.0
 const RESCUE_BURST_LIMIT := 118.0
-const POST_QTE_GAP := 82.0
+const PURSUER_STEP := 2.0
 
 var main: Variant
 var overlay: ChaseOverlay
@@ -33,8 +33,8 @@ var _trail: Array[Vector2] = []
 var _trail_total_distance := 0.0
 var _trail_start_distance := 0.0
 var _mist_trail_distance := 0.0
-var _mist_hold_until_msec := 0
-var _mist: Sprite2D
+var _mist: CharacterBody2D
+var _mist_sprite: Sprite2D
 
 
 func setup(host: Variant, qte_overlay: ChaseOverlay) -> void:
@@ -74,7 +74,6 @@ func begin() -> bool:
 	main.player.chase_input_locked = false
 	_base_time_scale = Engine.time_scale
 	_base_zoom = main.camera.zoom if main.camera != null else Vector2.ONE
-	_mist_hold_until_msec = 0
 	_trail.clear()
 	main.walk_and_use = false
 	main.player.walk_path.clear()
@@ -180,9 +179,6 @@ func run_qte(key: StringName) -> bool:
 		_rescue_pending = true
 		_rescue_cat()
 		return true
-	_mist_trail_distance = maxf(_mist_trail_distance - POST_QTE_GAP,
-		_trail_start_distance - INITIAL_GAP)
-	_mist_hold_until_msec = Time.get_ticks_msec() + 700
 	return true
 
 
@@ -335,7 +331,7 @@ func retreat_mist(duration: float = 0.3) -> void:
 	_remove_mist()
 
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	# Main restores the map camera each frame; retain duel framing while its QTE is active.
 	if qte_pending and _qte_started and not active:
 		if main != null and main.camera != null:
@@ -367,21 +363,47 @@ func _process(delta: float) -> void:
 		_rescue_cat()
 		door_reached.emit()
 
-	if _mist != null and is_instance_valid(_mist) and not _rescue_pending:
-		if Time.get_ticks_msec() >= _mist_hold_until_msec:
-			_mist_trail_distance = minf(
-				_trail_total_distance,
-				_mist_trail_distance + MIST_CHASE_SPEED * main.player.scale.x * delta
-			)
-		_mist.global_position = _point_on_trail_distance(_mist_trail_distance)
-		_mist.flip_h = _mist.global_position.x > position.x
-
 	if main.camera != null:
 		main.camera.zoom = _base_zoom * (1.15 if _qte_started else 1.05)
 		if _qte_started:
 			Engine.time_scale = 0.2
 		elif not is_equal_approx(Engine.time_scale, _base_time_scale):
 			Engine.time_scale = _base_time_scale
+
+
+func _physics_process(delta: float) -> void:
+	if not active or _rescue_pending or _mist == null or not is_instance_valid(_mist):
+		return
+	if overlay != null and overlay.is_frozen():
+		return
+	if delta <= 0.0:
+		_mist.velocity = Vector2.ZERO
+		return
+
+	var budget: float = MIST_CHASE_SPEED * main.player.scale.x * minf(delta, 0.1)
+	while budget > 0.001:
+		var available: float = _trail_total_distance - _mist_trail_distance
+		if available <= 0.001:
+			break
+		var step: float = minf(minf(budget, available), PURSUER_STEP)
+		var target: Vector2 = _point_on_trail_distance(_mist_trail_distance + step)
+		var gap: Vector2 = target - _mist.global_position
+		if gap.length() <= 0.01:
+			_mist_trail_distance += step
+			budget -= step
+			continue
+		var motion: Vector2 = gap.limit_length(step)
+		_mist.velocity = motion / maxf(minf(delta, 0.1), 0.001)
+		var before: Vector2 = _mist.global_position
+		var collision := _mist.move_and_collide(motion)
+		var moved: float = before.distance_to(_mist.global_position)
+		_mist_trail_distance += moved
+		budget -= moved
+		_mist_sprite.flip_h = _mist.velocity.x > 0.0 if absf(_mist.velocity.x) > 0.2 else _mist_sprite.flip_h
+		if collision != null or moved <= 0.001:
+			_mist.velocity = Vector2.ZERO
+			break
+	_mist.velocity = Vector2.ZERO
 
 
 func _on_overlay_qte_finished(key: StringName, success: bool) -> void:
@@ -420,18 +442,35 @@ func _create_mist() -> void:
 	var texture := load(MIST_PATH) as Texture2D
 	if texture == null:
 		return
-	_mist = Sprite2D.new()
+	_mist = CharacterBody2D.new()
 	_mist.name = "ch2_chase_mist"
-	_mist.texture = texture
+	_mist.collision_layer = 0
+	_mist.collision_mask = 1
+	_mist.scale = main.player.scale
+	_mist.add_collision_exception_with(main.player)
+	var collision := CollisionShape2D.new()
+	var foot := CircleShape2D.new()
+	foot.radius = 4.0
+	collision.shape = foot
+	_mist.add_child(collision)
+	_mist_sprite = Sprite2D.new()
+	_mist_sprite.name = "Visual"
+	_mist_sprite.texture = texture
 	# 素材是高清原图；沿用人物/地图标尺，限制在主角约1.5倍高度内。
-	var height: float = Player.DISPLAY_HEIGHT * main.current_map.player_scale * 1.5
+	var height: float = Player.DISPLAY_HEIGHT * 1.5
 	var ratio := height / maxf(texture.get_height(), 1.0)
-	_mist.scale = Vector2.ONE * ratio
-	_mist.offset.y = -texture.get_height() * 0.5
-	_mist.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_mist_sprite.scale = Vector2.ONE * ratio
+	_mist_sprite.offset.y = -texture.get_height() * 0.5
+	_mist_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	_mist.z_index = 30
 	main.stage_view.add_child(_mist)
-	_mist.global_position = main.player.global_position - Vector2(INITIAL_GAP, 0.0)
+	_mist.add_child(_mist_sprite)
+	var spawn: Vector2 = main.player.global_position - Vector2(INITIAL_GAP, 0.0)
+	while not WalkGrid.is_free(main.current_map, spawn) \
+			and spawn.distance_to(main.player.global_position) > 12.0:
+		spawn += Vector2(2.0, 0.0)
+	_mist.global_position = spawn
+	_mist_trail_distance = -spawn.distance_to(main.player.global_position)
 
 
 func _mist_gap() -> float:
@@ -441,8 +480,8 @@ func _mist_gap() -> float:
 
 
 func _rescue_cat() -> void:
-	if _mist != null and is_instance_valid(_mist):
-		_mist.modulate = Color(0.7, 0.7, 0.7, 1.0)
+	if _mist_sprite != null and is_instance_valid(_mist_sprite):
+		_mist_sprite.modulate = Color(0.7, 0.7, 0.7, 1.0)
 
 
 func _push_player_clear_of_mist() -> void:
@@ -513,3 +552,4 @@ func _remove_mist() -> void:
 	if _mist != null and is_instance_valid(_mist):
 		_mist.queue_free()
 	_mist = null
+	_mist_sprite = null

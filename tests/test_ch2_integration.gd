@@ -14,7 +14,7 @@ static func run(harness: TestHarness) -> void:
 	harness.section("第二章整合")
 	_test_events_and_maps(harness)
 	_test_assets(harness)
-	_test_bugfixes(harness)
+	await _test_bugfixes(harness)
 	await _test_save_and_caption(harness)
 
 
@@ -26,21 +26,35 @@ static func _test_bugfixes(h: TestHarness) -> void:
 	main.flags.set_value(&"ch2/teamed_c", true)
 	ItemTable.add(main.flags, &"charm")
 	h.check("追逐可实际启动", main.chase_session.begin(), true)
-	var mist: Sprite2D = main.chase_session._mist
-	h.check("追逐猫贴图已加载", mist != null, true)
+	var mist: CharacterBody2D = main.chase_session._mist
+	h.check("追逐猫是独立物理实体", mist is CharacterBody2D, true)
 	if mist != null:
-		h.check("追逐猫以清晰间距从后方开始", main.chase_session._mist_gap(), 48.0)
-		var screen_height: float = mist.texture.get_height() * mist.scale.y * main.camera.zoom.y
+		var mist_sprite := mist.get_node("Visual") as Sprite2D
+		h.check("追逐猫视觉贴图已加载", mist_sprite != null and mist_sprite.texture != null, true)
+		h.check("追逐猫碰撞体只检测场景障碍", mist.collision_layer, 0)
+		h.check("追逐猫碰撞体检测场景墙体", mist.collision_mask, 1)
+		h.check("追逐猫从可站立位置开始", WalkGrid.is_free(
+		main.current_map, mist.global_position), true)
+		h.check("追逐猫以清晰间距从后方开始",
+			main.chase_session._mist_gap() >= 40.0, true)
+		var screen_height: float = mist_sprite.texture.get_height() * mist_sprite.scale.y \
+			* mist.scale.y * main.camera.zoom.y
 		var player_height: float = Player.DISPLAY_HEIGHT * main.player.scale.y * main.camera.zoom.y
-		h.check("高清追逐猫不超过主角两倍高", screen_height <= player_height * 2.0, true)
-		h.check("追逐猫脚底贴着追踪路径", mist.offset.y + mist.texture.get_height() * 0.5, 0.0)
+		h.check("追逐猫不超过主角两倍高", screen_height <= player_height * 2.0, true)
+		h.check("追逐猫脚底贴着追踪路径",
+			mist_sprite.offset.y + mist_sprite.texture.get_height() * 0.5, 0.0)
 		var chase_start: Vector2 = main.player.global_position
 		var mist_start: Vector2 = mist.global_position
 		main.player.global_position = chase_start + Vector2(20.0, 0.0)
-		main.chase_session._process(0.1)
+		await h.root.get_tree().physics_frame
+		var first_step: float = mist.global_position.distance_to(mist_start)
+		h.check("追逐实体按物理帧连续移动 %.2f" % first_step, first_step < 3.0, true)
+		for _frame: int in 8:
+			await h.root.get_tree().physics_frame
 		var mist_distance := mist.global_position.distance_to(mist_start)
-		h.check("黑猫按独立常速沿路径追击",
-			mist_distance <= Ch2ChaseSession.MIST_CHASE_SPEED * main.player.scale.x * 0.1 + 0.1, true)
+		h.check("黑猫按独立常速沿路径追击 %.2f" % mist_distance,
+			mist_distance > 0.0 and mist_distance <= Ch2ChaseSession.MIST_CHASE_SPEED \
+			* main.player.scale.x * 0.25 + 0.5, true)
 		h.check("冲刺加速时主角能与黑猫拉开",
 			main.player.global_position.distance_to(mist.global_position) > mist_distance, true)
 		main.player.global_position = chase_start
