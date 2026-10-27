@@ -9,6 +9,12 @@ class_name Player
 extends CharacterBody2D
 
 const SPEED := 96.0
+const CHASE_BURST_DISTANCE := 72.0
+const CHASE_BURST_DURATION := 0.16
+
+var chase_input_locked := false
+var _chase_burst_velocity := Vector2.ZERO
+var _chase_burst_remaining := 0.0
 
 ## 素材没到、或者缺帧时退回的占位色块，脚底在原点
 const BODY_COLOR := Color("#e8b04b")
@@ -103,6 +109,22 @@ func _init() -> void:
 
 
 func _physics_process(_delta: float) -> void:
+	if _chase_burst_remaining > 0.0:
+		var motion := _chase_burst_velocity * _delta
+		var collision := move_and_collide(motion)
+		if collision != null:
+			_chase_burst_remaining = 0.0
+			_chase_burst_velocity = Vector2.ZERO
+		else:
+			_chase_burst_remaining -= motion.length()
+			if _chase_burst_remaining <= 0.0:
+				_chase_burst_velocity = Vector2.ZERO
+		play_animation(true)
+		return
+	if chase_input_locked:
+		velocity = Vector2.ZERO
+		play_animation(false)
+		return
 	var direction := current_direction()
 	if direction != Vector2.ZERO:
 		# 手动操作取消自动走
@@ -114,6 +136,22 @@ func _physics_process(_delta: float) -> void:
 	velocity = direction * movement_speed()
 	move_and_slide()
 	play_animation(direction != Vector2.ZERO)
+
+
+func start_chase_burst(direction: Vector2) -> bool:
+	if direction == Vector2.ZERO:
+		return false
+	var normalized := direction.normalized()
+	facing = normalized
+	var burst_distance := CHASE_BURST_DISTANCE * scale.x
+	_chase_burst_remaining = burst_distance
+	_chase_burst_velocity = normalized * (burst_distance / CHASE_BURST_DURATION)
+	chase_input_locked = false
+	return true
+
+
+func is_chase_bursting() -> bool:
+	return _chase_burst_remaining > 0.0
 
 
 ## 速度按统一显示尺度标定。地图坐标的步长随标尺变化，投影后始终 SPEED。

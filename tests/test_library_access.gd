@@ -56,6 +56,12 @@ static func _test_lock(h: TestHarness, gate: MapDef, entry: MapDef.Portal) -> vo
 	rescued.set_value(&"ch2/rescued_c", true)
 	h.check("救援成功不提前开放图书馆", entry.is_active(rescued), false)
 	h.check("救援成功仍保留锁门提示", gate.portal_at(entry.rect.get_center(), rescued), locked)
+	rescued.set_value(&"ch2/library_open", true)
+	h.check("仅救出C仍不能打开入口", ItemTable.count_of(rescued, &"key"), 0)
+	var key_only := WorldState.new()
+	key_only.set_value(&"ch2/library_open", true)
+	ItemTable.add(key_only, &"key", 1)
+	h.check("仅持钥匙但未救C仍不能打开入口", key_only.get_value(&"ch2/rescued_c"), null)
 	var event := DataLoader.load_event(&"ch2_library_locked")
 	h.check("锁门剧情可载入", event != null, true)
 	if event != null:
@@ -63,8 +69,9 @@ static func _test_lock(h: TestHarness, gate: MapDef, entry: MapDef.Portal) -> vo
 		h.check("锁门剧情入口存在", event.entry_node() != null, true)
 		if event.entry_node() != null:
 			var raw: Dictionary = event.entry_node().stage[0].data
-			h.check("未开放提示符合剧情修改1.0", raw.get("lines", [{}])[0].get("text", ""),
-				"还没有到自习室开放的时间")
+			h.check("未开放提示要求救出C并拿钥匙",
+				raw.get("lines", [{}])[0].get("text", ""),
+				"要先救出 C 并拿到钥匙，等图书馆开放后才能进去")
 
 
 static func _test_walkability(h: TestHarness, gate: MapDef, library: MapDef,
@@ -96,12 +103,23 @@ static func _test_walkability(h: TestHarness, gate: MapDef, library: MapDef,
 
 static func _test_round_trip(h: TestHarness, gate: MapDef, library: MapDef,
 		entry: MapDef.Portal, exit_portal: MapDef.Portal) -> void:
+	var entry_stands := _standing_points(gate,
+		WalkGrid.reachable(gate, gate.spawn_point(exit_portal.target_spawn)), entry.rect)
 	var main := h.new_main()
 	main.cutscene.instant = false
 	main.enter_map(&"school_gate", exit_portal.target_spawn)
+	main.flags.set_value(&"ch2/library_open", true)
+	ItemTable.add(main.flags, &"key", 1)
+	main.player.global_position = entry_stands[0] if not entry_stands.is_empty() else entry.rect.get_center()
+	h.check("仅持钥匙不能通过门口E交互", main._take_portal(), true)
+	h.check("缺少救援时E交互留在校门", main.current_map.id, &"school_gate")
+	h.check("缺少救援时直接传送目标为空", main.portal_destination(main.player.global_position), [])
 	main.flags.set_value(&"ch2/rescued_c", true)
-	var entry_stands := _standing_points(gate,
-		WalkGrid.reachable(gate, gate.spawn_point(exit_portal.target_spawn)), entry.rect)
+	ItemTable.remove(main.flags, &"key", 1)
+	h.check("救出C但没有钥匙时E仍被拦截", main._take_portal(), true)
+	h.check("缺少钥匙时直接传送目标为空", main.portal_destination(main.player.global_position), [])
+	ItemTable.add(main.flags, &"key", 1)
+	main.flags.set_value(&"ch2/library_open", false)
 	if entry_stands.is_empty():
 		main.queue_free()
 		return

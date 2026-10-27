@@ -23,6 +23,9 @@ func _run() -> void:
 	_test_warning_gate()
 	_test_deadlines()
 	_test_wrong_key()
+	_test_strict_chase_keys()
+	_test_direction_cross()
+	_test_direction_failure()
 	_test_freeze_resume()
 	print("ChaseOverlay: %d/%d checks passed" % [_checks - _failures, _checks])
 	quit(1 if _failures > 0 else 0)
@@ -144,6 +147,68 @@ func _test_freeze_resume() -> void:
 	_check("恢复后 E 可成功", overlay.handle_input(_key(KEY_E)), true)
 	_check("恢复仅产生一次成功", results, [true])
 	overlay.free()
+
+
+func _test_strict_chase_keys() -> void:
+	var overlay := _new_overlay()
+	var results: Array[bool] = []
+	overlay.qte_finished.connect(func(_key: StringName, success: bool) -> void: results.append(success))
+	overlay.clock_usec = 6_000_000
+	overlay.start_qte(&"q", false, true)
+	_activate_after_warning(overlay)
+	handle_key_check(overlay, KEY_E, true)
+	_check("追逐错按QTE立即失败", results, [false])
+	overlay.free()
+
+
+func _test_direction_cross() -> void:
+	var overlay := _new_overlay()
+	var result_keys: Array[StringName] = []
+	var result_values: Array[bool] = []
+	overlay.qte_finished.connect(func(key: StringName, success: bool) -> void:
+		result_keys.append(key)
+		result_values.append(success)
+	)
+	overlay.clock_usec = 7_000_000
+	overlay.start_direction_qte()
+	_activate_after_warning(overlay)
+	_check("方向判定显示WASD十字", overlay._key_label.text, "W\nA   D\nS")
+	_check("W选择上方", overlay.handle_input(_key(KEY_W)), true)
+	_check("W映射为向上", result_keys, [&"up"])
+	_check("方向选择成功", result_values, [true])
+	overlay.free()
+
+
+func _test_direction_failure() -> void:
+	var overlay := _new_overlay()
+	var result_keys: Array[StringName] = []
+	var result_values: Array[bool] = []
+	overlay.qte_finished.connect(func(key: StringName, success: bool) -> void:
+		result_keys.append(key)
+		result_values.append(success)
+	)
+	overlay.clock_usec = 8_000_000
+	overlay.start_direction_qte()
+	_activate_after_warning(overlay)
+	_check("方向错误键被消费", overlay.handle_input(_key(KEY_Q)), true)
+	_check("方向错误键以失败信号结束", result_values, [false])
+	_check("方向失败信号可与第一段QTE区分", result_keys, [&"direction"])
+	overlay.free()
+
+	overlay = _new_overlay()
+	result_values.clear()
+	overlay.qte_finished.connect(func(_key: StringName, success: bool) -> void: result_values.append(success))
+	overlay.clock_usec = 9_000_000
+	overlay.start_direction_qte()
+	_activate_after_warning(overlay)
+	overlay.clock_usec = overlay._active_until_usec
+	overlay._process(0.0)
+	_check("方向选择超时进入失败", result_values, [false])
+	overlay.free()
+
+
+func handle_key_check(overlay: FakeClockOverlay, key: Key, expected: bool) -> void:
+	_check("错键事件被消费", overlay.handle_input(_key(key)), expected)
 
 
 func _activate_after_warning(overlay: FakeClockOverlay) -> void:

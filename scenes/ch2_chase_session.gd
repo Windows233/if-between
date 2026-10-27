@@ -4,9 +4,9 @@ extends Node
 signal trigger_reached
 signal door_reached
 signal qte_resolved(key: StringName, success: bool)
+signal door_confirmed
 
 const MIST_PATH := "res://art/npc/shadow_cat/chase_mist_right.png"
-const DOOR_AREA := Rect2(338.0, 148.0, 30.0, 30.0)
 
 var main: Variant
 var overlay: ChaseOverlay
@@ -17,6 +17,7 @@ var _cancelled := false
 var _waiting_for_trigger := false
 var _awaiting_door := false
 var _arrived := false
+var _door_area := Rect2()
 var _expected_key: StringName = &""
 var _trigger_x := 0.0
 var _base_time_scale := 1.0
@@ -55,6 +56,8 @@ func begin() -> bool:
 	_waiting_for_trigger = false
 	_awaiting_door = false
 	_arrived = false
+	_door_area = _library_door_area()
+	main.player.chase_input_locked = false
 	_base_time_scale = Engine.time_scale
 	_base_zoom = main.camera.zoom if main.camera != null else Vector2.ONE
 	_mist_lag = 32.0
@@ -99,24 +102,41 @@ func run_qte(key: StringName, trigger_x: float) -> bool:
 		return false
 
 	_qte_started = true
+	main.player.chase_input_locked = true
 	Engine.time_scale = 0.2
 	if main.camera != null:
 		main.camera.zoom = _base_zoom * 1.15
 		main.camera.shake(2.4, 0.22)
-	if not overlay.start_qte(key):
+	if not overlay.start_qte(key, false, true):
 		qte_pending = false
 		_qte_started = false
+		main.player.chase_input_locked = false
 		_finish_run(true)
 		return false
 	main.update_player_control()
 
 	var result: Array = await qte_resolved
-	qte_pending = false
-	_qte_started = false
 	if _cancelled:
+		qte_pending = false
+		_qte_started = false
+		main.player.chase_input_locked = false
 		return false
 	var success: bool = bool(result[1])
 	var result_flag: StringName = &"ch2/chase_q1" if key == &"q" else &"ch2/chase_q2"
+	if success:
+		main.player.chase_input_locked = true
+		if not overlay.start_direction_qte():
+			success = false
+		else:
+			var direction_result: Array = await qte_resolved
+			success = not _cancelled and bool(direction_result[1])
+			if success:
+				main.player.start_chase_burst(_direction_vector(StringName(direction_result[0])))
+				main.player.chase_input_locked = false
+				await _wait_for_burst()
+	qte_pending = false
+	_qte_started = false
+	main.player.chase_input_locked = false
 	main.flags.set_value(result_flag, success)
 	Engine.time_scale = _base_time_scale
 	if main.camera != null:
@@ -176,23 +196,43 @@ func wait_for_arrival() -> bool:
 	if not active or _cancelled:
 		return false
 	_awaiting_door = true
-	if DOOR_AREA.has_point(main.player.global_position):
+	if _door_area.has_point(main.player.global_position):
 		_arrived = true
-		_awaiting_door = false
 	else:
 		await door_reached
-	_awaiting_door = false
 	if _cancelled or not _arrived:
+		_awaiting_door = false
+		return false
+	main.player.chase_input_locked = true
+	if main.toast != null:
+		main.toast.show_text("到图书馆门口了，按空格进门")
+	await door_confirmed
+	_awaiting_door = false
+	if _cancelled:
+		main.player.chase_input_locked = false
 		return false
 	active = false
 	main.flags.set_value(&"ch2/chase_arrived", true)
+	main.player.chase_input_locked = false
 	_restore_world()
 	main.update_player_control()
 	return true
 
 
 func can_move_player() -> bool:
-	return active and not _cancelled and not _arrived and (overlay == null or not overlay.is_frozen())
+	return active and not _cancelled and not _arrived \
+		and (overlay == null or not overlay.is_frozen())
+
+
+func awaiting_door_interaction() -> bool:
+	return _awaiting_door and _arrived and not _cancelled
+
+
+func confirm_door_interaction() -> bool:
+	if not awaiting_door_interaction():
+		return false
+	door_confirmed.emit()
+	return true
 
 
 func cancel() -> void:
@@ -203,11 +243,14 @@ func cancel() -> void:
 	if _awaiting_door:
 		_awaiting_door = false
 		door_reached.emit()
+		if _arrived:
+			door_confirmed.emit()
 	if overlay != null:
 		overlay.cancel_qte()
 	active = false
 	_qte_started = false
 	if main != null and main.player != null:
+		main.player.chase_input_locked = false
 		main.walk_and_use = false
 		main.player.walk_path.clear()
 	_restore_world()
@@ -247,9 +290,8 @@ func _process(delta: float) -> void:
 	if _waiting_for_trigger and position.x >= _trigger_x:
 		_waiting_for_trigger = false
 		trigger_reached.emit()
-	if _awaiting_door and DOOR_AREA.has_point(position):
+	if _awaiting_door and _door_area.has_point(position):
 		_arrived = true
-		_awaiting_door = false
 		door_reached.emit()
 
 	if _mist != null and is_instance_valid(_mist):
@@ -267,8 +309,32 @@ func _process(delta: float) -> void:
 
 
 func _on_overlay_qte_finished(key: StringName, success: bool) -> void:
-	if qte_pending and key == _expected_key:
+	if qte_pending and (key == _expected_key or key == &"direction" \
+			or key in [&"up", &"down", &"left", &"right"]):
 		qte_resolved.emit(key, success)
+
+
+func _library_door_area() -> Rect2:
+	if main == null or main.current_map == null or main.current_map.id != &"school_gate":
+		return Rect2()
+	for portal: MapDef.Portal in main.current_map.portals:
+		if portal.id in [&"to_library", &"to_library_locked"]:
+			return portal.rect
+	return Rect2()
+
+
+func _direction_vector(direction: StringName) -> Vector2:
+	match direction:
+		&"up": return Vector2.UP
+		&"left": return Vector2.LEFT
+		&"down": return Vector2.DOWN
+		&"right": return Vector2.RIGHT
+		_: return Vector2.ZERO
+
+
+func _wait_for_burst() -> void:
+	while main.player.is_chase_bursting() and not _cancelled:
+		await get_tree().physics_frame
 
 
 func _create_mist() -> void:
@@ -312,6 +378,8 @@ func _finish_run(remove_mist: bool) -> void:
 	_qte_started = false
 	_waiting_for_trigger = false
 	_awaiting_door = false
+	if main != null and main.player != null:
+		main.player.chase_input_locked = false
 	_restore_world()
 	if remove_mist:
 		_remove_mist()

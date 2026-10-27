@@ -42,6 +42,8 @@ var _panel_rect := Rect2()
 var _ring_center := Vector2()
 ## The C duel shares the countdown while using its own prompt and framing.
 var _duel := false
+var _strict_input := false
+var _direction_mode := false
 
 
 func _ready() -> void:
@@ -60,7 +62,7 @@ func _ready() -> void:
 			_set_freeze_reason(FREEZE_FOCUS, true)
 
 
-func start_qte(key: StringName, duel := false) -> bool:
+func start_qte(key: StringName, duel := false, strict_input := false) -> bool:
 	if not is_inside_tree() or _phase != Phase.IDLE:
 		return false
 	if key != &"q" and key != &"e":
@@ -68,6 +70,8 @@ func start_qte(key: StringName, duel := false) -> bool:
 
 	var now_usec: int = _now_usec()
 	_duel = duel
+	_strict_input = strict_input
+	_direction_mode = false
 	_expected_key = key
 	_active_duration_usec = Q_DURATION_USEC if key == &"q" else E_DURATION_USEC
 	_warning_started_usec = now_usec
@@ -86,6 +90,29 @@ func start_qte(key: StringName, duel := false) -> bool:
 	return true
 
 
+func start_direction_qte() -> bool:
+	if not is_inside_tree() or _phase != Phase.IDLE:
+		return false
+	_duel = false
+	_strict_input = true
+	_direction_mode = true
+	_expected_key = &"direction"
+	_active_duration_usec = Q_DURATION_USEC
+	_warning_started_usec = _now_usec()
+	_warning_until_usec = _warning_started_usec + WARNING_DURATION_USEC
+	_active_until_usec = 0
+	_wrong_flash_until_usec = 0
+	_phase = Phase.WARNING
+	if _is_frozen():
+		_frozen_at_usec = _warning_started_usec
+	_layout()
+	_refresh_labels()
+	_root.show()
+	_root.queue_redraw()
+	set_process(true)
+	return true
+
+
 func handle_input(event: InputEvent) -> bool:
 	if _phase != Phase.ACTIVE or _is_frozen() or not event is InputEventKey:
 		return false
@@ -95,18 +122,28 @@ func handle_input(event: InputEvent) -> bool:
 		return false
 
 	var physical_key: Key = key_event.physical_keycode
-	if physical_key != KEY_Q and physical_key != KEY_E:
-		return false
+	var actual_key: StringName = _direction_from_key(physical_key) if _direction_mode else \
+		(&"q" if physical_key == KEY_Q else (&"e" if physical_key == KEY_E else &""))
+	if actual_key == &"":
+		if not _strict_input:
+			return false
+		_finish(false)
+		return true
 
 	var now_usec: int = _now_usec()
 	if now_usec >= _active_until_usec:
 		_finish(false)
 		return true
 
-	var actual_key: StringName = &"q" if physical_key == KEY_Q else &"e"
-	if actual_key == _expected_key:
+	if (_direction_mode and actual_key in [&"up", &"left", &"down", &"right"]) \
+			or (not _direction_mode and actual_key == _expected_key):
+		if _direction_mode:
+			_expected_key = actual_key
 		_finish(true)
 	else:
+		if _strict_input:
+			_finish(false)
+			return true
 		_wrong_flash_until_usec = now_usec + WRONG_FLASH_USEC
 		_caption.text = "错键"
 		wrong_key_pressed.emit(actual_key)
@@ -222,6 +259,9 @@ func _layout() -> void:
 	_caption.size = Vector2(PANEL_SIZE.x - 6.0, 10.0)
 	_key_label.position = _ring_center - Vector2(14.0, 9.0)
 	_key_label.size = Vector2(28.0, 18.0)
+	if _direction_mode:
+		_key_label.position = _panel_rect.position + Vector2(12.0, 17.0)
+		_key_label.size = Vector2(34.0, 31.0)
 	_timer_label.position = _panel_rect.position + Vector2(3.0, 52.0)
 	_timer_label.size = Vector2(PANEL_SIZE.x - 6.0, 8.0)
 	_root.queue_redraw()
@@ -235,11 +275,14 @@ func _refresh_labels() -> void:
 		_key_label.add_theme_color_override("font_color", WARNING_COLOR)
 		_timer_label.text = "准备"
 	elif _phase == Phase.ACTIVE:
-		_caption.text = "按键闪避" if _duel else "闪避"
+		_caption.text = "按键闪避" if _duel else ("选择冲刺方向" if _direction_mode else "闪避")
 		_caption.add_theme_color_override("font_color", MUTED_COLOR)
-		_key_label.text = String(_expected_key).to_upper()
+		_key_label.text = "W\nA   D\nS" if _direction_mode else String(_expected_key).to_upper()
+		_key_label.add_theme_font_size_override("font_size", 7 if _direction_mode else 14)
 		_key_label.add_theme_color_override("font_color", ACTIVE_COLOR)
 		_timer_label.text = "1.4" if _expected_key == &"q" else "1.2"
+		if _direction_mode:
+			_timer_label.text = "1.4"
 
 
 func _draw_overlay() -> void:
@@ -297,7 +340,18 @@ func _reset_qte() -> void:
 	_warning_until_usec = 0
 	_active_until_usec = 0
 	_wrong_flash_until_usec = 0
+	_strict_input = false
+	_direction_mode = false
 	set_process(false)
+
+
+func _direction_from_key(key: Key) -> StringName:
+	match key:
+		KEY_W: return &"up"
+		KEY_A: return &"left"
+		KEY_S: return &"down"
+		KEY_D: return &"right"
+		_: return &""
 
 
 func _is_frozen() -> bool:

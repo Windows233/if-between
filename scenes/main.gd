@@ -1118,6 +1118,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if chase_session != null and chase_session.active and event is InputEventMouseButton:
 		return
+	if chase_session != null and chase_session.awaiting_door_interaction() \
+			and event is InputEventKey:
+		var door_key := event as InputEventKey
+		if door_key.pressed and not door_key.echo and door_key.physical_keycode == KEY_SPACE:
+			chase_session.confirm_door_interaction()
+			return
 
 	# 全局快捷键放在最前面，免得被开着的界面先吃掉。
 	# F4 图鉴、F5 存档菜单、F9 读档菜单。
@@ -1337,6 +1343,11 @@ func _take_portal() -> bool:
 	var portal := current_map.portal_at(player.global_position, flags)
 	if portal == null:
 		return false
+	var library_hint := _library_entry_block_reason(portal)
+	if library_hint != "":
+		if toast != null:
+			toast.show_text(library_hint)
+		return true
 
 	if current_map.id == &"school_gate" and portal.id == &"to_classroom":
 		start_story(&"ch2_class_door")
@@ -1532,6 +1543,8 @@ func portal_destination(point: Vector2) -> Array:
 	var portal := current_map.portal_at(point, flags)
 	if portal == null:
 		return []
+	if _library_entry_block_reason(portal) != "":
+		return []
 	# **还没开放的地点**（大地图上摆着、有介绍，但场景还没做）。
 	# 返回空数组让调用方当「这儿没有连接」处理，它那边会弹一句提示。
 	if portal.outcome == MapDef.Portal.Outcome.NONE:
@@ -1554,6 +1567,11 @@ func _travel_through_portal(point: Vector2) -> void:
 	var portal: MapDef.Portal = null
 	if current_map != null:
 		portal = current_map.portal_at(point, flags)
+	var library_hint := _library_entry_block_reason(portal)
+	if library_hint != "":
+		if toast != null:
+			toast.show_text(library_hint)
+		return
 
 	# **挂了事件的地点先演那一段**（进去之后的事由它自己 `goto`），
 	# 和 `_take_portal` 一个规矩。2026-09-25 补上：集市那一段原来是挂在
@@ -1596,6 +1614,17 @@ func use_portal_at(point: Vector2) -> void:
 	if dest.is_empty():
 		return
 	enter_map(dest[0], dest[1])
+
+
+func _library_entry_block_reason(portal: MapDef.Portal) -> String:
+	if current_map == null or current_map.id != &"school_gate" or portal == null \
+			or portal.id not in [&"to_library", &"to_library_locked"]:
+		return ""
+	if flags.get_value(&"ch2/rescued_c") != true:
+		return "先救出 C，再前往图书馆"
+	if ItemTable.count_of(flags, &"key") < 1:
+		return "还需要拿到钥匙，才能前往图书馆"
+	return ""
 
 
 ## 直接切过去并盖黑。只有读档用 ——
