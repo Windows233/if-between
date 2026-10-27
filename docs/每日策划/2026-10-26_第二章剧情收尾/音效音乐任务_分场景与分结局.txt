@@ -141,7 +141,7 @@ S08 猫虚化｜audio/sfx/cat_phase.wav
 S09 主角喘息｜audio/sfx/breath_short.wav
   时长：1—2秒；触发：回溯惊醒/躲入教室时各一次，勿循环盖对白。
   听感：无台词、克制、近距离；不要做配音长句。一次动作只响一次。
-S10 石砖单步｜audio/sfx/footstep_stone.wav
+S10 石砖单步｜audio/sfx/footstep_stone.ogg
   时长：0.12—0.35秒；触发：图书馆石砖/校门等按实际行走节奏调用；追兵可复用，按距离调音量。
   听感：一声干净单步，不带背景人声；先一条兼容当前footstep字段，变体可后补。一次动作只响一次。
 

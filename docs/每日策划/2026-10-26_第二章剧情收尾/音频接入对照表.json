@@ -470,7 +470,7 @@
       "status": "planned"
     },
     {
-      "path": "audio/sfx/footstep_stone.wav",
+      "path": "audio/sfx/footstep_stone.ogg",
       "title": "石砖单步",
       "length": "0.12—0.35秒",
       "trigger": "图书馆石砖/校门等按实际行走节奏调用；追兵可复用，按距离调音量",
