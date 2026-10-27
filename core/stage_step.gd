@@ -44,6 +44,7 @@ const KINDS: Dictionary = {
 	&"ch2_chase_start": [],
 	&"ch2_chase_qte": ["key"],
 	&"ch2_chase_arrive": [],
+	&"ch2_chase_rescue_appear": [],
 	&"ch2_chase_mist_retreat": [],
 	&"ch2_dodge_qte": ["key"],
 	&"ch2_escape_run": ["phase"], # 第二次背刺后的手动逃离，结果写入 ch2/escape_succeeded

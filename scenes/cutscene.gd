@@ -466,6 +466,8 @@ func _apply(step: StageStep) -> void:
 			await main.chase_session.run_qte(StringName(step.text("key")))
 		&"ch2_chase_arrive":
 			await main.chase_session.wait_for_arrival()
+		&"ch2_chase_rescue_appear":
+			await main.chase_session.prepare_rescue_c()
 		&"ch2_chase_mist_retreat":
 			await main.chase_session.retreat_mist(step.number("time", 0.3))
 		&"ch2_dodge_qte":

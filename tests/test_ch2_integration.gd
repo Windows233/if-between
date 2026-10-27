@@ -35,8 +35,11 @@ static func _test_bugfixes(h: TestHarness) -> void:
 		h.check("追逐猫碰撞体检测场景墙体", mist.collision_mask, 1)
 		h.check("追逐猫从可站立位置开始", WalkGrid.is_free(
 		main.current_map, mist.global_position), true)
-		h.check("追逐猫以清晰间距从后方开始",
-			main.chase_session._mist_gap() >= 40.0, true)
+		var start_distance: float = main.player.global_position.distance_to(mist.global_position)
+		h.check("黑猫从图书馆门左侧开场", mist.global_position.x < main.chase_session._door_area.position.x, true)
+		h.check("黑猫开场不贴近主角", start_distance > 180.0, true)
+		h.check("初始追逐距离计入喷泉绕行",
+			main.chase_session._mist_gap() >= start_distance, true)
 		var screen_height: float = mist_sprite.texture.get_height() * mist_sprite.scale.y \
 			* mist.scale.y * main.camera.zoom.y
 		var player_height: float = Player.DISPLAY_HEIGHT * main.player.scale.y * main.camera.zoom.y
@@ -58,6 +61,16 @@ static func _test_bugfixes(h: TestHarness) -> void:
 		h.check("冲刺加速时主角能与黑猫拉开",
 			main.player.global_position.distance_to(mist.global_position) > mist_distance, true)
 		main.player.global_position = chase_start
+		mist.global_position = main.player.global_position + Vector2.RIGHT * 40.0
+		await main.chase_session.prepare_rescue_c()
+		var c_actor: Node2D = main.cutscene._actor("c")
+		h.check("救援C按碰撞推动方向生成", c_actor != null, true)
+		if c_actor != null:
+			h.check("救援C紧邻主角出场", c_actor.global_position,
+				main.player.global_position - main.chase_session._rescue_direction \
+				* Ch2ChaseSession.RESCUE_C_SPACING * main.player.scale.x)
+			h.check("救援C淡入后可见", c_actor.modulate.a, 1.0)
+		main.cutscene.clear_actors()
 	main.chase_session.cancel()
 	var chase_event := DataLoader.load_event(&"ch2_diary", DataLoader.load_endings().ids())
 	var q1 := _node(chase_event, &"run_q1")
@@ -77,6 +90,9 @@ static func _test_bugfixes(h: TestHarness) -> void:
 			direct_has_os = direct_has_os or (lines.size() == 1 \
 				and str(lines[0].get("text", "")) == "他怎么能到得这么快，而且，他怎么知道我在这里")
 	h.check("普通入馆节点带有C和OS台词", direct_has_c and direct_has_os, true)
+	var rescue := _node(chase_event, &"c_door_cover")
+	h.check("C救援按当前主角位置和推动方向出场",
+		rescue.stage[0].kind, &"ch2_chase_rescue_appear")
 	# 正式入馆演出，再不调查直接往返；恢复应与初次入馆完全一致。
 	main.start_story(&"ch2_diary", &"library_enter")
 	var original: Array = main.cutscene.snapshot_actors()

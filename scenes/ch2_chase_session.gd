@@ -7,11 +7,11 @@ signal qte_resolved(key: StringName, success: bool)
 signal door_confirmed
 
 const MIST_PATH := "res://art/npc/shadow_cat/chase_mist_right.png"
-const MIST_CHASE_SPEED := 144.0
-const INITIAL_GAP := 48.0
+const MIST_CHASE_SPEED := 138.0
 const QTE_CATCH_GAP := 26.0
 const RESCUE_BURST_LIMIT := 118.0
 const PURSUER_STEP := 2.0
+const RESCUE_C_SPACING := 12.0
 
 var main: Variant
 var overlay: ChaseOverlay
@@ -35,6 +35,9 @@ var _trail_start_distance := 0.0
 var _mist_trail_distance := 0.0
 var _mist: CharacterBody2D
 var _mist_sprite: Sprite2D
+var _rescue_c: Node2D
+var _rescue_direction := Vector2.ZERO
+var _rescue_distance := 0.0
 
 
 func setup(host: Variant, qte_overlay: ChaseOverlay) -> void:
@@ -77,15 +80,21 @@ func begin() -> bool:
 	_trail.clear()
 	main.walk_and_use = false
 	main.player.walk_path.clear()
-	_trail.append(main.player.global_position)
+	_rescue_c = null
+	_rescue_direction = Vector2.ZERO
+	_rescue_distance = 0.0
 	_trail_total_distance = 0.0
 	_trail_start_distance = 0.0
-	_mist_trail_distance = -INITIAL_GAP
+	_mist_trail_distance = 0.0
 	main.flags.set_value(&"ch2/chase_q1", false)
 	main.flags.set_value(&"ch2/chase_q2", false)
 	main.flags.set_value(&"ch2/chase_arrived", false)
 	main.flags.set_value(&"ch2/chase_rescued", false)
 	_create_mist()
+	if _mist == null:
+		active = false
+		_restore_world()
+		return false
 	main.update_player_control()
 	return true
 
@@ -323,12 +332,34 @@ func retreat_mist(duration: float = 0.3) -> void:
 		main.update_player_control()
 	if _mist == null or not is_instance_valid(_mist):
 		return
-	var target: Vector2 = _point_on_trail_distance(_mist_trail_distance)
 	var tween := create_tween()
-	tween.tween_property(_mist, "global_position", target, duration)
-	tween.parallel().tween_property(_mist, "modulate:a", 0.0, duration)
+	tween.tween_property(_mist, "modulate:a", 0.0, duration)
 	await tween.finished
 	_remove_mist()
+
+
+func prepare_rescue_c() -> void:
+	if main == null or main.player == null or main.cutscene == null:
+		return
+	var rescue := _rescue_burst()
+	_rescue_direction = rescue.direction
+	_rescue_distance = rescue.distance
+	if _rescue_distance <= 0.0:
+		return
+	var scale_factor: float = main.current_map.player_scale if main.current_map != null else 1.0
+	var at: Vector2 = main.player.global_position - _rescue_direction * RESCUE_C_SPACING * scale_factor
+	_rescue_c = main.cutscene.add_actor("c", "res://art/npc/c", at,
+		Player.DISPLAY_HEIGHT, 12, "walk_" + _facing_name(_rescue_direction))
+	if _rescue_c == null:
+		return
+	_set_rescue_c_pose(true)
+	_rescue_c.modulate.a = 0.0
+	if not main.cutscene.instant:
+		var fade := create_tween()
+		fade.tween_property(_rescue_c, "modulate:a", 1.0, 0.14)
+		await fade.finished
+	else:
+		_rescue_c.modulate.a = 1.0
 
 
 func _process(_delta: float) -> void:
@@ -465,18 +496,28 @@ func _create_mist() -> void:
 	_mist.z_index = 30
 	main.stage_view.add_child(_mist)
 	_mist.add_child(_mist_sprite)
-	var spawn: Vector2 = main.player.global_position - Vector2(INITIAL_GAP, 0.0)
-	while not WalkGrid.is_free(main.current_map, spawn) \
-			and spawn.distance_to(main.player.global_position) > 12.0:
-		spawn += Vector2(2.0, 0.0)
-	_mist.global_position = spawn
-	_mist_trail_distance = -spawn.distance_to(main.player.global_position)
+	var preferred := Vector2(main.current_map.size.x - 14.0, 132.0)
+	if _door_area.size != Vector2.ZERO:
+		preferred = Vector2(_door_area.position.x - 12.0, _door_area.end.y + 10.0)
+	var route := WalkGrid.path_to(main.current_map, main.player.global_position, preferred)
+	if route.is_empty():
+		push_warning("[追逐] 图书馆门口与追逐出生点之间没有可走路径")
+		_remove_mist()
+		return
+	_mist.global_position = route[-1]
+	route.reverse()
+	_trail = route
+	_trail_total_distance = 0.0
+	for index in range(1, _trail.size()):
+		_trail_total_distance += _trail[index - 1].distance_to(_trail[index])
+	_trail_start_distance = 0.0
+	_mist_trail_distance = 0.0
 
 
 func _mist_gap() -> float:
 	if _mist == null or not is_instance_valid(_mist) or main == null or main.player == null:
 		return INF
-	return _mist.global_position.distance_to(main.player.global_position)
+	return maxf(_trail_total_distance - _mist_trail_distance, 0.0)
 
 
 func _rescue_cat() -> void:
@@ -487,19 +528,58 @@ func _rescue_cat() -> void:
 func _push_player_clear_of_mist() -> void:
 	if _mist == null or not is_instance_valid(_mist) or main == null or main.player == null:
 		return
-	var away: Vector2 = (main.player.global_position - _mist.global_position).normalized()
+	var rescue := {"direction": _rescue_direction, "distance": _rescue_distance}
+	if _rescue_direction.is_zero_approx():
+		rescue = _rescue_burst()
+	var direction: Vector2 = rescue.direction
+	var distance: float = rescue.distance
+	if distance <= 0.0:
+		return
+	if main.player.start_chase_burst(direction, distance):
+		_set_rescue_c_pose(true)
+		main.update_player_control()
+		while main.player.is_chase_bursting() and not _cancelled:
+			if _rescue_c != null and is_instance_valid(_rescue_c):
+				var scale_factor: float = main.current_map.player_scale if main.current_map != null else 1.0
+				_rescue_c.global_position = main.player.global_position \
+					- direction * RESCUE_C_SPACING * scale_factor
+			await get_tree().physics_frame
+		_set_rescue_c_pose(false)
+
+
+func _rescue_burst() -> Dictionary:
+	if main == null or main.player == null:
+		return {"direction": Vector2.ZERO, "distance": 0.0}
+	var away := Vector2.RIGHT
+	if _mist != null and is_instance_valid(_mist):
+		away = (main.player.global_position - _mist.global_position).normalized()
 	if away.is_zero_approx():
 		away = Vector2.RIGHT
 	var perpendicular := Vector2(-away.y, away.x)
 	var positive: float = main.player.burst_clearance(perpendicular, RESCUE_BURST_LIMIT)
 	var negative: float = main.player.burst_clearance(-perpendicular, RESCUE_BURST_LIMIT)
-	var direction := perpendicular if positive >= negative else -perpendicular
-	var distance := maxf(positive, negative)
-	if distance <= 0.0:
+	return {"direction": perpendicular if positive >= negative else -perpendicular,
+		"distance": maxf(positive, negative)}
+
+
+func _set_rescue_c_pose(moving: bool) -> void:
+	if _rescue_c == null or not is_instance_valid(_rescue_c):
 		return
-	if main.player.start_chase_burst(direction, distance):
-		main.update_player_control()
-		await _wait_for_burst()
+	var sprite := _rescue_c as AnimatedSprite2D
+	if sprite == null:
+		return
+	var side := _facing_name(_rescue_direction)
+	var pose := ("walk_" if moving else "idle_") + side
+	if sprite.sprite_frames != null and sprite.sprite_frames.has_animation(pose):
+		sprite.play(pose)
+	if side == "side":
+		sprite.flip_h = _rescue_direction.x > 0.0
+
+
+func _facing_name(direction: Vector2) -> String:
+	if absf(direction.x) >= absf(direction.y):
+		return "side"
+	return "up" if direction.y < 0.0 else "down"
 
 
 func _point_on_trail_distance(distance: float) -> Vector2:

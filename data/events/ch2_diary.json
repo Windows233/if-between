@@ -565,22 +565,7 @@
       "id": "c_door_cover",
       "stage": [
         {
-          "do": "npc",
-          "id": "c",
-          "sprite": "res://art/npc/c",
-          "at": [
-            365,
-            164
-          ],
-          "height": 45,
-          "z": 12,
-          "pose": "side"
-        },
-        {
-          "do": "npc_pose",
-          "id": "c",
-          "pose": "side",
-          "flip": true
+          "do": "ch2_chase_rescue_appear"
         },
         {
           "do": "say",
