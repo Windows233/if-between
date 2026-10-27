@@ -10,10 +10,9 @@ game_context:
       map_file: data/maps/classroom.json
       background: art/map/classroom.png
       map_size: [384, 307]
-      inspection: {data: verified, visual: verified, runtime: not_run, notes: "diary_desk与classroom_window已有独立actor；镜子与教学楼公告栏actor缺失。"}
+      inspection: {data: verified, visual: verified, runtime: not_run, notes: "diary_desk保留；classroom_window已按用户要求从地图编辑器删除；镜子与教学楼公告栏actor缺失。"}
       objects:
         - {id: diary_desk, rect: [260, 137, 38, 26], representation: interaction_only, notes: "action read -> ch2_diary。"}
-        - {id: classroom_window, rect: [87, 78, 28, 44], representation: sprite, notes: "action throw_coin -> ch2_classroom_window；frame已接入。"}
       camera_notes: "320x180视口；调查近景沿用当前对话层，不能假设镜头缩放。"
       scene_notes: "镜子需新增独立交互actor；日记图按页显示时不可让三页拼图同时遮住对白。"
     - id: school_yard
@@ -46,7 +45,7 @@ game_context:
       scene_notes: "crowbar_used后进入escape_prepare，再进入escape_library_run；追逐成功与C救场共用入口图。"
 sources:
   - {id: user_revision, path: user_message, locator: "2026-10-27互动缺口与素材接入要求", role: revision, authority: selected}
-  - {id: runtime_maps, path: data/maps/classroom.json, locator: "diary_desk、classroom_window", role: implementation, authority: observed}
+  - {id: runtime_maps, path: data/maps/classroom.json, locator: "diary_desk；classroom_window已删除", role: implementation, authority: observed}
   - {id: runtime_yard, path: data/maps/school_yard.json, locator: "flagpole、swing", role: implementation, authority: observed}
   - {id: runtime_gate, path: data/maps/school_gate.json, locator: "notice_board", role: implementation, authority: observed}
   - {id: runtime_library, path: data/maps/library.json, locator: "escape_shelf_barrier、library_no_cat、library_wall", role: implementation, authority: observed}
@@ -64,11 +63,11 @@ entities:
   - {id: notice_board, name: 公告栏, kind: prop}
   - {id: mirror, name: 镜子, kind: prop}
   - {id: shelf, name: 倒塌书架, kind: prop}
-  - {id: classroom_window, name: 窗边, kind: prop}
+  - {id: classroom_window, name: 窗边（待重新放置）, kind: prop}
 assets:
   - {id: shelf_fall_sheet_clean, kind: image_sequence, status: verified, path: art/props/library_shelf_fall_sheet.png, spec: "6.zip第二张7349...PNG；1983x793、5×2共10帧、无编号，已直接作为运行时帧源。"}
   - {id: shelf_fallen_final, kind: image, status: verified, path: art/props/library_shelf_fallen.png, spec: "倒塌完成后的静态兜底图。"}
-  - {id: classroom_window_frame, kind: image, status: verified, path: art/props/classroom_window_frame.png, spec: "现有窗框贴图；若用户附件像素不同才替换，保持classroom_window actor rect不变。"}
+  - {id: classroom_window_frame, kind: image, status: verified, path: art/props/classroom_window_frame.png, spec: "窗框候选资源；classroom_window对象已删除，重新放置后再校准rect。"}
   - {id: diary_page_1, kind: image, status: planned, path: art/props/ch2_diary_page_1.png, spec: "日记第1页，替换当前整张ch2_diary_written.png的分页显示。"}
   - {id: diary_page_2, kind: image, status: planned, path: art/props/ch2_diary_page_2.png, spec: "日记第2页。"}
   - {id: diary_page_3, kind: image, status: planned, path: art/props/ch2_diary_page_3.png, spec: "日记第3页。"}
@@ -84,7 +83,7 @@ variables:
   - {id: shelf_fallen, type: bool, initial: false, persistence: save, binding: ch2/library/shelf_fallen, description: "书架倒塌完成，读档后直接显示最终状态。"}
 decisions:
   - {id: shelf_sheet_choice, question: "6.zip两张联系图选哪一张作为正式帧源？", blocking: false, affects: [library_shelf_fall], resolution: "已选第二张7349...PNG无编号版本并接入library_shelf_fall_sheet.png。"}
-  - {id: window_pixel_match, question: "用户窗户附件与现有classroom_window_frame.png是否完全同源？", blocking: false, affects: [window_asset], resolution: "像素比较后同源则保留现有文件，否则替换同路径文件。"}
+  - {id: window_pixel_match, question: "用户窗户附件与现有classroom_window_frame.png是否完全同源？", blocking: false, affects: [window_asset], resolution: "像素比较后确认实质同源；地图对象已按用户要求删除，重新放置前不绑定事件。"}
   - {id: rescue_parameters, question: "救C小游戏最终难度参数？", blocking: false, affects: [swing_rescue], resolution: "三段稳定输入；错误累计3次失败；保留已完成段并允许重试，初始窗口按现有补充案参数实机调节。"}
 entry: diary_pages
 nodes:
@@ -213,8 +212,8 @@ nodes:
     repeat_notes: "窗边主线只按现有事件guard执行；回访不重复扣除决策币。"
     setup: {camera: "保持窗边交互位置", characters: {hero: inherit, c: inherit}, environment: "夜景底图+frame贴图分层", audio: inherit}
     cues:
-      - {id: window_frame_bind, kind: actor, origin: source, sources: [runtime_maps, window_delivery], target: classroom_window, description: "使用用户窗户图；保持actor rect [87,78,28,44]、night背板与frame层分离。", completion: immediate, assets: [classroom_window_frame], params: {operation: replace_texture, preserve_rect: true}, engine: {status: existing, steps: [], notes: "当前地图已引用classroom_window_frame.png；只有附件像素不同时才替换同路径资源并重新导入。"}}
-      - {id: window_story, kind: actor, origin: source, sources: [runtime_maps], target: classroom_window, description: "沿用ch2_classroom_window的抛币CG、扣除决策币和C误判/安全离界流程。", completion: finished, params: {operation: preserve}, engine: {status: existing, steps: [], notes: "不要创建第二个窗户actor。"}}
+      - {id: window_frame_bind, kind: actor, origin: source, sources: [runtime_maps, window_delivery], target: classroom_window, description: "重新放置后使用用户窗户图；由地图编辑器校准rect、night背板与frame层。", completion: immediate, assets: [classroom_window_frame], params: {operation: place_and_calibrate}, engine: {status: requires_work, steps: [], notes: "classroom_window已删除，当前不应触发事件；重新放置并确认站位后再绑定。", plan: "在地图编辑器中重新放置窗户对象，校准贴图位置与交互区，保存后再绑定ch2_classroom_window。"}}
+      - {id: window_story, kind: actor, origin: source, sources: [runtime_maps], target: classroom_window, description: "重新放置并确认位置后沿用ch2_classroom_window的抛币CG、扣除决策币和C误判/安全离界流程。", completion: finished, params: {operation: preserve}, engine: {status: requires_work, steps: [], notes: "当前地图没有classroom_window对象。", plan: "窗户对象重新保存后，确认事件入口、可达站位和窗框分层，再恢复原事件绑定。"}}
     exit: {type: return_control, handoff: "关闭窗边演出后恢复教室探索。"}
 coverage:
   - {from: "日记与互动缺口", nodes: [diary_pages, flagpole, swing_rescue, c_to_teaching_gate, notice_and_mirror], note: "覆盖用户列出的日记三图、旗杆、秋千/C、教学楼门口、公告栏、镜子。"}

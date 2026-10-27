@@ -6,7 +6,7 @@
 
 | 场景 | 工程文件 | 本次使用的真实对象 | 当前情况 |
 | --- | --- | --- | --- |
-| 教室 | `data/maps/classroom.json`，384×307，`art/map/classroom.png` | `diary_desk` `[260,137,38,26]`、`classroom_window` `[87,78,28,44]` | 日记和窗边已有事件；镜子、教学楼公告栏actor缺失 |
+| 教室 | `data/maps/classroom.json`，384×307，`art/map/classroom.png` | `diary_desk` `[260,137,38,26]` | 窗户actor已按用户要求从地图编辑器删除；镜子、教学楼公告栏actor缺失 |
 | 操场 | `data/maps/school_yard.json`，316×211，`art/map/school_yard.png` | `flagpole` `[106,39,28,62]`，`swing` `[194,38,56,38]` | 旗杆事件存在；秋千需解决底图C与独立C争用，救援小游戏加难 |
 | 校门 | `data/maps/school_gate.json`，421×281，`art/map/school_gate.png` | `notice_board` `[123,220,42,31]` | 这是校门通知栏；若要教学楼公告栏，需要新actor，不要复用错位置 |
 | 图书馆 | `data/maps/library.json`，467×374，`art/map/library_no_cat.png` + `library_wall.png` | `escape_shelf_barrier` `[201,215,64,28]` | 已有最终横放静态图和状态碰撞；缺一次性倒塌序列播放 |
@@ -26,7 +26,7 @@
 | `chase_nonfatal` | 日记路线 `chase_prepare` | Q/E追逐失败或被追上不死亡，清理追逐状态后由C救场 | 把当前 `chase_caught` 的死亡CG/End5出口替换为 `caught_rescued` 分支 |
 | `library_caught_dialogue` | 被追上后进入图书馆 | C说“看来有人在这里出事，我们得小心一点了”，随后停在入口 | `library_enter` 按结果分流，C不自动跟随 |
 | `library_success_os` | 两次QTE成功后进入图书馆 | 只出现主角OS：“他怎么能到得这么快，而且，他怎么知道我在这里” | 成功分支不要生成C救场对白 |
-| `window_asset` | 教室 `classroom_window` → `ch2_classroom_window` | 使用用户窗户图，夜景背板与窗框分层，继续原抛币/扣币/误判流程 | 当前actor和 `art/props/classroom_window_frame.png` 已接入；仅在附件像素不同才替换同一路径，不新增第二个窗户actor |
+| `window_asset` | 教室待重新放置的窗户对象 | 用户窗户图保留为候选资源，夜景背板与窗框分层，暂不触发原抛币流程 | `classroom_window` 已按用户要求删除；`ch2_classroom_window` 事件和 `art/props/classroom_window_frame.png` 保留，等待重新放置并校准位置 |
 
 ## 书架动画的状态时序
 
@@ -45,7 +45,7 @@
 - C门口：对白后设置 `ch2/c_static_teaching_gate=true`，C不跟随、不自动走位、不挡教学楼入口。
 - 书架：倒塌动画完成后设置 `ch2/library/shelf_fallen=true`；最终贴图和局部碰撞由 `library_visuals.gd` 复原。
 - 追逐：被追上设置 `caught_rescued=true` 并走图书馆C对白；成功路线不设置该状态，只走单句OS。
-- 窗户：保留已有 `ch2_classroom_window` 状态和物品扣除时序，不复制窗户actor。
+- 窗户：`classroom_window` 已从地图删除；保留 `ch2_classroom_window` 事件、状态和资源，重新放置后再恢复绑定。
 
 ## 当前缺口与验收
 
@@ -54,4 +54,4 @@
 3. 在地图编辑器新增镜子和教学楼公告栏，保存后检查交互范围、可站位置和遮挡层。
 4. 秋千救援测试成功、三次错误失败、暂停/重试、读档四条路径，并确认不会同时出现两个C。
 5. 追逐测试两次QTE成功、任一失败、被追上三条路径：失败不进End5；被追上能在图书馆看到C对白；全成功只出现OS。
-6. 窗户素材导入后跑 `python tools/check_data.py`、相关Godot回归和真窗口烟测；确认 `classroom_window` 原rect和 `ch2_classroom_window` 事件未被重复绑定。
+6. 窗户重新放置后再跑 `python tools/check_data.py`、相关Godot回归和真窗口烟测；当前不应假设 `classroom_window` 存在。

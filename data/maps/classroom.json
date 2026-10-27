@@ -164,53 +164,6 @@
         124
       ],
       "sprite": "res://art/props/ch2_blackboard_2.png"
-    },
-    {
-      "actions": [
-        {
-          "event": "ch2_classroom_window",
-          "id": "throw_coin",
-          "label": "走到窗边"
-        }
-      ],
-      "id": "classroom_window",
-      "label": "窗边",
-      "reach_local": [
-        -38,
-        55,
-        22,
-        41
-      ],
-      "rect": [
-        87,
-        78,
-        28,
-        44
-      ],
-      "visual_parts": [
-        {
-          "id": "night",
-          "layer": "back",
-          "rect": [
-            0,
-            0,
-            28,
-            44
-          ],
-          "sprite": "res://art/props/classroom_window_night_back.svg"
-        },
-        {
-          "id": "frame",
-          "layer": "back",
-          "rect": [
-            0,
-            0,
-            28,
-            44
-          ],
-          "sprite": "res://art/props/classroom_window_frame.png"
-        }
-      ]
     }
   ],
   "background": "res://art/map/classroom.png",
