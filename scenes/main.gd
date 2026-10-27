@@ -1343,10 +1343,10 @@ func _take_portal() -> bool:
 	var portal := current_map.portal_at(player.global_position, flags)
 	if portal == null:
 		return false
-	var library_hint := _library_entry_block_reason(portal)
-	if library_hint != "":
+	var teaching_hint := _teaching_entry_hint(portal)
+	if teaching_hint != "":
 		if toast != null:
-			toast.show_text(library_hint)
+			toast.show_text(teaching_hint)
 		return true
 
 	if current_map.id == &"school_gate" and portal.id == &"to_classroom":
@@ -1543,7 +1543,7 @@ func portal_destination(point: Vector2) -> Array:
 	var portal := current_map.portal_at(point, flags)
 	if portal == null:
 		return []
-	if _library_entry_block_reason(portal) != "":
+	if _teaching_entry_hint(portal) != "":
 		return []
 	# **还没开放的地点**（大地图上摆着、有介绍，但场景还没做）。
 	# 返回空数组让调用方当「这儿没有连接」处理，它那边会弹一句提示。
@@ -1567,10 +1567,10 @@ func _travel_through_portal(point: Vector2) -> void:
 	var portal: MapDef.Portal = null
 	if current_map != null:
 		portal = current_map.portal_at(point, flags)
-	var library_hint := _library_entry_block_reason(portal)
-	if library_hint != "":
+	var teaching_hint := _teaching_entry_hint(portal)
+	if teaching_hint != "":
 		if toast != null:
-			toast.show_text(library_hint)
+			toast.show_text(teaching_hint)
 		return
 
 	# **挂了事件的地点先演那一段**（进去之后的事由它自己 `goto`），
@@ -1616,15 +1616,20 @@ func use_portal_at(point: Vector2) -> void:
 	enter_map(dest[0], dest[1])
 
 
-func _library_entry_block_reason(portal: MapDef.Portal) -> String:
+func _teaching_entry_hint(portal: MapDef.Portal) -> String:
 	if current_map == null or current_map.id != &"school_gate" or portal == null \
-			or portal.id not in [&"to_library", &"to_library_locked"]:
+			or portal.id != &"to_classroom":
 		return ""
+	var clues: Array[String] = []
 	if flags.get_value(&"ch2/rescued_c") != true:
-		return "先救出 C，再前往图书馆"
+		clues.append("等的人还没有回到身边")
 	if ItemTable.count_of(flags, &"key") < 1:
-		return "还需要拿到钥匙，才能前往图书馆"
-	return ""
+		clues.append("似乎还少了一件要紧的东西")
+	if flags.get_value(&"ch2/c_at_school_gate") != true:
+		clues.append("同行的约定还没有说定")
+	if clues.is_empty():
+		return ""
+	return "门那边似乎还在等着什么：%s。" % "，".join(clues)
 
 
 ## 直接切过去并盖黑。只有读档用 ——

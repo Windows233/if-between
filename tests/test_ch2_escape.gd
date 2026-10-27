@@ -146,7 +146,13 @@ static func _test_escape_save_retry(h: TestHarness) -> void:
 	main.flags.set_value(&"ch2/library/shelf_fallen", true)
 	main.refresh_scene()
 	main.capture_ch2_checkpoint("escape")
+	var rug_preview := MapDef.Actor.new()
+	rug_preview.rect = Rect2(10.0, 10.0, 20.0, 20.0)
+	rug_preview.sprite = "res://art/props/ch2_box_closed_2.png"
+	main.object_preview.show_actor(rug_preview, main.current_map)
+	h.check("开始追逐前地毯近景确实显示", main.object_preview.content != null, true)
 	main.start_story(&"ch2_library_cat", &"escape_library_run")
+	h.check("C追逐启动时清理地毯近景", main.object_preview.content, null)
 	h.check("剧情写倒架标记后开跑立即生成碰撞", WalkGrid.is_free(main.current_map, Vector2(233, 238)), false)
 	h.check("首次逃跑开场不能提前F隐蔽", main.escape_session.activate_stealth(), false)
 	main.flags.set_value(&"ch2/personal/stealth_available", true)
@@ -159,6 +165,10 @@ static func _test_escape_save_retry(h: TestHarness) -> void:
 	h.check("重开检查点需重新主动开启隐蔽", main.flags.get_value(&"ch2/personal/stealth_started"), false)
 	h.check("读档不会丢失夜幕之泪", main.flags.get_value(&"item/night_tear"), 1)
 	h.check("读档保留地图血迹", main.flags.get_value(&"map_blood/library/entrance"), true)
+	var retry_player_start: Vector2 = main.player.global_position
+	var retry_chaser_start: Vector2 = main.escape_session._chaser.global_position
+	main.player.global_position = retry_player_start + Vector2(18.0, 12.0)
+	main.escape_session._chaser.global_position = main.player.global_position
 	main.escape_session._finish(false)
 	# 失败 CG 淡入后才会打开重试选项。
 	await h.root.get_tree().create_timer(0.3).timeout
@@ -167,6 +177,10 @@ static func _test_escape_save_retry(h: TestHarness) -> void:
 	h.check("可以选择仅重试这一段", h.pick(main, &"retry_escape"), true)
 	await h.root.get_tree().create_timer(0.8).timeout
 	h.check("重试没有跳过追逐", main.escape_session.active, true)
+	h.check("逃跑重试把玩家送回开场位置",
+		main.player.global_position.distance_to(retry_player_start) < 0.1, true)
+	h.check("逃跑重试把C送回开场位置",
+		main.escape_session._chaser.global_position.distance_to(retry_chaser_start) < 0.1, true)
 	h.check("重试不复制决策币", main.flags.get_value(&"item/charm"), 1)
 	main.show_title()
 	h.check("回标题会清理追逐和 HUD", main.escape_session.active, false)

@@ -40,6 +40,8 @@ func begin(part: String) -> bool:
 	var expected := &"library" if part == "library" else &"school_gate"
 	if part not in ["library", "gate"] or main.current_map.id != expected:
 		return false
+	if main.object_preview != null:
+		main.object_preview.clear()
 	if part == "library":
 		# 对话节点写入倒架标记后不会自动重建地图；开跑前落实贴图和物理障碍。
 		main.refresh_scene()

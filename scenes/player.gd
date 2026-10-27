@@ -9,14 +9,17 @@ class_name Player
 extends CharacterBody2D
 
 const SPEED := 96.0
-const CHASE_BURST_DISTANCE := 120.0
+const CHASE_BURST_DISTANCE := 110.0
 const CHASE_BURST_FRAMES := 4
-const CHASE_BURST_FPS := 30.0
+const CHASE_BURST_DURATION := 0.52
+const CHASE_BURST_FPS := float(CHASE_BURST_FRAMES) / CHASE_BURST_DURATION
 
 var chase_input_locked := false
 var _chase_burst_velocity := Vector2.ZERO
 var _chase_burst_remaining := 0.0
+var _chase_burst_distance := 0.0
 var _chase_burst_time_left := 0.0
+var _chase_burst_elapsed := 0.0
 
 ## 素材没到、或者缺帧时退回的占位色块，脚底在原点
 const BODY_COLOR := Color("#e8b04b")
@@ -113,18 +116,30 @@ func _init() -> void:
 func _physics_process(_delta: float) -> void:
 	if _chase_burst_time_left > 0.0:
 		if _chase_burst_remaining > 0.0:
-			var motion_distance: float = minf(_chase_burst_remaining,
-				_chase_burst_velocity.length() * _delta)
-			var motion: Vector2 = _chase_burst_velocity.normalized() * motion_distance
+			_chase_burst_elapsed = minf(CHASE_BURST_DURATION, _chase_burst_elapsed + _delta)
+			var progress: float = _chase_burst_elapsed / CHASE_BURST_DURATION
+			var burst_distance: float = CHASE_BURST_DISTANCE * scale.x
+			var burst_speed: float = burst_distance / CHASE_BURST_DURATION \
+				* 6.0 * progress * (1.0 - progress)
+			_chase_burst_velocity = facing * burst_speed
+			velocity = _chase_burst_velocity
+			var motion: Vector2 = _chase_burst_velocity * _delta
 			var collision := move_and_collide(motion)
 			if collision != null:
 				_chase_burst_remaining = 0.0
+				_chase_burst_time_left = 0.0
+				_chase_burst_elapsed = 0.0
 			else:
-				_chase_burst_remaining -= motion.length()
-		_chase_burst_time_left -= _delta
+				_chase_burst_distance += motion.length()
+				_chase_burst_remaining = burst_distance - _chase_burst_distance
+				_chase_burst_time_left = CHASE_BURST_DURATION - _chase_burst_elapsed
 		if _chase_burst_time_left <= 0.0:
 			_chase_burst_remaining = 0.0
+			_chase_burst_distance = 0.0
 			_chase_burst_velocity = Vector2.ZERO
+			velocity = Vector2.ZERO
+			_chase_burst_elapsed = 0.0
+			chase_input_locked = false
 			play_animation(false)
 		return
 	if chase_input_locked:
@@ -149,12 +164,13 @@ func start_chase_burst(direction: Vector2) -> bool:
 		return false
 	var normalized := direction.normalized()
 	facing = normalized
-	var burst_distance := CHASE_BURST_DISTANCE * scale.x
-	var burst_duration := float(CHASE_BURST_FRAMES) / CHASE_BURST_FPS
-	_chase_burst_remaining = burst_distance
-	_chase_burst_time_left = burst_duration
-	_chase_burst_velocity = normalized * (burst_distance / burst_duration)
-	chase_input_locked = false
+	_chase_burst_remaining = CHASE_BURST_DISTANCE * scale.x
+	_chase_burst_distance = 0.0
+	_chase_burst_time_left = CHASE_BURST_DURATION
+	_chase_burst_elapsed = 0.0
+	_chase_burst_velocity = Vector2.ZERO
+	velocity = Vector2.ZERO
+	chase_input_locked = true
 	if _sprite != null:
 		var side := facing_side()
 		_sprite.play(StringName("burst_" + side))
@@ -302,15 +318,18 @@ static func build_frames() -> SpriteFrames:
 				push_warning("[角色] 帧不是图片：%s" % path)
 				return null
 			frames.add_frame(name, texture)
+	var burst_indices_by_direction: Dictionary = {
+		"up": [1, 3, 2, 3],
+		"side": [1, 2, 3, 4],
+		"down": [1, 2, 3, 4],
+	}
 	for direction: String in ["up", "side", "down"]:
 		var burst_name := StringName("burst_" + direction)
 		frames.add_animation(burst_name)
 		frames.set_animation_speed(burst_name, CHASE_BURST_FPS)
 		frames.set_animation_loop(burst_name, false)
 		var walk_name := StringName("walk_" + direction)
-		var burst_indices: Array = ANIMATIONS[walk_name].duplicate()
-		while burst_indices.size() < CHASE_BURST_FRAMES:
-			burst_indices.append(burst_indices[0])
+		var burst_indices: Array = burst_indices_by_direction[direction]
 		for index: int in burst_indices:
 			frames.add_frame(burst_name, frames.get_frame_texture(walk_name, index - 1))
 	return frames

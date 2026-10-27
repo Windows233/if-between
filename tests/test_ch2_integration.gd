@@ -33,6 +33,16 @@ static func _test_bugfixes(h: TestHarness) -> void:
 		var player_height: float = Player.DISPLAY_HEIGHT * main.player.scale.y * main.camera.zoom.y
 		h.check("高清追逐猫不超过主角两倍高", screen_height <= player_height * 2.0, true)
 		h.check("追逐猫脚底贴着追踪路径", mist.offset.y + mist.texture.get_height() * 0.5, 0.0)
+		var chase_start: Vector2 = main.player.global_position
+		var mist_start: Vector2 = mist.global_position
+		main.player.global_position = chase_start + Vector2(20.0, 0.0)
+		main.chase_session._process(0.1)
+		var mist_distance := mist.global_position.distance_to(mist_start)
+		h.check("黑猫按独立常速沿路径追击",
+			mist_distance <= Ch2ChaseSession.MIST_CHASE_SPEED * main.player.scale.x * 0.1 + 0.1, true)
+		h.check("冲刺加速时主角能与黑猫拉开",
+			main.player.global_position.distance_to(mist.global_position) > mist_distance, true)
+		main.player.global_position = chase_start
 	main.chase_session.cancel()
 	# 正式入馆演出，再不调查直接往返；恢复应与初次入馆完全一致。
 	main.start_story(&"ch2_diary", &"library_enter")
@@ -134,8 +144,37 @@ static func _test_events_and_maps(harness: TestHarness) -> void:
 		harness.check("校门教学楼入口从操场侧可走到", not reachable_stands.is_empty(), true)
 		main.player.global_position = classroom_portal.rect.get_center()
 		main.interact()
-		harness.check("教学楼门触发钥匙检查剧情", main.story.event_id, &"ch2_class_door")
+		harness.check("缺少三项条件时教学楼入口拦截交互", main.story.event_id, &"")
 		harness.check("门剧情开始时仍在校门", main.current_map.id, &"school_gate")
+		var all_missing_hint: String = main._teaching_entry_hint(classroom_portal)
+		harness.check("缺项提示暗示三项尚未齐备",
+			all_missing_hint.contains("等的人") and all_missing_hint.contains("要紧的东西") \
+			and all_missing_hint.contains("约定"), true)
+		ItemTable.add(main.flags, &"key", 1)
+		main._travel_through_portal(classroom_portal.rect.get_center())
+		harness.check("仅有钥匙时地图入口仍留在校门", main.current_map.id, &"school_gate")
+		main.use_portal_at(classroom_portal.rect.get_center())
+		harness.check("仅有钥匙时直接传送仍留在校门", main.current_map.id, &"school_gate")
+		var no_c_hint: String = main._teaching_entry_hint(classroom_portal)
+		harness.check("缺少C时提示随未达条件变化",
+			no_c_hint.contains("等的人") and not no_c_hint.contains("要紧的东西"), true)
+		main.flags.set_value(&"ch2/rescued_c", true)
+		var no_ready_hint: String = main._teaching_entry_hint(classroom_portal)
+		harness.check("未选择准备好时出现对应暗示",
+			no_ready_hint.contains("约定") and not no_ready_hint.contains("等的人"), true)
+		main.flags.set_value(&"ch2/c_at_school_gate", true)
+		main.flags.set_value(&"item/key", 0)
+		var no_key_hint: String = main._teaching_entry_hint(classroom_portal)
+		harness.check("缺少钥匙时出现对应暗示",
+			no_key_hint.contains("要紧的东西") and not no_key_hint.contains("约定"), true)
+		main.flags.set_value(&"item/key", 1)
+		harness.check("三项齐备后可启动教学楼门剧情",
+			main._teaching_entry_hint(classroom_portal), "")
+		harness.check("三项齐备后教学楼目标有效",
+			main.portal_destination(classroom_portal.rect.get_center()),
+			[&"classroom", classroom_portal.target_spawn])
+		main.interact()
+		harness.check("三项齐备后进入钥匙门剧情", main.story.event_id, &"ch2_class_door")
 	main.queue_free()
 	var classroom_door := StoryEvent.from_dictionary(
 		_json("res://data/events/ch2_class_door.json"))

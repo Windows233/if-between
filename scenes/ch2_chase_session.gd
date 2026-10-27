@@ -7,6 +7,7 @@ signal qte_resolved(key: StringName, success: bool)
 signal door_confirmed
 
 const MIST_PATH := "res://art/npc/shadow_cat/chase_mist_right.png"
+const MIST_CHASE_SPEED := 104.0
 
 var main: Variant
 var overlay: ChaseOverlay
@@ -23,9 +24,10 @@ var _trigger_x := 0.0
 var _base_time_scale := 1.0
 var _base_zoom := Vector2.ONE
 var _trail: Array[Vector2] = []
+var _trail_total_distance := 0.0
+var _trail_start_distance := 0.0
+var _mist_trail_distance := 0.0
 var _mist: Sprite2D
-var _mist_lag := 32.0
-var _mist_hold_until_msec := 0
 
 
 func setup(host: Variant, qte_overlay: ChaseOverlay) -> void:
@@ -48,6 +50,8 @@ func begin() -> bool:
 		return false
 	if main.current_map.id != &"school_gate" or active or not can_start():
 		return active
+	if main.object_preview != null:
+		main.object_preview.clear()
 
 	_cancelled = false
 	active = true
@@ -60,12 +64,13 @@ func begin() -> bool:
 	main.player.chase_input_locked = false
 	_base_time_scale = Engine.time_scale
 	_base_zoom = main.camera.zoom if main.camera != null else Vector2.ONE
-	_mist_lag = 32.0
-	_mist_hold_until_msec = 0
 	_trail.clear()
 	main.walk_and_use = false
 	main.player.walk_path.clear()
 	_trail.append(main.player.global_position)
+	_trail_total_distance = 0.0
+	_trail_start_distance = 0.0
+	_mist_trail_distance = 0.0
 	main.flags.set_value(&"ch2/chase_q1", false)
 	main.flags.set_value(&"ch2/chase_q2", false)
 	main.flags.set_value(&"ch2/chase_arrived", false)
@@ -137,7 +142,6 @@ func run_qte(key: StringName, trigger_x: float) -> bool:
 					main.camera.clear_shake()
 					main.update_camera()
 				main.player.start_chase_burst(_direction_vector(StringName(direction_result[0])))
-				main.player.chase_input_locked = false
 				await _wait_for_burst()
 	qte_pending = false
 	_qte_started = false
@@ -151,8 +155,6 @@ func run_qte(key: StringName, trigger_x: float) -> bool:
 		_finish_run(true)
 		return false
 
-	_mist_lag = 48.0
-	_mist_hold_until_msec = Time.get_ticks_msec() + 350
 	return true
 
 
@@ -288,8 +290,10 @@ func _process(delta: float) -> void:
 
 	var position: Vector2 = main.player.global_position
 	if _trail.is_empty() or _trail[-1].distance_to(position) >= 1.0:
+		_trail_total_distance += _trail[-1].distance_to(position) if not _trail.is_empty() else 0.0
 		_trail.append(position)
 		if _trail.size() > 4096:
+			_trail_start_distance += _trail[0].distance_to(_trail[1])
 			_trail.pop_front()
 
 	if _waiting_for_trigger and position.x >= _trigger_x:
@@ -300,9 +304,11 @@ func _process(delta: float) -> void:
 		door_reached.emit()
 
 	if _mist != null and is_instance_valid(_mist):
-		if Time.get_ticks_msec() >= _mist_hold_until_msec:
-			_mist_lag = move_toward(_mist_lag, 32.0, delta * 64.0)
-		_mist.global_position = _point_on_trail(_mist_lag)
+		_mist_trail_distance = minf(
+			_trail_total_distance,
+			_mist_trail_distance + MIST_CHASE_SPEED * main.player.scale.x * delta
+		)
+		_mist.global_position = _point_on_trail_distance(_mist_trail_distance)
 		_mist.flip_h = _mist.global_position.x > position.x
 
 	if main.camera != null:
@@ -376,6 +382,21 @@ func _point_on_trail(distance_back: float) -> Vector2:
 			return end - segment / length * remaining
 		remaining -= length
 	return _trail[0]
+
+
+func _point_on_trail_distance(distance: float) -> Vector2:
+	if _trail.is_empty():
+		return main.player.global_position
+	var remaining := clampf(distance - _trail_start_distance, 0.0,
+		_trail_total_distance - _trail_start_distance)
+	for index in range(1, _trail.size()):
+		var start: Vector2 = _trail[index - 1]
+		var end: Vector2 = _trail[index]
+		var segment_length := start.distance_to(end)
+		if remaining <= segment_length and segment_length > 0.0:
+			return start.lerp(end, remaining / segment_length)
+		remaining -= segment_length
+	return _trail[-1]
 
 
 func _finish_run(remove_mist: bool) -> void:

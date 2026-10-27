@@ -35,9 +35,44 @@ static func test_chase_burst_animation_and_collision(h: TestHarness) -> void:
 	var main := h.new_main()
 	main.enter_map(&"library", &"from_school_gate", true)
 	var player: Player = main.player
+	player.global_position = Vector2(233.0, 190.0)
 	var start := player.global_position
+	var base_time_scale := Engine.time_scale
+	Engine.time_scale = 1.0
+	h.check("冲刺侧向动画有四帧", player._sprite.sprite_frames.get_frame_count(&"burst_side"), 4)
+	h.check("四帧动画贯穿冲刺时长",
+		player._sprite.sprite_frames.get_animation_speed(&"burst_side"), Player.CHASE_BURST_FPS)
+	player.start_chase_burst(Vector2.RIGHT)
+	h.check("冲刺立即切换四帧动作", player._sprite.animation, &"burst_side")
+	await h.root.get_tree().physics_frame
+	var initial_speed := player._chase_burst_velocity.length()
+	h.check("冲刺起始锁住常规移动输入", player.chase_input_locked, true)
+	for _frame: int in 7:
+		await h.root.get_tree().physics_frame
+	var early_speed := player._chase_burst_velocity.length()
+	for _frame: int in 9:
+		await h.root.get_tree().physics_frame
+	var peak_speed := player._chase_burst_velocity.length()
+	for _frame: int in 9:
+		await h.root.get_tree().physics_frame
+	var decelerating_speed := player._chase_burst_velocity.length()
+	h.check("冲刺速度先从静止平滑上升", early_speed > initial_speed, true)
+	h.check("冲刺速度先增至峰值", peak_speed > early_speed, true)
+	h.check("冲刺经过峰值后平滑减速", decelerating_speed < peak_speed, true)
+	h.check("冲刺平均速度快于常规行走",
+		Player.CHASE_BURST_DISTANCE / Player.CHASE_BURST_DURATION > player.movement_speed(), true)
+	for _frame: int in 10:
+		await h.root.get_tree().physics_frame
+	var displacement := player.global_position.x - start.x
+	h.check("冲刺确实沿选定方向移动", displacement > 0.0, true)
+	h.check("冲刺距离不会过度拉开",
+		displacement < Player.CHASE_BURST_DISTANCE * player.scale.x + 1.0, true)
+	h.check("四帧动作结束后冲刺停止", player.is_chase_bursting(), false)
+	h.check("冲刺结束立即释放移动输入", player.chase_input_locked, false)
+
+	player.global_position = start
 	var wall := StaticBody2D.new()
-	wall.position = start + Vector2(44.0, 0.0)
+	wall.position = start + Vector2(22.0, 0.0)
 	var collision := CollisionShape2D.new()
 	var wall_shape := RectangleShape2D.new()
 	wall_shape.size = Vector2(10.0, 48.0)
@@ -45,22 +80,14 @@ static func test_chase_burst_animation_and_collision(h: TestHarness) -> void:
 	wall.add_child(collision)
 	main.add_child(wall)
 	await h.root.get_tree().physics_frame
-	var base_time_scale := Engine.time_scale
-	Engine.time_scale = 1.0
-	h.check("冲刺侧向动画有四帧", player._sprite.sprite_frames.get_frame_count(&"burst_side"), 4)
-	h.check("冲刺动画速率为每秒30帧",
-		player._sprite.sprite_frames.get_animation_speed(&"burst_side"), Player.CHASE_BURST_FPS)
-	h.check("冲刺位移比普通行走更快",
-		Player.CHASE_BURST_DISTANCE / (float(Player.CHASE_BURST_FRAMES) / Player.CHASE_BURST_FPS)
-			> player.movement_speed(), true)
 	player.start_chase_burst(Vector2.RIGHT)
-	h.check("冲刺立即切换四帧动作", player._sprite.animation, &"burst_side")
-	for _frame: int in 14:
+	for _frame: int in 40:
 		await h.root.get_tree().physics_frame
-	var displacement := player.global_position.x - start.x
-	h.check("冲刺确实向前移动", displacement > 0.0, true)
-	h.check("冲刺受地图前方碰撞体拦截", displacement < 44.0, true)
-	h.check("四帧动作结束后冲刺停止", player.is_chase_bursting(), false)
+		if not player.is_chase_bursting():
+			break
+	var blocked_displacement := player.global_position.x - start.x
+	h.check("平滑冲刺仍受障碍碰撞拦截", blocked_displacement < 22.0, true)
+	h.check("碰撞后输入锁立即释放", player.chase_input_locked, false)
 	Engine.time_scale = base_time_scale
 	main.queue_free()
 
