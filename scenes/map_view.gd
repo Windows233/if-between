@@ -125,6 +125,7 @@ var _covers: Array[Dictionary] = []
 var _actor_variant_nodes: Dictionary = {}
 var _actor_alpha_tweens: Dictionary = {}
 var _actor_markers: Dictionary = {}
+var _actor_animation_generation: Dictionary = {}
 ## 这张地图有没有插画。有的话，家具、墙、门都不再画色块。
 var _has_picture := false
 
@@ -280,6 +281,80 @@ func set_actor_sprite_variant(actor_id: StringName, variant_id: StringName) -> b
 	else:
 		build(map_def, _flags)
 	return true
+
+
+## 播放地图物件的一次性透明序列；完成后交给调用方刷新最终状态。
+## 每帧按透明边界裁切并以最终贴图的像素比例落地，避免联系图的大透明画布
+## 把竖直书架缩成一小条。场景切换或重建时通过 generation 令旧动画失效。
+func play_actor_sprite_sheet(actor_id: StringName, path: String,
+		frame_count: int, columns: int, frame_time: float,
+		final_variant: StringName) -> void:
+	if map_def == null or path.is_empty() or frame_count <= 0 or columns <= 0:
+		return
+	var actor: MapDef.Actor = null
+	for candidate: MapDef.Actor in map_def.actors:
+		if candidate.id == actor_id:
+			actor = candidate
+			break
+	if actor == null or not actor.visual_parts.is_empty():
+		return
+	var node := _actor_variant_nodes.get(actor_id) as Sprite2D
+	if not is_instance_valid(node):
+		return
+	var source := load(path) as Texture2D
+	if source == null:
+		push_warning("[地图] 物件动画贴图无法加载：%s" % path)
+		return
+	var image := source.get_image()
+	if image == null or image.is_empty():
+		return
+	var rows := ceili(float(frame_count) / float(columns))
+	var static_path := actor.sprite_for_variant(str(final_variant))
+	var static_texture := load(static_path) as Texture2D
+	if static_texture == null:
+		return
+	var static_size := static_texture.get_size()
+	if static_size.x <= 0.0 or static_size.y <= 0.0:
+		return
+	var token: int = int(_actor_animation_generation.get(actor_id, 0)) + 1
+	_actor_animation_generation[actor_id] = token
+	var interval := maxf(frame_time, 0.01)
+	for index: int in frame_count:
+		if int(_actor_animation_generation.get(actor_id, 0)) != token:
+			return
+		if not is_instance_valid(node):
+			return
+		var col := index % columns
+		var row := index / columns
+		var x0 := roundi(float(col) * image.get_width() / float(columns))
+		var x1 := roundi(float(col + 1) * image.get_width() / float(columns))
+		var y0 := roundi(float(row) * image.get_height() / float(rows))
+		var y1 := roundi(float(row + 1) * image.get_height() / float(rows))
+		var region := Rect2i(x0, y0, x1 - x0, y1 - y0)
+		if region.size.x <= 0 or region.size.y <= 0:
+			continue
+		var frame := image.get_region(region)
+		var used := frame.get_used_rect()
+		if used.size.x <= 0 or used.size.y <= 0:
+			continue
+		var cropped := frame.get_region(used)
+		node.texture = ImageTexture.create_from_image(cropped)
+		# 序列每帧的透明边界不同；以可见内容宽度对齐现有倒架的
+		# 64px 地图宽度，保持原图比例并把脚底贴在碰撞区上沿。
+		var frame_scale := actor.rect.size.x / float(cropped.get_width())
+		node.scale = Vector2(frame_scale, frame_scale)
+		var draw_size := Vector2(cropped.get_width(), cropped.get_height()) * frame_scale
+		node.position = actor.rect.position + Vector2(
+			(actor.rect.size.x - draw_size.x) * 0.5,
+			actor.rect.size.y - draw_size.y)
+		await get_tree().create_timer(interval).timeout
+	if int(_actor_animation_generation.get(actor_id, 0)) != token:
+		return
+	if is_instance_valid(node):
+		var final_texture := TextureSource.resolve(static_path, static_texture)
+		node.texture = final_texture
+		node.transform = actor.visual_texture_transform(0, final_texture.get_size())
+	actor.sprite_variant = str(final_variant)
 
 
 ## 按 Actor ID 改变主贴图透明度；返回 false 表示物件没有独立主贴图。
@@ -761,6 +836,8 @@ func set_hovered(portal_id: StringName) -> void:
 
 
 func clear() -> void:
+	for actor_id: Variant in _actor_animation_generation:
+		_actor_animation_generation[actor_id] = int(_actor_animation_generation[actor_id]) + 1
 	_place_nodes.clear()
 	_places.clear()
 	_detail_for = &""

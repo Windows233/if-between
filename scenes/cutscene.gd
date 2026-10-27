@@ -370,7 +370,7 @@ func _perform(step: StageStep) -> void:
 ## - `wait` / `wait_click`：补演是瞬时的，等时间、等点击都说不通
 const REPLAY_SKIP: Array[StringName] = [
 	&"say", &"goto", &"place_player", &"play_sound", &"wait", &"wait_click",
-	&"save", &"rescue", &"ch2_escape_run",
+	&"save", &"rescue", &"ch2_escape_run", &"map_actor_animation",
 ]
 
 
@@ -424,6 +424,20 @@ func _apply(step: StageStep) -> void:
 		&"map_actor_variant":
 			main.set_actor_sprite_variant(
 				StringName(step.text("actor")), StringName(step.text("variant")))
+		&"map_actor_animation":
+			var actor_id := StringName(step.text("actor"))
+			var final_variant := StringName(step.text("final_variant"))
+			if instant:
+				main.set_actor_sprite_variant(actor_id, final_variant)
+				main.refresh_scene()
+			else:
+				await main.play_map_actor_animation(
+					actor_id,
+					step.text("path"),
+					int(step.number("frames", 10.0)),
+					int(step.number("columns", 5.0)),
+					step.number("frame_time", 0.14),
+					final_variant)
 		&"map_actor_alpha":
 			var actor_id := StringName(step.text("actor"))
 			var alpha := step.number("alpha")
