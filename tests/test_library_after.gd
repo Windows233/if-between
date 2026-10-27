@@ -11,10 +11,58 @@ static func run(h: TestHarness) -> void:
 	test_checkpoint_keeps_persistent_state(h)
 	test_new_stage_steps(h)
 	await test_dynamic_inventory_selection(h)
+	await test_approach_actor_completes(h)
+	await test_chase_burst_animation_and_collision(h)
 	test_window_marker_and_delivery_timing(h)
 	test_library_art_restoration(h)
 	await test_cancelled_dodge_qte_can_restart(h)
 	await test_duel_qte_input_and_cleanup(h)
+
+
+static func test_approach_actor_completes(h: TestHarness) -> void:
+	var main := h.new_main()
+	main.enter_map(&"library", &"from_school_gate", true)
+	main.cutscene.instant = false
+	main.player.global_position = Vector2(251, 296)
+	await main.cutscene._approach_map_actor(&"library_cat_visual", 8.0)
+	var cat := _actor(main.current_map, &"library_cat_visual")
+	h.check("接近黑猫剧情可在对话后继续",
+		cat != null and MapDef.rect_distance(cat.reach, main.player.global_position) <= 8.0, true)
+	main.queue_free()
+
+
+static func test_chase_burst_animation_and_collision(h: TestHarness) -> void:
+	var main := h.new_main()
+	main.enter_map(&"library", &"from_school_gate", true)
+	var player: Player = main.player
+	var start := player.global_position
+	var wall := StaticBody2D.new()
+	wall.position = start + Vector2(44.0, 0.0)
+	var collision := CollisionShape2D.new()
+	var wall_shape := RectangleShape2D.new()
+	wall_shape.size = Vector2(10.0, 48.0)
+	collision.shape = wall_shape
+	wall.add_child(collision)
+	main.add_child(wall)
+	await h.root.get_tree().physics_frame
+	var base_time_scale := Engine.time_scale
+	Engine.time_scale = 1.0
+	h.check("冲刺侧向动画有四帧", player._sprite.sprite_frames.get_frame_count(&"burst_side"), 4)
+	h.check("冲刺动画速率为每秒30帧",
+		player._sprite.sprite_frames.get_animation_speed(&"burst_side"), Player.CHASE_BURST_FPS)
+	h.check("冲刺位移比普通行走更快",
+		Player.CHASE_BURST_DISTANCE / (float(Player.CHASE_BURST_FRAMES) / Player.CHASE_BURST_FPS)
+			> player.movement_speed(), true)
+	player.start_chase_burst(Vector2.RIGHT)
+	h.check("冲刺立即切换四帧动作", player._sprite.animation, &"burst_side")
+	for _frame: int in 14:
+		await h.root.get_tree().physics_frame
+	var displacement := player.global_position.x - start.x
+	h.check("冲刺确实向前移动", displacement > 0.0, true)
+	h.check("冲刺受地图前方碰撞体拦截", displacement < 44.0, true)
+	h.check("四帧动作结束后冲刺停止", player.is_chase_bursting(), false)
+	Engine.time_scale = base_time_scale
+	main.queue_free()
 
 
 static func test_duel_qte_input_and_cleanup(h: TestHarness) -> void:

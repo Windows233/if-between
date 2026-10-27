@@ -131,6 +131,11 @@ func run_qte(key: StringName, trigger_x: float) -> bool:
 			var direction_result: Array = await qte_resolved
 			success = not _cancelled and bool(direction_result[1])
 			if success:
+				_qte_started = false
+				Engine.time_scale = _base_time_scale
+				if main.camera != null:
+					main.camera.clear_shake()
+					main.update_camera()
 				main.player.start_chase_burst(_direction_vector(StringName(direction_result[0])))
 				main.player.chase_input_locked = false
 				await _wait_for_burst()

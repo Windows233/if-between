@@ -9,12 +9,14 @@ class_name Player
 extends CharacterBody2D
 
 const SPEED := 96.0
-const CHASE_BURST_DISTANCE := 72.0
-const CHASE_BURST_DURATION := 0.16
+const CHASE_BURST_DISTANCE := 120.0
+const CHASE_BURST_FRAMES := 4
+const CHASE_BURST_FPS := 30.0
 
 var chase_input_locked := false
 var _chase_burst_velocity := Vector2.ZERO
 var _chase_burst_remaining := 0.0
+var _chase_burst_time_left := 0.0
 
 ## 素材没到、或者缺帧时退回的占位色块，脚底在原点
 const BODY_COLOR := Color("#e8b04b")
@@ -109,17 +111,21 @@ func _init() -> void:
 
 
 func _physics_process(_delta: float) -> void:
-	if _chase_burst_remaining > 0.0:
-		var motion := _chase_burst_velocity * _delta
-		var collision := move_and_collide(motion)
-		if collision != null:
+	if _chase_burst_time_left > 0.0:
+		if _chase_burst_remaining > 0.0:
+			var motion_distance: float = minf(_chase_burst_remaining,
+				_chase_burst_velocity.length() * _delta)
+			var motion: Vector2 = _chase_burst_velocity.normalized() * motion_distance
+			var collision := move_and_collide(motion)
+			if collision != null:
+				_chase_burst_remaining = 0.0
+			else:
+				_chase_burst_remaining -= motion.length()
+		_chase_burst_time_left -= _delta
+		if _chase_burst_time_left <= 0.0:
 			_chase_burst_remaining = 0.0
 			_chase_burst_velocity = Vector2.ZERO
-		else:
-			_chase_burst_remaining -= motion.length()
-			if _chase_burst_remaining <= 0.0:
-				_chase_burst_velocity = Vector2.ZERO
-		play_animation(true)
+			play_animation(false)
 		return
 	if chase_input_locked:
 		velocity = Vector2.ZERO
@@ -144,14 +150,21 @@ func start_chase_burst(direction: Vector2) -> bool:
 	var normalized := direction.normalized()
 	facing = normalized
 	var burst_distance := CHASE_BURST_DISTANCE * scale.x
+	var burst_duration := float(CHASE_BURST_FRAMES) / CHASE_BURST_FPS
 	_chase_burst_remaining = burst_distance
-	_chase_burst_velocity = normalized * (burst_distance / CHASE_BURST_DURATION)
+	_chase_burst_time_left = burst_duration
+	_chase_burst_velocity = normalized * (burst_distance / burst_duration)
 	chase_input_locked = false
+	if _sprite != null:
+		var side := facing_side()
+		_sprite.play(StringName("burst_" + side))
+		if side == "side":
+			_sprite.flip_h = facing.x > 0.0
 	return true
 
 
 func is_chase_bursting() -> bool:
-	return _chase_burst_remaining > 0.0
+	return _chase_burst_time_left > 0.0
 
 
 ## 速度按统一显示尺度标定。地图坐标的步长随标尺变化，投影后始终 SPEED。
@@ -289,6 +302,17 @@ static func build_frames() -> SpriteFrames:
 				push_warning("[角色] 帧不是图片：%s" % path)
 				return null
 			frames.add_frame(name, texture)
+	for direction: String in ["up", "side", "down"]:
+		var burst_name := StringName("burst_" + direction)
+		frames.add_animation(burst_name)
+		frames.set_animation_speed(burst_name, CHASE_BURST_FPS)
+		frames.set_animation_loop(burst_name, false)
+		var walk_name := StringName("walk_" + direction)
+		var burst_indices: Array = ANIMATIONS[walk_name].duplicate()
+		while burst_indices.size() < CHASE_BURST_FRAMES:
+			burst_indices.append(burst_indices[0])
+		for index: int in burst_indices:
+			frames.add_frame(burst_name, frames.get_frame_texture(walk_name, index - 1))
 	return frames
 
 

@@ -1616,23 +1616,21 @@ func _approach_map_actor(actor_id: StringName, max_distance: float) -> void:
 	if MapDef.rect_distance(actor.reach, start) <= max_distance:
 		return
 	var best := Vector2.ZERO
-	var best_path: Array[Vector2] = []
 	var best_distance := INF
 	for point: Vector2 in WalkGrid.reachable(main.current_map, start):
 		if not WalkGrid.has_landing_room(main.current_map, point):
 			continue
 		if MapDef.rect_distance(actor.reach, point) > max_distance:
 			continue
-		var path := WalkGrid.path_to(main.current_map, start, point)
-		if path.is_empty():
-			continue
 		var distance := start.distance_to(point)
 		if distance < best_distance:
 			best = point
-			best_path = path
 			best_distance = distance
 	if best_distance == INF:
 		main.player.facing = (actor.rect.get_center() - start).normalized()
+		return
+	var best_path := WalkGrid.path_to(main.current_map, start, best)
+	if best_path.is_empty():
 		return
 	await _walk_player(best_path, 0.0)
 	main.player.facing = (actor.rect.get_center() - best).normalized()
