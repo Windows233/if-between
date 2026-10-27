@@ -545,8 +545,8 @@
       "cover": false,
       "decor": true,
       "id": "escape_shelf_barrier",
-      "label": "倒塌书架（临时复用）",
-      "quarter_turns": 1,
+      "label": "倒塌书架",
+      "quarter_turns": 0,
       "rect": [
         201,
         215,
@@ -556,7 +556,7 @@
       "sprite": "res://art/fx/library/hidden.png",
       "sprite_variant": "hidden",
       "sprite_variants": {
-        "fallen": "res://art/props/library_shelf_a_cover.png",
+        "fallen": "res://art/props/library_shelf_fallen.png",
         "hidden": "res://art/fx/library/hidden.png"
       }
     }

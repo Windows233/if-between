@@ -17,28 +17,59 @@
     },
     {
       "id": "first",
-      "set": {
-        "ch2/library/shelf_seen": true
-      },
       "stage": [
         {
           "do": "say",
           "lines": [
             {
               "speaker": "我",
-              "text": "这是一本写着猫和小女孩的童话书。",
-              "side": "left",
-              "portrait": "protagonist/quiet"
-            },
-            {
-              "speaker": "我",
-              "text": "故事停在猫被留在学校的那一页。",
+              "text": "怎么一直在重复一句话...",
               "side": "left",
               "portrait": "protagonist/quiet"
             }
           ]
+        },
+        {
+          "do": "play_sound",
+          "path": "res://audio/sfx/翻书.wav"
+        },
+        {
+          "do": "image",
+          "path": "res://art/props/ch2_fairy_tale_book_first.png",
+          "fade": 0.35,
+          "wait_click": false,
+          "hide": false
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "童话书",
+              "text": "从前有一只猫，它的主人走了。猫一直在等。",
+              "side": "left",
+              "portrait": "protagonist/quiet"
+            },
+            {
+              "speaker": "童话书",
+              "text": "猫一直在等，等等啊，等等",
+              "side": "left",
+              "portrait": "protagonist/quiet"
+            }
+          ]
+        },
+        {
+          "do": "image_hide",
+          "fade": 0.35
         }
-      ]
+      ],
+      "next": "first_complete"
+    },
+    {
+      "id": "first_complete",
+      "set": {
+        "ch2/library/shelf_seen": true
+      },
+      "stage": []
     },
     {
       "id": "seen",
@@ -55,35 +86,88 @@
     },
     {
       "id": "second",
-      "set": {
-        "ch2/library/fairy_tale_second": true
-      },
       "stage": [
+        {
+          "do": "play_sound",
+          "path": "res://audio/sfx/翻书.wav"
+        },
+        {
+          "do": "image",
+          "path": "res://art/props/ch2_fairy_tale_book_first.png",
+          "fade": 0.35,
+          "wait_click": false,
+          "hide": false
+        },
         {
           "do": "say",
           "lines": [
             {
-              "speaker": "我",
-              "text": "书里多了一页。猫没有等到主人，而是叼走了一只玩偶。",
+              "speaker": "童话书",
+              "text": "从前有一只猫，它的主人走了。猫一直在等。",
               "side": "left",
-              "portrait": "protagonist/shocked"
+              "portrait": "protagonist/quiet"
             },
             {
-              "speaker": "我",
-              "text": "这不是我刚才看到的内容。",
+              "speaker": "童话书",
+              "text": "猫一直在等，等等啊，等等",
               "side": "left",
-              "portrait": "protagonist/thinking"
+              "portrait": "protagonist/quiet"
             }
           ]
+        },
+        {
+          "do": "image_hide",
+          "fade": 0.35
+        },
+        {
+          "do": "play_sound",
+          "path": "res://audio/sfx/翻书.wav"
+        },
+        {
+          "do": "image",
+          "path": "res://art/props/ch2_fairy_tale_book_second.png",
+          "fade": 0.35,
+          "wait_click": false,
+          "hide": false
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "童话书",
+              "text": "你看，你等的人终会背叛你",
+              "side": "left",
+              "portrait": "protagonist/shocked"
+            }
+          ]
+        },
+        {
+          "do": "image_hide",
+          "fade": 0.35
         }
-      ]
+      ],
+      "next": "second_complete"
+    },
+    {
+      "id": "second_complete",
+      "set": {
+        "ch2/library/fairy_tale_second": true
+      },
+      "stage": []
     },
     {
       "id": "repeat",
       "stage": [
         {
           "do": "say",
-          "text": "童话书还是那一页。"
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "童话书还是那一页。",
+              "side": "left",
+              "portrait": "protagonist/quiet"
+            }
+          ]
         }
       ]
     }

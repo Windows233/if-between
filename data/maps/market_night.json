@@ -10,7 +10,7 @@
         262,
         142
       ],
-      "sprite": "res://art/props/market_day_building_left.png"
+      "sprite": "res://art/props/market_night_building_left.png"
     },
     {
       "decor": true,
@@ -22,7 +22,7 @@
         258,
         127
       ],
-      "sprite": "res://art/props/market_day_building_right.png"
+      "sprite": "res://art/props/market_night_building_right.png"
     },
     {
       "cover": true,
@@ -36,7 +36,7 @@
         557,
         80
       ],
-      "sprite": "res://art/props/market_day_bottom_wall.png"
+      "sprite": "res://art/props/market_night_bottom_wall.png"
     },
     {
       "cover": true,
@@ -50,7 +50,7 @@
         103,
         77
       ],
-      "sprite": "res://art/props/market_day_stall_white.png"
+      "sprite": "res://art/props/market_night_stall_white.png"
     },
     {
       "cover": true,
@@ -64,7 +64,7 @@
         87,
         72
       ],
-      "sprite": "res://art/props/market_day_stall_red.png"
+      "sprite": "res://art/props/market_night_stall_red.png"
     },
     {
       "cover": true,
@@ -78,7 +78,7 @@
         96,
         78
       ],
-      "sprite": "res://art/props/market_day_stall_purple.png"
+      "sprite": "res://art/props/market_night_stall_purple.png"
     },
     {
       "cover": true,
@@ -92,7 +92,7 @@
         85,
         74
       ],
-      "sprite": "res://art/props/market_day_fountain.png"
+      "sprite": "res://art/props/market_night_fountain.png"
     },
     {
       "actions": [
@@ -105,23 +105,41 @@
       ],
       "id": "b_end_anchor",
       "if": {
-        "var": "ch2/left_veil_realm",
-        "op": "==",
-        "value": true
+        "all": [
+          {
+            "op": "==",
+            "value": true,
+            "var": "ch2/left_veil_realm"
+          },
+          {
+            "op": "!=",
+            "value": true,
+            "var": "ch2/cat_delivered"
+          }
+        ]
       },
       "label": "站在传送点旁的人",
-      "rect": [
-        310,
-        240,
-        40,
-        30
-      ],
+      "npc_height": 45,
+      "npc_pose": "down",
+      "person": true,
       "reach": [
         286,
         246,
         64,
         30
-      ]
+      ],
+      "rect": [
+        302,
+        217,
+        32,
+        45
+      ],
+      "solid": false,
+      "spawn_at": [
+        318,
+        262
+      ],
+      "sprite": "res://art/npc/b/down1.png"
     }
   ],
   "background": "res://art/map/market_night.png",

@@ -34,6 +34,12 @@ var instant := false
 ## 地图上临时出现的角色，`id -> Sprite2D`。
 ## 用字典而不是给每个角色建类：它们只会站、走、消失，没有别的行为。
 var _actors: Dictionary = {}
+## 临时改过透明度的地图物件；中止演出时一律恢复为不透明。
+var _map_actor_alphas: Dictionary = {}
+var _inventory_select_active := false
+var _inventory_select_result_flag := StringName(&"")
+var _inventory_select_chosen := StringName(&"")
+var _inventory_select_cancelled := false
 ## 正在等玩家点一下吗。
 var _waiting := false
 ## 场上这些临时角色各自挂着哪段对话：`id -> 事件 id`。
@@ -72,6 +78,11 @@ func consume_click() -> bool:
 ## 收干净。切场景、取消剧情时调用。
 func cancel() -> void:
 	_generation += 1
+	_inventory_select_active = false
+	_inventory_select_result_flag = &""
+	_inventory_select_chosen = &""
+	_inventory_select_cancelled = false
+	_reset_map_actor_alphas()
 	if main != null and main.get("escape_session") != null:
 		# 先使本轮失效，再唤醒等待的逃跑协程，避免取消时继续推进旧剧情。
 		main.escape_session.cancel()
@@ -79,6 +90,16 @@ func cancel() -> void:
 		main.rescue_panel.close()
 	_waiting = false
 	clear_actors()
+
+
+func _reset_map_actor_alphas() -> void:
+	if main != null:
+		for actor_id: Variant in _map_actor_alphas:
+			var actor_name := StringName(str(actor_id))
+			if main.set_map_actor_alpha(actor_name, 1.0):
+				continue
+			# 切图或回溯重建后，旧 Sprite2D 已不存在；新地图本身默认全不透明。
+	_map_actor_alphas.clear()
 
 
 func clear_actors() -> void:
@@ -104,8 +125,10 @@ func place_c_at_school_gate_wait_spawn() -> bool:
 	var spawn: Variant = main.current_map.spawns[&"near_classroom"]
 	if not (spawn is Vector2) or not Vector2(spawn).is_finite():
 		return false
+	# 追逐检查点也从这个出生点起跑；让等待中的 C 留在左下侧，避免脚底碰撞重叠。
+	var wait_position: Vector2 = main.current_map.spawn_point(&"near_classroom") + Vector2(-20.0, 20.0)
 	var actor := add_actor_with_talk("c", "res://art/npc/c",
-		main.current_map.spawn_point(&"near_classroom"), Player.DISPLAY_HEIGHT, 12, "down", "ch2_c_wait")
+		wait_position, Player.DISPLAY_HEIGHT, 12, "down", "ch2_c_wait")
 	return actor != null
 
 
@@ -401,6 +424,34 @@ func _apply(step: StageStep) -> void:
 		&"map_actor_variant":
 			main.set_actor_sprite_variant(
 				StringName(step.text("actor")), StringName(step.text("variant")))
+		&"map_actor_alpha":
+			var actor_id := StringName(step.text("actor"))
+			var alpha := step.number("alpha")
+			var ok: bool = main.set_map_actor_alpha(
+				actor_id, alpha,
+				0.0 if instant else step.number("time", 0.0))
+			if not ok:
+				push_warning("[演出] 找不到可变透明度的地图物件：%s" % actor_id)
+			if ok and is_equal_approx(alpha, 1.0):
+				_map_actor_alphas.erase(actor_id)
+			elif ok:
+				_map_actor_alphas[actor_id] = alpha
+			if ok and not instant and step.number("time", 0.0) > 0.0:
+				await _sleep(step.number("time", 0.0))
+		&"map_actor_marker":
+			main.set_map_actor_marker(StringName(step.text("actor")), step.text("text"))
+		&"approach_actor":
+			await _approach_map_actor(StringName(step.text("actor")),
+				step.number("max_distance", 8.0))
+		&"inventory_select":
+			await _inventory_select(StringName(step.text("result")))
+		&"item_add_once":
+			var reward_flag := StringName(step.text("flag"))
+			if main.flags.get_value(reward_flag, false) != true:
+				var item_id := StringName(step.text("item"))
+				var amount := int(step.number("amount"))
+				ItemTable.add(main.flags, item_id, amount)
+				main.flags.set_value(reward_flag, true)
 		&"ch2_checkpoint_save":
 			main.capture_ch2_checkpoint(step.text("checkpoint"))
 		&"ch2_checkpoint_restore":
@@ -435,6 +486,12 @@ func _apply(step: StageStep) -> void:
 			_npc_pose(step)
 		&"npc_remove":
 			await _npc_remove(step)
+		&"choice_cancel":
+			if main != null:
+				if main.choice_menu.is_open():
+					main.choice_menu.close()
+				if main.choice_menu.cancelled.is_connected(_on_choice_cancelled):
+					main.choice_menu.cancelled.disconnect(_on_choice_cancelled)
 		&"npc_talk":
 			_npc_talk(step)
 		&"hold":
@@ -1544,6 +1601,125 @@ func _scan_frames(folder: String, direction: String) -> Array[int]:
 ## 会走路的那种是 `AnimatedSprite2D`，两者只共用到 `Node2D` 这一层 ——
 ## 写成 `Sprite2D` 的话，动画那种取出来会变成 null，表现是「角色放出来了、
 ## 但之后所有的移动和收场都当它不存在」。
+func _approach_map_actor(actor_id: StringName, max_distance: float) -> void:
+	if main == null or main.current_map == null or main.player == null:
+		return
+	var actor: MapDef.Actor = null
+	for candidate: MapDef.Actor in main.current_map.actors:
+		if candidate.id == actor_id:
+			actor = candidate
+			break
+	if actor == null:
+		push_warning("[演出] approach_actor 找不到地图物件：%s" % actor_id)
+		return
+	var start: Vector2 = main.player.global_position
+	if MapDef.rect_distance(actor.reach, start) <= max_distance:
+		return
+	var best := Vector2.ZERO
+	var best_path: Array[Vector2] = []
+	var best_distance := INF
+	for point: Vector2 in WalkGrid.reachable(main.current_map, start):
+		if not WalkGrid.has_landing_room(main.current_map, point):
+			continue
+		if MapDef.rect_distance(actor.reach, point) > max_distance:
+			continue
+		var path := WalkGrid.path_to(main.current_map, start, point)
+		if path.is_empty():
+			continue
+		var distance := start.distance_to(point)
+		if distance < best_distance:
+			best = point
+			best_path = path
+			best_distance = distance
+	if best_distance == INF:
+		main.player.facing = (actor.rect.get_center() - start).normalized()
+		return
+	await _walk_player(best_path, 0.0)
+	main.player.facing = (actor.rect.get_center() - best).normalized()
+	main.player.play_animation(false)
+
+
+func _inventory_select(result_flag: StringName) -> void:
+	if main == null or main.choice_menu == null or result_flag == &"":
+		return
+	var options: Array[ChoiceOption] = []
+	for entry: Dictionary in _collect_inventory_items():
+		var item_id := StringName(entry.get("id", ""))
+		options.append(ChoiceOption.make(item_id, str(entry.get("name", item_id))))
+	if options.is_empty():
+		main.flags.set_value(result_flag, "")
+		return
+	_inventory_select_active = true
+	_inventory_select_result_flag = result_flag
+	_inventory_select_chosen = &""
+	var box_top: float = main.dialogue.hold_top() if main.dialogue.is_holding() else 108.0
+	while _inventory_select_active:
+		_inventory_select_cancelled = false
+		main.choice_menu.open_above(options, box_top, true)
+		if not main.choice_menu.cancelled.is_connected(_on_choice_cancelled):
+			main.choice_menu.cancelled.connect(_on_choice_cancelled)
+		await clicked
+		if not _inventory_select_cancelled:
+			break
+	_inventory_select_active = false
+	if main.choice_menu.is_open():
+		main.choice_menu.close()
+	main.flags.set_value(result_flag, str(_inventory_select_chosen))
+	_inventory_select_result_flag = &""
+	_inventory_select_chosen = &""
+
+
+func _collect_inventory_items() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if main == null or main.flags == null:
+		return out
+	var ids: Array[String] = []
+	for key: StringName in main.flags.keys():
+		if not ItemTable.is_item_flag(key):
+			continue
+		var id := str(ItemTable.id_from_flag(key))
+		if ItemTable.count_of(main.flags, StringName(id)) > 0:
+			ids.append(id)
+	ids.sort()
+	for id: String in ids:
+		out.append({
+			"id": StringName(id),
+			"name": main.items.name_of(StringName(id)) if main.items != null else id,
+		})
+	return out
+
+
+func _on_choice_cancelled() -> void:
+	if not _inventory_select_active:
+		return
+	_inventory_select_chosen = &""
+	_inventory_select_cancelled = true
+	main.choice_menu.cancelled.disconnect(_on_choice_cancelled)
+	clicked.emit()
+
+
+func is_inventory_select_active() -> bool:
+	return _inventory_select_active
+
+
+func choose_inventory_selection(item_id: StringName) -> bool:
+	if not _inventory_select_active or item_id == &"":
+		return false
+	_inventory_select_chosen = item_id
+	clicked.emit()
+	return true
+
+
+func cancel_inventory_selection() -> void:
+	if not _inventory_select_active:
+		return
+	_inventory_select_chosen = StringName(&"")
+	_inventory_select_cancelled = true
+	if main.choice_menu.cancelled.is_connected(_on_choice_cancelled):
+		main.choice_menu.cancelled.disconnect(_on_choice_cancelled)
+	clicked.emit()
+
+
 func _actor(id: String) -> Node2D:
 	if id == "" or not _actors.has(id):
 		push_warning("[演出] 临时角色「%s」还没放出来" % id)

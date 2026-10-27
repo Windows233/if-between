@@ -3,6 +3,7 @@
     {
       "cover": true,
       "cover_y": 153,
+      "decor": true,
       "id": "new_actor",
       "label": "翻开书的书桌",
       "rect": [
@@ -16,6 +17,7 @@
     {
       "cover": true,
       "cover_y": 152,
+      "decor": true,
       "id": "new_actor_2",
       "label": "书桌1",
       "rect": [
@@ -29,6 +31,7 @@
     {
       "cover": true,
       "cover_y": 152,
+      "decor": true,
       "id": "new_actor_2_2",
       "label": "书桌2",
       "rect": [
@@ -42,6 +45,7 @@
     {
       "cover": true,
       "cover_y": 152,
+      "decor": true,
       "id": "new_actor_2_2_2",
       "label": "书桌3",
       "rect": [
@@ -55,6 +59,7 @@
     {
       "cover": true,
       "cover_y": 194,
+      "decor": true,
       "id": "new_actor_2_2_2_2",
       "label": "书桌4",
       "rect": [
@@ -68,6 +73,7 @@
     {
       "cover": true,
       "cover_y": 194,
+      "decor": true,
       "id": "new_actor_2_2_2_2_2",
       "label": "书桌5",
       "rect": [
@@ -81,6 +87,7 @@
     {
       "cover": true,
       "cover_y": 194,
+      "decor": true,
       "id": "new_actor_2_2_2_2_2_2",
       "label": "书桌6",
       "rect": [
@@ -94,6 +101,7 @@
     {
       "cover": true,
       "cover_y": 194,
+      "decor": true,
       "id": "new_actor_2_2_2_2_2_2_2",
       "label": "书桌7",
       "rect": [
@@ -167,23 +175,41 @@
       ],
       "id": "classroom_window",
       "label": "窗边",
-      "reach": [
-        284,
-        88,
-        44,
-        36
-      ],
       "reach_local": [
         -38,
-        72,
-        36,
-        24
+        55,
+        22,
+        41
       ],
       "rect": [
-        330,
-        64,
+        87,
+        78,
         28,
         44
+      ],
+      "visual_parts": [
+        {
+          "id": "night",
+          "layer": "back",
+          "rect": [
+            0,
+            0,
+            28,
+            44
+          ],
+          "sprite": "res://art/props/classroom_window_night_back.svg"
+        },
+        {
+          "id": "frame",
+          "layer": "back",
+          "rect": [
+            0,
+            0,
+            28,
+            44
+          ],
+          "sprite": "res://art/props/classroom_window_frame.png"
+        }
       ]
     }
   ],

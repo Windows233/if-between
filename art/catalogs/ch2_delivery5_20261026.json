@@ -1,0 +1,29 @@
+{
+  "archive": "5.zip",
+  "files": [
+    {
+      "source": "IMG_5376_upscaled_4x.png",
+      "target": "art/source/ch2_delivery5/classroom_window_artist.png",
+      "sha256": "6e6ca771e85639821bdaa455b497adfa15e4520fa517a93d649648f56a68f26d"
+    },
+    {
+      "source": "EFFAB338-7AA4-447C-A86A-1895D9D03250.PNG",
+      "target": "art/cg/ch2_crowbar_defense_cold.png",
+      "sha256": "a895a72ccab8df37e4fd3ce0f9663efeb78e93b7e17b01e7d9f2c7bb9eafc7a7"
+    },
+    {
+      "source": "6559E8DD-B873-43C1-85F8-3360B7D24584.PNG",
+      "target": "art/cg/ch2_c_decision_coin_gift.png",
+      "sha256": "7156b2b993d6e6a45be30db927fa9d6ee91dd7e3860bb5b5c1c5ddc33501fd60"
+    },
+    {
+      "source": "8B768241-1084-4C74-940A-3E4759CBB97B.PNG",
+      "target": "art/cg/ch2_crowbar_defense.png",
+      "sha256": "cf871fa2b4c5b23b949e59802fbc9df4466052685b2d07cf6d8fb38722a0b5f4"
+    }
+  ],
+  "generated": [
+    "art/props/library_shelf_fallen.png"
+  ],
+  "note": "Cold defense variant archived, warm selected. Window original retained; runtime cleanup separate. Never treating coin illustration as new item reward."
+}

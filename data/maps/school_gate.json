@@ -102,6 +102,24 @@
       ],
       "sort_offset": -60.9999964104006,
       "sprite": "res://art/props/school_gate_bottom_wall.png"
+    },
+    {
+      "decor": true,
+      "id": "new_actor_2",
+      "label": "新物件",
+      "reach_local": [
+        -6,
+        1,
+        38,
+        16
+      ],
+      "rect": [
+        195,
+        128,
+        30,
+        17
+      ],
+      "sprite": "res://art/props/ch2_sculpture_inscription_3.png"
     }
   ],
   "background": "res://art/map/school_gate.png",
@@ -130,7 +148,7 @@
         45,
         68,
         35,
-        45
+        54
       ],
       "spawn": "from_gate",
       "to": "classroom"
@@ -202,7 +220,7 @@
     ],
     "near_classroom": [
       62,
-      110
+      126
     ],
     "near_yard": [
       210,
@@ -307,15 +325,15 @@
       11
     ],
     [
-      12,
+      3,
       90,
-      38,
+      47,
       14
     ],
     [
       73,
       90,
-      27,
+      61,
       14
     ],
     [

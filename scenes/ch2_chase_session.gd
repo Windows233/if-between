@@ -154,9 +154,9 @@ func run_dodge_qte(key: StringName) -> bool:
 	main.player.walk_path.clear()
 	Engine.time_scale = 0.2
 	if main.camera != null:
-		main.camera.zoom = _base_zoom * 1.15
+		main.camera.zoom = _base_zoom * 1.3
 		main.camera.shake(2.4, 0.22)
-	if not overlay.start_qte(key):
+	if not overlay.start_qte(key, true):
 		qte_pending = false
 		_qte_started = false
 		_restore_world()
@@ -228,6 +228,11 @@ func retreat_mist(duration: float = 0.3) -> void:
 
 
 func _process(delta: float) -> void:
+	# Main restores the map camera each frame; retain duel framing while its QTE is active.
+	if qte_pending and _qte_started and not active:
+		if main != null and main.camera != null:
+			main.camera.zoom = _base_zoom * 1.3
+		return
 	if not active or main == null or main.player == null:
 		return
 	if overlay != null and overlay.is_frozen():

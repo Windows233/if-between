@@ -290,6 +290,7 @@ func boot() -> void:
 	add_child(choice_menu)
 	choice_menu.setup()
 	choice_menu.chosen.connect(_on_choice_chosen)
+	choice_menu.cancelled.connect(_on_choice_cancelled)
 	rescue_panel = RescuePanel.new()
 	rescue_panel.name = "RescuePanel"
 	add_child(rescue_panel)
@@ -506,6 +507,7 @@ func enter_map(map_id: StringName, spawn_name: StringName,
 	preload("res://scenes/library_visuals.gd").prepare(def, flags)
 	map_view.build(def, flags)
 	_sync_library_box_visual()
+	_sync_window_target_marker()
 	player.global_position = def.spawn_point(spawn_name)
 	# 保留地图坐标中的美术标尺及碰撞；相机以倒数投影，屏幕上的主角始终等高。
 	player.scale = Vector2(def.player_scale, def.player_scale)
@@ -583,6 +585,21 @@ func current_music() -> String:
 ## 变体只替换主贴图，不改变物件位置、碰撞、交互或遮挡。
 func set_actor_sprite_variant(actor_id: StringName, variant_id: StringName) -> bool:
 	return map_view != null and map_view.set_actor_sprite_variant(actor_id, variant_id)
+
+
+func set_map_actor_alpha(actor_id: StringName, alpha: float, time: float = 0.0) -> bool:
+	return map_view != null and map_view.set_actor_alpha(actor_id, alpha, time)
+
+
+func set_map_actor_marker(actor_id: StringName, text: String) -> bool:
+	return map_view != null and map_view.set_actor_marker(actor_id, text)
+
+
+func _sync_window_target_marker() -> void:
+	if map_view == null or current_map == null:
+		return
+	if current_map.id == &"classroom" and flags.get_value(&"ch2/window_marker_active") == true:
+		map_view.set_actor_marker(&"classroom_window", "走到这里，把决策币抛出去。")
 
 
 func _sync_library_box_visual() -> void:
@@ -1482,6 +1499,9 @@ func _on_dialogue_finished() -> void:
 
 
 func _on_choice_chosen(id: StringName) -> void:
+	if cutscene != null and cutscene.choose_inventory_selection(id):
+		choice_menu.close()
+		return
 	# 剧情的 IF 选项。导演返回 false 表示这次不是它的（比如被拒绝的选择），
 	# 也不该落到角色动作那一路上去。
 	if story.choose(id):
@@ -1495,6 +1515,11 @@ func _on_choice_chosen(id: StringName) -> void:
 			play_interaction(inter)
 			break
 	pending_actor = null
+
+
+func _on_choice_cancelled() -> void:
+	if cutscene != null:
+		cutscene.cancel_inventory_selection()
 
 
 ## 某个位置上的连接通向哪里。返回 `[场景, 出生点]`，没有连接就返回空数组。
@@ -2103,3 +2128,4 @@ func refresh_scene() -> void:
 	preload("res://scenes/library_visuals.gd").prepare(current_map, flags)
 	map_view.build(current_map, flags)
 	_sync_library_box_visual()
+	_sync_window_target_marker()

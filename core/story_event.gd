@@ -96,6 +96,14 @@ func validate(known_endings: Array[StringName] = []) -> Array[String]:
 					% [node.id, choice.id, choice.next_id])
 
 		problems.append_array(_validate_stage(node, spawned))
+		if node.id == &"first_item_select":
+			var has_inventory_selection := false
+			for step: StageStep in node.stage:
+				if step.kind == &"inventory_select" \
+						and step.text("result") == "ch2/library/first_cat_medium":
+					has_inventory_selection = true
+			if not has_inventory_selection:
+				problems.append("节点 %s 缺少动态背包道具选择" % node.id)
 
 	return problems
 

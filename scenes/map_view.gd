@@ -121,6 +121,8 @@ var _detail: Label = null
 ## 它们的层级随角色站的位置变，见 `set_player_y()`。
 var _covers: Array[Dictionary] = []
 var _actor_variant_nodes: Dictionary = {}
+var _actor_alpha_tweens: Dictionary = {}
+var _actor_markers: Dictionary = {}
 ## 这张地图有没有插画。有的话，家具、墙、门都不再画色块。
 var _has_picture := false
 
@@ -273,6 +275,95 @@ func set_actor_sprite_variant(actor_id: StringName, variant_id: StringName) -> b
 			node.transform = actor.visual_texture_transform(0, texture.get_size())
 	else:
 		build(map_def, _flags)
+	return true
+
+
+## 按 Actor ID 改变主贴图透明度；返回 false 表示物件没有独立主贴图。
+func set_actor_alpha(actor_id: StringName, alpha: float, time: float = 0.0) -> bool:
+	if map_def == null or not is_finite(alpha) or alpha < 0.0 or alpha > 1.0 \
+			 or not is_finite(time) or time < 0.0:
+		return false
+	var actor: MapDef.Actor = null
+	for candidate: MapDef.Actor in map_def.actors:
+		if candidate.id == actor_id:
+			actor = candidate
+			break
+	if actor == null or not actor.visual_parts.is_empty():
+		return false
+	var node := _actor_variant_nodes.get(actor_id) as Sprite2D
+	if not is_instance_valid(node):
+		return false
+	var existing: Variant = _actor_alpha_tweens.get(actor_id)
+	if existing is Tween and is_instance_valid(existing):
+		(existing as Tween).kill()
+	_actor_alpha_tweens.erase(actor_id)
+	if time <= 0.0 or not is_inside_tree():
+		var tint := node.modulate
+		tint.a = alpha
+		node.modulate = tint
+		return true
+	var tween := create_tween()
+	_actor_alpha_tweens[actor_id] = tween
+	tween.tween_property(node, "modulate:a", alpha, time)
+	tween.finished.connect(func() -> void:
+		if _actor_alpha_tweens.get(actor_id) == tween:
+			_actor_alpha_tweens.erase(actor_id))
+	return true
+
+
+## 在物件当前交互区周围显示场景内目标标记。
+func set_actor_marker(actor_id: StringName, text: String) -> bool:
+	if _built == null:
+		return false
+	if actor_id == &"" and text == "":
+		for marker: Variant in _actor_markers.values():
+			if is_instance_valid(marker):
+				(marker as Node).queue_free()
+		_actor_markers.clear()
+		return true
+	var previous: Variant = _actor_markers.get(actor_id)
+	if is_instance_valid(previous):
+		(previous as Node).queue_free()
+	_actor_markers.erase(actor_id)
+	if actor_id == &"" or text == "":
+		return true
+	if map_def == null:
+		return false
+	var actor: MapDef.Actor = null
+	for candidate: MapDef.Actor in map_def.actors:
+		if candidate.id == actor_id:
+			actor = candidate
+			break
+	if actor == null:
+		return false
+	var marker := Node2D.new()
+	marker.name = "TargetMarker_%s" % actor_id
+	marker.z_index = 20
+	var frame := Line2D.new()
+	frame.name = "Frame"
+	frame.width = 1.5
+	frame.default_color = Color("#e8c07a")
+	frame.closed = true
+	frame.points = PackedVector2Array([
+		actor.reach.position,
+		Vector2(actor.reach.end.x, actor.reach.position.y),
+		actor.reach.end,
+		Vector2(actor.reach.position.x, actor.reach.end.y),
+	])
+	marker.add_child(frame)
+	var label := Label.new()
+	label.name = "Text"
+	label.text = text
+	label.position = Vector2(actor.reach.position.x, actor.reach.position.y - 18.0)
+	label.custom_minimum_size = Vector2(176.0, 16.0)
+	label.add_theme_font_size_override("font_size", 10)
+	label.add_theme_color_override("font_color", Color("#fff1cf"))
+	label.add_theme_color_override("font_outline_color", Color("#171820"))
+	label.add_theme_constant_override("outline_size", 3)
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	marker.add_child(label)
+	_built.add_child(marker)
+	_actor_markers[actor_id] = marker
 	return true
 
 
@@ -672,6 +763,11 @@ func clear() -> void:
 	_detail = null
 	_covers.clear()
 	_actor_variant_nodes.clear()
+	_actor_markers.clear()
+	for tween: Variant in _actor_alpha_tweens.values():
+		if tween is Tween and is_instance_valid(tween):
+			(tween as Tween).kill()
+	_actor_alpha_tweens.clear()
 	_hovered = &""
 	# **旧的 `Built` 要真的扔掉。**
 	#

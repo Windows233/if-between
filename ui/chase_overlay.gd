@@ -40,6 +40,8 @@ var _freeze_reasons: int = 0
 var _frozen_at_usec: int = 0
 var _panel_rect := Rect2()
 var _ring_center := Vector2()
+## The C duel shares the countdown while using its own prompt and framing.
+var _duel := false
 
 
 func _ready() -> void:
@@ -58,13 +60,14 @@ func _ready() -> void:
 			_set_freeze_reason(FREEZE_FOCUS, true)
 
 
-func start_qte(key: StringName) -> bool:
+func start_qte(key: StringName, duel := false) -> bool:
 	if not is_inside_tree() or _phase != Phase.IDLE:
 		return false
 	if key != &"q" and key != &"e":
 		return false
 
 	var now_usec: int = _now_usec()
+	_duel = duel
 	_expected_key = key
 	_active_duration_usec = Q_DURATION_USEC if key == &"q" else E_DURATION_USEC
 	_warning_started_usec = now_usec
@@ -75,6 +78,7 @@ func start_qte(key: StringName) -> bool:
 	if _is_frozen():
 		_frozen_at_usec = now_usec
 
+	_layout()
 	_refresh_labels()
 	_root.show()
 	_root.queue_redraw()
@@ -208,6 +212,9 @@ func _layout() -> void:
 	_root.size = view_size
 	var x: float = maxf(4.0, view_size.x - PANEL_SIZE.x - 8.0)
 	var y: float = maxf(4.0, minf(8.0, view_size.y - PANEL_SIZE.y - 4.0))
+	if _duel:
+		x = (view_size.x - PANEL_SIZE.x) * 0.5
+		y = (view_size.y - PANEL_SIZE.y) * 0.5
 	_panel_rect = Rect2(Vector2(floorf(x), floorf(y)), PANEL_SIZE)
 	_ring_center = _panel_rect.position + Vector2(PANEL_SIZE.x * 0.5, 32.0)
 
@@ -222,13 +229,13 @@ func _layout() -> void:
 
 func _refresh_labels() -> void:
 	if _phase == Phase.WARNING:
-		_caption.text = "黑雾逼近"
+		_caption.text = "C 正在逼近" if _duel else "黑雾逼近"
 		_caption.add_theme_color_override("font_color", WARNING_COLOR)
 		_key_label.text = "!"
 		_key_label.add_theme_color_override("font_color", WARNING_COLOR)
 		_timer_label.text = "准备"
 	elif _phase == Phase.ACTIVE:
-		_caption.text = "闪避"
+		_caption.text = "按键闪避" if _duel else "闪避"
 		_caption.add_theme_color_override("font_color", MUTED_COLOR)
 		_key_label.text = String(_expected_key).to_upper()
 		_key_label.add_theme_color_override("font_color", ACTIVE_COLOR)

@@ -28,18 +28,6 @@
       "id": "b_arrives",
       "stage": [
         {
-          "do": "npc",
-          "id": "b",
-          "sprite": "res://art/npc/b",
-          "at": [
-            300,
-            279
-          ],
-          "height": 45,
-          "z": 12,
-          "pose": "down"
-        },
-        {
           "do": "say",
           "lines": [
             {
@@ -181,8 +169,21 @@
           "spawn": "from_overworld"
         },
         {
+          "do": "place_player",
+          "at": [223, 125]
+        },
+        {
+          "do": "focus",
+          "at": [223, 170],
+          "time": 0
+        },
+        {
           "do": "location",
           "text": "？月 ？日 委托屋 深夜"
+        },
+        {
+          "do": "music",
+          "path": "res://audio/bgm/主角店内.mp3"
         }
       ],
       "next": "elder_arrives"
@@ -277,14 +278,30 @@
           ]
         }
       ],
-      "next": "silver_reward"
+      "next": "silver_reward_check"
+    },
+    {
+      "id": "silver_reward_check",
+      "stage": [],
+      "next": "silver_reward",
+      "next_when": {
+        "if": {
+          "var": "ch2/silver_rewarded",
+          "op": "==",
+          "value": true
+        },
+        "next": "elder_leaves"
+      }
     },
     {
       "id": "silver_reward",
-      "set": {
-        "item/silver_coin": 10
-      },
       "stage": [
+        {
+          "do": "item_add_once",
+          "item": "silver_coin",
+          "amount": 10,
+          "flag": "ch2/silver_rewarded"
+        },
         {
           "do": "say",
           "text": "获得 银币x10"
@@ -294,10 +311,6 @@
     },
     {
       "id": "elder_leaves",
-      "set": {
-        "ch2/school_closed": true,
-        "ch2/night_tear_absorbed": true
-      },
       "stage": [
         {
           "do": "npc_move",
@@ -342,10 +355,24 @@
           "time": 0.4
         },
         {
+          "do": "music",
+          "path": ""
+        }
+      ],
+      "next": "ending_results"
+    },
+    {
+      "id": "ending_results",
+      "set": {
+        "ch2/school_closed": true,
+        "ch2/night_tear_absorbed": true
+      },
+      "stage": [
+        {
           "do": "caption",
           "fade": 0.7,
-          "hold": 1.3,
-          "out": 0.5,
+          "wait_click": true,
+          "out": 0.35,
           "lines": [
             {
               "text": "条件已改写：猫 = 玩偶"
@@ -357,7 +384,13 @@
               "text": "夜幕之泪：已吸收"
             }
           ]
-        },
+        }
+      ],
+      "next": "ending_question"
+    },
+    {
+      "id": "ending_question",
+      "stage": [
         {
           "do": "caption",
           "fade": 0.7,
@@ -374,7 +407,7 @@
           "lines": [
             {
               "speaker": "C",
-              "text": "yn是吗，你比我想象中的做得还要好呢",
+              "text": "你比我想象中的做得还要好呢",
               "side": "right",
               "portrait": "c/neutral"
             },

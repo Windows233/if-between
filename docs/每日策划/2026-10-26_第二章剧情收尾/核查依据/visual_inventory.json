@@ -1,0 +1,281 @@
+[
+  {
+    "path": "art/map/library_no_cat.png",
+    "size": [
+      5608,
+      4488
+    ],
+    "mode": "RGBA",
+    "sha256": "3a3acde7e1ea107b9fef66b92b9cba579abe7ac46e0d13e80ef41d21fdd9fdd2"
+  },
+  {
+    "path": "art/map/library_with_blood.png",
+    "size": [
+      5608,
+      4488
+    ],
+    "mode": "RGBA",
+    "sha256": "e6a21bc6b354ab2c256e412f02bce62f13d8a4d891b795f8da59783deee90b96"
+  },
+  {
+    "path": "art/map/classroom.png",
+    "size": [
+      4608,
+      3688
+    ],
+    "mode": "RGBA",
+    "sha256": "8074fed3e44030796905f10cd0f765585f21b090f0eebee9a91cb659d6aa2122"
+  },
+  {
+    "path": "art/map/school_gate.png",
+    "size": [
+      6144,
+      4096
+    ],
+    "mode": "RGBA",
+    "sha256": "56c93259a08187e0e687f025f546c92396b4ff1245fa858f060ea53c7b7cad33"
+  },
+  {
+    "path": "art/map/market_night.png",
+    "size": [
+      6688,
+      3764
+    ],
+    "mode": "RGBA",
+    "sha256": "e97cf443b7f6392e66e149256f1c2b6d413c98be1966c7449ea3aee9aed17711"
+  },
+  {
+    "path": "art/map/desk_shop.png",
+    "size": [
+      5552,
+      4532
+    ],
+    "mode": "RGBA",
+    "sha256": "0d9d0655c099245e88934f069a04c6e39f0f39e9342df3c25d8d55df084024a3"
+  },
+  {
+    "path": "art/cg/ch2_betrayal_01.jpg",
+    "size": [
+      2752,
+      1536
+    ],
+    "mode": "RGBA",
+    "sha256": "ce72584a9bf30a85071810125954309a886e02e2f00b06196f171ca50ea6b688"
+  },
+  {
+    "path": "art/cg/ch2_betrayal_02.jpg",
+    "size": [
+      2752,
+      1536
+    ],
+    "mode": "RGBA",
+    "sha256": "772e68e1fae4e65fd1f8daf9097d3d753e7786fb55cd9cbde5a8578598799c54"
+  },
+  {
+    "path": "art/cg/ch2_chase_failure.png",
+    "size": [
+      1671,
+      941
+    ],
+    "mode": "RGBA",
+    "sha256": "6609b387fae8d48805ea28cdae077406c7995ba58c6c47ad4a14738eac682f17"
+  },
+  {
+    "path": "art/cg/ch2_classroom_hide.png",
+    "size": [
+      1672,
+      941
+    ],
+    "mode": "RGBA",
+    "sha256": "407ded299f86eeccf26ad124c4ade3a0d8be84b29e0c7f1b7f384d989b3b040b"
+  },
+  {
+    "path": "art/cg/ch2_coin_throw.png",
+    "size": [
+      1672,
+      941
+    ],
+    "mode": "RGBA",
+    "sha256": "55cd0fda491e08ddf6ae67415063c9dc18dbf48734808146c5dd29202368fc21"
+  },
+  {
+    "path": "art/cg/ch2_end6_guilt.png",
+    "size": [
+      1672,
+      941
+    ],
+    "mode": "RGBA",
+    "sha256": "a4730f422a4498bf3db1af0624cc782e28fda49859ea00f41e057091467f74dd"
+  },
+  {
+    "path": "art/cg/ch2_epilogue.png",
+    "size": [
+      1672,
+      941
+    ],
+    "mode": "RGBA",
+    "sha256": "9a051d5c314abb0a3cb25e16c3b15ae5430c65e4a476fde6999669c6de74c26d"
+  },
+  {
+    "path": "art/cg/ch2_rescue_injury.png",
+    "size": [
+      1672,
+      941
+    ],
+    "mode": "RGBA",
+    "sha256": "d51a3554aeddf8780fc29d3a1165d34d5a09acab044cf2341dbda51d425cb19b"
+  },
+  {
+    "path": "art/props/ch2_box_closed_2.png",
+    "size": [
+      256,
+      256
+    ],
+    "mode": "RGBA",
+    "sha256": "890d00b664c2d9e09ac70e63cad5b1135f436c084099629956cc9a24786ab21d"
+  },
+  {
+    "path": "art/props/ch2_box_open.png",
+    "size": [
+      256,
+      256
+    ],
+    "mode": "RGBA",
+    "sha256": "a7e044e48f99e7a1d7fd6ddba65019110f3da276a4f7391791aeae231cc1c03e"
+  },
+  {
+    "path": "art/props/ch2_crowbar.png",
+    "size": [
+      128,
+      128
+    ],
+    "mode": "RGBA",
+    "sha256": "fc382cd2e54b631263dc699e632c492193961657b346818e2b3d8228a4d97989"
+  },
+  {
+    "path": "art/item/group_photo.png",
+    "size": [
+      1448,
+      1086
+    ],
+    "mode": "RGBA",
+    "sha256": "b3e314220b9be3399826dbe7eeca4069c8c0b72b870c0a522abdf5ff027aec52"
+  },
+  {
+    "path": "art/item/charm.png",
+    "size": [
+      887,
+      887
+    ],
+    "mode": "RGBA",
+    "sha256": "4368e249492aa7b9be6cd275435f3a83df7d6604b836c6729be6d70d794299c2"
+  },
+  {
+    "path": "art/item/decision_coin_no.png",
+    "size": [
+      887,
+      887
+    ],
+    "mode": "RGBA",
+    "sha256": "f4b2b73664d8074e77aa5ed57c39c897afbf51b5eeffe74fa5fec5e544c67758"
+  },
+  {
+    "path": "art/item/night_tear.png",
+    "size": [
+      1792,
+      2400
+    ],
+    "mode": "RGBA",
+    "sha256": "11aa5a36f83f896cbd3324025f873179a20f3d19f41ec367c9d0db067e2e5ed1"
+  },
+  {
+    "path": "art/item/cat_doll.png",
+    "size": [
+      1792,
+      2400
+    ],
+    "mode": "RGBA",
+    "sha256": "fd9e19c1484836a06aa47ad5dd57e88141ba280ba9c758d9d0b340ac2dfe73f4"
+  },
+  {
+    "path": "art/item/pendant.png",
+    "size": [
+      1230,
+      1278
+    ],
+    "mode": "RGBA",
+    "sha256": "73342968b9f3f351d28d80a829990f27bf7e6f0c9659c38caa6044d31b8ece73"
+  },
+  {
+    "path": "art/fx/library/cat_layer.png",
+    "size": [
+      2880,
+      2112
+    ],
+    "mode": "RGBA",
+    "sha256": "c6762be7d4d0dac3377cc5ad118f3ce7ac8353d3238a159bf65dfcd65e43fde7"
+  },
+  {
+    "path": "art/fx/library/blood_entrance.png",
+    "size": [
+      960,
+      1288
+    ],
+    "mode": "RGBA",
+    "sha256": "64c2501c75f8a36f5564e28ab4bcfcddfa4f99b3887b07a2ab4df4247904fea9"
+  },
+  {
+    "path": "art/props/library_shelf_a_cover.png",
+    "size": [
+      350,
+      786
+    ],
+    "mode": "RGBA",
+    "sha256": "9c1ad50a3ab687b0436643280bd0334e31a2ec085ffc1c5ee29cb08f3bec3465"
+  },
+  {
+    "path": "art/npc/c/side2.png",
+    "size": [
+      258,
+      360
+    ],
+    "mode": "RGBA",
+    "sha256": "dce716c75b2ce7d50713623be62598615547ec84f7bd7d0992bb53563881f4ba"
+  },
+  {
+    "path": "art/props/ch2_fairy_tale_book.png",
+    "size": [
+      1535,
+      1024
+    ],
+    "mode": "RGBA",
+    "sha256": "ae1dbe3867f8d9c12abb5b742eb41946630ef157f89178510709520dce9e29e2"
+  },
+  {
+    "path": "art/props/ch2_fairy_tale_book_blank.png",
+    "size": [
+      2528,
+      1686
+    ],
+    "mode": "RGBA",
+    "sha256": "a1388efc349c847e754960712d47d868e452e44c728332be2ba5c5478cbdcd05"
+  },
+  {
+    "path": "art/props/ch2_fairy_tale_book_first.png",
+    "size": [
+      1535,
+      1024
+    ],
+    "mode": "RGBA",
+    "sha256": "469f18ded24c93a53b3dc7a7a228d155b2fb4291ad4763c54a6ad4568f11e51b"
+  },
+  {
+    "path": "art/props/ch2_fairy_tale_book_second.png",
+    "size": [
+      2528,
+      1696
+    ],
+    "mode": "RGBA",
+    "sha256": "8ddfe61e46b8188fbfe44faec91adba455aca1621dd39b29edf77f476cb9e8c6"
+  }
+]

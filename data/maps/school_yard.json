@@ -136,6 +136,7 @@
     {
       "cover": true,
       "cover_y": 57,
+      "decor": true,
       "id": "new_actor_2",
       "label": "秋千遮挡",
       "rect": [
@@ -149,6 +150,7 @@
     {
       "cover": true,
       "cover_y": 155,
+      "decor": true,
       "id": "new_actor_3",
       "label": "围墙遮挡",
       "rect": [

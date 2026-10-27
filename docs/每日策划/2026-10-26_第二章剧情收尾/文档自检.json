@@ -1,0 +1,15 @@
+{
+  "schema_exit": 0,
+  "schema_stdout": "PASS: 47 nodes; status=ready_for_implementation. Structural validation only.",
+  "nodes": 47,
+  "cues": 297,
+  "original_spoken_or_thought_lines": 121,
+  "missing_original_lines": [],
+  "missing_verified_assets": [],
+  "unknown_native_commands": [],
+  "runtime_scope": "四图实际GPU查看+WalkGrid静态可达性，不是完整新剧情实走",
+  "gameplay_code_modified": false,
+  "baseline_game_tests": "4976/4976 pass, published main ae1a7bd snapshot",
+  "baseline_data": "14 maps/32 events/7 endings/11 items",
+  "baseline_smoke": "pass"
+}

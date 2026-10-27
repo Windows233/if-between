@@ -1,0 +1,502 @@
+{
+  "date": "2026-10-26",
+  "main_verified": "ae1a7bd42039a1171b3b2882787116c85752532b",
+  "kind": "planning_only_not_runtime_config",
+  "new_counts": {
+    "ending_bgm": 4,
+    "scene_bgm": 10,
+    "core_sfx": 10,
+    "optional_sfx": 3
+  },
+  "existing_inventory": [
+    {
+      "path": "audio/bgm/end1.wav",
+      "sha256": "a5ade30647b3d0c2fb04b1d650e66962e415efc41f4e7c90800abaf7346792f5",
+      "status": "existing_not_new_work",
+      "seconds": 52.152,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    },
+    {
+      "path": "audio/bgm/end2.wav",
+      "sha256": "f39c35f4d5b5b3571de55155c25ddc5eb0de56a73123c177f28c871c2b7ba1f8",
+      "status": "existing_not_new_work",
+      "seconds": 23.382,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    },
+    {
+      "path": "audio/bgm/end3.wav",
+      "sha256": "b8980fdbed7de634fd53d93986bcb6f4aabc8deebf5ce1efb61d3c74186f63a1",
+      "status": "existing_not_new_work",
+      "seconds": 43.7,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    },
+    {
+      "path": "audio/bgm/reclamation.mp3",
+      "sha256": "d4017d24b6b425464203e5906e91d875bb28aba4c0ef18cfcf30391c7396ee6d",
+      "status": "existing_not_new_work"
+    },
+    {
+      "path": "audio/bgm/RUN!（鱼姐追逐战）.wav",
+      "sha256": "2cb4293238fe7962edab76bdb7d6c97a6b6ec674fd4166d143a9b9d78429996e",
+      "status": "existing_not_new_work",
+      "seconds": 27.005,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    },
+    {
+      "path": "audio/bgm/主菜单.mp3",
+      "sha256": "36de72b53ebfa0a2d973253b02dc55d6f56663847f5324bf0f46e115b7c10b6b",
+      "status": "existing_not_new_work"
+    },
+    {
+      "path": "audio/bgm/主角店内.mp3",
+      "sha256": "b0776552bcacbad2be826b418b55d8af405814e73ee266b22d665602ae4c8ae8",
+      "status": "existing_not_new_work"
+    },
+    {
+      "path": "audio/bgm/大地图背景音乐.mp3",
+      "sha256": "b4a606870149305abfc8ea50a0db1b4aba2a9f97f2de63835a1af06dab0c450a",
+      "status": "existing_not_new_work"
+    },
+    {
+      "path": "audio/bgm/集市音乐.wav",
+      "sha256": "910a500ac48985990669e9bcac8fe4b863cb443965f3ee3d4573364ff7757a2f",
+      "status": "existing_not_new_work",
+      "seconds": 137.183,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    },
+    {
+      "path": "audio/sfx/cat_meow.wav",
+      "sha256": "a0ce2761755debd26bb89eaebd30c815a1951fcb3e0e7146d27f9a852ad7cbf3",
+      "status": "existing_not_new_work",
+      "seconds": 2.601,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    },
+    {
+      "path": "audio/sfx/door_close.wav",
+      "sha256": "12e8b6c5cc446ad102b8c7abf6e35f50102e7cf5694b944fb9f00548dc629d1e",
+      "status": "existing_not_new_work",
+      "seconds": 1.184,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    },
+    {
+      "path": "audio/sfx/door_open.wav",
+      "sha256": "d8923bede0a69598fc4f0d33b4634a515eeff0b380114910265f16bc41ebe73f",
+      "status": "existing_not_new_work",
+      "seconds": 1.045,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    },
+    {
+      "path": "audio/sfx/footstep_wood.ogg",
+      "sha256": "e4f68e1c9fd55b4dc8ca89ed2bbab6f200171bc54bdc18aa96b80d8e7336f462",
+      "status": "existing_not_new_work"
+    },
+    {
+      "path": "audio/sfx/glass_break.wav",
+      "sha256": "1590feffad0fcedcce6962086f21e605914cc07e1b5e8d1f6cd6825a45cbc377",
+      "status": "existing_not_new_work",
+      "seconds": 2.276,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    },
+    {
+      "path": "audio/sfx/item_pickup.wav",
+      "sha256": "780ec1dc0d617b73ccf71c0af9da9e4176323ba633d496f795c97ee6393d5448",
+      "status": "existing_not_new_work",
+      "seconds": 0.42,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    },
+    {
+      "path": "audio/sfx/mc木门.wav",
+      "sha256": "1d4d31133cb1801303addd23024508b1f2fa6770f09bb85c0415ecab9d6387c2",
+      "status": "existing_not_new_work",
+      "seconds": 0.279,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    },
+    {
+      "path": "audio/sfx/qte失误.wav",
+      "sha256": "f1d33b0d5ef1b1608a0cf223cc06142fb5642d66d223d30b62e62f49d84220b5",
+      "status": "existing_not_new_work",
+      "seconds": 0.488,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    },
+    {
+      "path": "audio/sfx/qte成功.wav",
+      "sha256": "49aa843a7206094ec825e906e8919d830d0078b9bbe1780ec4081119d53983c7",
+      "status": "existing_not_new_work",
+      "seconds": 0.65,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    },
+    {
+      "path": "audio/sfx/qte提示音.wav",
+      "sha256": "e77d95c6e7075db9a59eb4f7510b0ed700c3dedf8fa6ec58ebc65e79e364857c",
+      "status": "existing_not_new_work",
+      "seconds": 0.65,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    },
+    {
+      "path": "audio/sfx/rescue_complete.wav",
+      "sha256": "20476fad5eca7f532d08128d42c7c3aa5f418ca69aac22710da9159d47628424",
+      "status": "existing_not_new_work",
+      "seconds": 1.254,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    },
+    {
+      "path": "audio/sfx/rescue_mistake.wav",
+      "sha256": "f4236e97d8334f092e726d8f21037d87cce385127a288457ddb74357e142fc38",
+      "status": "existing_not_new_work",
+      "seconds": 0.372,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    },
+    {
+      "path": "audio/sfx/rescue_success.wav",
+      "sha256": "6fb684980de2466ea7b4aba84599a91a321277901b365e8ab8f82c2eb427e5f9",
+      "status": "existing_not_new_work",
+      "seconds": 0.441,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    },
+    {
+      "path": "audio/sfx/时间回溯.wav",
+      "sha256": "7f2c1969cb4057bb0bf33060b2925fcc06bd47d41b01cd73d4a22e0f7a988bb0",
+      "status": "existing_not_new_work",
+      "seconds": 2.485,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    },
+    {
+      "path": "audio/sfx/翻书.wav",
+      "sha256": "9f256e099424c4eb924819d3234844cc52bd1586845dbf64e569eb3e585ed377",
+      "status": "existing_not_new_work",
+      "seconds": 1.44,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    },
+    {
+      "path": "audio/sfx/被黑雾追上.wav",
+      "sha256": "6dec8858f3a7e889f67bfb44449f4247f8fc771e3d2e44b37fb2ce26e5928404",
+      "status": "existing_not_new_work",
+      "seconds": 0.488,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    },
+    {
+      "path": "audio/sfx/铁门.wav",
+      "sha256": "5dffd97c2184a22f41f144e88e7f92b425c09ba6f222a677da9f7eaefa5e755e",
+      "status": "existing_not_new_work",
+      "seconds": 1.115,
+      "sample_rate": 44100,
+      "channels": 2,
+      "bits": 16
+    }
+  ],
+  "ending_music": [
+    {
+      "number": 1,
+      "title": "平静即死亡",
+      "ending_id": "end1_calm",
+      "path": "audio/bgm/end1.wav",
+      "status": "已存在且ch1_opening调用",
+      "mood": "麻木、平静里的不安，收束但不庆祝"
+    },
+    {
+      "number": 2,
+      "title": "甜蜜的咬痕",
+      "ending_id": "end2_sweet",
+      "path": "audio/bgm/end2.wav",
+      "status": "已存在且ch2_meet_a调用",
+      "mood": "温柔表层下的危险，甜美而失真"
+    },
+    {
+      "number": 3,
+      "title": "碌碌而无为",
+      "ending_id": "end3_nothing",
+      "path": "audio/bgm/end3.wav",
+      "status": "已存在且meet_b调用",
+      "mood": "空荡、无力、机会流失"
+    },
+    {
+      "number": 4,
+      "title": "自以为是的到来",
+      "ending_id": "end4_arrogant",
+      "path": "audio/bgm/ending_04_arrogant.wav",
+      "status": "待制作",
+      "mood": "救援失败后的短促失控，转为冰冷和后悔"
+    },
+    {
+      "number": 5,
+      "title": "不可违的铁律",
+      "ending_id": "end4_iron",
+      "path": "audio/bgm/ending_05_iron.wav",
+      "status": "待制作",
+      "mood": "规则压迫、机械感、无法反抗；缓慢重复的低音动机"
+    },
+    {
+      "number": 6,
+      "title": "罪过",
+      "ending_id": "end6_sin",
+      "path": "audio/bgm/ending_06_sin.wav",
+      "status": "待制作",
+      "mood": "背叛、被猎杀、压抑的下坠；短起势后留空给C对白"
+    },
+    {
+      "number": 7,
+      "title": "未到的明天",
+      "ending_id": "end7_rewritten",
+      "path": "audio/bgm/ending_07_tomorrow.wav",
+      "status": "待制作",
+      "mood": "先松一口气，随后暗藏疑点；结尾留一个未解决音，不做胜利庆典"
+    }
+  ],
+  "scene_music": [
+    {
+      "map_id": "library",
+      "title": "图书馆",
+      "path": "audio/bgm/scene_library.wav",
+      "status": "待制作",
+      "priority": "第一优先",
+      "brief": "稀疏钢琴/钟琴、低音持续音、极少的空间声，安静但不安全；不放猫叫/脚步/翻书等同步事件音"
+    },
+    {
+      "map_id": "classroom",
+      "title": "教室",
+      "path": "audio/bgm/scene_classroom.wav",
+      "status": "待制作",
+      "priority": "第一优先",
+      "brief": "更近、更封闭的细弱脉冲/断续旋律，带不安；与图书馆明显可区分，不能只调音量或速度"
+    },
+    {
+      "map_id": "school_gate",
+      "title": "校门",
+      "path": "audio/bgm/scene_school_gate.wav",
+      "status": "待制作",
+      "priority": "第二优先",
+      "brief": "开阔夜色、冷风感、稀疏节奏，远处有威胁，避开追逐鼓点"
+    },
+    {
+      "map_id": "school_yard",
+      "title": "操场",
+      "path": "audio/bgm/scene_school_yard.wav",
+      "status": "待制作",
+      "priority": "第二优先",
+      "brief": "空荡、童年感被轻微扭曲；救援前能听清按键反馈，不把救援三音混进曲子"
+    },
+    {
+      "map_id": "gatehouse",
+      "title": "门卫室",
+      "path": "audio/bgm/scene_gatehouse.wav",
+      "status": "待制作",
+      "priority": "后续补齐",
+      "brief": "狭小、陈旧、轻微规律脉冲，低调不抢调查文字"
+    },
+    {
+      "map_id": "shop",
+      "title": "B的商店",
+      "path": "audio/bgm/scene_mysterious_shop.wav",
+      "status": "待制作",
+      "priority": "后续补齐",
+      "brief": "交易、神秘、克制的小节奏；与委托屋温暖主题区分"
+    },
+    {
+      "map_id": "bedroom",
+      "title": "卧室",
+      "path": "audio/bgm/scene_bedroom_day.wav",
+      "status": "待制作",
+      "priority": "后续补齐",
+      "brief": "短而温暖、暂时安全，轻乐器和留白"
+    },
+    {
+      "map_id": "bedroom_night",
+      "title": "卧室夜晚",
+      "path": "audio/bgm/scene_bedroom_night.wav",
+      "status": "待制作",
+      "priority": "后续补齐",
+      "brief": "卧室主题的夜间编配，更稀薄、慢、不稳定；独立文件"
+    },
+    {
+      "map_id": "bedroom_night_sleep",
+      "title": "睡眠/梦境卧室",
+      "path": "audio/bgm/scene_bedroom_dream.wav",
+      "status": "待制作",
+      "priority": "后续补齐",
+      "brief": "卧室主题的梦境变奏，轻微漂移和失真，不做突然爆音；独立文件"
+    },
+    {
+      "map_id": "market_night",
+      "title": "夜间集市",
+      "path": "audio/bgm/scene_market_night.wav",
+      "status": "待制作",
+      "priority": "后续补齐",
+      "brief": "日市主题的夜间变奏，较安静、疏离，供B接应，不与白天同一文件"
+    },
+    {
+      "map_id": "market",
+      "title": "白天集市",
+      "path": "audio/bgm/集市音乐.wav",
+      "status": "已有，保留",
+      "priority": "不重做",
+      "brief": "保留现曲；夜市使用另一个文件"
+    },
+    {
+      "map_id": "desk_shop",
+      "title": "委托屋",
+      "path": "audio/bgm/主角店内.mp3",
+      "status": "已有，保留",
+      "priority": "不重做",
+      "brief": "沿用；结局屏出现时被独立结局曲覆盖"
+    },
+    {
+      "map_id": "overworld",
+      "title": "大地图",
+      "path": "audio/bgm/大地图背景音乐.mp3",
+      "status": "已有，保留",
+      "priority": "不重做",
+      "brief": "沿用"
+    },
+    {
+      "map_id": "dead_alley",
+      "title": "学校后巷",
+      "path": "audio/bgm/reclamation.mp3",
+      "status": "已有，暂留此场景",
+      "priority": "不重做",
+      "brief": "先独立留给后巷；是否适配氛围需听感验收，不据文件名判定"
+    }
+  ],
+  "sfx": [
+    {
+      "path": "audio/sfx/knife_draw.wav",
+      "title": "出刀/刀锋掠出",
+      "length": "0.2—0.6秒",
+      "trigger": "首刀黑屏或第二次QTE预告前，各响一次；不是刀命中的声音",
+      "brief": "干、短、金属与衣料摩擦，避免夸张剑气",
+      "status": "planned"
+    },
+    {
+      "path": "audio/sfx/knife_hit.wav",
+      "title": "刺中",
+      "length": "0.3—0.8秒",
+      "trigger": "首次背刺与确定被刺的失败画面；闪避成功绝不能响",
+      "brief": "轻闷撞击和衣料声，不要长惨叫",
+      "status": "planned"
+    },
+    {
+      "path": "audio/sfx/crowbar_clash.wav",
+      "title": "撬棍抵挡",
+      "length": "0.2—0.7秒",
+      "trigger": "主角持撬棍挡开攻击的动作时响一次",
+      "brief": "短金属碰击，有重量不过度尖锐",
+      "status": "planned"
+    },
+    {
+      "path": "audio/sfx/shelf_fall.wav",
+      "title": "书架倒塌",
+      "length": "1—2秒",
+      "trigger": "shelf_fallen实际生效、倒架出现时响一次",
+      "brief": "木材倒地、少量书本散落；一条完整声，不叠多次轰炸",
+      "status": "planned"
+    },
+    {
+      "path": "audio/sfx/box_open.wav",
+      "title": "木盒开启",
+      "length": "0.4—1秒",
+      "trigger": "盒盖从closed切到open时；重复调查已开的盒子不响",
+      "brief": "木盖铰链/小卡扣，不暗示取得一把不存在的钥匙",
+      "status": "planned"
+    },
+    {
+      "path": "audio/sfx/coin_throw.wav",
+      "title": "决策币抛出",
+      "length": "0.3—0.8秒",
+      "trigger": "抛币CG出手、实际扣除决策币时响一次",
+      "brief": "轻金属和短掠风；不是玻璃破碎或人跳窗",
+      "status": "planned"
+    },
+    {
+      "path": "audio/sfx/stealth_activate.wav",
+      "title": "主动隐蔽",
+      "length": "0.6—1.2秒",
+      "trigger": "玩家第一次有效按F激活时；连续按F/读档恢复不重响",
+      "brief": "收敛的低频/气流与微小晶体共鸣，和时间回溯区别开",
+      "status": "planned"
+    },
+    {
+      "path": "audio/sfx/cat_phase.wav",
+      "title": "猫虚化",
+      "length": "0.5—1.2秒",
+      "trigger": "C试图接近、猫降到50%透明时一次",
+      "brief": "轻空化/离身感，不能像主角发动回溯",
+      "status": "planned"
+    },
+    {
+      "path": "audio/sfx/breath_short.wav",
+      "title": "主角喘息",
+      "length": "1—2秒",
+      "trigger": "回溯惊醒/躲入教室时各一次，勿循环盖对白",
+      "brief": "无台词、克制、近距离；不要做配音长句",
+      "status": "planned"
+    },
+    {
+      "path": "audio/sfx/footstep_stone.wav",
+      "title": "石砖单步",
+      "length": "0.12—0.35秒",
+      "trigger": "图书馆石砖/校门等按实际行走节奏调用；追兵可复用，按距离调音量",
+      "brief": "一声干净单步，不带背景人声；先一条兼容当前footstep字段，变体可后补",
+      "status": "planned"
+    }
+  ],
+  "optional_sfx": [
+    {
+      "path": "audio/sfx/coin_land.wav",
+      "length": "0.2—0.6秒",
+      "brief": "窗外币落地的轻响；仅需要落点提示时用，现阶段可省，不能伪装人落地",
+      "status": "optional_planned"
+    },
+    {
+      "path": "audio/sfx/crystal_form.wav",
+      "length": "0.8—1.5秒",
+      "brief": "净化后结晶形成；可先用已有item_pickup，避免获得提示叠两次",
+      "status": "optional_planned"
+    },
+    {
+      "path": "audio/sfx/dodge_whoosh.wav",
+      "length": "0.2—0.5秒",
+      "brief": "物理闪避成功的掠过声；保留QTE成功提示，不必首版追加",
+      "status": "optional_planned"
+    }
+  ],
+  "scope": "未生成/导入新音频，未试听判定既有曲是否适配，未修改游戏地图/事件/播放代码；新路径均为待交建议文件名"
+}
