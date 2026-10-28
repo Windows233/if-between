@@ -605,14 +605,27 @@ func set_map_actor_alpha(actor_id: StringName, alpha: float, time: float = 0.0) 
 
 
 func set_map_actor_marker(actor_id: StringName, text: String) -> bool:
-	return map_view != null and map_view.set_actor_marker(actor_id, text)
+	if map_view == null:
+		return false
+	if actor_id == &"classroom_window" and current_map != null:
+		var has_requested_actor := false
+		for actor: MapDef.Actor in current_map.actors:
+			if actor.id == actor_id:
+				has_requested_actor = true
+				break
+		if not has_requested_actor:
+			for actor: MapDef.Actor in current_map.actors:
+				if actor.id == &"window":
+					actor_id = actor.id
+					break
+	return map_view.set_actor_marker(actor_id, text)
 
 
 func _sync_window_target_marker() -> void:
 	if map_view == null or current_map == null:
 		return
 	if current_map.id == &"classroom" and flags.get_value(&"ch2/window_marker_active") == true:
-		map_view.set_actor_marker(&"classroom_window", "走到这里，把决策币抛出去。")
+		set_map_actor_marker(&"classroom_window", "走到这里，把决策币抛出去。")
 
 
 func _sync_library_box_visual() -> void:
@@ -1455,6 +1468,8 @@ func begin_interaction(actor: MapDef.Actor) -> void:
 		var classroom_events := {
 			&"blackboard": &"ch2_blackboard",
 			&"diary_desk": &"ch2_diary",
+			&"window": &"ch2_classroom_window",
+			&"classroom_window": &"ch2_classroom_window",
 		}
 		if classroom_events.has(actor.id):
 			start_story(classroom_events[actor.id])
