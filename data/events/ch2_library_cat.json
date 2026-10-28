@@ -1092,9 +1092,9 @@
           "do": "map_actor_animation",
           "actor": "escape_shelf_barrier",
           "path": "res://art/props/library_shelf_fall_sheet.png",
-          "frames": 10,
+          "frames": 5,
           "columns": 5,
-          "frame_time": 0.12,
+          "frame_time": 0.18,
           "final_variant": "fallen"
         },
         {

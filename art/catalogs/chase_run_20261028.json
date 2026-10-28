@@ -1,0 +1,12 @@
+{
+  "date": "2026-10-28",
+  "asset": "res://art/npc/shadow_cat/chase_run_sheet.png",
+  "source": "imagegen，参考现有 chase_mist_right.png 生成四个跑动姿势",
+  "source_filename": "exec-b132d976-8c33-41d2-a431-1beb8188e55c.png",
+  "size": [1467, 1072],
+  "frames": 4,
+  "fps": 8,
+  "direction": "原图向右；向左移动时水平翻面",
+  "regions": [[0, 0, 820, 536], [820, 0, 647, 536], [0, 536, 765, 536], [765, 536, 702, 536]],
+  "runtime": "按各姿势区域裁透明边，统一画布与脚底；实际移动才推进帧，保留原静态源图"
+}

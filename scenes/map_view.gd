@@ -325,6 +325,14 @@ func play_actor_sprite_sheet(actor_id: StringName, path: String,
 	var token: int = int(_actor_animation_generation.get(actor_id, 0)) + 1
 	_actor_animation_generation[actor_id] = token
 	var interval := maxf(frame_time, 0.01)
+	# 同一书架从竖直到倒地沿用相同像素比例，不能每帧按宽度重新放大。
+	var cell_size := Vector2i(image.get_width() / columns, image.get_height() / rows)
+	var last_cell := image.get_region(Rect2i(Vector2i(
+		(frame_count - 1) % columns, (frame_count - 1) / columns) * cell_size, cell_size))
+	var reference_width := maxi(last_cell.get_used_rect().size.x, 1)
+	var frame_scale := actor.rect.size.x / float(reference_width)
+	var original_z := node.z_index
+	node.z_index = ABOVE_OVERLAY_Z
 	for index: int in frame_count:
 		if int(_actor_animation_generation.get(actor_id, 0)) != token:
 			return
@@ -345,9 +353,7 @@ func play_actor_sprite_sheet(actor_id: StringName, path: String,
 			continue
 		var cropped := frame.get_region(used)
 		node.texture = ImageTexture.create_from_image(cropped)
-		# 序列每帧的透明边界不同；以可见内容宽度对齐现有倒架的
-		# 64px 地图宽度，保持原图比例并把脚底贴在碰撞区上沿。
-		var frame_scale := actor.rect.size.x / float(cropped.get_width())
+		# 每帧保持最终倒地帧的像素比例，脚底固定在物件下沿。
 		node.scale = Vector2(frame_scale, frame_scale)
 		var draw_size := Vector2(cropped.get_width(), cropped.get_height()) * frame_scale
 		node.position = actor.rect.position + Vector2(
@@ -357,6 +363,7 @@ func play_actor_sprite_sheet(actor_id: StringName, path: String,
 	if int(_actor_animation_generation.get(actor_id, 0)) != token:
 		return
 	if is_instance_valid(node):
+		node.z_index = original_z
 		var final_texture := TextureSource.resolve(static_path, static_texture)
 		node.texture = final_texture
 		node.transform = actor.visual_texture_transform(0, final_texture.get_size())

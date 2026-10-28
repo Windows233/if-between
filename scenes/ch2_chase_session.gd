@@ -7,6 +7,8 @@ signal qte_resolved(key: StringName, success: bool)
 signal door_confirmed
 
 const MIST_PATH := "res://art/npc/shadow_cat/chase_mist_right.png"
+const RUN_PATH := "res://art/npc/shadow_cat/chase_run_sheet.png"
+const RUN_FPS := 8.0
 const MIST_CHASE_SPEED := 138.0
 const QTE_CATCH_GAP := 26.0
 const RESCUE_BURST_LIMIT := 118.0
@@ -40,6 +42,8 @@ var _mist_anim_phase := 0.0
 var _mist_stride := 0.0
 var _mist_sprite_scale := Vector2.ONE
 var _mist_sprite_offset_y := 0.0
+var _run_frames: Array[Texture2D] = []
+var _run_clock := 0.0
 var _rescue_c: Node2D
 var _rescue_direction := Vector2.ZERO
 var _rescue_distance := 0.0
@@ -446,7 +450,7 @@ func _physics_process(delta: float) -> void:
 		frame_motion += _mist.global_position - before
 		_mist_trail_distance += moved
 		budget -= moved
-		_mist_sprite.flip_h = _mist.velocity.x > 0.0 if absf(_mist.velocity.x) > 0.2 else _mist_sprite.flip_h
+		_mist_sprite.flip_h = _mist.velocity.x < 0.0 if absf(_mist.velocity.x) > 0.2 else _mist_sprite.flip_h
 		if collision != null or moved <= 0.001:
 			_mist.velocity = Vector2.ZERO
 			break
@@ -458,14 +462,18 @@ func _animate_mist(delta: float, motion: Vector2) -> void:
 	if not is_instance_valid(_mist_sprite):
 		return
 	var moving := motion.length() > 0.01
+	if moving and not _run_frames.is_empty():
+		_run_clock += delta
+		_mist_sprite.texture = _run_frames[int(_run_clock * RUN_FPS) % _run_frames.size()]
+		_mist_sprite.offset.y = -_mist_sprite.texture.get_height() * 0.5
 	_mist_stride = move_toward(_mist_stride, 1.0 if moving else 0.0, delta * 8.0)
 	if moving:
 		_mist_anim_phase += delta * Player.WALK_FPS * 0.25 * TAU
 	var gait := sin(_mist_anim_phase) * _mist_stride
 	var lift: float = absf(gait) * 9.0 * main.player.scale.y
 	_mist_sprite.position.y = _mist_sprite_offset_y - lift
-	_mist_sprite.scale = _mist_sprite_scale * Vector2(1.0 + gait * 0.4, 1.0 - gait * 0.38)
-	_mist_sprite.rotation = gait * 0.11
+	_mist_sprite.scale = _mist_sprite_scale
+	_mist_sprite.rotation = 0.0
 	if is_instance_valid(_mist_shadow):
 		_mist_shadow.scale = Vector2(1.0 + lift * 0.1, 1.0 - lift * 0.12)
 		_mist_shadow.color.a = 0.34 - lift * 0.018
@@ -500,6 +508,33 @@ func _wait_for_burst() -> void:
 		await get_tree().physics_frame
 
 
+## 原画联系图的四个姿势并非等宽格；按各自区域读取，统一画布与脚底。
+func _load_run_frames() -> void:
+	if not _run_frames.is_empty():
+		return
+	var sheet := load(RUN_PATH) as Texture2D
+	if sheet == null:
+		return
+	var source := sheet.get_image()
+	var regions: Array[Rect2i] = [Rect2i(0, 0, 820, 536),
+		Rect2i(820, 0, 647, 536), Rect2i(0, 536, 765, 536),
+		Rect2i(765, 536, 702, 536)]
+	var crops: Array[Image] = []
+	var size := Vector2i.ZERO
+	for region: Rect2i in regions:
+		var cell := source.get_region(region)
+		var crop := cell.get_region(cell.get_used_rect())
+		crops.append(crop)
+		size.x = maxi(size.x, crop.get_width())
+		size.y = maxi(size.y, crop.get_height())
+	for crop: Image in crops:
+		var frame := Image.create(size.x, size.y, false, Image.FORMAT_RGBA8)
+		frame.fill(Color.TRANSPARENT)
+		frame.blit_rect(crop, Rect2i(Vector2i.ZERO, crop.get_size()),
+			Vector2i((size.x - crop.get_width()) / 2, size.y - crop.get_height()))
+		_run_frames.append(ImageTexture.create_from_image(frame))
+
+
 func _create_mist() -> void:
 	_remove_mist()
 	if not ResourceLoader.exists(MIST_PATH) or main.stage_view == null:
@@ -507,6 +542,10 @@ func _create_mist() -> void:
 	var texture := load(MIST_PATH) as Texture2D
 	if texture == null:
 		return
+	_load_run_frames()
+	_run_clock = 0.0
+	if not _run_frames.is_empty():
+		texture = _run_frames[0]
 	_mist = CharacterBody2D.new()
 	_mist.name = "ch2_chase_mist"
 	_mist.collision_layer = 0
