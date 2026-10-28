@@ -252,6 +252,10 @@ static func _test_fairy_tale_and_shelf_animation(h: TestHarness) -> void:
 		sprite != null and sprite.texture != null \
 			and barrier != null and barrier.sprite_variant == "fallen", true)
 	if sprite != null and barrier != null:
+		h.check("落地使用重绘俯视散书贴图", sprite.texture,
+			preload("res://scenes/library_shelf_fall.gd").fallen_texture())
+		h.check("倒地透视不靠旋转正面卡片", is_zero_approx(sprite.rotation), true)
+		h.check("已取消触地扬尘", main.map_view._built.has_node("ShelfImpactDust"), false)
 		h.check("无书架底图不再用临时地砖遮盖", main.map_view._built.has_node("ShelfFloor"), false)
 		h.check("图书馆接入无书架底图", main.current_map.background,
 			"res://art/map/library_no_shelves.png")

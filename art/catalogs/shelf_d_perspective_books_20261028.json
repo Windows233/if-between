@@ -1,0 +1,12 @@
+{
+  "date": "2026-10-28",
+  "asset": "art/props/library_shelf_d_fallen_perspective.png",
+  "source_filename": "exec-ec5b05be-aa87-4291-ab38-d847c332c363.png",
+  "source": "imagegen，参考shelf_d重绘俯视倒地姿态，含散书和倒下蜡烛，无烟无扬尘",
+  "size": [
+    1902,
+    827
+  ],
+  "sha256": "eac81a0858536ac03b47e210ace90604f6da1df034ae04e94498e2084575e306",
+  "runtime": "倾倒后段过渡到新落地纹理；透明边裁取后对齐编辑器倒塌矩形，不把站立正面旋转90度作为最终画面"
+}

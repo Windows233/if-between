@@ -563,7 +563,7 @@
       "sprite": "res://art/fx/library/hidden.png",
       "sprite_variant": "hidden",
       "sprite_variants": {
-        "fallen": "res://art/props/library_shelf_fallen.png",
+        "fallen": "res://art/props/library_shelf_d_fallen_perspective.png",
         "hidden": "res://art/fx/library/hidden.png"
       }
     }

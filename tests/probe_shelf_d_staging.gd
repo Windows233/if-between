@@ -1,7 +1,8 @@
-## 实际剧情验收：shelf_d → 编辑器倒塌落点；C在上、主角在门口、触地扬尘。
+## 实际剧情验收：shelf_d → 编辑器倒塌落点；C在上、主角在门口、散落书本、无扬尘。
 extends SceneTree
 var main: Node2D
 var seen_dust := false
+var seen_landing := false
 var shots := {}
 var dust_done := false
 func _initialize() -> void:
@@ -29,12 +30,14 @@ func _run() -> void:
 			if not shots.has(phase):
 				shots[phase] = true
 				await _shot("phase_%d" % phase)
-			var dust: Node = main.map_view._built.get_node_or_null("ShelfImpactDust")
-			if dust != null:
-				seen_dust = true
-				if dust.age > 0.2 and not dust_done:
+			seen_dust = seen_dust or main.map_view._built.has_node("ShelfImpactDust")
+			var landing: Node = main.map_view._built.get_node_or_null("ShelfPerspectiveLanding")
+			if landing != null and landing.modulate.a > 0.99:
+				seen_landing = true
+				if not dust_done:
 					dust_done = true
-					await _shot("impact_dust")
+					await _shot("perspective_books")
+
 	var staging := preload("res://scenes/library_shelf_fall.gd").positions(main.current_map)
 	var target := preload("res://scenes/library_shelf_fall.gd").target_rect(main.current_map)
 	var c: Node2D = main.cutscene._actor("c")
@@ -45,7 +48,7 @@ func _run() -> void:
 			source_hidden = actor.sprite_variant == "hidden"
 			original_collider_gone = actor.collision_rects().is_empty()
 	var at_exit: bool = WalkGrid.is_free(main.current_map, main.player.position)
-	var ok: bool = seen_dust and source_hidden and original_collider_gone and at_exit and main.escape_session.active \
+	var ok: bool = not seen_dust and seen_landing and source_hidden and original_collider_gone and at_exit and main.escape_session.active \
 		and c != null and c.position.y < target.position.y and main.player.position.y > target.end.y
 	print("SHELF_D_STAGING dust=%s hidden=%s old_collision_removed=%s C=%s player=%s target=%s free=%s PASS=%s" % [seen_dust, source_hidden, original_collider_gone, c.position if c else Vector2.ZERO, main.player.position, target, at_exit, ok])
 	await _shot("finished")
