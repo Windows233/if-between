@@ -1,4 +1,4 @@
-class_name Ch2ChaseSession
+﻿class_name Ch2ChaseSession
 extends Node
 
 signal trigger_reached
@@ -10,10 +10,12 @@ const MIST_PATH := "res://art/npc/shadow_cat/chase_mist_right.png"
 ## 追兵本体的移动/寻路/接触判定全在 `Ch2ChasePursuer`；这里只管剧情节奏。
 const MIST_CHASE_SPEED := Ch2ChasePursuer.SPEED
 ## 开跑后这段时间内即使贴上也不算追上（主角刚出教学楼时不被抓）。
-const CATCH_GRACE := 2.2
+const CATCH_GRACE := 2.0
 ## 每次 QTE 结束后这段时间内不再算追上：冲刺撞墙没拉开距离时，不会立刻连着弹下一个 QTE。
 const RECATCH_GRACE := 1.0
 const RESCUE_BURST_LIMIT := 118.0
+## 垂直方向能冲的距离低于这个值（未缩放单位），视为被堵，改选任意空旷方向。
+const RESCUE_MIN_BURST := 24.0
 const RESCUE_C_SPACING := 12.0
 
 var main: Variant
@@ -39,6 +41,8 @@ var _mist_sprite: Sprite2D
 var _rescue_c: Node2D
 var _rescue_direction := Vector2.ZERO
 var _rescue_distance := 0.0
+## 救援冲刺进行中：门口已到达时主角本不可移动，这段要单独放行物理。
+var _rescue_bursting := false
 
 
 func setup(host: Variant, qte_overlay: ChaseOverlay) -> void:
@@ -268,6 +272,15 @@ func wait_for_arrival() -> bool:
 	if _cancelled:
 		main.player.chase_input_locked = false
 		return false
+	if _rescue_pending:
+		# 在门口按空格前被第三次追上：走 C 救援，不算直接进门。
+		_arrived = false
+		main.player.chase_input_locked = false
+		main.flags.set_value(&"ch2/chase_arrived", false)
+		main.flags.set_value(&"ch2/chase_rescued", true)
+		_restore_world()
+		main.update_player_control()
+		return false
 	active = false
 	main.flags.set_value(&"ch2/chase_arrived", true)
 	main.player.chase_input_locked = false
@@ -277,6 +290,8 @@ func wait_for_arrival() -> bool:
 
 
 func can_move_player() -> bool:
+	if _rescue_bursting and not _cancelled:
+		return true
 	return active and not _cancelled and not _arrived \
 		and (overlay == null or not overlay.is_frozen())
 
@@ -346,14 +361,30 @@ func prepare_rescue_c() -> void:
 	var rescue := _rescue_burst()
 	_rescue_direction = rescue.direction
 	_rescue_distance = rescue.distance
-	if _rescue_distance <= 0.0:
-		return
+	# 无论能否冲刺 C 都必须出场，否则后面的救援对白没人说。四面堵死时挡在主角与猫之间。
+	var side: Vector2 = _rescue_direction
+	if side.is_zero_approx():
+		side = Vector2.RIGHT
+		if _mist != null and is_instance_valid(_mist):
+			var away: Vector2 = main.player.global_position - _mist.global_position
+			side = Vector2(signf(away.x) if absf(away.x) > 0.01 else 1.0, 0.0)
 	var scale_factor: float = main.current_map.player_scale if main.current_map != null else 1.0
-	var at: Vector2 = main.player.global_position - _rescue_direction * RESCUE_C_SPACING * scale_factor
+	var at: Vector2 = main.player.global_position - side * RESCUE_C_SPACING * scale_factor
 	_rescue_c = main.cutscene.add_actor("c", "res://art/npc/c", at,
 		Player.DISPLAY_HEIGHT, 12, "walk_" + _facing_name(_rescue_direction))
 	if _rescue_c == null:
 		return
+	# 救援演出里的 C 不占碰撞：演员默认挂的脚底 StaticBody2D 会紧贴主角，
+	# 挡住冲刺或让净空检测误判（门口窄道里尤其明显）。
+	var body := _rescue_c.get_node_or_null("Body")
+	if body != null:
+		_rescue_c.remove_child(body)
+		body.free()
+	# 往下推时 C 在主角身后（画面偏上），要画在主角下面，否则会把主角整个盖住。
+	_rescue_c.z_index = main.player.z_index - 1 if side.y > 0.5 else main.player.z_index + 2
+	if main.toast != null and main.toast.is_open() \
+			and main.toast.current_text() == "到图书馆门口了，按空格进门":
+		main.toast.hide_now()
 	_set_rescue_c_pose(true)
 	_rescue_c.modulate.a = 0.0
 	if not main.cutscene.instant:
@@ -386,11 +417,14 @@ func _process(_delta: float) -> void:
 		_arrived = true
 		door_reached.emit()
 
-	if _awaiting_door and _catch_count >= 2 and _mist_caught_player():
+	# 第三次追上 → C 救援。门口等确认（按空格）时被追上也一样；
+	# wait_for_arrival 可能停在 door_reached 或 door_confirmed 任一处，两个都要放行。
+	if _awaiting_door and not _door_confirmed and _catch_count >= 2 and _mist_caught_player():
 		_rescue_pending = true
 		_awaiting_door = false
 		_rescue_cat()
 		door_reached.emit()
+		door_confirmed.emit()
 
 	if main.camera != null:
 		main.camera.zoom = _base_zoom * (1.15 if _qte_started else 1.05)
@@ -409,7 +443,8 @@ func _physics_process(_delta: float) -> void:
 func _update_mist_hold() -> void:
 	if _mist == null or not is_instance_valid(_mist):
 		return
-	_mist.holding = not active or _rescue_pending or _arrived \
+	# 走进门区但还没按空格时猫照样追，门口也可能被追上。
+	_mist.holding = not active or _rescue_pending or _door_confirmed \
 		or (qte_pending and not _waiting_for_trigger) \
 		or (overlay != null and overlay.is_frozen())
 
@@ -485,41 +520,81 @@ func _rescue_cat() -> void:
 		_mist_sprite.modulate = Color(0.7, 0.7, 0.7, 1.0)
 
 
+## C 推着主角同步冲刺；主角撞墙即停，C 跟着停。C 只是演出节点，没有碰撞体。
 func _push_player_clear_of_mist() -> void:
-	if _mist == null or not is_instance_valid(_mist) or main == null or main.player == null:
+	if main == null or main.player == null:
 		return
-	var rescue := {"direction": _rescue_direction, "distance": _rescue_distance}
 	if _rescue_direction.is_zero_approx():
-		rescue = _rescue_burst()
-	var direction: Vector2 = rescue.direction
-	var distance: float = rescue.distance
-	if distance <= 0.0:
-		return
-	if main.player.start_chase_burst(direction, distance):
-		_set_rescue_c_pose(true)
-		main.update_player_control()
-		while main.player.is_chase_bursting() and not _cancelled:
-			if _rescue_c != null and is_instance_valid(_rescue_c):
-				var scale_factor: float = main.current_map.player_scale if main.current_map != null else 1.0
-				_rescue_c.global_position = main.player.global_position \
-					- direction * RESCUE_C_SPACING * scale_factor
-			await get_tree().physics_frame
+		var rescue := _rescue_burst()
+		_rescue_direction = rescue.direction
+		_rescue_distance = rescue.distance
+	var direction: Vector2 = _rescue_direction
+	if _rescue_distance <= 0.0 or direction.is_zero_approx():
+		# 四面都贴墙：不冲刺，C 已在身边，直接进对话。
 		_set_rescue_c_pose(false)
+		return
+	if not main.player.start_chase_burst(direction, _rescue_distance):
+		return
+	_rescue_bursting = true
+	_set_rescue_c_pose(true)
+	main.update_player_control()
+	# 保险：冲刺本身最多 CHASE_BURST_DURATION；多给一倍余量，绝不让剧情卡在这里。
+	var deadline := Time.get_ticks_msec() + int(Player.CHASE_BURST_DURATION * 2000.0) + 500
+	while main.player.is_chase_bursting() and not _cancelled:
+		_follow_player_with_rescue_c(direction)
+		if Time.get_ticks_msec() > deadline:
+			main.player.stop_chase_burst()
+			break
+		# process_frame 在本帧物理之后：C 贴的是主角这一帧移动后的位置，不会落后半拍。
+		await get_tree().process_frame
+	_follow_player_with_rescue_c(direction)
+	_rescue_bursting = false
+	main.update_player_control()
+	_set_rescue_c_pose(false)
 
 
+func _follow_player_with_rescue_c(direction: Vector2) -> void:
+	if _rescue_c == null or not is_instance_valid(_rescue_c):
+		return
+	var scale_factor: float = main.current_map.player_scale if main.current_map != null else 1.0
+	_rescue_c.global_position = main.player.global_position \
+		- direction * RESCUE_C_SPACING * scale_factor
+
+
+## 救援冲刺方向（只取东南西北）：
+## 1. 先看垂直于「猫→主角」连线的两个方向，取一路无障碍的；都有障碍取能冲得最远的。
+## 2. 两个垂直方向都几乎冲不动（如图书馆门口窄道），改为四个方向里最空旷的。
+## 返回 {"direction", "distance"}，distance 为未缩放的主角单位；四面都堵死时为 0。
 func _rescue_burst() -> Dictionary:
 	if main == null or main.player == null:
 		return {"direction": Vector2.ZERO, "distance": 0.0}
 	var away := Vector2.RIGHT
 	if _mist != null and is_instance_valid(_mist):
-		away = (main.player.global_position - _mist.global_position).normalized()
+		away = main.player.global_position - _mist.global_position
 	if away.is_zero_approx():
 		away = Vector2.RIGHT
-	var perpendicular := Vector2(-away.y, away.x)
-	var positive: float = main.player.burst_clearance(perpendicular, RESCUE_BURST_LIMIT)
-	var negative: float = main.player.burst_clearance(-perpendicular, RESCUE_BURST_LIMIT)
-	return {"direction": perpendicular if positive >= negative else -perpendicular,
-		"distance": maxf(positive, negative)}
+	var sides: Array[Vector2] = []
+	if absf(away.x) >= absf(away.y):
+		sides.append_array([Vector2.UP, Vector2.DOWN])
+	else:
+		sides.append_array([Vector2.LEFT, Vector2.RIGHT])
+	var best := _longest_burst(sides)
+	if best.distance >= RESCUE_MIN_BURST:
+		return best
+	# 极端情况：不再拘泥垂直方向，任选最空旷的一边；平手时优先背离猫的方向。
+	var away_axis := Vector2(signf(away.x), 0.0) if absf(away.x) >= absf(away.y) \
+		else Vector2(0.0, signf(away.y))
+	var all: Array[Vector2] = [away_axis, sides[0], sides[1], -away_axis]
+	return _longest_burst(all)
+
+
+func _longest_burst(directions: Array[Vector2]) -> Dictionary:
+	var best := {"direction": Vector2.ZERO, "distance": 0.0}
+	for direction: Vector2 in directions:
+		var clearance: float = main.player.burst_clearance(direction, RESCUE_BURST_LIMIT)
+		if clearance > best.distance + 0.01:
+			best = {"direction": direction, "distance": clearance}
+	return best
 
 
 func _set_rescue_c_pose(moving: bool) -> void:

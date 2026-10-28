@@ -1,4 +1,4 @@
-## 玩家角色。在室内场景里用 WASD 走动，撞到墙停下。
+﻿## 玩家角色。在室内场景里用 WASD 走动，撞到墙停下。
 ##
 ## 输入目前直接读物理键。将来要做按键重绑定，就换成 InputMap 的动作名，
 ## 改动只会落在这一个文件里 —— `MOVE_KEYS` 是全项目唯一的按键映射表。
@@ -179,6 +179,18 @@ func start_chase_burst(direction: Vector2, distance: float = CHASE_BURST_DISTANC
 	return true
 
 
+## 立即结束冲刺并释放输入锁（剧情保险用：冲刺因故停不下来时不让流程卡住）。
+func stop_chase_burst() -> void:
+	_chase_burst_remaining = 0.0
+	_chase_burst_distance = 0.0
+	_chase_burst_time_left = 0.0
+	_chase_burst_elapsed = 0.0
+	_chase_burst_velocity = Vector2.ZERO
+	velocity = Vector2.ZERO
+	chase_input_locked = false
+	play_animation(false)
+
+
 func is_chase_bursting() -> bool:
 	return _chase_burst_time_left > 0.0
 
@@ -189,9 +201,11 @@ func burst_clearance(direction: Vector2, limit: float) -> float:
 		return 0.0
 	var unit := direction.normalized()
 	var distance := 0.0
+	# 每次从起点测「已走 + 这一步」的整段位移；只测单步的话永远从原地出发，
+	# 隔着几格的墙测不到，窄道里会误报整段畅通（2026-10-28 图书馆门口卡死的根因之一）。
 	while distance < limit:
-		var step := minf(6.0, limit - distance)
-		if test_move(global_transform, unit * step * scale.x):
+		var step := minf(2.0, limit - distance)
+		if test_move(global_transform, unit * (distance + step) * scale.x):
 			break
 		distance += step
 	return distance

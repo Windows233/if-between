@@ -1,4 +1,4 @@
-extends RefCounted
+﻿extends RefCounted
 
 
 class CheckpointMain extends Node2D:
@@ -110,7 +110,14 @@ static func _test_bugfixes(h: TestHarness) -> void:
 				main.player.global_position - main.chase_session._rescue_direction \
 				* Ch2ChaseSession.RESCUE_C_SPACING * main.player.scale.x)
 			h.check("救援C淡入后可见", c_actor.modulate.a, 1.0)
+			h.check("救援C没有碰撞体", c_actor.get_node_or_null("Body"), null)
+			var facing: Vector2 = main.chase_session._rescue_direction
+			h.check("救援方向只取东南西北",
+				facing.is_equal_approx(Vector2.UP) or facing.is_equal_approx(Vector2.DOWN) \
+				or facing.is_equal_approx(Vector2.LEFT) or facing.is_equal_approx(Vector2.RIGHT), true)
+			h.check("猫在右侧时救援方向垂直于追击线", absf(facing.x), 0.0)
 		main.cutscene.clear_actors()
+		await _test_door_rescue(h, main)
 	main.chase_session.cancel()
 	var chase_event := DataLoader.load_event(&"ch2_diary", DataLoader.load_endings().ids())
 	var q1 := _node(chase_event, &"run_q1")
@@ -180,6 +187,47 @@ static func _test_bugfixes(h: TestHarness) -> void:
 	main.enter_map(&"school_gate", &"from_library")
 	h.check("换图时清理物件近景", main.object_preview.content, null)
 	main.queue_free()
+
+
+## 图书馆门口窄道里第三次被追上：左右都被门洞墙挡住，C 仍须出场并推着主角冲出去，流程不卡。
+static func _test_door_rescue(h: TestHarness, main: Variant) -> void:
+	var session: Ch2ChaseSession = main.chase_session
+	var door: Rect2 = session._door_area
+	var at := Vector2(door.get_center().x, door.end.y - 4.0)
+	main.player.global_position = at
+	session._mist.global_position = at + Vector2(0.0, 18.0)
+	var perpendicular := maxf(main.player.burst_clearance(Vector2.LEFT, 118.0),
+		main.player.burst_clearance(Vector2.RIGHT, 118.0))
+	h.check("门口窄道两侧冲刺距离不足 %.1f" % perpendicular,
+		perpendicular < Ch2ChaseSession.RESCUE_MIN_BURST, true)
+	session._catch_count = 2
+	session._arrived = true
+	session._rescue_pending = true
+	await session.prepare_rescue_c()
+	var c_actor: Node2D = main.cutscene._actor("c")
+	h.check("门口窄道C仍然出场", c_actor != null, true)
+	h.check("门口窄道改选空旷方向冲刺",
+		session._rescue_distance >= Ch2ChaseSession.RESCUE_MIN_BURST, true)
+	var before: Vector2 = main.player.global_position
+	var done := [false]
+	var retreat := func() -> void:
+		await session.retreat_mist(0.05)
+		done[0] = true
+	retreat.call()
+	h.check("门口已到达时救援冲刺仍放行主角物理", session.can_move_player(), true)
+	for _frame: int in 120:
+		if done[0]:
+			break
+		await h.root.get_tree().physics_frame
+	h.check("门口救援冲刺结束不卡流程", done[0], true)
+	h.check("门口救援主角被推离门口",
+		main.player.global_position.distance_to(before) > 4.0, true)
+	if c_actor != null and is_instance_valid(c_actor):
+		h.check("门口救援C贴着主角停下",
+			c_actor.global_position.distance_to(main.player.global_position) <= \
+			Ch2ChaseSession.RESCUE_C_SPACING * main.player.scale.x + 0.5, true)
+	h.check("救援后主角输入锁释放", main.player.chase_input_locked, false)
+	main.cutscene.clear_actors()
 
 
 static func _json(path: String) -> Dictionary:
