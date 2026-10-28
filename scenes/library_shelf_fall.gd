@@ -5,6 +5,11 @@ extends RefCounted
 static var upright: Texture2D
 static var grounded: Texture2D
 const FALLEN_PATH := "res://art/props/library_shelf_d_fallen_perspective.png"
+## 重绘图中的书架本体范围；外围散书/蜡烛不能参与本体尺寸标定。
+const FALLEN_BODY := Rect2(200, 0, 1690, 710)
+
+static func body_scale(source: Rect2) -> float:
+	return source.size.y / FALLEN_BODY.size.x
 
 static func fallen_texture() -> Texture2D:
 	if grounded == null:
@@ -39,14 +44,17 @@ static func pose(node: Sprite2D, rect: Rect2, angle: float, target := Rect2()) -
 	if is_equal_approx(t, 1.0):
 		node.texture = fallen_texture()
 		node.offset = Vector2.ZERO
-		node.scale = target.size / node.texture.get_size()
-		node.position = target.position
+		var ratio := body_scale(rect)
+		node.scale = Vector2.ONE * ratio
+		node.position = Vector2(target.get_center().x - FALLEN_BODY.get_center().x * ratio,
+			target.end.y - FALLEN_BODY.end.y * ratio)
 		node.rotation = 0.0
 		return
 	var initial_scale := rect.size / node.texture.get_size()
-	var final_scale := Vector2(target.size.y, target.size.x) / node.texture.get_size()
-	node.scale = initial_scale.lerp(final_scale, t)
-	node.position = Vector2(rect.position.x, rect.end.y).lerp(target.end, t)
+	# 倾倒时保持原书架尺寸；落点框只提供中心和地面锚点，不强迫贴图缩进框里。
+	node.scale = initial_scale
+	var final_pivot := Vector2(target.get_center().x + rect.size.y * 0.5, target.end.y)
+	node.position = Vector2(rect.position.x, rect.end.y).lerp(final_pivot, t)
 	node.rotation = -angle
 
 static func positions(def: MapDef) -> Dictionary:

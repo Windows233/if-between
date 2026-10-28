@@ -287,7 +287,10 @@ static func _test_fairy_tale_and_shelf_animation(h: TestHarness) -> void:
 		for corner: Vector2 in [bounds.position, bounds.end,
 				Vector2(bounds.position.x, bounds.end.y), Vector2(bounds.end.x, bounds.position.y)]:
 			bottom = maxf(bottom, (sprite.transform * corner).y)
-		h.check("倒架可见轮廓底边贴地、不埋进地面", is_equal_approx(bottom, barrier.rect.end.y), true)
+		var body := preload("res://scenes/library_shelf_fall.gd").FALLEN_BODY
+		h.check("落地书架本体长边保持原高度", is_equal_approx(body.size.x * sprite.scale.x, original_rect.size.y), true)
+		h.check("落地书架等比显示不拉扁", is_equal_approx(sprite.scale.x, sprite.scale.y), true)
+		h.check("书架本体底边贴地，散书位于外围", is_equal_approx((sprite.transform * body.end).y, barrier.rect.end.y), true)
 		var settled := sprite.transform
 		main.refresh_scene()
 		sprite = main.map_view._actor_variant_nodes.get(&"escape_shelf_barrier") as Sprite2D
