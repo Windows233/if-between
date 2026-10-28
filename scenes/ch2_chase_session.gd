@@ -7,10 +7,13 @@ signal qte_resolved(key: StringName, success: bool)
 signal door_confirmed
 
 const MIST_PATH := "res://art/npc/shadow_cat/chase_mist_right.png"
-const MIST_CHASE_SPEED := 138.0
-const QTE_CATCH_GAP := 26.0
+## 追兵本体的移动/寻路/接触判定全在 `Ch2ChasePursuer`；这里只管剧情节奏。
+const MIST_CHASE_SPEED := Ch2ChasePursuer.SPEED
+## 开跑后这段时间内即使贴上也不算追上（主角刚出教学楼时不被抓）。
+const CATCH_GRACE := 2.2
+## 每次 QTE 结束后这段时间内不再算追上：冲刺撞墙没拉开距离时，不会立刻连着弹下一个 QTE。
+const RECATCH_GRACE := 1.0
 const RESCUE_BURST_LIMIT := 118.0
-const PURSUER_STEP := 2.0
 const RESCUE_C_SPACING := 12.0
 
 var main: Variant
@@ -29,11 +32,9 @@ var _catch_count := 0
 var _expected_key: StringName = &""
 var _base_time_scale := 1.0
 var _base_zoom := Vector2.ONE
-var _trail: Array[Vector2] = []
-var _trail_total_distance := 0.0
-var _trail_start_distance := 0.0
-var _mist_trail_distance := 0.0
-var _mist: CharacterBody2D
+var _elapsed := 0.0
+var _catch_ready_at := 0.0
+var _mist: Ch2ChasePursuer
 var _mist_sprite: Sprite2D
 var _rescue_c: Node2D
 var _rescue_direction := Vector2.ZERO
@@ -77,15 +78,13 @@ func begin() -> bool:
 	main.player.chase_input_locked = false
 	_base_time_scale = Engine.time_scale
 	_base_zoom = main.camera.zoom if main.camera != null else Vector2.ONE
-	_trail.clear()
 	main.walk_and_use = false
 	main.player.walk_path.clear()
 	_rescue_c = null
 	_rescue_direction = Vector2.ZERO
 	_rescue_distance = 0.0
-	_trail_total_distance = 0.0
-	_trail_start_distance = 0.0
-	_mist_trail_distance = 0.0
+	_elapsed = 0.0
+	_catch_ready_at = CATCH_GRACE
 	main.flags.set_value(&"ch2/chase_q1", false)
 	main.flags.set_value(&"ch2/chase_q2", false)
 	main.flags.set_value(&"ch2/chase_arrived", false)
@@ -117,7 +116,7 @@ func run_qte(key: StringName) -> bool:
 
 	_expected_key = key
 	qte_pending = true
-	if not _arrived and _catch_count < 3 and _mist_gap() > QTE_CATCH_GAP:
+	if not _arrived and _catch_count < 3 and not _mist_caught_player():
 		_waiting_for_trigger = true
 		await trigger_reached
 		_waiting_for_trigger = false
@@ -184,6 +183,9 @@ func run_qte(key: StringName) -> bool:
 		main.camera.clear_shake()
 		main.update_camera()
 	_catch_count += 1
+	_catch_ready_at = _elapsed + RECATCH_GRACE
+	if success and _mist != null and is_instance_valid(_mist):
+		_mist.stagger()
 	if not success:
 		_rescue_pending = true
 		_rescue_cat()
@@ -374,21 +376,17 @@ func _process(_delta: float) -> void:
 		return
 
 	var position: Vector2 = main.player.global_position
-	if _trail.is_empty() or _trail[-1].distance_to(position) >= 1.0:
-		_trail_total_distance += _trail[-1].distance_to(position) if not _trail.is_empty() else 0.0
-		_trail.append(position)
-		if _trail.size() > 4096:
-			_trail_start_distance += _trail[0].distance_to(_trail[1])
-			_trail.pop_front()
+	_elapsed += _delta
+	_update_mist_hold()
 
-	if _waiting_for_trigger and _mist_gap() <= QTE_CATCH_GAP:
+	if _waiting_for_trigger and _mist_caught_player():
 		_waiting_for_trigger = false
 		trigger_reached.emit()
 	if _awaiting_door and _door_area.has_point(position) and not _arrived:
 		_arrived = true
 		door_reached.emit()
 
-	if _awaiting_door and _catch_count >= 2 and _mist_gap() <= QTE_CATCH_GAP:
+	if _awaiting_door and _catch_count >= 2 and _mist_caught_player():
 		_rescue_pending = true
 		_awaiting_door = false
 		_rescue_cat()
@@ -402,39 +400,27 @@ func _process(_delta: float) -> void:
 			Engine.time_scale = _base_time_scale
 
 
-func _physics_process(delta: float) -> void:
-	if not active or _rescue_pending or _mist == null or not is_instance_valid(_mist):
-		return
-	if overlay != null and overlay.is_frozen():
-		return
-	if delta <= 0.0:
-		_mist.velocity = Vector2.ZERO
-		return
+func _physics_process(_delta: float) -> void:
+	# 追兵在自己的物理帧里移动；这里只保证它在该停的时候停住（物理帧先于下一次 _process）。
+	_update_mist_hold()
 
-	var budget: float = MIST_CHASE_SPEED * main.player.scale.x * minf(delta, 0.1)
-	while budget > 0.001:
-		var available: float = _trail_total_distance - _mist_trail_distance
-		if available <= 0.001:
-			break
-		var step: float = minf(minf(budget, available), PURSUER_STEP)
-		var target: Vector2 = _point_on_trail_distance(_mist_trail_distance + step)
-		var gap: Vector2 = target - _mist.global_position
-		if gap.length() <= 0.01:
-			_mist_trail_distance += step
-			budget -= step
-			continue
-		var motion: Vector2 = gap.limit_length(step)
-		_mist.velocity = motion / maxf(minf(delta, 0.1), 0.001)
-		var before: Vector2 = _mist.global_position
-		var collision := _mist.move_and_collide(motion)
-		var moved: float = before.distance_to(_mist.global_position)
-		_mist_trail_distance += moved
-		budget -= moved
-		_mist_sprite.flip_h = _mist.velocity.x > 0.0 if absf(_mist.velocity.x) > 0.2 else _mist_sprite.flip_h
-		if collision != null or moved <= 0.001:
-			_mist.velocity = Vector2.ZERO
-			break
-	_mist.velocity = Vector2.ZERO
+
+## QTE/冲刺进行中、救援中、已进门或窗口失焦时，追兵原地不动。
+func _update_mist_hold() -> void:
+	if _mist == null or not is_instance_valid(_mist):
+		return
+	_mist.holding = not active or _rescue_pending or _arrived \
+		or (qte_pending and not _waiting_for_trigger) \
+		or (overlay != null and overlay.is_frozen())
+
+
+## 追兵脚底与主角相贴，并且已过开跑保护期。
+func _mist_caught_player() -> bool:
+	if _mist == null or not is_instance_valid(_mist) or main == null or main.player == null:
+		return false
+	if _elapsed < _catch_ready_at or _mist.is_emerging():
+		return false
+	return _mist.is_touching(main.player)
 
 
 func _on_overlay_qte_finished(key: StringName, success: bool) -> void:
@@ -473,51 +459,25 @@ func _create_mist() -> void:
 	var texture := load(MIST_PATH) as Texture2D
 	if texture == null:
 		return
-	_mist = CharacterBody2D.new()
-	_mist.name = "ch2_chase_mist"
-	_mist.collision_layer = 0
-	_mist.collision_mask = 1
-	_mist.scale = main.player.scale
-	_mist.add_collision_exception_with(main.player)
-	var collision := CollisionShape2D.new()
-	var foot := CircleShape2D.new()
-	foot.radius = 4.0
-	collision.shape = foot
-	_mist.add_child(collision)
-	_mist_sprite = Sprite2D.new()
-	_mist_sprite.name = "Visual"
-	_mist_sprite.texture = texture
-	# 素材是高清原图；沿用人物/地图标尺，限制在主角约1.5倍高度内。
-	var height: float = Player.DISPLAY_HEIGHT * 1.5
-	var ratio := height / maxf(texture.get_height(), 1.0)
-	_mist_sprite.scale = Vector2.ONE * ratio
-	_mist_sprite.offset.y = -texture.get_height() * 0.5
-	_mist_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	_mist.z_index = 30
-	main.stage_view.add_child(_mist)
-	_mist.add_child(_mist_sprite)
-	var preferred := Vector2(main.current_map.size.x - 14.0, 132.0)
-	if _door_area.size != Vector2.ZERO:
-		preferred = Vector2(_door_area.position.x - 12.0, _door_area.end.y + 10.0)
-	var route := WalkGrid.path_to(main.current_map, main.player.global_position, preferred)
-	if route.is_empty():
-		push_warning("[追逐] 图书馆门口与追逐出生点之间没有可走路径")
-		_remove_mist()
+	# 出生点：教学楼门口左侧的地图边缘，与主角出教学楼的位置同一高度，从左边追过来。
+	var spawn := Ch2ChasePursuer.edge_spawn(main.current_map, main.player.global_position, -1)
+	if spawn.is_equal_approx(main.player.global_position):
+		push_warning("[追逐] 校门左侧地图边缘找不到可走的追兵出生点")
 		return
-	_mist.global_position = route[-1]
-	route.reverse()
-	_trail = route
-	_trail_total_distance = 0.0
-	for index in range(1, _trail.size()):
-		_trail_total_distance += _trail[index - 1].distance_to(_trail[index])
-	_trail_start_distance = 0.0
-	_mist_trail_distance = 0.0
+	_mist = Ch2ChasePursuer.new()
+	_mist.setup(main.current_map, main.player, texture, main.player.scale)
+	_mist.global_position = spawn
+	main.stage_view.add_child(_mist)
+	_mist_sprite = _mist.get_node_or_null("Visual") as Sprite2D
+	_mist.emerge()
+	_update_mist_hold()
 
 
+## 追兵到主角的实际可走路程（绕障）。
 func _mist_gap() -> float:
 	if _mist == null or not is_instance_valid(_mist) or main == null or main.player == null:
 		return INF
-	return maxf(_trail_total_distance - _mist_trail_distance, 0.0)
+	return _mist.path_gap()
 
 
 func _rescue_cat() -> void:
@@ -580,28 +540,6 @@ func _facing_name(direction: Vector2) -> String:
 	if absf(direction.x) >= absf(direction.y):
 		return "side"
 	return "up" if direction.y < 0.0 else "down"
-
-
-func _point_on_trail_distance(distance: float) -> Vector2:
-	if _trail.is_empty():
-		return main.player.global_position
-	if distance < _trail_start_distance:
-		var first_direction := Vector2.RIGHT
-		if _trail.size() > 1:
-			var first_segment: Vector2 = _trail[1] - _trail[0]
-			if not first_segment.is_zero_approx():
-				first_direction = first_segment.normalized()
-		return _trail[0] - first_direction * (_trail_start_distance - distance)
-	var remaining := clampf(distance - _trail_start_distance, 0.0,
-		_trail_total_distance - _trail_start_distance)
-	for index in range(1, _trail.size()):
-		var start: Vector2 = _trail[index - 1]
-		var end: Vector2 = _trail[index]
-		var segment_length := start.distance_to(end)
-		if remaining <= segment_length and segment_length > 0.0:
-			return start.lerp(end, remaining / segment_length)
-		remaining -= segment_length
-	return _trail[-1]
 
 
 func _finish_run(remove_mist: bool) -> void:

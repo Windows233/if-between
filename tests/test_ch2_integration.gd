@@ -35,11 +35,32 @@ static func _test_bugfixes(h: TestHarness) -> void:
 		h.check("追逐猫碰撞体检测场景墙体", mist.collision_mask, 1)
 		h.check("追逐猫从可站立位置开始", WalkGrid.is_free(
 		main.current_map, mist.global_position), true)
-		var start_distance: float = main.player.global_position.distance_to(mist.global_position)
-		h.check("黑猫从图书馆门左侧开场", mist.global_position.x < main.chase_session._door_area.position.x, true)
-		h.check("黑猫开场不贴近主角", start_distance > 180.0, true)
-		h.check("初始追逐距离计入喷泉绕行",
-			main.chase_session._mist_gap() >= start_distance, true)
+		h.check("追逐猫是独立追兵类型", mist is Ch2ChasePursuer, true)
+		var pursuer := mist as Ch2ChasePursuer
+		var classroom_door := Rect2()
+		for portal: MapDef.Portal in main.current_map.portals:
+			if portal.id == &"to_classroom":
+				classroom_door = portal.rect
+		h.check("黑猫在教学楼门口左侧的地图边缘出现",
+			mist.global_position.x < classroom_door.position.x and mist.global_position.x <= 16.0, true)
+		h.check("黑猫与主角出教学楼处同一高度带",
+			absf(mist.global_position.y - main.player.global_position.y) <= 12.0, true)
+		h.check("黑猫出现时先淡入不移动", pursuer.is_emerging() and mist.modulate.a < 0.05, true)
+		h.check("开场保护期内贴身也不触发追上", main.chase_session._mist_caught_player(), false)
+		# 绕障：从喷泉正上方追到正下方，路线必须绕开喷泉，长度明显大于直线。
+		var above := Vector2(210, 70)
+		var below := Vector2(210, 170)
+		var around := pursuer.find_path(above, below)
+		var around_length := 0.0
+		var crosses_fountain := false
+		for index in range(1, around.size()):
+			around_length += around[index - 1].distance_to(around[index])
+		for point in around:
+			crosses_fountain = crosses_fountain or not WalkGrid.is_free(main.current_map, point)
+		h.check("追兵路线绕开喷泉", not around.is_empty() and not crosses_fountain, true)
+		h.check("追兵绕障路程大于直线", around_length > above.distance_to(below) + 60.0, true)
+		h.check("喷泉挡住追兵直线视线", pursuer.has_clear_line(above, below), false)
+		h.check("脚底框相贴才算追上", pursuer.is_touching(main.player), false)
 		var screen_height: float = mist_sprite.texture.get_height() * mist_sprite.scale.y \
 			* mist.scale.y * main.camera.zoom.y
 		var player_height: float = Player.DISPLAY_HEIGHT * main.player.scale.y * main.camera.zoom.y
@@ -47,19 +68,38 @@ static func _test_bugfixes(h: TestHarness) -> void:
 		h.check("追逐猫脚底贴着追踪路径",
 			mist_sprite.offset.y + mist_sprite.texture.get_height() * 0.5, 0.0)
 		var chase_start: Vector2 = main.player.global_position
+		main.chase_overlay._set_freeze_reason(ChaseOverlay.FREEZE_FOCUS, false)
+		main.chase_session._update_mist_hold()
+		pursuer._emerge_left = 0.0
+		mist.modulate.a = 1.0
 		var mist_start: Vector2 = mist.global_position
-		main.player.global_position = chase_start + Vector2(20.0, 0.0)
+		var physics_dt := 1.0 / float(Engine.physics_ticks_per_second)
+		# physics_frame 在节点物理回调之前发出，等两次才确保跑过一帧。
+		await h.root.get_tree().physics_frame
 		await h.root.get_tree().physics_frame
 		var first_step: float = mist.global_position.distance_to(mist_start)
-		h.check("追逐实体按物理帧连续移动 %.2f" % first_step, first_step < 3.0, true)
-		for _frame: int in 8:
+		h.check("追逐实体按物理帧连续移动 %.2f" % first_step,
+			first_step > 0.0 and first_step <= pursuer.speed() * physics_dt * 2.0 + 0.01, true)
+		for _frame: int in 7:
 			await h.root.get_tree().physics_frame
 		var mist_distance := mist.global_position.distance_to(mist_start)
-		h.check("黑猫按独立常速沿路径追击 %.2f" % mist_distance,
-			mist_distance > 0.0 and mist_distance <= Ch2ChaseSession.MIST_CHASE_SPEED \
-			* main.player.scale.x * 0.25 + 0.5, true)
-		h.check("冲刺加速时主角能与黑猫拉开",
-			main.player.global_position.distance_to(mist.global_position) > mist_distance, true)
+		h.check("黑猫按独立常速追击 %.2f" % mist_distance,
+			mist_distance > 0.0 and mist_distance <= pursuer.speed() * physics_dt * 9.0 + 0.5, true)
+		h.check("黑猫比主角快，能追上", pursuer.speed() > main.player.movement_speed(), true)
+		# 贴身 + 过保护期 → 追上；QTE 进行中原地不动。
+		mist.global_position = chase_start + Vector2(-8.0, 0.0)
+		h.check("脚底框相贴判定为追上", pursuer.is_touching(main.player), true)
+		main.chase_session._elapsed = Ch2ChaseSession.CATCH_GRACE + 0.1
+		h.check("过保护期贴身触发追上", main.chase_session._mist_caught_player(), true)
+		main.chase_session.qte_pending = true
+		main.chase_session._update_mist_hold()
+		var held_at: Vector2 = mist.global_position
+		main.player.global_position = chase_start + Vector2(40.0, 0.0)
+		for _frame: int in 4:
+			await h.root.get_tree().physics_frame
+		h.check("QTE进行中追兵原地不动", mist.global_position, held_at)
+		main.chase_session.qte_pending = false
+		main.player.global_position = chase_start
 		main.player.global_position = chase_start
 		mist.global_position = main.player.global_position + Vector2.RIGHT * 40.0
 		await main.chase_session.prepare_rescue_c()

@@ -32,8 +32,8 @@ func _run() -> void:
 	main.flags.set_value(&"ch2/gate_entry_seen", true)
 	ItemTable.add(main.flags, &"charm")
 	main.chase_session.begin()
-	main.chase_session._trail.append(main.player.global_position - Vector2(40, 0))
-	main.chase_session._trail.append(main.player.global_position)
+	if main.chase_session._mist != null:
+		main.chase_session._mist.global_position = main.player.global_position - Vector2(40, 0)
 	await _capture("03_chase")
 	main.chase_session.cancel()
 	main.cutscene.instant = true
