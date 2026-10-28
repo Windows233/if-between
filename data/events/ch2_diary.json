@@ -438,6 +438,7 @@
         "ch2/end5_retry_kind": "chase"
       },
       "stage": [
+        { "do": "music", "path": "res://audio/bgm/ending_05_iron.wav" },
         {
           "do": "image",
           "path": "res://art/cg/ch2_chase_failure.png",
@@ -461,6 +462,7 @@
     {
       "id": "end5_route_cg",
       "stage": [
+        { "do": "music", "path": "res://audio/bgm/ending_05_iron.wav" },
         {
           "do": "image",
           "path": "res://art/cg/ch2_chase_failure.png",

@@ -16,6 +16,53 @@ static func run(h: TestHarness) -> void:
 	test_meet_b_stops_music(h)
 	test_footsteps_and_doors(h)
 	test_all_ending_music(h)
+	test_failure_cg_music_and_retry(h)
+
+
+## 在图片真正显示的信号边界检查播放器，而非只检查终点是否写着音乐路径。
+static func test_failure_cg_music_and_retry(h: TestHarness) -> void:
+	var cases := [
+		[&"ch2_swing", &"failed", "ending_04_arrogant.wav"],
+		[&"ch2_diary", &"chase_caught", "ending_05_iron.wav"],
+		[&"ch2_diary", &"end5_route_cg", "ending_05_iron.wav"],
+		[&"ch2_library_cat", &"dodge_failed", "ending_06_sin.wav"],
+		[&"ch2_library_cat", &"escape_caught", "ending_06_sin.wav"],
+	]
+	var main := h.new_main()
+	main.cutscene.instant = true
+	main.enter_map(&"library", &"from_school_gate", true)
+	for item: Array in cases:
+		var node := DataLoader.load_event(item[0]).node(item[1])
+		main.play_music("res://audio/bgm/end1.wav")
+		var observed := {}
+		var on_image := func(shown: bool) -> void:
+			if shown:
+				observed["path"] = main.current_music()
+				observed["playing"] = main.bgm.playing
+				observed["stream"] = main.bgm.stream
+		main.stage_overlay.picture_changed.connect(on_image)
+		var prefix: Array[StageStep] = []
+		for step: StageStep in node.stage:
+			prefix.append(step)
+			if step.kind == &"image":
+				break
+		main.cutscene.run(prefix)
+		h.check("%s CG出现瞬间切到专曲" % item[1], observed.get("path"), "res://audio/bgm/" + item[2])
+		h.check("%s CG出现时播放器已播放" % item[1], observed.get("playing"), true)
+		h.check("%s 专曲资源实际加载" % item[1], observed.get("stream") is AudioStream, true)
+		main.stage_overlay.picture_changed.disconnect(on_image)
+		main.stage_overlay.hide_image(0.0)
+	for item: Array in [["rescue", &"school_yard"], ["route", &"classroom"], ["chase", &"school_gate"], ["escape", &"library"]]:
+		main.enter_map(item[1], &"start", true)
+		h.check("音乐重试专项检查点可保存：%s" % item[0], main.capture_ch2_checkpoint(item[0]), true)
+		main.play_music("res://audio/bgm/ending_06_sin.wav")
+		h.check("音乐重试专项检查点可恢复：%s" % item[0], main.restore_ch2_checkpoint(item[0]), true)
+		h.check("同图重试退出结局曲：%s" % item[0], main.current_music(), main.current_map.music)
+	var retry := DataLoader.load_event(&"ch2_library_cat").node(&"dodge_retry")
+	main.play_music("res://audio/bgm/ending_06_sin.wav")
+	main.cutscene.run(retry.stage)
+	h.check("闪避重试恢复图书馆配乐", main.current_music(), main.current_map.music)
+	main.queue_free()
 
 
 static func test_all_ending_music(h: TestHarness) -> void:

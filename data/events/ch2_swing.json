@@ -54,6 +54,7 @@
     {
       "id": "failed",
       "stage": [
+        { "do": "music", "path": "res://audio/bgm/ending_04_arrogant.wav" },
         {
           "do": "image",
           "path": "res://art/cg/ch2_rescue_injury.png",

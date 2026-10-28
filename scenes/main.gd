@@ -2042,6 +2042,8 @@ func restore_ch2_checkpoint(checkpoint_id: String) -> bool:
 	update_camera()
 	update_player_control()
 	update_cover()
+	# 同图重试不会 enter_map，也要收掉失败CG的结局曲；追逐节点随后接管音乐。
+	_play_map_music(current_map)
 	return true
 
 
