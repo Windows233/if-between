@@ -87,6 +87,7 @@
     {
       "id": "calm_death",
       "ending": "end1_calm",
+      "stage": [{ "do": "music", "path": "res://audio/bgm/end1.wav" }],
       "talk": [
         { "text": "—— end1 平静即死亡" },
         { "text": "你没有做错什么。你只是没有去。" }

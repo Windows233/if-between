@@ -488,6 +488,9 @@
     },
     {
       "id": "calm_death",
+      "stage": [
+        { "do": "music", "path": "res://audio/bgm/end1.wav" }
+      ],
       "ending": "end1_calm"
     }
   ]

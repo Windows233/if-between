@@ -15,6 +15,41 @@ static func run(h: TestHarness) -> void:
 	test_music_step(h)
 	test_meet_b_stops_music(h)
 	test_footsteps_and_doors(h)
+	test_all_ending_music(h)
+
+
+static func test_all_ending_music(h: TestHarness) -> void:
+	var paths := {&"end1_calm": "end1.wav", &"end2_sweet": "end2.wav",
+		&"end3_nothing": "end3.wav", &"end4_arrogant": "ending_04_arrogant.wav",
+		&"end4_iron": "ending_05_iron.wav", &"end6_sin": "ending_06_sin.wav",
+		&"end7_rewritten": "ending_07_tomorrow.wav"}
+	var main := h.new_main()
+	main.cutscene.instant = true
+	var found := {}
+	var folder := DirAccess.open("res://data/events")
+	for file: String in folder.get_files():
+		if not file.ends_with(".json"):
+			continue
+		var event := DataLoader.load_event(StringName(file.get_basename()))
+		if event == null:
+			continue
+		for node: StoryNode in event.nodes:
+			if not paths.has(node.ending):
+				continue
+			var path: String = "res://audio/bgm/" + paths[node.ending]
+			var step: StageStep = null
+			for candidate: StageStep in node.stage:
+				if candidate.kind == &"music" and candidate.text("path") == path:
+					step = candidate
+					break
+			h.check("%s/%s 结局接入专用音乐" % [file, node.id], step != null, true)
+			if step != null:
+				main.cutscene._perform(step)
+				h.check("%s/%s 专用音乐实际播放" % [file, node.id],
+					main.current_music() == path and main.bgm.stream != null and main.bgm.playing, true)
+			found[node.ending] = true
+	h.check("全部七个结局都有音乐入口", found.size(), 7)
+	main.queue_free()
 
 
 ## 滑条位置换算成增益倍数。

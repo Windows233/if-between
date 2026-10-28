@@ -356,7 +356,7 @@
         },
         {
           "do": "music",
-          "path": ""
+          "path": "res://audio/bgm/ending_07_tomorrow.wav"
         }
       ],
       "next": "ending_results"
@@ -391,6 +391,7 @@
     {
       "id": "ending_question",
       "stage": [
+        { "do": "music", "path": "res://audio/bgm/ending_07_tomorrow.wav" },
         {
           "do": "caption",
           "fade": 0.7,

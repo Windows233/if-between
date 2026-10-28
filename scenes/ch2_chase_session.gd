@@ -7,8 +7,9 @@ signal qte_resolved(key: StringName, success: bool)
 signal door_confirmed
 
 const MIST_PATH := "res://art/npc/shadow_cat/chase_mist_right.png"
-const RUN_PATH := "res://art/npc/shadow_cat/chase_run_sheet.png"
-const RUN_FPS := 8.0
+const RUN_PATH := "res://art/npc/shadow_cat/chase_run_12.png"
+const RUN_FPS := 20.0
+const SMOKE_SHADER := preload("res://scenes/chase_smoke.gdshader")
 const MIST_CHASE_SPEED := 138.0
 const QTE_CATCH_GAP := 26.0
 const RESCUE_BURST_LIMIT := 118.0
@@ -44,6 +45,7 @@ var _mist_sprite_scale := Vector2.ONE
 var _mist_sprite_offset_y := 0.0
 var _run_frames: Array[Texture2D] = []
 var _run_clock := 0.0
+var _smoke_clock := 0.0
 var _rescue_c: Node2D
 var _rescue_direction := Vector2.ZERO
 var _rescue_distance := 0.0
@@ -462,15 +464,18 @@ func _animate_mist(delta: float, motion: Vector2) -> void:
 	if not is_instance_valid(_mist_sprite):
 		return
 	var moving := motion.length() > 0.01
+	_smoke_clock += delta
+	if _mist_sprite.material is ShaderMaterial:
+		(_mist_sprite.material as ShaderMaterial).set_shader_parameter("smoke_time", _smoke_clock)
 	if moving and not _run_frames.is_empty():
 		_run_clock += delta
-		_mist_sprite.texture = _run_frames[int(_run_clock * RUN_FPS) % _run_frames.size()]
+		_mist_sprite.texture = _run_frames[int(_run_clock * RUN_FPS + 0.00001) % _run_frames.size()]
 		_mist_sprite.offset.y = -_mist_sprite.texture.get_height() * 0.5
 	_mist_stride = move_toward(_mist_stride, 1.0 if moving else 0.0, delta * 8.0)
 	if moving:
 		_mist_anim_phase += delta * Player.WALK_FPS * 0.25 * TAU
 	var gait := sin(_mist_anim_phase) * _mist_stride
-	var lift: float = absf(gait) * 9.0 * main.player.scale.y
+	var lift: float = (0.5 - 0.5 * cos(_mist_anim_phase * 2.0)) * 2.0
 	_mist_sprite.position.y = _mist_sprite_offset_y - lift
 	_mist_sprite.scale = _mist_sprite_scale
 	_mist_sprite.rotation = 0.0
@@ -508,7 +513,7 @@ func _wait_for_burst() -> void:
 		await get_tree().physics_frame
 
 
-## 原画联系图的四个姿势并非等宽格；按各自区域读取，统一画布与脚底。
+## 十二姿势联系图按画师实际留白切区，统一画布与脚底。
 func _load_run_frames() -> void:
 	if not _run_frames.is_empty():
 		return
@@ -516,9 +521,12 @@ func _load_run_frames() -> void:
 	if sheet == null:
 		return
 	var source := sheet.get_image()
-	var regions: Array[Rect2i] = [Rect2i(0, 0, 820, 536),
-		Rect2i(820, 0, 647, 536), Rect2i(0, 536, 765, 536),
-		Rect2i(765, 536, 702, 536)]
+	var regions: Array[Rect2i] = []
+	var xs := [0, 424, 776, 1144, 1536]
+	var ys := [0, 365, 690, 1024]
+	for row: int in 3:
+		for col: int in 4:
+			regions.append(Rect2i(xs[col], ys[row], xs[col + 1] - xs[col], ys[row + 1] - ys[row]))
 	var crops: Array[Image] = []
 	var size := Vector2i.ZERO
 	for region: Rect2i in regions:
@@ -560,6 +568,10 @@ func _create_mist() -> void:
 	_mist_sprite = Sprite2D.new()
 	_mist_sprite.name = "Visual"
 	_mist_sprite.texture = texture
+	var smoke := ShaderMaterial.new()
+	smoke.shader = SMOKE_SHADER
+	_mist_sprite.material = smoke
+	_smoke_clock = 0.0
 	# 素材是高清原图；沿用人物/地图标尺，限制在主角约1.5倍高度内。
 	var height: float = Player.DISPLAY_HEIGHT * 1.5
 	var ratio := height / maxf(texture.get_height(), 1.0)

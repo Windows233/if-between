@@ -136,7 +136,8 @@
         {
           "do": "ch2_checkpoint_clear",
           "checkpoint": "rescue"
-        }
+        },
+        { "do": "music", "path": "res://audio/bgm/ending_04_arrogant.wav" }
       ]
     },
     {

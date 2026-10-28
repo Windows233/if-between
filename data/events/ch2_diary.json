@@ -559,7 +559,9 @@
     {
       "id": "end5_ending",
       "ending": "end4_iron",
-      "stage": []
+      "stage": [
+        { "do": "music", "path": "res://audio/bgm/ending_05_iron.wav" }
+      ]
     },
     {
       "id": "c_door_cover",

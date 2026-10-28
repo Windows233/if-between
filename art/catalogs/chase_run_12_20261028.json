@@ -1,0 +1,12 @@
+{
+  "date": "2026-10-28",
+  "asset": "res://art/npc/shadow_cat/chase_run_12.png",
+  "source": "imagegen，参考原四姿势黑雾猫扩展跑动衔接与雾流",
+  "source_filename": "exec-bb2df33d-0b4d-4342-8db8-abbdf6298402.png",
+  "size": [1536, 1024],
+  "frames": 12,
+  "fps": 20,
+  "x_boundaries": [0, 424, 776, 1144, 1536],
+  "y_boundaries": [0, 365, 690, 1024],
+  "runtime": "统一脚底和画布；不再大幅上下弹跳；雾流由暂停兼容的shader连续驱动，头眼保持稳定。原四帧图保留。"
+}

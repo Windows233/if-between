@@ -74,6 +74,7 @@
     {
       "id": "end2",
       "ending": "end2_sweet",
+      "stage": [{ "do": "music", "path": "res://audio/bgm/end2.wav" }],
       "talk": [
         { "text": "—— end2 甜蜜的咬痕" },
         { "text": "你也不是故意的，只是太巧了。" }

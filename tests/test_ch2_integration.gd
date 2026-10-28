@@ -39,15 +39,17 @@ static func _test_bugfixes(h: TestHarness) -> void:
 		var cat_scale_min := INF
 		var cat_scale_max := -INF
 		var frames_seen := {}
-		for _pose: int in 8:
-			main.chase_session._animate_mist(1.0 / Player.WALK_FPS, Vector2.RIGHT)
+		for _pose: int in 12:
+			main.chase_session._animate_mist(1.0 / main.chase_session.RUN_FPS, Vector2.RIGHT)
 			cat_lift_min = minf(cat_lift_min, mist_sprite.position.y)
 			cat_lift_max = maxf(cat_lift_max, mist_sprite.position.y)
 			cat_scale_min = minf(cat_scale_min, mist_sprite.scale.y)
 			cat_scale_max = maxf(cat_scale_max, mist_sprite.scale.y)
 			frames_seen[mist_sprite.texture.get_instance_id()] = true
-		h.check("黑猫追逐动画按8FPS有明显腾跃", cat_lift_max - cat_lift_min > 3.0, true)
-		h.check("黑猫跑动实际切换四个腿部姿势", frames_seen.size(), 4)
+		h.check("黑猫跑动只有轻微身体起伏", cat_lift_max - cat_lift_min <= 2.0, true)
+		h.check("黑猫跑动实际切换十二个腿部姿势", frames_seen.size(), 12)
+		var smoke_time: float = mist_sprite.material.get_shader_parameter("smoke_time")
+		h.check("黑猫雾气时间连续推进", smoke_time > 0.5, true)
 		h.check("黑猫跑动保持身体比例", is_equal_approx(cat_scale_max, cat_scale_min), true)
 		h.check("追逐猫从可站立位置开始", WalkGrid.is_free(
 		main.current_map, mist.global_position), true)
