@@ -1,0 +1,221 @@
+format: stage-script/v2
+title: "第二章互动缺口与图书馆素材接入"
+status: draft
+project: {name: "IF：如果之间", engine: "Godot 4.7.2", adapter: if-between-native}
+game_context:
+  viewport: [320, 180]
+  coordinate_system: "原点左上；地图坐标以角色脚底为锚点；镜头沿用GameCamera夹边。"
+  scenes:
+    - id: classroom
+      map_file: data/maps/classroom.json
+      background: art/map/classroom.png
+      map_size: [384, 307]
+      inspection: {data: verified, visual: verified, runtime: not_run, notes: "diary_desk保留；classroom_window已按用户要求从地图编辑器删除；镜子与教学楼公告栏actor缺失。"}
+      objects:
+        - {id: diary_desk, rect: [260, 137, 38, 26], representation: interaction_only, notes: "action read -> ch2_diary。"}
+      camera_notes: "320x180视口；调查近景沿用当前对话层，不能假设镜头缩放。"
+      scene_notes: "镜子需新增独立交互actor；日记图按页显示时不可让三页拼图同时遮住对白。"
+    - id: school_yard
+      map_file: data/maps/school_yard.json
+      background: art/map/school_yard.png
+      map_size: [316, 211]
+      inspection: {data: verified, visual: verified, runtime: not_run, notes: "底图已画入C；flagpole与swing数据存在。"}
+      objects:
+        - {id: flagpole, rect: [106, 39, 28, 62], reach: [96, 43, 48, 72], representation: interaction_only, notes: "action check -> ch2_flagpole。"}
+        - {id: swing, rect: [194, 38, 56, 38], reach: [188, 35, 70, 52], representation: interaction_only, notes: "action check -> ch2_swing；底图C与临时C不可重复。"}
+      camera_notes: "操场底图C是烘焙人物，不可直接当作可移动C。"
+      scene_notes: "救援小游戏接管输入时隐藏或冻结底图C，并只保留一个独立C表现。"
+    - id: school_gate
+      map_file: data/maps/school_gate.json
+      background: art/map/school_gate.png
+      map_size: [421, 281]
+      inspection: {data: verified, visual: verified, runtime: not_run, notes: "notice_board是校门通知栏；教学楼入口是portal，不是独立actor。"}
+      objects:
+        - {id: notice_board, rect: [123, 220, 42, 31], representation: interaction_only, notes: "action read -> ch2_notice；若需求指教学楼公告栏，需另加actor。"}
+      camera_notes: "沿用相机夹边；追逐清理时须恢复普通地图控制。"
+      scene_notes: "被追上不进入死亡结局；C救场后切图书馆。"
+    - id: library
+      map_file: data/maps/library.json
+      background: art/map/library_no_cat.png
+      map_size: [467, 374]
+      inspection: {data: verified, visual: verified, runtime: not_run, notes: "escape_shelf_barrier已有hidden/fallen静态变体；library_wall为前景遮挡。"}
+      objects:
+        - {id: escape_shelf_barrier, rect: [201, 215, 64, 28], representation: sprite, notes: "现有fallen为最终横放书架；碰撞由scenes/library_visuals.gd状态开启。"}
+      camera_notes: "倒塌动画应在当前地图坐标播放，不移动镜头；完成后保留最终横放贴图。"
+      scene_notes: "crowbar_used后进入escape_prepare，再进入escape_library_run；追逐成功与C救场共用入口图。"
+sources:
+  - {id: user_revision, path: user_message, locator: "2026-10-27互动缺口与素材接入要求", role: revision, authority: selected}
+  - {id: runtime_maps, path: data/maps/classroom.json, locator: "diary_desk；classroom_window已删除", role: implementation, authority: observed}
+  - {id: runtime_yard, path: data/maps/school_yard.json, locator: "flagpole、swing", role: implementation, authority: observed}
+  - {id: runtime_gate, path: data/maps/school_gate.json, locator: "notice_board", role: implementation, authority: observed}
+  - {id: runtime_library, path: data/maps/library.json, locator: "escape_shelf_barrier、library_no_cat、library_wall", role: implementation, authority: observed}
+  - {id: runtime_events, path: data/events/ch2_library_cat.json, locator: "crowbar_used、escape_prepare、escape_library_run、escape_caught", role: implementation, authority: observed}
+  - {id: diary_event, path: data/events/ch2_diary.json, locator: "diary_first、diary_again", role: implementation, authority: observed}
+  - {id: shelf_delivery, path: "C:/Users/admin/Documents/WeChat Files/wxid_u7qymtfxqhw822/FileStorage/File/2026-10/6.zip", locator: "两张1983x793、10帧书架倒塌联系图", role: asset, authority: observed}
+  - {id: window_delivery, path: user_message, locator: "codex-clipboard-dc176da7-27c8-4491-b15e-6b35e3136486.png", role: asset, authority: observed}
+entities:
+  - {id: hero, name: 主角, kind: character}
+  - {id: c, name: C, kind: character}
+  - {id: mist, name: 黑雾猫, kind: character}
+  - {id: diary, name: 日记本, kind: prop}
+  - {id: flagpole, name: 旗杆, kind: prop}
+  - {id: swing, name: 秋千, kind: prop}
+  - {id: notice_board, name: 公告栏, kind: prop}
+  - {id: mirror, name: 镜子, kind: prop}
+  - {id: shelf, name: 倒塌书架, kind: prop}
+  - {id: classroom_window, name: 窗边（待重新放置）, kind: prop}
+assets:
+  - {id: shelf_fall_sheet_clean, kind: image_sequence, status: verified, path: art/props/library_shelf_fall_sheet.png, spec: "6.zip第二张7349...PNG；1983x793、5×2共10帧、无编号，已直接作为运行时帧源。"}
+  - {id: shelf_fallen_final, kind: image, status: verified, path: art/props/library_shelf_fallen.png, spec: "倒塌完成后的静态兜底图。"}
+  - {id: classroom_window_frame, kind: image, status: verified, path: art/props/classroom_window_frame.png, spec: "窗框候选资源；classroom_window对象已删除，重新放置后再校准rect。"}
+  - {id: diary_page_1, kind: image, status: planned, path: art/props/ch2_diary_page_1.png, spec: "日记第1页，替换当前整张ch2_diary_written.png的分页显示。"}
+  - {id: diary_page_2, kind: image, status: planned, path: art/props/ch2_diary_page_2.png, spec: "日记第2页。"}
+  - {id: diary_page_3, kind: image, status: planned, path: art/props/ch2_diary_page_3.png, spec: "日记第3页。"}
+  - {id: mirror_asset, kind: image, status: planned, path: art/props/ch2_mirror.png, spec: "教学楼/教室镜子交互贴图；需编辑器放置后保存。"}
+  - {id: teaching_notice_asset, kind: image, status: planned, path: art/props/ch2_teaching_notice_board.png, spec: "教学楼公告栏；校门notice_board仍复用ch2_notice。"}
+  - {id: c_neutral, kind: portrait, status: verified, path: art/portrait/c/neutral.png, spec: "C中性立绘。"}
+  - {id: hero_quiet, kind: portrait, status: verified, path: art/portrait/protagonist/quiet.png, spec: "主角OS立绘。"}
+variables:
+  - {id: diary_read, type: bool, initial: false, persistence: save, binding: ch2/diary_read, description: "三页日记全部确认并奖励。"}
+  - {id: rescued_c, type: bool, initial: false, persistence: save, binding: ch2/rescued_c, description: "秋千救援成功。"}
+  - {id: c_static_teaching_gate, type: bool, initial: false, persistence: save, binding: ch2/c_static_teaching_gate, description: "C在教学楼门口对白结束后保持静止。"}
+  - {id: caught_rescued, type: bool, initial: false, persistence: chapter, binding: ch2/caught_rescued, description: "追逐被追上后C已救场。"}
+  - {id: shelf_fallen, type: bool, initial: false, persistence: save, binding: ch2/library/shelf_fallen, description: "书架倒塌完成，读档后直接显示最终状态。"}
+decisions:
+  - {id: shelf_sheet_choice, question: "6.zip两张联系图选哪一张作为正式帧源？", blocking: false, affects: [library_shelf_fall], resolution: "已选第二张7349...PNG无编号版本并接入library_shelf_fall_sheet.png。"}
+  - {id: window_pixel_match, question: "用户窗户附件与现有classroom_window_frame.png是否完全同源？", blocking: false, affects: [window_asset], resolution: "像素比较后确认实质同源；地图对象已按用户要求删除，重新放置前不绑定事件。"}
+  - {id: rescue_parameters, question: "救C小游戏最终难度参数？", blocking: false, affects: [swing_rescue], resolution: "三段稳定输入；错误累计3次失败；保留已完成段并允许重试，初始窗口按现有补充案参数实机调节。"}
+entry: diary_pages
+nodes:
+  - id: diary_pages
+    title: "日记三张图片逐页切换"
+    sources: [user_revision, diary_event]
+    scene: classroom
+    trigger: {type: interact, target: diary, condition: {var: diary_read, op: eq, value: false}}
+    control: cutscene
+    repeat: guarded
+    repeat_notes: "首次逐页确认并奖励；回访仍可阅读但不重复发放日记本。"
+    setup: {camera: "保持日记桌调查位置", characters: {hero: inherit, c: "不在日记图片上方叠加"}, environment: "三页图片逐张显示", audio: inherit}
+    cues:
+      - {id: diary_page_1_show, kind: image, origin: source, sources: [user_revision, diary_event], description: "显示日记第1页，确认后收图。", completion: confirm, assets: [diary_page_1], params: {operation: show, asset: diary_page_1, hide_after_confirm: true}, engine: {status: requires_work, steps: [], notes: "当前ch2_diary只显示整张ch2_diary_written.png。", plan: "拆成三个image cue，每页确认后hide。"}}
+      - {id: diary_page_2_show, kind: image, origin: source, sources: [user_revision, diary_event], description: "显示日记第2页，确认后收图。", completion: confirm, assets: [diary_page_2], params: {operation: show, asset: diary_page_2, hide_after_confirm: true}, engine: {status: requires_work, steps: [], notes: "同上。", plan: "新增第二页资源及确认出口。"}}
+      - {id: diary_page_3_show, kind: image, origin: source, sources: [user_revision, diary_event], description: "显示日记第3页，确认后收图。", completion: confirm, assets: [diary_page_3], params: {operation: show, asset: diary_page_3, hide_after_confirm: true}, engine: {status: requires_work, steps: [], notes: "同上。", plan: "第三页确认后才进入奖励节点。"}}
+      - {id: diary_reward, kind: state, origin: staging, sources: [diary_event], description: "第三页关闭后设置diary_read并发放日记本。", completion: immediate, params: {changes: [{var: diary_read, op: set, value: true}]}, engine: {status: existing, steps: [], notes: "保留现有diary_reward时序。"}}
+    exit: {type: return_control, handoff: "第三页确认后沿现有ch2_diary.diary_reaction继续；关闭分页图片并恢复教室探索。"}
+  - id: flagpole
+    title: "旗杆调查"
+    sources: [user_revision, runtime_yard]
+    scene: school_yard
+    trigger: {type: interact, target: flagpole}
+    control: cutscene
+    repeat: repeatable
+    setup: {camera: "保持旗杆调查位置", characters: {hero: inherit}, environment: inherit, audio: inherit}
+    cues:
+      - {id: flagpole_line, kind: dialogue, origin: source, sources: [runtime_yard], description: "显示旗杆上的外套与猫毛调查文字。", completion: confirm, params: {speaker: null, mode: narration, text: "旗杆上挂着的不是旗，是一个小孩的外套，袖口有猫毛", side: none, portrait: null}, engine: {status: existing, steps: [{do: say}], notes: "复用ch2_flagpole.read；若当前版本未挂action，编辑器绑定到flagpole.check。"}}
+    exit: {type: return_control, handoff: "关闭文字后恢复操场探索。"}
+  - id: swing_rescue
+    title: "秋千救援加难且只保留一个C"
+    sources: [user_revision, runtime_yard]
+    scene: school_yard
+    trigger: {type: interact, target: swing, condition: {var: rescued_c, op: eq, value: false}}
+    control: minigame
+    repeat: guarded
+    repeat_notes: "失败不死亡，允许就近重试；成功后才写rescued_c。"
+    setup: {camera: "保持秋千附近", characters: {hero: inherit, c: "独立C与底图C二选一，禁止重叠"}, environment: "显示束缚线阶段图", audio: inherit}
+    cues:
+      - {id: rescue_input, kind: interaction, origin: proposal, sources: [user_revision], decision_ids: [rescue_parameters], description: "三段连续稳定输入；有效窗口外按键计一次错误，累计3次失败；已完成段不回退。", completion: interaction_result, params: {input: "确认键/点击", result: rescued_c, requirement_status: planned}, engine: {status: requires_work, steps: [], notes: "当前救援实现过于简单且C会与底图/其他互动争用。", plan: "增加三段进度、错误计数、暂停与重试；接管秋千交互期间屏蔽C普通互动，成功后清理束缚层并恢复唯一C。"}}
+      - {id: rescue_state, kind: state, origin: staging, sources: [user_revision], description: "小游戏成功后设置rescued_c=true。", completion: immediate, params: {changes: [{var: rescued_c, op: set, value: true}]}, engine: {status: requires_work, steps: [], notes: "成功判定与奖励必须同一出口。", plan: "在minigame result=success后写状态。"}}
+    exit: {type: next, next: c_to_teaching_gate}
+  - id: c_to_teaching_gate
+    title: "C改为教学楼门口静止NPC"
+    sources: [user_revision, runtime_yard]
+    scene: school_gate
+    trigger: {type: flow}
+    control: cutscene
+    repeat: guarded
+    repeat_notes: "对白完成后保持同一C实例；回访不重复自动移动。"
+    setup: {camera: "教学楼门口视野", characters: {hero: inherit, c: "to_classroom门口固定站位"}, environment: inherit, audio: inherit}
+    cues:
+      - {id: c_gate_dialogue, kind: dialogue, origin: source, sources: [runtime_yard], description: "保留C询问是否准备好进入教学楼的现有对白。", completion: confirm, params: {speaker: c, mode: spoken, text: "准备好和我一起去教学楼了吗？", side: right, portrait: c_neutral}, engine: {status: existing, steps: [{do: npc_talk, id: c, talk: ch2_c_wait}], notes: "去掉结束后自动去二楼/操场的出口。"}}
+      - {id: c_static, kind: state, origin: staging, sources: [user_revision], description: "对白结束后C变成不会动的NPC，玩家自行进入教学楼。", completion: immediate, params: {changes: [{var: c_static_teaching_gate, op: set, value: true}]}, engine: {status: requires_work, steps: [], notes: "需保存站位并禁止跟随/自动移动，读档后保持。", plan: "给C设置静态NPC标记；portal仍由玩家交互触发。"}}
+    exit: {type: return_control, handoff: "C固定在教学楼门口；恢复玩家移动，不自动传送。"}
+  - id: notice_and_mirror
+    title: "公告栏与镜子调查"
+    sources: [user_revision, runtime_maps]
+    scene: classroom
+    trigger: {type: interact, target: notice_board, condition: {var: diary_read, op: eq, value: true}}
+    control: cutscene
+    repeat: repeatable
+    setup: {camera: inherit, characters: {hero: inherit, c: inherit}, environment: "先完成编辑器放置再绑定事件", audio: inherit}
+    cues:
+      - {id: teaching_notice_read, kind: image, origin: source, sources: [user_revision], description: "显示教学楼公告栏图片与三条规则，确认后收图。", completion: confirm, assets: [teaching_notice_asset], params: {operation: show, asset: teaching_notice_asset}, engine: {status: requires_work, steps: [], notes: "当前notice_board只存在于school_gate；classroom无教学楼公告栏actor。", plan: "用地图编辑器新增actor，绑定新事件或复用ch2_notice的image段。"}}
+      - {id: mirror_read, kind: dialogue, origin: source, sources: [user_revision], description: "调查镜子，显示一次性镜面反馈；不改变主线状态。", completion: confirm, params: {speaker: null, mode: narration, text: "镜子里的自己，似乎比记忆中慢了半拍。", side: none, portrait: null}, engine: {status: requires_work, steps: [], notes: "当前classroom无mirror actor与事件。", plan: "新增mirror actor及ch2_mirror事件，交互范围按贴图与站位分离设置。"}}
+    exit: {type: return_control, handoff: "关闭图片/文字后恢复教室探索。"}
+  - id: library_shelf_fall
+    title: "撬棍触发书架十帧倒塌"
+    sources: [user_revision, runtime_events, runtime_library, shelf_delivery]
+    scene: library
+    trigger: {type: state, condition: {var: shelf_fallen, op: eq, value: false}}
+    control: cutscene
+    repeat: guarded
+    repeat_notes: "首次倒塌播放动画；读档或再次进入直接显示fallen最终帧，不重播。"
+    setup: {camera: "保持图书馆当前视角，不缩放不平移", characters: {hero: inherit, c: "被书架阻挡的一侧"}, environment: "保留library_wall遮挡层", audio: inherit}
+    cues:
+      - {id: shelf_fall_start, kind: actor, origin: source, sources: [user_revision, runtime_events, shelf_delivery], target: shelf, description: "主角说‘对了！书架’后，在escape_shelf_barrier位置播放已选用的无编号5×2联系图，共10帧。", completion: finished, assets: [shelf_fall_sheet_clean], params: {operation: animate, frames: 10, fps: 8.33, columns: 5, rect: [201, 215, 64, 28]}, engine: {status: existing, steps: [{do: map_actor_animation, actor: escape_shelf_barrier, path: res://art/props/library_shelf_fall_sheet.png, frames: 10, columns: 5, frame_time: 0.12, final_variant: fallen}], notes: "已选用7349...PNG无编号版本；按透明边界等比落地，动画完成后重建图书馆地图。"}}
+      - {id: shelf_fall_final, kind: state, origin: staging, sources: [runtime_library], target: shelf, description: "动画完成后保留library_shelf_fallen.png并开启library_visuals的局部碰撞；已有节点状态在进入时写入shelf_fallen，碰撞只在动画完成后的地图重建中出现。", completion: immediate, params: {changes: [{var: shelf_fallen, op: set, value: true}]}, engine: {status: existing, steps: [], notes: "map_actor_animation完成后由main重建图书馆；读档、重进图书馆或补演跳过动画时直接由library_visuals显示fallen。"}}
+      - {id: shelf_c_dialogue, kind: dialogue, origin: source, sources: [runtime_events], description: "保留C咳嗽与‘看来这场游戏要尽早结束了’两句。", completion: confirm, params: {speaker: c, mode: spoken, text: "咳咳咳，可恶\n看来这场游戏要尽早结束了", side: right, portrait: c_neutral}, engine: {status: existing, steps: [{do: say}], notes: "对白在倒塌完成后出现。"}}
+    exit: {type: return_control, handoff: "倒塌完成后沿现有ch2_library_cat.escape_prepare继续；不要再次播放动画。"}
+  - id: chase_nonfatal
+    title: "追逐被追上后统一C救场"
+    sources: [user_revision, diary_event]
+    scene: school_gate
+    trigger: {type: state, condition: {var: caught_rescued, op: eq, value: false}}
+    control: minigame
+    repeat: guarded
+    repeat_notes: "QTE失败/被追上不触发End5；清理追逐后转入图书馆。"
+    setup: {camera: "沿用现有追逐镜头", characters: {hero: inherit, mist: inherit, c: "仅救场分支出现"}, environment: inherit, audio: inherit}
+    cues:
+      - {id: chase_qtes, kind: interaction, origin: source, sources: [diary_event, user_revision], description: "保留Q/E两次QTE；成功继续，失败或被追上进入C救场。", completion: interaction_result, params: {input: "现有Q/E追逐输入", result: chase_result, requirement_status: existing}, engine: {status: requires_work, steps: [], notes: "现有chase_caught进入死亡CG与End5。", plan: "替换失败出口为caught_rescue，清除计时/输入/黑雾状态且不写死亡结局。"}}
+      - {id: c_rescue, kind: dialogue, origin: source, sources: [user_revision], description: "C救场后显示‘小心！’、‘你没受伤吧’，主角回应去图书馆。", completion: confirm, params: {speaker: c, mode: spoken, text: "小心！\n你没受伤吧", side: right, portrait: c_neutral}, engine: {status: existing, steps: [{do: npc, id: c, sprite: "res://art/npc/c", at: [365, 164]}, {do: npc_remove, id: mist}], notes: "复用c_door_cover的救场演出；追逐清理由程序接入。"}}
+    exit: {type: next, next: library_caught_dialogue}
+  - id: library_caught_dialogue
+    title: "被追上入馆后的C对白"
+    sources: [user_revision, diary_event]
+    scene: library
+    trigger: {type: state, condition: {var: caught_rescued, op: eq, value: true}}
+    control: cutscene
+    repeat: guarded
+    repeat_notes: "只由caught_rescued分支进入一次；C随后固定入口。"
+    setup: {camera: inherit, characters: {hero: "入口出生点", c: "入口侧固定"}, environment: "显示图书馆深夜地点字幕", audio: inherit}
+    cues:
+      - {id: caught_library_line, kind: dialogue, origin: source, sources: [user_revision], description: "C：看来有人在这里出事，我们得小心一点了。", completion: confirm, params: {speaker: c, mode: spoken, text: "看来有人在这里出事，我们得小心一点了", side: right, portrait: c_neutral}, engine: {status: requires_work, steps: [], notes: "新增caught专属一次性对白，C随后停在入口。", plan: "在library_enter分支按caught_rescued选择节点。"}}
+    exit: {type: return_control, handoff: "关闭对白后恢复图书馆探索；C保持入口静止。"}
+  - id: library_success_os
+    title: "未被追上入馆只显示OS"
+    sources: [user_revision, diary_event]
+    scene: library
+    trigger: {type: state, condition: {var: caught_rescued, op: eq, value: false}}
+    control: cutscene
+    repeat: guarded
+    repeat_notes: "只由追逐全成功分支进入一次；不生成救场C。"
+    setup: {camera: inherit, characters: {hero: "入口出生点", c: "成功分支不出现救场C"}, environment: inherit, audio: inherit}
+    cues:
+      - {id: success_os, kind: dialogue, origin: source, sources: [user_revision], description: "只显示主角OS，不播放C救场对白。", completion: confirm, params: {speaker: hero, mode: thought, text: "他怎么能到得这么快，而且，他怎么知道我在这里", side: left, portrait: hero_quiet}, engine: {status: requires_work, steps: [], notes: "成功分支当前与救场共享对白，需拆分。", plan: "library_enter根据chase_result分流；成功分支只保留这一句。"}}
+    exit: {type: return_control, handoff: "OS关闭后恢复图书馆探索。"}
+  - id: window_asset
+    title: "窗户图片接入"
+    sources: [user_revision, runtime_maps, window_delivery]
+    scene: classroom
+    trigger: {type: interact, target: classroom_window}
+    control: cutscene
+    repeat: guarded
+    repeat_notes: "窗边主线只按现有事件guard执行；回访不重复扣除决策币。"
+    setup: {camera: "保持窗边交互位置", characters: {hero: inherit, c: inherit}, environment: "夜景底图+frame贴图分层", audio: inherit}
+    cues:
+      - {id: window_frame_bind, kind: actor, origin: source, sources: [runtime_maps, window_delivery], target: classroom_window, description: "重新放置后使用用户窗户图；由地图编辑器校准rect、night背板与frame层。", completion: immediate, assets: [classroom_window_frame], params: {operation: place_and_calibrate}, engine: {status: requires_work, steps: [], notes: "classroom_window已删除，当前不应触发事件；重新放置并确认站位后再绑定。", plan: "在地图编辑器中重新放置窗户对象，校准贴图位置与交互区，保存后再绑定ch2_classroom_window。"}}
+      - {id: window_story, kind: actor, origin: source, sources: [runtime_maps], target: classroom_window, description: "重新放置并确认位置后沿用ch2_classroom_window的抛币CG、扣除决策币和C误判/安全离界流程。", completion: finished, params: {operation: preserve}, engine: {status: requires_work, steps: [], notes: "当前地图没有classroom_window对象。", plan: "窗户对象重新保存后，确认事件入口、可达站位和窗框分层，再恢复原事件绑定。"}}
+    exit: {type: return_control, handoff: "关闭窗边演出后恢复教室探索。"}
+coverage:
+  - {from: "日记与互动缺口", nodes: [diary_pages, flagpole, swing_rescue, c_to_teaching_gate, notice_and_mirror], note: "覆盖用户列出的日记三图、旗杆、秋千/C、教学楼门口、公告栏、镜子。"}
+  - {from: "图书馆撬棍与追逐修订", nodes: [library_shelf_fall, chase_nonfatal, library_caught_dialogue, library_success_os], note: "覆盖书架倒塌动画、非死亡追逐、被追上C救场和成功分支单句OS。"}
+  - {from: "窗户素材接入", nodes: [window_asset], note: "复用现有classroom_window事件和actor，避免重复绑定。"}

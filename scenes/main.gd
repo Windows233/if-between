@@ -587,6 +587,19 @@ func set_actor_sprite_variant(actor_id: StringName, variant_id: StringName) -> b
 	return map_view != null and map_view.set_actor_sprite_variant(actor_id, variant_id)
 
 
+func play_map_actor_animation(actor_id: StringName, path: String,
+		frame_count: int, columns: int, frame_time: float,
+		final_variant: StringName) -> void:
+	if map_view == null:
+		return
+	await map_view.play_actor_sprite_sheet(actor_id, path, frame_count, columns,
+		frame_time, final_variant)
+	if current_map != null and current_map.id == &"library" \
+			and actor_id == &"escape_shelf_barrier":
+		preload("res://scenes/library_visuals.gd").prepare(current_map, flags)
+		map_view.build(current_map, flags)
+
+
 func set_map_actor_alpha(actor_id: StringName, alpha: float, time: float = 0.0) -> bool:
 	return map_view != null and map_view.set_actor_alpha(actor_id, alpha, time)
 

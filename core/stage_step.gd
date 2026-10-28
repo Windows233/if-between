@@ -31,6 +31,7 @@ const KINDS: Dictionary = {
 	&"personal_anchor": [],    # 记录首次入馆的个人与背包状态
 	&"personal_anchor_restore": [],
 	&"map_actor_variant": ["actor", "variant"],
+	&"map_actor_animation": ["actor", "path", "final_variant"],
 	&"map_actor_alpha": ["actor", "alpha"],
 	&"map_actor_marker": ["actor", "text"],
 	&"approach_actor": ["actor"],

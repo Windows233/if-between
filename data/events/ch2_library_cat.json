@@ -1044,7 +1044,21 @@
             },
             {
               "text": "你用早已准备好的撬棍掀倒书架，挡住了 C 的去路。"
-            },
+            }
+          ]
+        },
+        {
+          "do": "map_actor_animation",
+          "actor": "escape_shelf_barrier",
+          "path": "res://art/props/library_shelf_fall_sheet.png",
+          "frames": 10,
+          "columns": 5,
+          "frame_time": 0.12,
+          "final_variant": "fallen"
+        },
+        {
+          "do": "say",
+          "lines": [
             {
               "speaker": "C",
               "text": "咳咳咳，可恶",
