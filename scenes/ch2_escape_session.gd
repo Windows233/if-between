@@ -53,7 +53,7 @@ func begin(part: String) -> bool:
 	main.walk_and_use = false
 	_trail.clear()
 	var origin: Vector2 = main.player.global_position
-	var preferred := Vector2(233, 190) if part == "library" else origin + Vector2(0, -28)
+	var preferred: Vector2 = preload("res://scenes/library_shelf_fall.gd").positions(main.current_map)["c"] if part == "library" else origin + Vector2(0, -28)
 	var initial := WalkGrid.path_to(main.current_map, preferred, origin)
 	if initial.is_empty() or initial[-1].distance_to(origin) > 3.0:
 		# 地图被编辑后仍从可达位置出场，不能穿墙向玩家直线靠拢。

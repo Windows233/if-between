@@ -587,6 +587,9 @@ func set_actor_sprite_variant(actor_id: StringName, variant_id: StringName) -> b
 	return map_view != null and map_view.set_actor_sprite_variant(actor_id, variant_id)
 
 
+var _shelf_camera_zoom := 0.0
+
+
 func play_map_actor_animation(actor_id: StringName, path: String,
 		frame_count: int, columns: int, frame_time: float,
 		final_variant: StringName) -> void:
@@ -595,15 +598,22 @@ func play_map_actor_animation(actor_id: StringName, path: String,
 	var previous_focus: Variant = camera_focus
 	if actor_id == &"escape_shelf_barrier":
 		update_player_control()
+		var staging := preload("res://scenes/library_shelf_fall.gd").positions(current_map)
+		player.walk_path.clear()
+		player.position = staging["player"]
+		player.facing = Vector2.UP
+		_shelf_camera_zoom = minf(camera.zoom.x, get_viewport_rect().size.y / (absf(staging["player"].y - staging["c"].y) + Player.DISPLAY_HEIGHT * 2.0 + 24.0))
+		cutscene.add_actor("c", "res://art/npc/c", staging["c"], Player.DISPLAY_HEIGHT, 9, "idle_down")
 		for actor: MapDef.Actor in current_map.actors:
 			if actor.id == actor_id:
-				camera_focus = preload("res://scenes/library_shelf_fall.gd").source_rect(current_map).get_center()
+				camera_focus = (staging["player"] + staging["c"]) * 0.5 - Vector2(0, Player.DISPLAY_HEIGHT * 0.35)
 				update_camera()
 				break
 	if actor_id == &"escape_shelf_barrier":
-		map_view.set_actor_alpha(&"shelf_se", 0.0)
+		map_view.set_actor_alpha(&"shelf_d", 0.0)
 	await map_view.play_actor_sprite_sheet(actor_id, path, frame_count, columns,
 		frame_time, final_variant)
+	_shelf_camera_zoom = 0.0
 	if current_map != null and current_map.id == &"library" \
 			and actor_id == &"escape_shelf_barrier":
 		camera_focus = previous_focus
@@ -1095,6 +1105,8 @@ func update_camera() -> void:
 		focus = camera_focus
 	camera.follow(focus, Vector2(current_map.size),
 		GameCamera.should_shrink(current_map.kind), current_map.player_scale)
+	if _shelf_camera_zoom > 0.0:
+		camera.zoom = Vector2.ONE * _shelf_camera_zoom
 
 
 ## F11 / Alt+Enter：切全屏。返回 true 表示这个键我吃掉了。

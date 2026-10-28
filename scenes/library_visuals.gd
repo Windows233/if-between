@@ -12,8 +12,8 @@ static func prepare(def: MapDef, flags: WorldState) -> void:
 	var fallen: bool = flags.get_value(&"ch2/library/shelf_fallen") == true
 	var source := preload("res://scenes/library_shelf_fall.gd").source_rect(def)
 	for actor: MapDef.Actor in def.actors:
-		if actor.id == &"shelf_se":
-			actor.sprite_variants["standing"] = "res://art/props/library_shelf_se_cover.png"
+		if actor.id == &"shelf_d":
+			actor.sprite_variants["standing"] = "res://art/props/library_shelf_d_cover.png"
 			actor.sprite_variants["hidden"] = "res://art/fx/library/hidden.png"
 			actor.sprite_variant = "hidden" if fallen else "standing"
 			if not actor.has_meta("standing_collision"):
@@ -28,16 +28,13 @@ static func prepare(def: MapDef, flags: WorldState) -> void:
 			actor.has_local_collision = false
 			actor.collisions.clear()
 			continue
-		# 右下角原书架向左倾倒后的轴对齐包围框；随编辑器原书架位置变化。
-		if fallen:
-			actor.rect = Rect2(source.position.x - source.size.y,
-				source.end.y - source.size.x, source.size.y, source.size.x)
+		# 倒塌物件的矩形由编辑器指定，不能用旧坐标覆盖用户落点。
 		actor.sprite_variant = "fallen" if fallen else "hidden"
 		actor.draw_layer = "map_top_under_player"
 		actor.has_local_collision = fallen
 		actor.collisions.clear()
 		if fallen:
-			actor.collisions.append(Rect2(Vector2(10, 10), actor.rect.size - Vector2(14, 14)))
+			actor.collisions.append(Rect2(Vector2(2, 2), actor.rect.size - Vector2(4, 4)))
 		actor.solid = false
 
 

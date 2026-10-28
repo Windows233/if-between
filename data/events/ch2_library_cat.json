@@ -1290,6 +1290,7 @@
         },
         {
           "do": "place_player",
+          "library_escape": true,
           "at": [
             233,
             258
@@ -1301,6 +1302,7 @@
         },
         {
           "do": "npc",
+          "library_escape": true,
           "id": "c",
           "sprite": "res://art/npc/c",
           "at": [
@@ -1498,6 +1500,7 @@
         },
         {
           "do": "place_player",
+          "library_escape": true,
           "at": [
             233,
             258
@@ -1509,6 +1512,7 @@
         },
         {
           "do": "npc",
+          "library_escape": true,
           "id": "c",
           "sprite": "res://art/npc/c",
           "at": [

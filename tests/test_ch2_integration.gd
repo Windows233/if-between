@@ -259,12 +259,26 @@ static func _test_fairy_tale_and_shelf_animation(h: TestHarness) -> void:
 			Image.load_from_file(main.current_map.background).get_size(),
 			Image.load_from_file("res://art/map/library_no_cat.png").get_size())
 		for original: MapDef.Actor in main.current_map.actors:
-			if original.id == &"shelf_se":
-				h.check("倒下的是原右下角书架", original.sprite_variant, "hidden")
+			if original.id == &"shelf_d":
+				h.check("倒下的是指定的shelf_d书架", original.sprite_variant, "hidden")
 				h.check("原书架碰撞同步移走", original.collision_rects().is_empty(), true)
 		var bottom := -INF
 		var bounds := sprite.get_rect()
 		var original_rect := preload("res://scenes/library_shelf_fall.gd").source_rect(main.current_map)
+		var configured := DataLoader.load_map(&"library")
+		var expected := preload("res://scenes/library_shelf_fall.gd").target_rect(configured)
+		h.check("倒地碰撞区域采用编辑器倒塌书架落点", barrier.rect, expected)
+		var stage_positions := preload("res://scenes/library_shelf_fall.gd").positions(main.current_map)
+		h.check("C位于阻隔上方", stage_positions["c"].y < expected.position.y, true)
+		h.check("主角位于阻隔下方靠近门口", stage_positions["player"].y > expected.end.y, true)
+		h.check("门口主角脚点合法", WalkGrid.is_free(main.current_map, stage_positions["player"]), true)
+		var direct_blocked := false
+		for i: int in range(1, 41):
+			var sample: Vector2 = stage_positions["c"].lerp(stage_positions["player"], i / 40.0)
+			direct_blocked = direct_blocked or not WalkGrid.is_free(main.current_map, sample)
+		h.check("倒地书架阻挡C直线追上主角", direct_blocked, true)
+		var around := WalkGrid.path_to(main.current_map, stage_positions["c"], stage_positions["player"])
+		h.check("C只能沿合法路线绕过书架", not around.is_empty() and around[-1].distance_to(stage_positions["player"]) < 3.0, true)
 		h.check("书架向左倒到原位置左侧", (sprite.transform * bounds.get_center()).x < original_rect.position.x, true)
 		for corner: Vector2 in [bounds.position, bounds.end,
 				Vector2(bounds.position.x, bounds.end.y), Vector2(bounds.end.x, bounds.position.y)]:
@@ -276,10 +290,10 @@ static func _test_fairy_tale_and_shelf_animation(h: TestHarness) -> void:
 		h.check("重建地图后倒架位置和角度保持一致", sprite.transform.is_equal_approx(settled), true)
 		# 用户可以删除独立书架：没有原物件时不能再凭空生成一只倒架。
 		for i: int in range(main.current_map.actors.size() - 1, -1, -1):
-			if main.current_map.actors[i].id == &"shelf_se":
+			if main.current_map.actors[i].id == &"shelf_d":
 				main.current_map.actors.remove_at(i)
 		main.refresh_scene()
-		h.check("手动删除右下书架后不凭空生成倒架", barrier.sprite_variant, "hidden")
+		h.check("手动删除shelf_d书架后不凭空生成倒架", barrier.sprite_variant, "hidden")
 		h.check("删除后不留下倒架碰撞", barrier.collision_rects().is_empty(), true)
 	main.queue_free()
 

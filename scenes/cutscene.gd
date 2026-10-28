@@ -911,8 +911,11 @@ func _npc(step: StageStep) -> void:
 	# A 出场是蹲着的：「a 蹲在店铺门口修留声机」。
 	# `talk` 是「这人身上挂着哪段对话」—— 演出演完、控制权交回玩家之后，
 	# 玩家走到他跟前按交互就能起那一段。
+	var at := step.point("at")
+	if step.flag("library_escape") and main.current_map != null and main.current_map.id == &"library":
+		at = preload("res://scenes/library_shelf_fall.gd").positions(main.current_map)["c"]
 	var sprite := add_actor_with_talk(step.text("id"), step.text("sprite"),
-		step.point("at"), height, int(step.number("z", 9.0)), step.text("pose"),
+		at, height, int(step.number("z", 9.0)), step.text("pose"),
 		step.text("talk"))
 	if sprite == null:
 		return
@@ -1191,6 +1194,8 @@ func _place_player(step: StageStep) -> void:
 
 	var route := step.points("path")
 	var target := step.point("at")
+	if step.flag("library_escape") and main.current_map != null and main.current_map.id == &"library":
+		target = preload("res://scenes/library_shelf_fall.gd").positions(main.current_map)["player"]
 	if not route.is_empty():
 		target = route[route.size() - 1]
 	else:

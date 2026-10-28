@@ -232,7 +232,7 @@ func _add_actor(actor: MapDef.Actor) -> void:
 		drawn = true
 		node.transform = actor.visual_texture_transform(index, node.texture.get_size())
 		if actor.id == &"escape_shelf_barrier" and actor.sprite_variant == "fallen":
-			preload("res://scenes/library_shelf_fall.gd").pose(node, preload("res://scenes/library_shelf_fall.gd").source_rect(map_def), PI * 0.5)
+			preload("res://scenes/library_shelf_fall.gd").pose(node, preload("res://scenes/library_shelf_fall.gd").source_rect(map_def), PI * 0.5, actor.rect)
 		if layers[index] == "front":
 			node.z_index = OVER_Z
 		elif layers[index] == "above_overlay":
