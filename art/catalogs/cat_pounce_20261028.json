@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-28",
+  "asset": "res://art/npc/shadow_cat/pounce_vertical.png",
+  "source": "imagegen，以现有黑雾猫为参考补向下/向上四阶段前扑",
+  "source_filename": "exec-ab786447-ce5b-46e8-9904-08aa085cce67.png",
+  "layout": "4列2排；第一排向下，第二排向上",
+  "cell": [384, 512],
+  "poses": ["蓄力停步", "蹬地起跳", "腾空前扑", "落地"],
+  "hold_seconds": 0.28,
+  "air_seconds": 0.52,
+  "side_pose_indices": [3, 6, 0, 1],
+  "motion": "蓄力阶段物理位移为零，空中按正弦速度沿碰撞路径移动；全周期保持原平均追逐速度。动画阶段与位移共用同一时钟。"
+}

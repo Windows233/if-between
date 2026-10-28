@@ -4,27 +4,51 @@ extends RefCounted
 
 static var upright: Texture2D
 
+static func source_rect(def: MapDef) -> Rect2:
+	for actor: MapDef.Actor in def.actors:
+		if actor.id == &"shelf_se":
+			return actor.rect
+	return Rect2()
+
 static func texture() -> Texture2D:
 	if upright == null:
-		var sheet := load("res://art/props/library_shelf_fall_sheet.png") as Texture2D
-		var image := sheet.get_image()
-		var cell := image.get_region(Rect2i(0, 0, image.get_width() / 5, image.get_height()))
-		upright = ImageTexture.create_from_image(cell.get_region(cell.get_used_rect()))
+		upright = load("res://art/props/library_shelf_se_cover.png") as Texture2D
 	return upright
 
 static func pose(node: Sprite2D, rect: Rect2, angle: float) -> void:
 	node.texture = texture()
 	node.centered = false
-	node.offset = -node.texture.get_size()
-	var ratio := rect.size.x / node.texture.get_height()
-	node.scale = Vector2.ONE * ratio
+	node.offset = Vector2(0, -node.texture.get_height())
+	node.scale = rect.size / node.texture.get_size()
 	node.position = Vector2(rect.position.x, rect.end.y)
-	node.rotation = angle
+	node.rotation = -angle
+
+## 原书架也烘焙在背景里；以同图的空地砖补回被移走的区域，前景墙仍正常遮挡。
+static func hide_source(view: Node2D) -> void:
+	view.set_actor_alpha(&"shelf_se", 0.0)
+	if view._built.has_node("ShelfFloor"):
+		return
+	var source := source_rect(view.map_def)
+	var background := load(view.map_def.background) as Texture2D
+	var scale := background.get_size() / Vector2(view.map_def.size)
+	var sample := Rect2i(Vector2(80, 200) * scale, Vector2(20, 20) * scale)
+	var patch := TextureRect.new()
+	patch.name = "ShelfFloor"
+	patch.texture = ImageTexture.create_from_image(background.get_image().get_region(sample))
+	patch.stretch_mode = TextureRect.STRETCH_TILE
+	patch.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+	patch.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	patch.position = source.position
+	patch.scale = Vector2.ONE / scale
+	patch.size = source.size * scale
+	patch.z_index = -19
+	view._built.add_child(patch)
 
 static func play(view: Node2D, node: Sprite2D, actor: MapDef.Actor,
 		token: int, final_variant: StringName) -> void:
 	node.z_index = view.ABOVE_OVERLAY_Z
-	pose(node, actor.rect, 0.0)
+	hide_source(view)
+	pose(node, source_rect(view.map_def), 0.0)
 	# 重心越过支点后加速，触地只做一次小幅回弹；每个渲染帧都有新角度。
 	var elapsed := 0.0
 	var impact := false
@@ -45,6 +69,6 @@ static func play(view: Node2D, node: Sprite2D, actor: MapDef.Actor,
 					view.get_parent().play_sound("res://audio/sfx/shelf_fall.wav")
 			var t := clampf((elapsed - 1.12) / 0.38, 0.0, 1.0)
 			angle = PI * 0.5 - sin(t * PI) * (1.0 - t) * 0.045
-		pose(node, actor.rect, angle)
-	pose(node, actor.rect, PI * 0.5)
+		pose(node, source_rect(view.map_def), angle)
+	pose(node, source_rect(view.map_def), PI * 0.5)
 	actor.sprite_variant = str(final_variant)

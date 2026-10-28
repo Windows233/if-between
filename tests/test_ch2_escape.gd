@@ -10,6 +10,7 @@ static func run(h: TestHarness) -> void:
 	h.check("书架未倒时原通道可行走", WalkGrid.is_free(main.current_map, barrier_at), true)
 	main.flags.set_value(&"ch2/library/shelf_fallen", true)
 	main.refresh_scene()
+	barrier_at = _barrier_center(main.current_map)
 	h.check("撬棍标记生成实际障碍", WalkGrid.is_free(main.current_map, barrier_at), false)
 	var route := WalkGrid.path_to(main.current_map, Vector2(233, 190), Vector2(233, 258))
 	h.check("追兵仍可绕过书架", not route.is_empty() and route[-1].distance_to(Vector2(233, 258)) < 3, true)
@@ -197,7 +198,7 @@ static func _test_escape_save_retry(h: TestHarness) -> void:
 	h.check("开始追逐前地毯近景确实显示", main.object_preview.content != null, true)
 	main.start_story(&"ch2_library_cat", &"escape_library_run")
 	h.check("C追逐启动时清理地毯近景", main.object_preview.content, null)
-	h.check("剧情写倒架标记后开跑立即生成碰撞", WalkGrid.is_free(main.current_map, Vector2(233, 238)), false)
+	h.check("剧情写倒架标记后开跑立即生成碰撞", WalkGrid.is_free(main.current_map, _barrier_center(main.current_map)), false)
 	h.check("首次逃跑开场不能提前F隐蔽", main.escape_session.activate_stealth(), false)
 	main.flags.set_value(&"ch2/personal/stealth_available", true)
 	h.check("图书馆段F不会提前启动校门隐蔽", main.escape_session.activate_stealth(), false)
@@ -307,4 +308,11 @@ static func _reachable_portal_stand(map: MapDef, portal: MapDef.Portal,
 	for stand: Vector2 in WalkGrid.reachable(map, origin):
 		if target_area.has_point(stand):
 			return stand
+	return Vector2.INF
+
+
+static func _barrier_center(def: MapDef) -> Vector2:
+	for actor: MapDef.Actor in def.actors:
+		if actor.id == &"escape_shelf_barrier" and not actor.collision_rects().is_empty():
+			return actor.collision_rects()[0].get_center()
 	return Vector2.INF

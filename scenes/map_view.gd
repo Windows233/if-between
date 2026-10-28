@@ -190,6 +190,8 @@ func _build_room() -> void:
 	_build_wall_collision()
 	_build_actor_collision()
 	_add_overlay()
+	if map_def.id == &"library" and _flags != null and _flags.get_value(&"ch2/library/shelf_fallen") == true:
+		preload("res://scenes/library_shelf_fall.gd").hide_source(self)
 
 
 ## 还没有背景图时，把场景名字淡淡地铺在中间。
@@ -230,7 +232,7 @@ func _add_actor(actor: MapDef.Actor) -> void:
 		drawn = true
 		node.transform = actor.visual_texture_transform(index, node.texture.get_size())
 		if actor.id == &"escape_shelf_barrier" and actor.sprite_variant == "fallen":
-			preload("res://scenes/library_shelf_fall.gd").pose(node, actor.rect, PI * 0.5)
+			preload("res://scenes/library_shelf_fall.gd").pose(node, preload("res://scenes/library_shelf_fall.gd").source_rect(map_def), PI * 0.5)
 		if layers[index] == "front":
 			node.z_index = OVER_Z
 		elif layers[index] == "above_overlay":

@@ -46,8 +46,15 @@ static func _test_bugfixes(h: TestHarness) -> void:
 			cat_scale_min = minf(cat_scale_min, mist_sprite.scale.y)
 			cat_scale_max = maxf(cat_scale_max, mist_sprite.scale.y)
 			frames_seen[mist_sprite.texture.get_instance_id()] = true
-		h.check("黑猫跑动只有轻微身体起伏", cat_lift_max - cat_lift_min <= 2.0, true)
-		h.check("黑猫慢速跑动完整覆盖八个连续姿势", frames_seen.size(), 8)
+		h.check("黑猫跃起高度受控", cat_lift_max - cat_lift_min <= 6.0, true)
+		h.check("黑猫完整覆盖蓄力起跳腾空落地", frames_seen.size(), 4)
+		h.check("蓄力阶段实际停步", Ch2ChaseSession.hop_rate(0.1), 0.0)
+		h.check("腾空阶段向前跃出", Ch2ChaseSession.hop_rate(0.5) > 1.0, true)
+		for direction: Vector2 in [Vector2.UP, Vector2.DOWN]:
+			main.chase_session._animate_mist(0.01, direction)
+			h.check("上下方向选择对应动画", main.chase_session._vertical_frames[
+				"up" if direction.y < 0 else "down"].has(mist_sprite.texture), true)
+		main.chase_session._animate_mist(0.0, Vector2.RIGHT)
 		var smoke_time: float = mist_sprite.material.get_shader_parameter("smoke_time")
 		h.check("黑猫雾气时间连续推进", smoke_time > 0.5, true)
 		h.check("黑猫跑动保持身体比例", is_equal_approx(cat_scale_max, cat_scale_min), true)
@@ -73,7 +80,7 @@ static func _test_bugfixes(h: TestHarness) -> void:
 		for _frame: int in 8:
 			await h.root.get_tree().physics_frame
 		var mist_distance := mist.global_position.distance_to(mist_start)
-		h.check("黑猫按独立常速沿路径追击 %.2f" % mist_distance,
+		h.check("黑猫停步后沿路径跃出 %.2f" % mist_distance,
 			mist_distance > 0.0 and mist_distance <= Ch2ChaseSession.MIST_CHASE_SPEED \
 			* main.player.scale.x * 0.25 + 0.5, true)
 		h.check("冲刺加速时主角能与黑猫拉开",
@@ -245,6 +252,11 @@ static func _test_fairy_tale_and_shelf_animation(h: TestHarness) -> void:
 		sprite != null and sprite.texture != null \
 			and barrier != null and barrier.sprite_variant == "fallen", true)
 	if sprite != null and barrier != null:
+		h.check("移走背景里右下角书架后补回地面", main.map_view._built.has_node("ShelfFloor"), true)
+		for original: MapDef.Actor in main.current_map.actors:
+			if original.id == &"shelf_se":
+				h.check("倒下的是原右下角书架", original.sprite_variant, "hidden")
+				h.check("原书架碰撞同步移走", original.collision_rects().is_empty(), true)
 		var bottom := -INF
 		var bounds := sprite.get_rect()
 		for corner: Vector2 in [bounds.position, bounds.end,

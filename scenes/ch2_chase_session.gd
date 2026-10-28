@@ -9,6 +9,8 @@ signal door_confirmed
 const MIST_PATH := "res://art/npc/shadow_cat/chase_mist_right.png"
 const RUN_PATH := "res://art/npc/shadow_cat/chase_run_12.png"
 const RUN_FPS := 8.0
+const HOP_HOLD := 0.28
+const HOP_AIR := 0.52
 const SMOKE_SHADER := preload("res://scenes/chase_smoke.gdshader")
 const MIST_CHASE_SPEED := 138.0
 const QTE_CATCH_GAP := 26.0
@@ -45,6 +47,10 @@ var _mist_sprite_scale := Vector2.ONE
 var _mist_sprite_offset_y := 0.0
 var _run_frames: Array[Texture2D] = []
 var _run_clock := 0.0
+var _hop_clock := 0.0
+var _hop_requested := false
+var _hop_direction := Vector2.RIGHT
+var _vertical_frames: Dictionary = {}
 var _smoke_clock := 0.0
 var _rescue_c: Node2D
 var _rescue_direction := Vector2.ZERO
@@ -422,6 +428,14 @@ func _process(_delta: float) -> void:
 			Engine.time_scale = _base_time_scale
 
 
+## 停步蓄力后跃出。一个周期积分为1，保持原平均追逐速度和碰撞路径。
+static func hop_rate(clock: float) -> float:
+	var phase := fposmod(clock, HOP_HOLD + HOP_AIR)
+	if phase < HOP_HOLD:
+		return 0.0
+	return (HOP_HOLD + HOP_AIR) / HOP_AIR * PI * 0.5 * sin((phase - HOP_HOLD) / HOP_AIR * PI)
+
+
 func _physics_process(delta: float) -> void:
 	if not active or _rescue_pending or _mist == null or not is_instance_valid(_mist):
 		return
@@ -432,7 +446,12 @@ func _physics_process(delta: float) -> void:
 		return
 
 	var frame_motion := Vector2.ZERO
-	var budget: float = MIST_CHASE_SPEED * main.player.scale.x * minf(delta, 0.1)
+	_hop_requested = _trail_total_distance - _mist_trail_distance > 0.01
+	var next := _point_on_trail_distance(minf(_mist_trail_distance + 2.0, _trail_total_distance)) - _mist.position
+	if next.length() > 0.1:
+		_hop_direction = next.normalized()
+	var rate := hop_rate(_hop_clock + delta * 0.5) if _hop_requested else 0.0
+	var budget: float = MIST_CHASE_SPEED * main.player.scale.x * minf(delta, 0.1) * rate
 	while budget > 0.001:
 		var available: float = _trail_total_distance - _mist_trail_distance
 		if available <= 0.001:
@@ -464,20 +483,35 @@ func _animate_mist(delta: float, motion: Vector2) -> void:
 	if not is_instance_valid(_mist_sprite):
 		return
 	var moving := motion.length() > 0.01
+	if moving:
+		_hop_direction = motion.normalized()
+	if moving or _hop_requested:
+		_hop_clock = fposmod(_hop_clock + delta, HOP_HOLD + HOP_AIR)
+	else:
+		_hop_clock = 0.0
 	_smoke_clock += delta
 	if _mist_sprite.material is ShaderMaterial:
 		(_mist_sprite.material as ShaderMaterial).set_shader_parameter("smoke_time", _smoke_clock)
-	if moving and not _run_frames.is_empty():
-		_run_clock += delta
-		_mist_sprite.texture = _run_frames[int(_run_clock * RUN_FPS + 0.00001) % _run_frames.size()]
-		_mist_sprite.offset.y = -_mist_sprite.texture.get_height() * 0.5
+	var airborne := _hop_clock >= HOP_HOLD
+	var progress := clampf((_hop_clock - HOP_HOLD) / HOP_AIR, 0.0, 1.0)
+	var pose := 0 if not airborne else (1 if progress < 0.22 else (2 if progress < 0.72 else 3))
+	var facing := "side" if absf(_hop_direction.x) >= absf(_hop_direction.y) else ("up" if _hop_direction.y < 0 else "down")
+	if _mist_sprite.material is ShaderMaterial:
+		(_mist_sprite.material as ShaderMaterial).set_shader_parameter("vertical_facing", 1.0 if facing == "up" else (-1.0 if facing == "down" else 0.0))
+	var frames: Array = _run_frames if facing == "side" else _vertical_frames.get(facing, _run_frames)
+	if not frames.is_empty():
+		var indices := [3, 6, 0, 1]
+		_mist_sprite.texture = frames[indices[pose] if facing == "side" else pose]
+		var baseline := float(_mist_sprite.texture.get_height()) if facing == "side" else (465.0 if facing == "down" else 320.0)
+		_mist_sprite.offset.y = _mist_sprite.texture.get_height() * 0.5 - baseline
+		_mist_sprite.scale = Vector2.ONE * Player.DISPLAY_HEIGHT * 1.5 / _mist_sprite.texture.get_height()
+		_mist_sprite.flip_h = facing == "side" and _hop_direction.x < 0
 	_mist_stride = move_toward(_mist_stride, 1.0 if moving else 0.0, delta * 8.0)
 	if moving:
 		_mist_anim_phase += delta * TAU
 	var gait := sin(_mist_anim_phase) * _mist_stride
-	var lift: float = (0.5 - 0.5 * cos(_mist_anim_phase)) * 0.6
+	var lift: float = sin(progress * PI) * 6.0 if airborne else 0.0
 	_mist_sprite.position.y = _mist_sprite_offset_y - lift
-	_mist_sprite.scale = _mist_sprite_scale
 	_mist_sprite.rotation = 0.0
 	if is_instance_valid(_mist_shadow):
 		_mist_shadow.scale = Vector2(1.0 + lift * 0.1, 1.0 - lift * 0.12)
@@ -521,6 +555,13 @@ func _load_run_frames() -> void:
 	if sheet == null:
 		return
 	var source := sheet.get_image()
+	var vertical := (load("res://art/npc/shadow_cat/pounce_vertical.png") as Texture2D).get_image()
+	for row: int in 2:
+		var poses: Array[Texture2D] = []
+		for col: int in 4:
+			poses.append(ImageTexture.create_from_image(vertical.get_region(Rect2i(
+				col * 384, row * 512, 384, 512))))
+		_vertical_frames["down" if row == 0 else "up"] = poses
 	var regions: Array[Rect2i] = []
 	var xs := [0, 424, 776, 1144, 1536]
 	var ys := [0, 365, 690, 1024]
@@ -556,6 +597,8 @@ func _create_mist() -> void:
 		return
 	_load_run_frames()
 	_run_clock = 0.0
+	_hop_clock = 0.0
+	_hop_requested = false
 	if not _run_frames.is_empty():
 		texture = _run_frames[0]
 	_mist = CharacterBody2D.new()

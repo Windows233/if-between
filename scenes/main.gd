@@ -597,9 +597,11 @@ func play_map_actor_animation(actor_id: StringName, path: String,
 		update_player_control()
 		for actor: MapDef.Actor in current_map.actors:
 			if actor.id == actor_id:
-				camera_focus = actor.rect.get_center() - Vector2(0, actor.rect.size.y)
+				camera_focus = preload("res://scenes/library_shelf_fall.gd").source_rect(current_map).get_center()
 				update_camera()
 				break
+	if actor_id == &"escape_shelf_barrier":
+		map_view.set_actor_alpha(&"shelf_se", 0.0)
 	await map_view.play_actor_sprite_sheet(actor_id, path, frame_count, columns,
 		frame_time, final_variant)
 	if current_map != null and current_map.id == &"library" \
