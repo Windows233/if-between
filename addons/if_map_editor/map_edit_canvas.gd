@@ -812,6 +812,7 @@ func _draw() -> void:
 			draw_dashed_line(band_screen.position + Vector2(band_screen.size.x, 0),
 				band_screen.position + band_screen.size, OVERLAY_MARK, 1.0, 5.0)
 			_label(band.position + Vector2(2, -3), "前景层：恒在角色之上", OVERLAY_MARK)
+	_draw_visual_layer("map_top_under_player")
 	_draw_visual_layer("above_overlay")
 	if show_walk and _walk_texture != null:
 		draw_texture_rect(_walk_texture, full, false)

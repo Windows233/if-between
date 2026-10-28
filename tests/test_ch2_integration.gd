@@ -136,7 +136,7 @@ static func _test_bugfixes(h: TestHarness) -> void:
 	h.check("调查结束自动收起近景", main.object_preview.content, null)
 	actor.sprite = ""
 	main.begin_interaction(actor)
-	h.check("无独立切图时从背景裁取近景", main.object_preview.content != null, true)
+	h.check("无独立贴图时不从地图背景伪造近景", main.object_preview.content, null)
 	main.enter_map(&"school_gate", &"from_library")
 	h.check("换图时清理物件近景", main.object_preview.content, null)
 	main.queue_free()

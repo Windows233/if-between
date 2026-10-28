@@ -88,6 +88,10 @@ const BORDER_THICKNESS := 32.0
 const PROP_Z := 5
 ## 静态地图装饰：在普通物件和背景之上，但仍在角色与整张前景遮挡图之后。
 const MAP_UNDER_PLAYER_Z := 9
+## 地图贴片：盖过整张前景遮挡图；角色进入其区域时临时绘制在贴片上方。
+const MAP_TOP_UNDER_PLAYER_Z := 14
+const PLAYER_Z := 10
+const PLAYER_OVER_MAP_TOP_Z := 15
 ## 会挡人的家具（`MapDef.Actor.cover`）在「人在它后面」时升到这一层，
 ## 盖住角色的下半身。**必须大于角色的 10。**
 const COVER_Z := 11
@@ -102,7 +106,7 @@ const OVER_Z := 12
 ## 所有东西都被它按图上的形状切掉。
 const OVERLAY_Z := 13
 ## 需覆盖整张前景的独立物件，例如地面血迹；与角色前层12明确分开。
-const ABOVE_OVERLAY_Z := 14
+const ABOVE_OVERLAY_Z := 16
 
 var map_def: MapDef = null
 ## 当前的世界状态。用来判断哪些角色和连接「现在存在」。
@@ -231,6 +235,8 @@ func _add_actor(actor: MapDef.Actor) -> void:
 			node.z_index = ABOVE_OVERLAY_Z
 		elif layers[index] == "map_under_player":
 			node.z_index = MAP_UNDER_PLAYER_Z
+		elif layers[index] == "map_top_under_player":
+			node.z_index = MAP_TOP_UNDER_PLAYER_Z
 		elif layers[index] == "auto":
 			_covers.append({"node": node, "cover_y": baselines[index]})
 	if drawn or not actor.visual_parts.is_empty():
@@ -460,6 +466,16 @@ func set_player_y(y: float) -> void:
 			continue
 		# 人在家具后面（脚更靠北）→ 家具盖住人；人在前面 → 人盖住家具
 		node.z_index = COVER_Z if y < float(item["cover_y"]) else PROP_Z
+
+
+## 角色进入地图贴片区域时置于贴片前方；区域外恢复正常遮挡顺序。
+func player_z_at(position: Vector2) -> int:
+	if map_def == null:
+		return PLAYER_Z
+	for actor: MapDef.Actor in map_def.active_actors(_flags):
+		if actor.visual_layers().has("map_top_under_player") and actor.rect.has_point(position):
+			return PLAYER_OVER_MAP_TOP_Z
+	return PLAYER_Z
 
 
 ## 场上会挡人的家具数量。测试用。

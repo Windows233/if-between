@@ -67,10 +67,10 @@ static func _ids(actors: Array[MapDef.Actor]) -> Array[StringName]:
 
 static func _test_layers(h: TestHarness) -> void:
 	var actors: Array = []
-	for layer: String in ["back", "auto", "map_under_player", "front", "above_overlay"]:
+	for layer: String in ["back", "auto", "map_under_player", "front", "map_top_under_player", "above_overlay"]:
 		actors.append(_actor(layer, layer))
 	var definition := MapDef.from_dictionary(_map(actors))
-	h.check("五种绘制层定义合法", definition.validate(), [])
+	h.check("六种绘制层定义合法", definition.validate(), [])
 	var view := _view(h, definition)
 	for player_y: float in [0.0, 999.0]:
 		view.set_player_y(player_y)
@@ -83,11 +83,20 @@ static func _test_layers(h: TestHarness) -> void:
 			_node(view, &"map_under_player").z_index < 10, true)
 		h.check("底图上方层仍低于整张前景遮挡图 %.0f" % player_y,
 			_node(view, &"map_under_player").z_index < view.overlay_node().z_index, true)
+		h.check("地图上方层高于整张前景遮挡图 %.0f" % player_y,
+			_node(view, &"map_top_under_player").z_index > view.overlay_node().z_index, true)
+		h.check("地图上方层低于贴片范围内角色 %.0f" % player_y,
+			_node(view, &"map_top_under_player").z_index < MapView.PLAYER_OVER_MAP_TOP_Z, true)
 		h.check("角色前层仍低于整张前景 %.0f" % player_y,
 			_node(view, &"front").z_index < view.overlay_node().z_index, true)
 		h.check("前景之上可覆盖整张前景 %.0f" % player_y,
 			_node(view, &"above_overlay").z_index > view.overlay_node().z_index, true)
 	h.check("只有自动层参与按站位遮挡", view.cover_count(), 1)
+	var top_actor := definition.actors[definition.actors.size() - 2]
+	h.check("角色进入地图贴片区域时位于贴片前方",
+		view.player_z_at(top_actor.rect.get_center()), MapView.PLAYER_OVER_MAP_TOP_Z)
+	h.check("角色离开地图贴片区域后恢复正常遮挡",
+		view.player_z_at(Vector2(390, 290)), MapView.PLAYER_Z)
 	view.free()
 	# 旧地图及旧快照不含新字段，必须精确保留over/cover的原行为。
 	var legacy: Array = []
@@ -222,12 +231,13 @@ static func _test_library_blood_layer(h: TestHarness) -> void:
 	for actor: MapDef.Actor in definition.actors:
 		if actor.id != &"library_blood_visual":
 			continue
-		h.check("入口血迹采用角色后方地图装饰层", actor.visual_layers(), PackedStringArray(["map_under_player"]))
+		h.check("入口血迹采用地图上方角色前方层", actor.visual_layers(), PackedStringArray(["map_top_under_player"]))
 		var view := _view(h, definition)
 		var node := _node(view, actor.id)
-		h.check("入口血迹绘制在底图上方", node.z_index, MapView.MAP_UNDER_PLAYER_Z)
-		h.check("入口血迹位于角色绘制层下", node.z_index < 10, true)
-		h.check("入口血迹仍位于整张前景遮挡图下", node.z_index < view.overlay_node().z_index, true)
+		h.check("入口血迹绘制在整张前景遮挡图上", node.z_index, MapView.MAP_TOP_UNDER_PLAYER_Z)
+		h.check("入口血迹位于正常角色绘制层上", node.z_index > MapView.PLAYER_Z, true)
+		h.check("角色进入血迹区域时提升到血迹前方",
+			view.player_z_at(actor.rect.get_center()), MapView.PLAYER_OVER_MAP_TOP_Z)
 		view.free()
 		return
 	h.check("图书馆地图包含入口血迹", false, true)

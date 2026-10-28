@@ -850,6 +850,7 @@ func _check_walk_arrival() -> void:
 func update_cover() -> void:
 	if map_view != null and player != null:
 		map_view.set_player_y(player.global_position.y)
+		player.z_index = map_view.player_z_at(player.global_position)
 
 
 ## 这一轮里新拿到的东西，说一声。

@@ -9,7 +9,7 @@ class_name MapDef
 extends RefCounted
 
 const Trigger := preload("res://core/map_trigger.gd")
-const DRAW_LAYERS := ["", "back", "map_under_player", "auto", "front", "above_overlay"]
+const DRAW_LAYERS := ["", "back", "map_under_player", "auto", "front", "map_top_under_player", "above_overlay"]
 
 ## 场景类型。决定「怎么触发连接」和「角色能不能走」。
 enum Kind {
@@ -612,7 +612,7 @@ func validate() -> Array[String]:
 		if actor.quarter_turns < 0 or actor.quarter_turns > 3:
 			problems.append("角色 %s 的 quarter_turns 必须是 0..3 的整数" % actor.id)
 		if actor.draw_layer not in DRAW_LAYERS:
-			problems.append("角色 %s 的 draw_layer 必须是空串/back/map_under_player/auto/front/above_overlay" % actor.id)
+			problems.append("角色 %s 的 draw_layer 必须是空串/back/map_under_player/auto/front/map_top_under_player/above_overlay" % actor.id)
 		if actor.sprite_variant != "" and not actor.sprite_variants.has(actor.sprite_variant):
 			problems.append("角色 %s 的默认贴图变体不存在：%s" % [actor.id, actor.sprite_variant])
 		if not actor.sprite_variants.is_empty() and not actor.visual_parts.is_empty():

@@ -72,6 +72,15 @@ static func run(harness: TestHarness) -> void:
 	harness.check("人在桌前时桌子位于角色之后", preview.view.cover_z(0), MapView.PROP_Z)
 	harness.check("角色使用快照出生点", preview.player.position, Vector2(48, 112))
 	harness.check("角色保留快照缩放", preview.player.scale, Vector2.ONE * preview.definition.player_scale)
+	harness.check("试走角色在地图上方贴片范围外保持常规层级", preview.player.z_index,
+		MapView.PLAYER_Z)
+	preview.player.position = Vector2(208, 112)
+	preview.panel._sync_player_depth()
+	harness.check("试走角色进入地图上方贴片范围时切到贴片前方层",
+		preview.player.z_index, MapView.PLAYER_OVER_MAP_TOP_Z)
+	preview.player.position = Vector2(48, 112)
+	preview.panel._sync_player_depth()
+	harness.check("试走角色离开贴片后恢复常规层级", preview.player.z_index, MapView.PLAYER_Z)
 	var foot := preview.player.get_child(0) as CollisionShape2D
 	harness.check("角色脚底实体尺寸复用运行时常量", (foot.shape as RectangleShape2D).size, Player.FOOT_SIZE)
 	harness.check("角色脚底偏移复用运行时常量", foot.position, Vector2(0, Player.FOOT_OFFSET))
@@ -187,7 +196,9 @@ static func fixture() -> Dictionary:
 		"spawns": {"start": [48, 112]}, "walls": [[240, 0, 16, 240]],
 		"actors": [{"id": "preview_desk", "label": "书桌", "rect": [112, 64, 64, 64],
 			"sprite": "res://art/props/gatehouse_desk.png", "cover": true,
-			"collision": [[0, 32, 64, 32]], "reach_local": [-16, 32, 96, 64]}]}
+			"collision": [[0, 32, 64, 32]], "reach_local": [-16, 32, 96, 64]},
+			{"id": "blood_patch", "label": "血迹", "rect": [192, 96, 64, 32],
+			"sprite": "res://art/props/gatehouse_desk.png", "draw_layer": "map_top_under_player"}]}
 
 
 func _run() -> void:

@@ -224,14 +224,18 @@ static func test_window_marker_and_delivery_timing(h: TestHarness) -> void:
 	var window := _actor(classroom, &"classroom_window")
 	var view := MapView.new()
 	view.build(classroom, WorldState.new())
-	h.check("窗边持续标记绑定当前交互区", view.set_actor_marker(
-		&"classroom_window", "走到标记的窗边，把决策币抛出去。"), true)
-	var marker := view._actor_markers.get(&"classroom_window") as Node2D
-	var label := marker.get_child(1) as Label if marker != null and marker.get_child_count() > 1 else null
-	h.check("窗边目标文字可见", label != null and label.text.contains("决策币"), true)
-	var frame := marker.get_child(0) as Line2D if marker != null and marker.get_child_count() > 0 else null
-	h.check("窗边目标框覆盖窗actor实际reach", frame != null and window != null \
-			and frame.points[0].distance_to(window.reach.position) < 0.01, true)
+	if window != null:
+		h.check("窗边持续标记绑定当前交互区", view.set_actor_marker(
+			&"classroom_window", "走到标记的窗边，把决策币抛出去。"), true)
+		var marker := view._actor_markers.get(&"classroom_window") as Node2D
+		var label := marker.get_child(1) as Label if marker != null and marker.get_child_count() > 1 else null
+		h.check("窗边目标文字可见", label != null and label.text.contains("决策币"), true)
+		var frame := marker.get_child(0) as Line2D if marker != null and marker.get_child_count() > 0 else null
+		h.check("窗边目标框覆盖窗actor实际reach", frame != null \
+				and frame.points[0].distance_to(window.reach.position) < 0.01, true)
+	else:
+		h.check("未放置窗户时不生成窗边标记", view.set_actor_marker(
+			&"classroom_window", "走到标记的窗边，把决策币抛出去。"), false)
 	h.check("交互后可清除窗边目标", view.set_actor_marker(&"", ""), true)
 	h.check("清除后不遗留目标框", view._actor_markers.is_empty(), true)
 
@@ -239,8 +243,8 @@ static func test_window_marker_and_delivery_timing(h: TestHarness) -> void:
 	main.enter_map(&"classroom", &"from_gate", true)
 	main.flags.set_value(&"ch2/window_marker_active", true)
 	main.refresh_scene()
-	h.check("保存状态可恢复窗边目标标记",
-		main.map_view._actor_markers.has(&"classroom_window"), true)
+	h.check("保存状态不为未放置窗户恢复标记",
+		main.map_view._actor_markers.has(&"classroom_window"), window != null)
 	main.queue_free()
 
 	var market := DataLoader.load_map(&"market_night")
@@ -388,25 +392,26 @@ static func test_map_bindings(h: TestHarness) -> void:
 	if classroom != null:
 		var classroom_overlay := _actor(classroom, &"new_actor_3")
 		h.check("教室全屏遮挡物不截获交互", classroom_overlay != null and classroom_overlay.decor, true)
-		h.check("窗边绑定抛币事件",
-			_has_event(_actor(classroom, &"classroom_window"), &"ch2_classroom_window"), true)
 		var window := _actor(classroom, &"classroom_window")
+		h.check("窗边绑定抛币事件",
+			_has_event(window, &"ch2_classroom_window"), window != null)
 		var classroom_window_reachable := false
 		var classroom_flags := WorldState.new()
-		for point: Vector2 in WalkGrid.reachable(classroom, classroom.spawn_point(&"from_gate")):
-			if WalkGrid.has_landing_room(classroom, point) \
-					and classroom.actor_near(point, 24.0, classroom_flags) == _actor(classroom, &"classroom_window"):
-				classroom_window_reachable = true
-				break
-		h.check("教室窗边有可达交互站位", classroom_window_reachable, true)
+		if window != null:
+			for point: Vector2 in WalkGrid.reachable(classroom, classroom.spawn_point(&"from_gate")):
+				if WalkGrid.has_landing_room(classroom, point) \
+						and classroom.actor_near(point, 24.0, classroom_flags) == window:
+					classroom_window_reachable = true
+					break
+		h.check("教室窗边可达状态符合对象放置状态", classroom_window_reachable, window != null)
 		var marker_view := MapView.new()
 		marker_view.build(classroom, classroom_flags)
 		h.check("窗边标记可绑定地图reach", marker_view.set_actor_marker(
-			&"classroom_window", "走到标记的窗边，把决策币抛出去。"), true)
+			&"classroom_window", "走到标记的窗边，把决策币抛出去。"), window != null)
 		var marker := marker_view._actor_markers.get(&"classroom_window") as Node2D
 		var frame := marker.get_node_or_null("Frame") as Line2D if marker != null else null
 		h.check("窗边框覆盖真实交互区", frame != null and window != null \
-				and frame.points[0].distance_to(window.reach.position) < 0.01, true)
+				and frame.points[0].distance_to(window.reach.position) < 0.01, window != null)
 		h.check("窗边标记支持清除", marker_view.set_actor_marker(&"", "") \
 				and marker_view._actor_markers.is_empty(), true)
 		marker_view.clear()

@@ -182,7 +182,7 @@ class PreviewPanel:
 		_range_toggle.set_pressed_no_signal(bool(options.get("show_ranges", _range_toggle.button_pressed)))
 		_set_ranges_visible(_range_toggle.button_pressed)
 		_fit_camera()
-		view.set_player_y(player.position.y)
+		_sync_player_depth()
 		_update_blocked()
 		_pressed = false
 		if bool(options.get("read_only", false)):
@@ -244,13 +244,17 @@ class PreviewPanel:
 		if not blocked:
 			player._physics_process(delta)
 		_fit_camera()
-		view.set_player_y(player.global_position.y)
+		_sync_player_depth()
 		if _ranges.visible:
 			_ranges.queue_redraw()
 		var pressed := Input.is_physical_key_pressed(KEY_SPACE)
 		if pressed and not _pressed:
 			inspect_interaction()
 		_pressed = pressed
+
+	func _sync_player_depth() -> void:
+		view.set_player_y(player.global_position.y)
+		player.z_index = view.player_z_at(player.global_position)
 
 	func _physics_process(delta: float) -> void:
 		if auto_step:

@@ -1,4 +1,4 @@
-## 调查物件时的近景：按地图实际贴图/部件绘制，缺独立贴图时裁取背景。
+## 调查物件时只放大物件自身配置的贴图或视觉部件。
 ## 独立屏幕层不受地图相机缩放影响，不接管输入；正式剧情大图显示时让位。
 ## 生命周期跟随当前交互，换图、对话/选项结束自动收起，不写入存档。
 extends CanvasLayer
@@ -37,24 +37,6 @@ func show_actor(actor: MapDef.Actor, definition: MapDef) -> void:
 			visible_rect = sprite.transform * Rect2(pixels.get_used_rect())
 		bounds = visible_rect if first else bounds.merge(visible_rect)
 		first = false
-	if first and not definition.background.is_empty() and ResourceLoader.exists(definition.background):
-		var texture := load(definition.background) as Texture2D
-		if texture != null and definition.size.x > 0 and definition.size.y > 0:
-			texture = TextureSource.resolve(definition.background, texture)
-			var ratio := texture.get_size() / Vector2(definition.size)
-			var region := Rect2(actor.rect.position * ratio, actor.rect.size * ratio)
-			region = region.intersection(Rect2(Vector2.ZERO, texture.get_size()))
-			if region.has_area():
-				var atlas := AtlasTexture.new()
-				atlas.atlas = texture
-				atlas.region = region
-				var sprite := Sprite2D.new()
-				sprite.texture = atlas
-				sprite.centered = false
-				sprite.position = region.position / ratio
-				sprite.scale = Vector2.ONE / ratio
-				content.add_child(sprite)
-				bounds = Rect2(sprite.position, region.size / ratio)
 	if not bounds.has_area():
 		clear()
 	else:

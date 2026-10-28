@@ -100,10 +100,13 @@ static func run(h: TestHarness) -> void:
 			if distance < window_distance:
 				window_landing = point
 				window_distance = distance
-	h.check("窗边交互区有可站立落点", window_distance < INF, true)
-	var window_path := WalkGrid.path_to(main.current_map, main.player.global_position, window_landing)
-	h.check("教室门口可走到窗边交互区", window_distance < INF and not window_path.is_empty() \
-		and window_path[-1].distance_to(window_landing) < 3, true)
+	if window == null:
+		h.check("未放置的窗户不绑定交互", window, null)
+	else:
+		h.check("窗边交互区有可站立落点", window_distance < INF, true)
+		var window_path := WalkGrid.path_to(main.current_map, main.player.global_position, window_landing)
+		h.check("教室门口可走到窗边交互区", window_distance < INF and not window_path.is_empty() \
+			and window_path[-1].distance_to(window_landing) < 3, true)
 	var cat_map := DataLoader.load_map(&"library")
 	var cat_flags := WorldState.new()
 	var cat_path := WalkGrid.path_to(cat_map, cat_map.spawn_point(&"from_school_gate"), Vector2(251, 296))

@@ -526,7 +526,7 @@
     {
       "cover": false,
       "decor": true,
-      "draw_layer": "map_under_player",
+      "draw_layer": "map_top_under_player",
       "id": "library_blood_visual",
       "label": "入口血迹图层",
       "rect": [
