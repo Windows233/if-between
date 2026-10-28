@@ -29,6 +29,7 @@ func _run() -> void:
 	ItemTable.add(main.flags, &"crowbar")
 	main.start_story(&"ch2_library_cat", &"crowbar_used")
 	var textures := {}
+	var previous_angle := -1.0
 	var locked := true
 	var elapsed := 0.0
 	while elapsed < 12.0 and not main.escape_session.active:
@@ -39,12 +40,19 @@ func _run() -> void:
 		var sprite := main.map_view._actor_variant_nodes.get(&"escape_shelf_barrier") as Sprite2D
 		if is_instance_valid(sprite) and sprite.z_index == main.map_view.ABOVE_OVERLAY_Z:
 			locked = locked and not main.player.is_physics_processing()
-			if not textures.has(sprite.texture.get_instance_id()):
-				textures[sprite.texture.get_instance_id()] = true
+			textures[snappedf(sprite.rotation, 0.01)] = true
+			if absf(sprite.rotation - previous_angle) > 0.25:
+				previous_angle = sprite.rotation
 				await _shot("shelf_%d" % textures.size())
 	print("ANIMATION_PROBE frames=%d locked=%s escape=%s movable=%s" % [
 		textures.size(), locked, main.escape_session.active, main.player.is_physics_processing()])
-	var ok: bool = textures.size() == 5 and locked and main.escape_session.active and main.player.is_physics_processing()
+	var sprite := main.map_view._actor_variant_nodes.get(&"escape_shelf_barrier") as Sprite2D
+	var final_transform := sprite.transform
+	main.refresh_scene()
+	sprite = main.map_view._actor_variant_nodes.get(&"escape_shelf_barrier") as Sprite2D
+	var stable: bool = sprite.transform.is_equal_approx(final_transform)
+	print("FINAL_POSE_STABLE=%s" % stable)
+	var ok: bool = textures.size() > 20 and stable and locked and main.escape_session.active and main.player.is_physics_processing()
 	main.escape_session.cancel()
 	main.queue_free()
 	await process_frame

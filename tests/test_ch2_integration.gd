@@ -47,7 +47,7 @@ static func _test_bugfixes(h: TestHarness) -> void:
 			cat_scale_max = maxf(cat_scale_max, mist_sprite.scale.y)
 			frames_seen[mist_sprite.texture.get_instance_id()] = true
 		h.check("黑猫跑动只有轻微身体起伏", cat_lift_max - cat_lift_min <= 2.0, true)
-		h.check("黑猫跑动实际切换十二个腿部姿势", frames_seen.size(), 12)
+		h.check("黑猫慢速跑动完整覆盖八个连续姿势", frames_seen.size(), 8)
 		var smoke_time: float = mist_sprite.material.get_shader_parameter("smoke_time")
 		h.check("黑猫雾气时间连续推进", smoke_time > 0.5, true)
 		h.check("黑猫跑动保持身体比例", is_equal_approx(cat_scale_max, cat_scale_min), true)
@@ -244,6 +244,17 @@ static func _test_fairy_tale_and_shelf_animation(h: TestHarness) -> void:
 	h.check("倒架动画结束后保留静态倒地贴图",
 		sprite != null and sprite.texture != null \
 			and barrier != null and barrier.sprite_variant == "fallen", true)
+	if sprite != null and barrier != null:
+		var bottom := -INF
+		var bounds := sprite.get_rect()
+		for corner: Vector2 in [bounds.position, bounds.end,
+				Vector2(bounds.position.x, bounds.end.y), Vector2(bounds.end.x, bounds.position.y)]:
+			bottom = maxf(bottom, (sprite.transform * corner).y)
+		h.check("倒架可见轮廓底边贴地、不埋进地面", is_equal_approx(bottom, barrier.rect.end.y), true)
+		var settled := sprite.transform
+		main.refresh_scene()
+		sprite = main.map_view._actor_variant_nodes.get(&"escape_shelf_barrier") as Sprite2D
+		h.check("重建地图后倒架位置和角度保持一致", sprite.transform.is_equal_approx(settled), true)
 	main.queue_free()
 
 

@@ -14,6 +14,7 @@ static func prepare(def: MapDef, flags: WorldState) -> void:
 			continue
 		var fallen: bool = flags.get_value(&"ch2/library/shelf_fallen") == true
 		actor.sprite_variant = "fallen" if fallen else "hidden"
+		actor.draw_layer = "map_top_under_player"
 		actor.has_local_collision = fallen
 		actor.collisions.clear()
 		if fallen:

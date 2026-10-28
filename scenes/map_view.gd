@@ -229,6 +229,8 @@ func _add_actor(actor: MapDef.Actor) -> void:
 			_actor_variant_nodes[actor.id] = node
 		drawn = true
 		node.transform = actor.visual_texture_transform(index, node.texture.get_size())
+		if actor.id == &"escape_shelf_barrier" and actor.sprite_variant == "fallen":
+			preload("res://scenes/library_shelf_fall.gd").pose(node, actor.rect, PI * 0.5)
 		if layers[index] == "front":
 			node.z_index = OVER_Z
 		elif layers[index] == "above_overlay":
@@ -308,6 +310,11 @@ func play_actor_sprite_sheet(actor_id: StringName, path: String,
 	if not is_instance_valid(node):
 		return
 	var source := load(path) as Texture2D
+	if actor_id == &"escape_shelf_barrier":
+		var generation: int = int(_actor_animation_generation.get(actor_id, 0)) + 1
+		_actor_animation_generation[actor_id] = generation
+		await preload("res://scenes/library_shelf_fall.gd").play(self, node, actor, generation, final_variant)
+		return
 	if source == null:
 		push_warning("[地图] 物件动画贴图无法加载：%s" % path)
 		return

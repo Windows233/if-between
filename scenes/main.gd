@@ -600,7 +600,6 @@ func play_map_actor_animation(actor_id: StringName, path: String,
 				camera_focus = actor.rect.get_center() - Vector2(0, actor.rect.size.y)
 				update_camera()
 				break
-		play_sound("res://audio/sfx/shelf_fall.wav")
 	await map_view.play_actor_sprite_sheet(actor_id, path, frame_count, columns,
 		frame_time, final_variant)
 	if current_map != null and current_map.id == &"library" \

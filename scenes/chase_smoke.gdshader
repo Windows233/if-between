@@ -8,8 +8,7 @@ void vertex() {
 void fragment() {
 	float tail = 1.0 - smoothstep(0.45, 0.82, UV.x);
 	vec2 flow = UV;
-	flow.y += tail * (sin(UV.x * 19.0 - smoke_time * 5.0) * 0.012
-		+ sin(UV.x * 33.0 + smoke_time * 3.0) * 0.005);
-	flow.x += tail * sin(UV.y * 22.0 - smoke_time * 4.0) * 0.006;
+	flow.y += tail * sin(UV.x * 12.0 - smoke_time * 1.6) * 0.003;
+	flow.x += tail * sin(UV.y * 14.0 - smoke_time * 1.2) * 0.002;
 	COLOR = sprite_tint * texture(TEXTURE, clamp(flow, vec2(0.0), vec2(1.0)));
 }

@@ -8,7 +8,7 @@ signal door_confirmed
 
 const MIST_PATH := "res://art/npc/shadow_cat/chase_mist_right.png"
 const RUN_PATH := "res://art/npc/shadow_cat/chase_run_12.png"
-const RUN_FPS := 20.0
+const RUN_FPS := 8.0
 const SMOKE_SHADER := preload("res://scenes/chase_smoke.gdshader")
 const MIST_CHASE_SPEED := 138.0
 const QTE_CATCH_GAP := 26.0
@@ -473,9 +473,9 @@ func _animate_mist(delta: float, motion: Vector2) -> void:
 		_mist_sprite.offset.y = -_mist_sprite.texture.get_height() * 0.5
 	_mist_stride = move_toward(_mist_stride, 1.0 if moving else 0.0, delta * 8.0)
 	if moving:
-		_mist_anim_phase += delta * Player.WALK_FPS * 0.25 * TAU
+		_mist_anim_phase += delta * TAU
 	var gait := sin(_mist_anim_phase) * _mist_stride
-	var lift: float = (0.5 - 0.5 * cos(_mist_anim_phase * 2.0)) * 2.0
+	var lift: float = (0.5 - 0.5 * cos(_mist_anim_phase)) * 0.6
 	_mist_sprite.position.y = _mist_sprite_offset_y - lift
 	_mist_sprite.scale = _mist_sprite_scale
 	_mist_sprite.rotation = 0.0
@@ -513,7 +513,7 @@ func _wait_for_burst() -> void:
 		await get_tree().physics_frame
 
 
-## 十二姿势联系图按画师实际留白切区，统一画布与脚底。
+## 取联系图前八姿势组成一秒步态；统一画布与双眼锚点，稳住头部。
 func _load_run_frames() -> void:
 	if not _run_frames.is_empty():
 		return
@@ -524,22 +524,26 @@ func _load_run_frames() -> void:
 	var regions: Array[Rect2i] = []
 	var xs := [0, 424, 776, 1144, 1536]
 	var ys := [0, 365, 690, 1024]
-	for row: int in 3:
+	for row: int in 2:
 		for col: int in 4:
 			regions.append(Rect2i(xs[col], ys[row], xs[col + 1] - xs[col], ys[row + 1] - ys[row]))
 	var crops: Array[Image] = []
-	var size := Vector2i.ZERO
+	# 原图金色双眼的平均位置（相对各自透明裁边）；预先核对，避免开场逐像素扫描。
+	var anchors: Array[Vector2i] = [Vector2i(326, 210), Vector2i(282, 216),
+		Vector2i(287, 222), Vector2i(284, 206), Vector2i(311, 175),
+		Vector2i(267, 167), Vector2i(277, 185), Vector2i(304, 181)]
+	var size := Vector2i(480, 340)
 	for region: Rect2i in regions:
 		var cell := source.get_region(region)
-		var crop := cell.get_region(cell.get_used_rect())
+		var used := cell.get_used_rect()
+		var crop := cell.get_region(used)
 		crops.append(crop)
-		size.x = maxi(size.x, crop.get_width())
-		size.y = maxi(size.y, crop.get_height())
-	for crop: Image in crops:
+	for i: int in crops.size():
+		var crop := crops[i]
 		var frame := Image.create(size.x, size.y, false, Image.FORMAT_RGBA8)
 		frame.fill(Color.TRANSPARENT)
 		frame.blit_rect(crop, Rect2i(Vector2i.ZERO, crop.get_size()),
-			Vector2i((size.x - crop.get_width()) / 2, size.y - crop.get_height()))
+			Vector2i(370, 175) - anchors[i])
 		_run_frames.append(ImageTexture.create_from_image(frame))
 
 
