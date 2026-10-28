@@ -222,12 +222,14 @@ static func test_dynamic_inventory_selection(h: TestHarness) -> void:
 static func test_window_marker_and_delivery_timing(h: TestHarness) -> void:
 	var classroom := DataLoader.load_map(&"classroom")
 	var window := _actor(classroom, &"classroom_window")
+	if window == null:
+		window = _actor(classroom, &"window")
 	var view := MapView.new()
 	view.build(classroom, WorldState.new())
 	if window != null:
 		h.check("窗边持续标记绑定当前交互区", view.set_actor_marker(
-			&"classroom_window", "走到标记的窗边，把决策币抛出去。"), true)
-		var marker := view._actor_markers.get(&"classroom_window") as Node2D
+		&"window", "走到标记的窗边，把决策币抛出去。"), true)
+		var marker := view._actor_markers.get(&"window") as Node2D
 		var label := marker.get_child(1) as Label if marker != null and marker.get_child_count() > 1 else null
 		h.check("窗边目标文字可见", label != null and label.text.contains("决策币"), true)
 		var frame := marker.get_child(0) as Line2D if marker != null and marker.get_child_count() > 0 else null
@@ -235,7 +237,7 @@ static func test_window_marker_and_delivery_timing(h: TestHarness) -> void:
 				and frame.points[0].distance_to(window.reach.position) < 0.01, true)
 	else:
 		h.check("未放置窗户时不生成窗边标记", view.set_actor_marker(
-			&"classroom_window", "走到标记的窗边，把决策币抛出去。"), false)
+			&"window", "走到标记的窗边，把决策币抛出去。"), false)
 	h.check("交互后可清除窗边目标", view.set_actor_marker(&"", ""), true)
 	h.check("清除后不遗留目标框", view._actor_markers.is_empty(), true)
 
@@ -243,8 +245,10 @@ static func test_window_marker_and_delivery_timing(h: TestHarness) -> void:
 	main.enter_map(&"classroom", &"from_gate", true)
 	main.flags.set_value(&"ch2/window_marker_active", true)
 	main.refresh_scene()
+	var marker_id: StringName = &"window" if _actor(main.current_map, &"window") != null \
+		else &"classroom_window"
 	h.check("保存状态不为未放置窗户恢复标记",
-		main.map_view._actor_markers.has(&"classroom_window"), window != null)
+		main.map_view._actor_markers.has(marker_id), window != null)
 	main.queue_free()
 
 	var market := DataLoader.load_map(&"market_night")
@@ -284,6 +288,27 @@ static func test_market_ending_contract(h: TestHarness) -> void:
 			and result_caption.flag("wait_click"), true)
 	var ending_question := event.node(&"ending_question")
 	h.check("结果确认后进入独立疑问屏", ending_question != null, true)
+	var epilogue_index := -1
+	var final_caption_index := -1
+	var image_hide_index := -1
+	var c_lines_index := -1
+	if ending_question != null:
+		for index: int in ending_question.stage.size():
+			var step: StageStep = ending_question.stage[index]
+			if step.kind == &"image" and step.text("path") == "res://art/cg/ch2_epilogue.png":
+				epilogue_index = index
+			if step.kind == &"caption" and step.data.get("lines", []).size() == 2:
+				final_caption_index = index
+			if step.kind == &"image_hide":
+				image_hide_index = index
+			if step.kind == &"say":
+				var lines: Array = step.data.get("lines", [])
+				if lines.size() == 2 and str(lines[0].get("speaker", "")) == "C":
+					c_lines_index = index
+	h.check("End7尾声CG出现在C黑屏对白之后并承托最终标题",
+		c_lines_index >= 0 and c_lines_index < epilogue_index \
+		and epilogue_index < final_caption_index, true)
+	h.check("End7最终字幕结束后收起尾声CG", image_hide_index > final_caption_index, true)
 	var reward_check := event.node(&"silver_reward_check")
 	var reward := event.node(&"silver_reward")
 	h.check("银币奖励节点存在", reward != null, true)

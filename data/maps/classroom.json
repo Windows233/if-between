@@ -114,13 +114,13 @@
     },
     {
       "cover": true,
-      "cover_y": 179,
+      "cover_y": 177,
       "decor": true,
       "id": "new_actor_3",
       "label": "新物件",
       "rect": [
-        3,
-        2,
+        0,
+        0,
         384,
         307
       ],
@@ -138,6 +138,12 @@
       "cover_y": 153,
       "id": "diary_desk",
       "label": "日记",
+      "reach_local": [
+        0,
+        0,
+        38,
+        40
+      ],
       "rect": [
         260,
         137,
@@ -164,6 +170,23 @@
         124
       ],
       "sprite": "res://art/props/ch2_blackboard_2.png"
+    },
+    {
+      "id": "window",
+      "label": "窗户",
+      "reach_local": [
+        2,
+        2,
+        24,
+        40
+      ],
+      "rect": [
+        52,
+        130,
+        18,
+        46
+      ],
+      "sprite": "res://art/props/classroom_window_frame.png"
     }
   ],
   "background": "res://art/map/classroom.png",

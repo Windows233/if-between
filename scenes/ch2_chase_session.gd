@@ -35,6 +35,11 @@ var _trail_start_distance := 0.0
 var _mist_trail_distance := 0.0
 var _mist: CharacterBody2D
 var _mist_sprite: Sprite2D
+var _mist_shadow: Polygon2D
+var _mist_anim_phase := 0.0
+var _mist_stride := 0.0
+var _mist_sprite_scale := Vector2.ONE
+var _mist_sprite_offset_y := 0.0
 var _rescue_c: Node2D
 var _rescue_direction := Vector2.ZERO
 var _rescue_distance := 0.0
@@ -86,6 +91,8 @@ func begin() -> bool:
 	_trail_total_distance = 0.0
 	_trail_start_distance = 0.0
 	_mist_trail_distance = 0.0
+	_mist_anim_phase = 0.0
+	_mist_stride = 0.0
 	main.flags.set_value(&"ch2/chase_q1", false)
 	main.flags.set_value(&"ch2/chase_q2", false)
 	main.flags.set_value(&"ch2/chase_arrived", false)
@@ -233,14 +240,14 @@ func run_dodge_qte(key: StringName) -> bool:
 
 
 func wait_for_arrival() -> bool:
-	if not active or _cancelled:
+	if _cancelled:
+		return false
+	if _rescue_pending:
+		_finish_rescue_route()
+		return false
+	if not active:
 		return false
 	_awaiting_door = true
-	if _rescue_pending:
-		main.flags.set_value(&"ch2/chase_rescued", true)
-		_restore_world()
-		main.update_player_control()
-		return false
 	if not _arrived and _door_area.has_point(main.player.global_position):
 		_arrived = true
 	elif not _arrived:
@@ -249,10 +256,7 @@ func wait_for_arrival() -> bool:
 		_awaiting_door = false
 		return false
 	if _rescue_pending:
-		_awaiting_door = false
-		main.flags.set_value(&"ch2/chase_rescued", true)
-		_restore_world()
-		main.update_player_control()
+		_finish_rescue_route()
 		return false
 	if not _arrived:
 		_awaiting_door = false
@@ -272,6 +276,16 @@ func wait_for_arrival() -> bool:
 	_restore_world()
 	main.update_player_control()
 	return true
+
+
+func _finish_rescue_route() -> void:
+	_awaiting_door = false
+	active = false
+	main.flags.set_value(&"ch2/chase_rescued", true)
+	if main.player != null:
+		main.player.chase_input_locked = false
+	_restore_world()
+	main.update_player_control()
 
 
 func can_move_player() -> bool:
@@ -411,6 +425,7 @@ func _physics_process(delta: float) -> void:
 		_mist.velocity = Vector2.ZERO
 		return
 
+	var frame_motion := Vector2.ZERO
 	var budget: float = MIST_CHASE_SPEED * main.player.scale.x * minf(delta, 0.1)
 	while budget > 0.001:
 		var available: float = _trail_total_distance - _mist_trail_distance
@@ -428,6 +443,7 @@ func _physics_process(delta: float) -> void:
 		var before: Vector2 = _mist.global_position
 		var collision := _mist.move_and_collide(motion)
 		var moved: float = before.distance_to(_mist.global_position)
+		frame_motion += _mist.global_position - before
 		_mist_trail_distance += moved
 		budget -= moved
 		_mist_sprite.flip_h = _mist.velocity.x > 0.0 if absf(_mist.velocity.x) > 0.2 else _mist_sprite.flip_h
@@ -435,6 +451,24 @@ func _physics_process(delta: float) -> void:
 			_mist.velocity = Vector2.ZERO
 			break
 	_mist.velocity = Vector2.ZERO
+	_animate_mist(delta, frame_motion)
+
+
+func _animate_mist(delta: float, motion: Vector2) -> void:
+	if not is_instance_valid(_mist_sprite):
+		return
+	var moving := motion.length() > 0.01
+	_mist_stride = move_toward(_mist_stride, 1.0 if moving else 0.0, delta * 8.0)
+	if moving:
+		_mist_anim_phase += delta * Player.WALK_FPS * 0.25 * TAU
+	var gait := sin(_mist_anim_phase) * _mist_stride
+	var lift: float = absf(gait) * 9.0 * main.player.scale.y
+	_mist_sprite.position.y = _mist_sprite_offset_y - lift
+	_mist_sprite.scale = _mist_sprite_scale * Vector2(1.0 + gait * 0.4, 1.0 - gait * 0.38)
+	_mist_sprite.rotation = gait * 0.11
+	if is_instance_valid(_mist_shadow):
+		_mist_shadow.scale = Vector2(1.0 + lift * 0.1, 1.0 - lift * 0.12)
+		_mist_shadow.color.a = 0.34 - lift * 0.018
 
 
 func _on_overlay_qte_finished(key: StringName, success: bool) -> void:
@@ -493,6 +527,19 @@ func _create_mist() -> void:
 	_mist_sprite.scale = Vector2.ONE * ratio
 	_mist_sprite.offset.y = -texture.get_height() * 0.5
 	_mist_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	_mist_sprite_scale = _mist_sprite.scale
+	_mist_sprite_offset_y = _mist_sprite.position.y
+	_mist_shadow = Polygon2D.new()
+	_mist_shadow.name = "GroundShadow"
+	var shadow_points := PackedVector2Array()
+	for point_index in 20:
+		var angle := TAU * float(point_index) / 20.0
+		shadow_points.append(Vector2(cos(angle) * 12.0, sin(angle) * 3.5))
+	_mist_shadow.polygon = shadow_points
+	_mist_shadow.color = Color(0.015, 0.012, 0.025, 0.34)
+	_mist_shadow.position.y = -1.0 * main.player.scale.y
+	_mist_shadow.z_index = -1
+	_mist.add_child(_mist_shadow)
 	_mist.z_index = 30
 	main.stage_view.add_child(_mist)
 	_mist.add_child(_mist_sprite)

@@ -34,13 +34,6 @@
           "path": "res://audio/sfx/翻书.wav"
         },
         {
-          "do": "image",
-          "path": "res://art/props/ch2_fairy_tale_book_first.png",
-          "fade": 0.35,
-          "wait_click": false,
-          "hide": false
-        },
-        {
           "do": "say",
           "lines": [
             {
@@ -56,10 +49,6 @@
               "portrait": "protagonist/quiet"
             }
           ]
-        },
-        {
-          "do": "image_hide",
-          "fade": 0.35
         }
       ],
       "next": "first_complete"
@@ -92,13 +81,6 @@
           "path": "res://audio/sfx/翻书.wav"
         },
         {
-          "do": "image",
-          "path": "res://art/props/ch2_fairy_tale_book_first.png",
-          "fade": 0.35,
-          "wait_click": false,
-          "hide": false
-        },
-        {
           "do": "say",
           "lines": [
             {
@@ -116,19 +98,8 @@
           ]
         },
         {
-          "do": "image_hide",
-          "fade": 0.35
-        },
-        {
           "do": "play_sound",
           "path": "res://audio/sfx/翻书.wav"
-        },
-        {
-          "do": "image",
-          "path": "res://art/props/ch2_fairy_tale_book_second.png",
-          "fade": 0.35,
-          "wait_click": false,
-          "hide": false
         },
         {
           "do": "say",
@@ -140,10 +111,6 @@
               "portrait": "protagonist/shocked"
             }
           ]
-        },
-        {
-          "do": "image_hide",
-          "fade": 0.35
         }
       ],
       "next": "second_complete"

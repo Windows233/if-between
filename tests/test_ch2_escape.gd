@@ -41,9 +41,37 @@ static func run(h: TestHarness) -> void:
 	h.check("退出恢复角色透明度", main.player.modulate.a, 1.0)
 	main.enter_map(&"school_gate", &"from_library", true)
 	h.check("校门逃跑能够启动", main.escape_session.begin("gate"), true)
-	main.player.global_position = main.current_map.spawn_point(&"near_classroom")
+	var classroom_portal: MapDef.Portal = null
+	for portal: MapDef.Portal in main.current_map.portals:
+		if portal.id == &"to_classroom":
+			classroom_portal = portal
+			break
+	h.check("校门地图有教学楼门区", classroom_portal != null, true)
+	if classroom_portal == null:
+		main.queue_free()
+		return
+	var gate_stands := WalkGrid.reachable(main.current_map,
+		main.current_map.spawn_point(&"from_library"))
+	var gate_reachable := false
+	for stand: Vector2 in gate_stands:
+		if classroom_portal.rect.grow(Ch2EscapeSession.EXIT_MARGIN \
+				* main.current_map.player_scale).has_point(stand):
+			gate_reachable = true
+			break
+	h.check("从图书馆出口能走进教学楼门区", gate_reachable, true)
+	var gate_stand := _reachable_portal_stand(main.current_map,
+		classroom_portal, main.current_map.spawn_point(&"from_library"))
+	if gate_stand == Vector2.INF:
+		main.queue_free()
+		return
+	main.player.global_position = gate_stand
 	main.flags.set_value(&"ch2/personal/stealth_started", false)
-	h.check("不隐蔽不能甩开 C 进教室", main.escape_session.try_exit(), false)
+	var gate_path := WalkGrid.path_to(main.current_map,
+		main.current_map.spawn_point(&"from_library"), gate_stand)
+	h.check("从图书馆出口到教学楼门区有完整可走路径",
+		not gate_path.is_empty() and gate_path[-1].distance_to(gate_stand) < 3.0, true)
+	h.check("实际教学楼门区可触发离开检查", main.escape_session._at_escape_exit(), true)
+	h.check("不隐蔽仍不能甩开 C 进教室", main.escape_session.try_exit(), false)
 	var gate_key := InputEventKey.new()
 	gate_key.physical_keycode = KEY_F
 	gate_key.keycode = KEY_F
@@ -61,6 +89,7 @@ static func run(h: TestHarness) -> void:
 	h.check("逃跑不跳过教学楼钥匙检查", main.escape_session.try_exit(), false)
 	main.flags.set_value(&"item/key", 1)
 	h.check("隐蔽且有钥匙才能进入教室", main.escape_session.try_exit(), true)
+	h.check("进入教室前追逐会话已结束", main.escape_session.active, false)
 	main.enter_map(&"library", &"from_school_gate", true)
 	main.player.global_position = Vector2(233, 258)
 	var results: Array[bool] = []
@@ -87,7 +116,7 @@ static func run(h: TestHarness) -> void:
 	main.enter_map(&"classroom", &"from_gate", true)
 	var window: MapDef.Actor
 	for actor: MapDef.Actor in main.current_map.actors:
-		if actor.id == &"classroom_window":
+		if actor.id in [&"classroom_window", &"window"]:
 			window = actor
 	var window_landing := Vector2.ZERO
 	var window_distance := INF
@@ -148,7 +177,19 @@ static func _test_escape_save_retry(h: TestHarness) -> void:
 	main.flags.set_value(&"item/night_tear", 1)
 	main.flags.set_value(&"ch2/library/shelf_fallen", true)
 	main.refresh_scene()
-	main.capture_ch2_checkpoint("escape")
+	h.check("逃跑检查点可以保存", main.capture_ch2_checkpoint("escape"), true)
+	h.check("逃跑检查点记录图书馆开跑场景",
+		String(main.ch2_checkpoints.get("escape", {}).get("map_id", "")), "library")
+	var library_event := DataLoader.load_event(&"ch2_library_cat")
+	var caught_node := library_event.node(&"escape_caught")
+	var caught_image: StageStep = null
+	if caught_node != null:
+		for step: StageStep in caught_node.stage:
+			if step.kind == &"image":
+				caught_image = step
+				break
+	h.check("被C追上时显示全屏CG",
+		caught_image != null and caught_image.flag("fill"), true)
 	var rug_preview := MapDef.Actor.new()
 	rug_preview.rect = Rect2(10.0, 10.0, 20.0, 20.0)
 	rug_preview.sprite = "res://art/props/ch2_box_closed_2.png"
@@ -180,6 +221,7 @@ static func _test_escape_save_retry(h: TestHarness) -> void:
 	h.check("可以选择仅重试这一段", h.pick(main, &"retry_escape"), true)
 	await h.root.get_tree().create_timer(0.8).timeout
 	h.check("重试没有跳过追逐", main.escape_session.active, true)
+	h.check("重试返回图书馆开跑点", main.current_map.id, &"library")
 	h.check("逃跑重试把玩家送回开场位置",
 		main.player.global_position.distance_to(retry_player_start) < 0.1, true)
 	h.check("逃跑重试把C送回开场位置",
@@ -222,7 +264,22 @@ static func _test_escape_gate_unlock(h: TestHarness) -> void:
 	main.flags.set_value(&"item/key", 1)
 	main.flags.set_value(&"ch2/personal/stealth_started", false)
 	main.flags.set_value(&"ch2/personal/stealth_available", false)
-	main.player.global_position = main.current_map.spawn_point(&"near_classroom")
+	var classroom_portal: MapDef.Portal = null
+	for portal: MapDef.Portal in main.current_map.portals:
+		if portal.id == &"to_classroom":
+			classroom_portal = portal
+			break
+	if classroom_portal == null:
+		h.check("校门地图有教学楼门区", false, true)
+		main.queue_free()
+		return
+	var classroom_stand := _reachable_portal_stand(main.current_map,
+		classroom_portal, main.current_map.spawn_point(&"near_classroom"))
+	if classroom_stand == Vector2.INF:
+		h.check("教学楼门区附近存在可走落点", false, true)
+		main.queue_free()
+		return
+	main.player.global_position = classroom_stand
 	h.check("校门段技能未解锁前不能进教室", main.escape_session.begin("gate"), true)
 	h.check("提前到门口仍被追踪拦住", main.escape_session.try_exit(), false)
 	h.check("提前到门口不登记逃脱成功", main.flags.get_value(&"ch2/escape_succeeded"), null)
@@ -241,3 +298,13 @@ static func _test_escape_gate_unlock(h: TestHarness) -> void:
 	h.check("主动F后才能成功离开校门追逐", main.escape_session.try_exit(), true)
 	main.escape_session._finish(false)
 	main.queue_free()
+
+
+static func _reachable_portal_stand(map: MapDef, portal: MapDef.Portal,
+		origin: Vector2) -> Vector2:
+	var margin := Ch2EscapeSession.EXIT_MARGIN * map.player_scale
+	var target_area := portal.rect.grow(margin)
+	for stand: Vector2 in WalkGrid.reachable(map, origin):
+		if target_area.has_point(stand):
+			return stand
+	return Vector2.INF

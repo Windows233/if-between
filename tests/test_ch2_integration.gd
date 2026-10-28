@@ -15,6 +15,7 @@ static func run(harness: TestHarness) -> void:
 	_test_events_and_maps(harness)
 	_test_assets(harness)
 	await _test_bugfixes(harness)
+	await _test_fairy_tale_and_shelf_animation(harness)
 	await _test_save_and_caption(harness)
 
 
@@ -33,6 +34,18 @@ static func _test_bugfixes(h: TestHarness) -> void:
 		h.check("追逐猫视觉贴图已加载", mist_sprite != null and mist_sprite.texture != null, true)
 		h.check("追逐猫碰撞体只检测场景障碍", mist.collision_layer, 0)
 		h.check("追逐猫碰撞体检测场景墙体", mist.collision_mask, 1)
+		var cat_lift_min := INF
+		var cat_lift_max := -INF
+		var cat_scale_min := INF
+		var cat_scale_max := -INF
+		for _pose: int in 8:
+			main.chase_session._animate_mist(1.0 / Player.WALK_FPS, Vector2.RIGHT)
+			cat_lift_min = minf(cat_lift_min, mist_sprite.position.y)
+			cat_lift_max = maxf(cat_lift_max, mist_sprite.position.y)
+			cat_scale_min = minf(cat_scale_min, mist_sprite.scale.y)
+			cat_scale_max = maxf(cat_scale_max, mist_sprite.scale.y)
+		h.check("黑猫追逐动画按8FPS有明显腾跃", cat_lift_max - cat_lift_min > 3.0, true)
+		h.check("黑猫追逐动画包含伸缩变化", cat_scale_max - cat_scale_min > 0.05, true)
 		h.check("追逐猫从可站立位置开始", WalkGrid.is_free(
 		main.current_map, mist.global_position), true)
 		var start_distance: float = main.player.global_position.distance_to(mist.global_position)
@@ -72,6 +85,14 @@ static func _test_bugfixes(h: TestHarness) -> void:
 			h.check("救援C淡入后可见", c_actor.modulate.a, 1.0)
 		main.cutscene.clear_actors()
 	main.chase_session.cancel()
+	h.check("救援测试可重新启动追逐", main.chase_session.begin(), true)
+	main.chase_session._rescue_pending = true
+	var rescue_arrived: bool = await main.chase_session.wait_for_arrival()
+	h.check("救援分支不等待玩家抵达门口", rescue_arrived, false)
+	h.check("救援分支写入救援状态", main.flags.get_value(&"ch2/chase_rescued"), true)
+	h.check("进入救援剧情前已结束追逐会话", main.chase_session.active, false)
+	h.check("进入救援剧情前已清除门口等待", main.chase_session._awaiting_door, false)
+	main.chase_session.cancel()
 	var chase_event := DataLoader.load_event(&"ch2_diary", DataLoader.load_endings().ids())
 	var q1 := _node(chase_event, &"run_q1")
 	var q2 := _node(chase_event, &"run_q2")
@@ -93,6 +114,25 @@ static func _test_bugfixes(h: TestHarness) -> void:
 	var rescue := _node(chase_event, &"c_door_cover")
 	h.check("C救援按当前主角位置和推动方向出场",
 		rescue.stage[0].kind, &"ch2_chase_rescue_appear")
+	h.check("C救援对白后进入图书馆入场演出", rescue.next_id, &"library_enter")
+	var library_enter := _node(chase_event, &"library_enter")
+	var library_state := _node(chase_event, &"library_state")
+	var fade_to_black := -1
+	var library_goto := -1
+	var fade_to_clear := -1
+	for index: int in library_enter.stage.size():
+		var step: StageStep = library_enter.stage[index]
+		if step.kind == &"fade" and step.text("to") == "black":
+			fade_to_black = index
+		elif step.kind == &"goto" and step.text("map") == "library":
+			library_goto = index
+	if library_state != null and not library_state.stage.is_empty():
+		var reveal := library_state.stage[0]
+		if reveal.kind == &"fade" and reveal.text("to") == "clear":
+			fade_to_clear = 0
+	h.check("救援入馆先黑屏再切到图书馆并揭幕",
+		fade_to_black >= 0 and fade_to_black < library_goto \
+		and library_goto >= 0 and fade_to_clear >= 0, true)
 	# 正式入馆演出，再不调查直接往返；恢复应与初次入馆完全一致。
 	main.start_story(&"ch2_diary", &"library_enter")
 	var original: Array = main.cutscene.snapshot_actors()
@@ -139,6 +179,66 @@ static func _test_bugfixes(h: TestHarness) -> void:
 	h.check("无独立贴图时不从地图背景伪造近景", main.object_preview.content, null)
 	main.enter_map(&"school_gate", &"from_library")
 	h.check("换图时清理物件近景", main.object_preview.content, null)
+	main.queue_free()
+
+
+static func _test_fairy_tale_and_shelf_animation(h: TestHarness) -> void:
+	var shelf_event := DataLoader.load_event(&"ch2_library_shelf")
+	for node_id: StringName in [&"first", &"second"]:
+		var node := shelf_event.node(node_id)
+		var has_book_image := false
+		if node != null:
+			for step: StageStep in node.stage:
+				has_book_image = has_book_image or step.kind in [&"image", &"image_hide"]
+		h.check("童话书 %s 以对白和翻页音效呈现、不叠书页大图" % node_id,
+			has_book_image, false)
+	var cat_event := DataLoader.load_event(&"ch2_library_cat")
+	var approach := cat_event.node(&"approach")
+	var second_scene := cat_event.node(&"second_scene")
+	var c_faces_rug := false
+	var c_restored := false
+	if approach != null:
+		for step: StageStep in approach.stage:
+			if step.kind == &"npc_pose" and step.text("id") == "c" \
+					and step.has("flip") and not step.flag("flip"):
+				c_faces_rug = true
+	if second_scene != null:
+		for step: StageStep in second_scene.stage:
+			if step.kind != &"npc" or step.text("id") != "c":
+				continue
+			var actor_at: Array = step.data.get("at", [])
+			c_restored = actor_at.size() == 2 \
+				and is_equal_approx(float(actor_at[0]), 274.0) \
+				and is_equal_approx(float(actor_at[1]), 210.0)
+	h.check("地毯场景中的C面向地毯", c_faces_rug, true)
+	h.check("回溯地毯场景会恢复C的原位置", c_restored, true)
+
+	var main := h.new_main()
+	main.enter_map(&"library", &"from_school_gate", true)
+	main.flags.set_value(&"ch2/library/shelf_fallen", true)
+	main.refresh_scene()
+	var barrier: MapDef.Actor = null
+	for actor: MapDef.Actor in main.current_map.actors:
+		if actor.id == &"escape_shelf_barrier":
+			barrier = actor
+			break
+	h.check("撬棍倒架动画有正式物件承接", barrier != null and barrier.sprite_variants.has("fallen"), true)
+	var animation_step := StageStep.from_dictionary({
+		"do": "map_actor_animation",
+		"actor": "escape_shelf_barrier",
+		"path": "res://art/props/library_shelf_fall_sheet.png",
+		"frames": 10,
+		"columns": 5,
+		"frame_time": 0.01,
+		"final_variant": "fallen",
+	})
+	await main.cutscene._perform(animation_step)
+	h.check("撬棍剧情实际播放倒架序列并切到fallen",
+		barrier != null and barrier.sprite_variant == "fallen", true)
+	var sprite := main.map_view._actor_variant_nodes.get(&"escape_shelf_barrier") as Sprite2D
+	h.check("倒架动画结束后保留静态倒地贴图",
+		sprite != null and sprite.texture != null \
+			and barrier != null and barrier.sprite_variant == "fallen", true)
 	main.queue_free()
 
 
@@ -247,6 +347,29 @@ static func _test_events_and_maps(harness: TestHarness) -> void:
 			harness.check(str(binding[0]) + " 剧情动作已绑定", actor.interactions.size(), 1)
 			harness.check(str(binding[0]) + " 绑定正确剧情",
 				actor.interactions[0].event_id, binding[1])
+	var classroom_window := _node(StoryEvent.from_dictionary(
+		_json("res://data/events/ch2_classroom_window.json")), &"throw")
+	var throw_has_center_image := false
+	var throw_has_coin_sound := false
+	for step: StageStep in classroom_window.stage:
+		throw_has_center_image = throw_has_center_image or step.kind == &"image"
+		throw_has_coin_sound = throw_has_coin_sound or (step.kind == &"play_sound" \
+			and step.text("path") == "res://audio/sfx/coin_throw.wav")
+	harness.check("抛币演出不显示居中图片并播放抛币音效",
+		not throw_has_center_image and throw_has_coin_sound, true)
+	var window_main := harness.new_main()
+	window_main.enter_map(&"classroom", &"from_gate", true)
+	var window_actor := MapDef.Actor.new()
+	window_actor.id = &"window"
+	window_main.begin_interaction(window_actor)
+	harness.check("当前窗户物件ID触发抛币剧情",
+		window_main.story.event_id, &"ch2_classroom_window")
+	window_main.story.cancel()
+	window_main.flags.set_value(&"ch2/window_marker_active", true)
+	window_main.refresh_scene()
+	harness.check("窗户提示标记适配当前window物件ID",
+		window_main.map_view._actor_markers.has(&"window"), true)
+	window_main.queue_free()
 	var swing_actor: Dictionary = {}
 	for actor: Dictionary in yard.get("actors", []):
 		if actor.get("id", "") == "swing":

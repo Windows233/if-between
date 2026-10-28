@@ -1938,7 +1938,8 @@ func can_save() -> bool:
 ## 存的是「当前全部状态」：场景、坐标、朝向、剧情进度、世界状态、结局进度。
 ## 读档要回到玩家离开的那一刻，不是把他丢回场景开头。
 func capture_ch2_checkpoint(checkpoint_id: String) -> bool:
-	if checkpoint_id not in ["rescue", "chase", "route"] or current_map == null or player == null:
+	if checkpoint_id not in ["rescue", "chase", "route", "escape"] \
+			or current_map == null or player == null:
 		return false
 	var saved_flags := flags.snapshot().duplicate(true)
 	saved_flags.erase(StringName("ch2/retry_checkpoint/" + checkpoint_id))

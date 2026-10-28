@@ -76,7 +76,8 @@
         {
           "do": "npc_pose",
           "id": "c",
-          "pose": "side"
+          "pose": "side",
+          "flip": false
         },
         {
           "do": "map_actor_alpha",
@@ -101,6 +102,17 @@
     {
       "id": "approach_talk",
       "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "中央地毯上的猫抬起头，C停在它身边。",
+              "side": "left",
+              "portrait": "protagonist/thinking"
+            }
+          ]
+        },
         {
           "do": "say",
           "lines": [
@@ -600,6 +612,35 @@
     {
       "id": "second_scene",
       "stage": [
+        {
+          "do": "npc",
+          "id": "c",
+          "sprite": "res://art/npc/c",
+          "at": [
+            274,
+            210
+          ],
+          "height": 45,
+          "z": 12,
+          "pose": "side"
+        },
+        {
+          "do": "npc_pose",
+          "id": "c",
+          "pose": "side",
+          "flip": false
+        },
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "我",
+              "text": "我再次走近中央地毯。C站在一旁，等我开口。",
+              "side": "left",
+              "portrait": "protagonist/thinking"
+            }
+          ]
+        },
         {
           "do": "say",
           "lines": [
@@ -1403,6 +1444,7 @@
           "do": "image",
           "path": "res://art/cg/ch2_end6_guilt.png",
           "fade": 0.2,
+          "fill": true,
           "wait_click": false,
           "hide": false
         },

@@ -4,6 +4,8 @@
 class_name Ch2EscapeSession
 extends Node
 
+const EXIT_MARGIN := 40.0
+
 signal resolved(success: bool)
 
 var main: Variant
@@ -107,8 +109,7 @@ func activate_stealth() -> bool:
 func try_exit() -> bool:
 	if not active:
 		return false
-	var target: Vector2 = main.current_map.spawn_point(&"from_school_gate" if phase == "library" else &"near_classroom")
-	if main.player.global_position.distance_to(target) > 18.0 * main.current_map.player_scale:
+	if not _at_escape_exit():
 		return false
 	if phase == "gate":
 		if main.flags.get_value(&"ch2/personal/stealth_available") != true:
@@ -124,6 +125,16 @@ func try_exit() -> bool:
 			return false
 	_finish(true)
 	return true
+
+
+func _at_escape_exit() -> bool:
+	var portal_id: StringName = &"to_school_gate" if phase == "library" else &"to_classroom"
+	for portal: MapDef.Portal in main.current_map.portals:
+		if portal.id != portal_id:
+			continue
+		var margin: float = EXIT_MARGIN * main.current_map.player_scale
+		return portal.rect.grow(margin).has_point(main.player.global_position)
+	return false
 
 
 func cancel() -> void:

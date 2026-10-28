@@ -420,6 +420,14 @@
           ]
         },
         {
+          "do": "image",
+          "path": "res://art/cg/ch2_epilogue.png",
+          "fade": 0.45,
+          "fill": true,
+          "wait_click": false,
+          "hide": false
+        },
+        {
           "do": "caption",
           "fade": 0.8,
           "wait_click": true,
@@ -433,6 +441,10 @@
               "size": 14
             }
           ]
+        },
+        {
+          "do": "image_hide",
+          "fade": 0.45
         }
       ],
       "ending": "end7_rewritten"
