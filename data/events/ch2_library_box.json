@@ -21,23 +21,9 @@
       "next": "locked",
       "next_when": {
         "if": {
-          "all": [
-            {
-              "var": "ch2/library/rewound",
-              "op": "==",
-              "value": true
-            },
-            {
-              "var": "ch2/library/blood_second_seen",
-              "op": "==",
-              "value": true
-            },
-            {
-              "var": "ch2/library/fairy_tale_second",
-              "op": "==",
-              "value": true
-            }
-          ]
+          "var": "ch2/library/rewound",
+          "op": "==",
+          "value": true
         },
         "next": "open"
       }

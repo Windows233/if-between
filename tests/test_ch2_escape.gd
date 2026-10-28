@@ -72,7 +72,8 @@ static func run(h: TestHarness) -> void:
 	h.check("从图书馆出口到教学楼门区有完整可走路径",
 		not gate_path.is_empty() and gate_path[-1].distance_to(gate_stand) < 3.0, true)
 	h.check("实际教学楼门区可触发离开检查", main.escape_session._at_escape_exit(), true)
-	h.check("不隐蔽仍不能甩开 C 进教室", main.escape_session.try_exit(), false)
+	h.check("有钥匙时不使用夜幕之泪也能进教室", main.escape_session.try_exit(), true)
+	h.check("进门后可重新启动隐蔽专项", main.escape_session.begin("gate"), true)
 	var gate_key := InputEventKey.new()
 	gate_key.physical_keycode = KEY_F
 	gate_key.keycode = KEY_F
@@ -89,7 +90,7 @@ static func run(h: TestHarness) -> void:
 	main.flags.set_value(&"item/key", 0)
 	h.check("逃跑不跳过教学楼钥匙检查", main.escape_session.try_exit(), false)
 	main.flags.set_value(&"item/key", 1)
-	h.check("隐蔽且有钥匙才能进入教室", main.escape_session.try_exit(), true)
+	h.check("隐蔽加钥匙同样能进教室", main.escape_session.try_exit(), true)
 	h.check("进入教室前追逐会话已结束", main.escape_session.active, false)
 	main.enter_map(&"library", &"from_school_gate", true)
 	main.player.global_position = Vector2(233, 258)
@@ -281,22 +282,23 @@ static func _test_escape_gate_unlock(h: TestHarness) -> void:
 		main.queue_free()
 		return
 	main.player.global_position = classroom_stand
-	h.check("校门段技能未解锁前不能进教室", main.escape_session.begin("gate"), true)
-	h.check("提前到门口仍被追踪拦住", main.escape_session.try_exit(), false)
-	h.check("提前到门口不登记逃脱成功", main.flags.get_value(&"ch2/escape_succeeded"), null)
+	h.check("技能未解锁也可启动校门追逐", main.escape_session.begin("gate"), true)
+	h.check("技能未解锁也可直接进教学楼", main.escape_session.try_exit(), true)
+	h.check("直接进门结束本段追逐", main.escape_session.active, false)
 	main.escape_session._finish(false)
 	main.flags.set_value(&"ch2/personal/stealth_available", true)
 	main.flags.set_value(&"ch2/personal/stealth_started", false)
-	h.check("技能解锁后门口仍需主动F", main.escape_session.begin("gate"), true)
+	h.check("技能解锁后可选择是否隐蔽", main.escape_session.begin("gate"), true)
 	h.check("F测试时校门追逐仍激活", main.escape_session.active, true)
 	h.check("F测试时阶段为校门", main.escape_session.phase, "gate")
 	h.check("F测试时隐蔽能力已解锁",
 		main.flags.get_value(&"ch2/personal/stealth_available"), true)
-	h.check("解锁后尚未F仍不能进教室", main.escape_session.try_exit(), false)
-	h.check("未F时不会登记成功", main.flags.get_value(&"ch2/escape_succeeded"), null)
+	h.check("解锁后未按F也可进门", main.escape_session.try_exit(), true)
+	h.check("重新启动后仍能选择F隐蔽", main.escape_session.begin("gate"), true)
+	h.check("手动会话只返回离开结果，由剧情登记成功", main.flags.get_value(&"ch2/escape_succeeded"), null)
 	h.check("解锁后逃跑中可主动F隐蔽", main.escape_session.activate_stealth(), true)
 	h.check("按F后角色获得隐蔽透明度", main.player.modulate.a < 0.6, true)
-	h.check("主动F后才能成功离开校门追逐", main.escape_session.try_exit(), true)
+	h.check("主动F后同样成功离开校门追逐", main.escape_session.try_exit(), true)
 	main.escape_session._finish(false)
 	main.queue_free()
 

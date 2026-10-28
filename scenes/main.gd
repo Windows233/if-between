@@ -616,6 +616,7 @@ func play_map_actor_animation(actor_id: StringName, path: String,
 	_shelf_camera_zoom = 0.0
 	if current_map != null and current_map.id == &"library" \
 			and actor_id == &"escape_shelf_barrier":
+		flags.set_value(&"ch2/library/shelf_fallen", true)
 		camera_focus = previous_focus
 		update_camera()
 		preload("res://scenes/library_visuals.gd").prepare(current_map, flags)
@@ -1172,7 +1173,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if chase_session != null and chase_session.awaiting_door_interaction() \
 			and event is InputEventKey:
 		var door_key := event as InputEventKey
-		if door_key.pressed and not door_key.echo and door_key.physical_keycode == KEY_SPACE:
+		if door_key.pressed and not door_key.echo and InputUtil.keycode_of(door_key) in [KEY_E, KEY_SPACE]:
 			chase_session.confirm_door_interaction()
 			return
 
@@ -1480,7 +1481,11 @@ func begin_interaction(actor: MapDef.Actor) -> void:
 	if actor == null:
 		return
 	if object_preview != null:
-		object_preview.show_actor(actor, current_map)
+		if actor.id in [&"window", &"classroom_window"] \
+				or (current_map.id == &"library" and actor.id == &"shelf_a"):
+			object_preview.clear()
+		else:
+			object_preview.show_actor(actor, current_map)
 	if current_map.id == &"gatehouse" and actor.id == &"desk":
 		start_story(&"ch2_register")
 		return
@@ -1547,6 +1552,11 @@ func _apply_effects(effects: Dictionary) -> void:
 ## 读文件是 `DataLoader` 的事，推进是导演的事，这里只把两头接上。
 func start_story(event_id: StringName, resume_node_id: StringName = &"",
 		resume_step: int = 0, resume_spoke: bool = false) -> void:
+	if event_id == &"ch2_library_cat":
+		_clear_player_motion_state()
+		player.velocity = Vector2.ZERO
+		if object_preview != null:
+			object_preview.clear()
 	# 记下「这段剧情发生过」。存档带着它走，读档之后不会当成没发生过。
 	flags.set_value(StringName("seen/" + str(event_id)), true)
 	story.start(DataLoader.load_event(event_id, endings.ids()), flags,

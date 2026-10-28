@@ -30,6 +30,13 @@
           ]
         },
         {
+          "do": "image",
+          "path": "res://art/props/ch2_fairy_tale_book_first.png",
+          "fade": 0.2,
+          "wait_click": false,
+          "hide": false
+        },
+        {
           "do": "play_sound",
           "path": "res://audio/sfx/翻书.wav"
         },
@@ -39,16 +46,18 @@
             {
               "speaker": "童话书",
               "text": "从前有一只猫，它的主人走了。猫一直在等。",
-              "side": "left",
-              "portrait": "protagonist/quiet"
+              "side": "none"
             },
             {
               "speaker": "童话书",
               "text": "猫一直在等，等等啊，等等",
-              "side": "left",
-              "portrait": "protagonist/quiet"
+              "side": "none"
             }
           ]
+        },
+        {
+          "do": "image_hide",
+          "fade": 0.15
         }
       ],
       "next": "first_complete"
@@ -77,6 +86,13 @@
       "id": "second",
       "stage": [
         {
+          "do": "image",
+          "path": "res://art/props/ch2_fairy_tale_book_first.png",
+          "fade": 0.2,
+          "wait_click": false,
+          "hide": false
+        },
+        {
           "do": "play_sound",
           "path": "res://audio/sfx/翻书.wav"
         },
@@ -86,14 +102,12 @@
             {
               "speaker": "童话书",
               "text": "从前有一只猫，它的主人走了。猫一直在等。",
-              "side": "left",
-              "portrait": "protagonist/quiet"
+              "side": "none"
             },
             {
               "speaker": "童话书",
               "text": "猫一直在等，等等啊，等等",
-              "side": "left",
-              "portrait": "protagonist/quiet"
+              "side": "none"
             }
           ]
         },
@@ -102,15 +116,25 @@
           "path": "res://audio/sfx/翻书.wav"
         },
         {
+          "do": "image",
+          "path": "res://art/props/ch2_fairy_tale_book_second.png",
+          "fade": 0.2,
+          "wait_click": false,
+          "hide": false
+        },
+        {
           "do": "say",
           "lines": [
             {
               "speaker": "童话书",
               "text": "你看，你等的人终会背叛你",
-              "side": "left",
-              "portrait": "protagonist/shocked"
+              "side": "none"
             }
           ]
+        },
+        {
+          "do": "image_hide",
+          "fade": 0.15
         }
       ],
       "next": "second_complete"

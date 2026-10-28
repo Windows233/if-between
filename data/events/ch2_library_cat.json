@@ -19,47 +19,17 @@
       "id": "approach",
       "stage": [
         {
-          "do": "focus",
-          "at": [
-            233,
-            210
-          ]
-        },
-        {
-          "do": "fade",
-          "to": "black",
-          "time": 0.25
-        },
-        {
-          "do": "place_player",
-          "at": [
-            251,
-            296
-          ],
-          "facing": [
-            -1,
-            0
-          ]
-        },
-        {
-          "do": "fade",
-          "to": "clear",
-          "time": 0.25
-        },
-        {
-          "do": "map_actor_alpha",
-          "actor": "library_cat_visual",
-          "alpha": 0.5,
-          "time": 0.25
+          "do": "focus"
         },
         {
           "do": "npc",
           "id": "c",
           "sprite": "res://art/npc/c",
           "at": [
-            210,
-            210
+            251,
+            296
           ],
+          "library_role": "entry_c",
           "height": 45,
           "z": 12,
           "pose": "side"
@@ -71,30 +41,14 @@
             274,
             210
           ],
-          "time": 0.8
+          "library_role": "carpet_c",
+          "time": 1.4
         },
         {
           "do": "npc_pose",
           "id": "c",
           "pose": "side",
           "flip": false
-        },
-        {
-          "do": "map_actor_alpha",
-          "actor": "library_cat_visual",
-          "alpha": 1.0,
-          "time": 0.2
-        },
-        {
-          "do": "place_player",
-          "at": [
-            251,
-            296
-          ],
-          "facing": [
-            -1,
-            0
-          ]
         }
       ],
       "next": "approach_talk"
@@ -251,7 +205,8 @@
             {
               "speaker": "猫",
               "text": "！是你",
-              "side": "right"
+              "side": "right",
+              "portrait": "res://art/props/library_cat_cover.png"
             },
             {
               "speaker": "我",
@@ -262,7 +217,8 @@
             {
               "speaker": "猫",
               "text": "......喵",
-              "side": "right"
+              "side": "right",
+              "portrait": "res://art/props/library_cat_cover.png"
             }
           ]
         }
@@ -613,71 +569,16 @@
       "id": "second_scene",
       "stage": [
         {
-          "do": "npc",
-          "id": "c",
-          "sprite": "res://art/npc/c",
-          "at": [
-            274,
-            210
-          ],
-          "height": 45,
-          "z": 12,
-          "pose": "side"
-        },
-        {
-          "do": "npc_pose",
-          "id": "c",
-          "pose": "side",
-          "flip": false
+          "do": "focus"
         },
         {
           "do": "say",
           "lines": [
-            {
-              "speaker": "我",
-              "text": "我再次走近中央地毯。C站在一旁，等我开口。",
-              "side": "left",
-              "portrait": "protagonist/thinking"
-            }
-          ]
-        },
-        {
-          "do": "say",
-          "lines": [
-            {
-              "speaker": "C",
-              "text": "（呢喃）不愧是“夜幕之泪”啊",
-              "side": "right",
-              "portrait": "c/neutral"
-            },
-            {
-              "speaker": "我",
-              "text": "原来在这时候就不对劲了吗",
-              "side": "left",
-              "portrait": "protagonist/thinking"
-            },
-            {
-              "speaker": "C",
-              "text": "你来试试吧，我不用武力的话这猫看起来不会乖呢 ^ ^",
-              "side": "right",
-              "portrait": "c/neutral"
-            },
-            {
-              "speaker": "我",
-              "text": "（翻白眼）",
-              "side": "left",
-              "portrait": "protagonist/guarded"
-            },
-            {
-              "speaker": "我",
-              "text": "好",
-              "side": "left",
-              "portrait": "protagonist/quiet"
-            },
             {
               "speaker": "猫",
               "text": "是你...怎么又回来了？",
-              "side": "right"
+              "side": "right",
+              "portrait": "res://art/props/library_cat_cover.png"
             },
             {
               "speaker": "我",
@@ -688,37 +589,44 @@
             {
               "speaker": "猫",
               "text": "主人说过她会回来看我的，所以只要明天不到来，今天就永远是昨天",
-              "side": "right"
+              "side": "right",
+              "portrait": "res://art/props/library_cat_cover.png"
             },
             {
               "speaker": "猫",
               "text": "现在喵回来了，我又怎么会忘记任何",
-              "side": "right"
+              "side": "right",
+              "portrait": "res://art/props/library_cat_cover.png"
             },
             {
               "speaker": "猫",
               "text": "好啦好啦，本喵是这个蚀界的核心，喵当然知道这个时间锚里发生的所有事情",
-              "side": "right"
+              "side": "right",
+              "portrait": "res://art/props/library_cat_cover.png"
             },
             {
               "speaker": "猫",
               "text": "等你们带着结晶出去，没有能量维系，这里自然喵会消散",
-              "side": "right"
+              "side": "right",
+              "portrait": "res://art/props/library_cat_cover.png"
             },
             {
               "speaker": "猫",
               "text": "而你，你的能力是回溯吧喵，你的血液里带着时间的种子",
-              "side": "right"
+              "side": "right",
+              "portrait": "res://art/props/library_cat_cover.png"
             },
             {
               "speaker": "猫",
               "text": "你看那里的血迹，你既处于现在的喵，也处于过去的喵",
-              "side": "right"
+              "side": "right",
+              "portrait": "res://art/props/library_cat_cover.png"
             },
             {
               "speaker": "猫",
               "text": "因果可以说都凝聚在你身上，知道自己其实是个天赋怪吗喵喵",
-              "side": "right"
+              "side": "right",
+              "portrait": "res://art/props/library_cat_cover.png"
             },
             {
               "speaker": "我",
@@ -735,12 +643,14 @@
             {
               "speaker": "猫",
               "text": "本喵怎么会说人话呢嘻嘻",
-              "side": "right"
+              "side": "right",
+              "portrait": "res://art/props/library_cat_cover.png"
             },
             {
               "speaker": "猫",
               "text": "算了，我和你说那么多干什么",
-              "side": "right"
+              "side": "right",
+              "portrait": "res://art/props/library_cat_cover.png"
             },
             {
               "speaker": "我",
@@ -757,27 +667,32 @@
             {
               "speaker": "猫",
               "text": "蚀界产生的结晶内含有巨大的能量，这个C是告诉过你了喵",
-              "side": "right"
+              "side": "right",
+              "portrait": "res://art/props/library_cat_cover.png"
             },
             {
               "speaker": "猫",
               "text": "但他没告诉你喵，达到一定品质的结晶会带有特殊的能力",
-              "side": "right"
+              "side": "right",
+              "portrait": "res://art/props/library_cat_cover.png"
             },
             {
               "speaker": "猫",
               "text": "品质越高，其相对能力喵也越强",
-              "side": "right"
+              "side": "right",
+              "portrait": "res://art/props/library_cat_cover.png"
             },
             {
               "speaker": "猫",
               "text": "而且喵，能力者的天赋，决定了ta在蚀界内获得结晶品质的上限",
-              "side": "right"
+              "side": "right",
+              "portrait": "res://art/props/library_cat_cover.png"
             },
             {
               "speaker": "猫",
               "text": "那么现在你再看看你，其实你自己就是个宝贝啊喵喵喵",
-              "side": "right"
+              "side": "right",
+              "portrait": "res://art/props/library_cat_cover.png"
             },
             {
               "speaker": "我",
@@ -800,7 +715,8 @@
             {
               "speaker": "猫",
               "text": "这就要你自己决定了喵，你该走了，你在这待的时间太长了喵",
-              "side": "right"
+              "side": "right",
+              "portrait": "res://art/props/library_cat_cover.png"
             },
             {
               "speaker": "我",
@@ -820,6 +736,22 @@
           "do": "map_actor_variant",
           "actor": "library_cat_visual",
           "variant": "hidden"
+        },
+        {
+          "do": "npc_move",
+          "id": "c",
+          "to": [
+            274,
+            210
+          ],
+          "library_role": "carpet_c",
+          "time": 1.4
+        },
+        {
+          "do": "npc_pose",
+          "id": "c",
+          "pose": "side",
+          "flip": false
         }
       ],
       "next": "second_cat_disappear_commit"
@@ -1051,21 +983,12 @@
           "fade": 0.15
         }
       ],
-      "next": "crowbar_missing",
-      "next_when": {
-        "if": {
-          "var": "item/crowbar",
-          "op": ">=",
-          "value": 1
-        },
-        "next": "crowbar_used"
-      }
+      "next": "crowbar_used"
     },
     {
       "id": "crowbar_used",
       "set": {
-        "ch2/personal/crowbar_used": true,
-        "ch2/library/shelf_fallen": true
+        "ch2/personal/shelf_pushed": true
       },
       "stage": [
         {
@@ -1084,9 +1007,20 @@
               "portrait": "protagonist/guarded"
             },
             {
-              "text": "你用早已准备好的撬棍掀倒书架，挡住了 C 的去路。"
+              "text": "主角用力推向身旁的书架，挡住 C 的去路。"
             }
           ]
+        },
+        {
+          "do": "place_player",
+          "library_escape": true,
+          "time": 1.2,
+          "facing": "up",
+          "at": [
+            233,
+            296
+          ],
+          "c_pursuit": true
         },
         {
           "do": "map_actor_animation",
@@ -1096,49 +1030,14 @@
           "columns": 5,
           "frame_time": 0.18,
           "final_variant": "fallen"
-        },
-        {
-          "do": "say",
-          "lines": [
-            {
-              "speaker": "C",
-              "text": "咳咳咳，可恶",
-              "side": "right",
-              "portrait": "c/neutral"
-            },
-            {
-              "speaker": "C",
-              "text": "看来这场游戏要尽早结束了",
-              "side": "right",
-              "portrait": "c/neutral"
-            }
-          ]
         }
       ],
-      "next": "escape_prepare"
+      "next": "shelf_landed"
     },
     {
       "id": "crowbar_missing",
-      "stage": [
-        {
-          "do": "say",
-          "lines": [
-            {
-              "speaker": "我",
-              "text": "手边没有撬棍，书架纹丝不动。",
-              "side": "left",
-              "portrait": "protagonist/guarded"
-            },
-            {
-              "speaker": "C",
-              "text": "我倒要看看你还能躲到哪里去呢",
-              "side": "right",
-              "portrait": "c/neutral"
-            }
-          ]
-        }
-      ],
-      "next": "escape_prepare"
+      "stage": [],
+      "next": "crowbar_used"
     },
     {
       "id": "stealth_escape",
@@ -1319,7 +1218,7 @@
         },
         {
           "do": "say",
-          "text": "C 正绕过书架逼近。先向下逃出图书馆，再绕过喷泉回到教学楼。\nWASD 移动；靠近教学楼门按 E。\n脱身后还要设法甩开追踪。"
+          "text": "C 正绕过书架逼近。先从门口逃出图书馆，再绕过喷泉到教学楼。\nWASD 移动，靠近出口按 E 或空格。\n夜幕之泪可以帮助隐蔽，也可以直接跑向教学楼。"
         },
         {
           "do": "ch2_checkpoint_save",
@@ -1553,6 +1452,32 @@
         }
       ],
       "ending": "end6_sin"
+    },
+    {
+      "id": "shelf_landed",
+      "set": {
+        "ch2/library/shelf_fallen": true
+      },
+      "stage": [
+        {
+          "do": "say",
+          "lines": [
+            {
+              "speaker": "C",
+              "text": "咳咳咳，可恶",
+              "side": "right",
+              "portrait": "c/neutral"
+            },
+            {
+              "speaker": "C",
+              "text": "看来这场游戏要尽早结束了",
+              "side": "right",
+              "portrait": "c/neutral"
+            }
+          ]
+        }
+      ],
+      "next": "escape_prepare"
     }
   ]
 }

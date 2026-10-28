@@ -367,9 +367,9 @@ static func test_map_bindings(h: TestHarness) -> void:
 				break
 		h.check("从图书馆入口可达且能选中盒子的站位", box_reachable, true)
 		h.check("首遍线索未调查时猫事件锁定", cat.is_active(flags), false)
-		flags.set_value(&"ch2/library/blood_seen", true)
+		flags.set_value(&"ch2/library/blood_seen", false)
 		flags.set_value(&"ch2/library/shelf_seen", true)
-		h.check("首遍血迹和书架调查后开放猫事件", cat.is_active(flags), true)
+		h.check("首遍只读书架、不查血迹也开放猫事件", cat.is_active(flags), true)
 		var cat_event := DataLoader.load_event(&"ch2_library_cat", DataLoader.load_endings().ids())
 		var cat_select := cat_event.node(&"first_item_select")
 		h.check("媒介选择不提前扣日记", ItemTable.count_of(flags, &"diary"), 0)
@@ -395,11 +395,10 @@ static func test_map_bindings(h: TestHarness) -> void:
 		h.check("图层复位到不透明", library_view.set_actor_alpha(&"library_cat_visual", 1.0), true)
 		h.check("猫透明度复位为1", cat_sprite != null and is_equal_approx(cat_sprite.modulate.a, 1.0), true)
 		var approach_event := cat_event.node(&"approach")
-		var approach_uses_alpha := false
+		var walks_up := false
 		for step: StageStep in approach_event.stage:
-			if step.kind == &"map_actor_alpha" and is_equal_approx(step.number("alpha"), 0.5):
-				approach_uses_alpha = true
-		h.check("C穿猫虚影演出触发50%图层Alpha", approach_uses_alpha, true)
+			walks_up = walks_up or (step.kind == &"npc_move" and step.text("library_role") == "carpet_c")
+		h.check("C从下方向地毯走入后开口", walks_up, true)
 		flags.set_value(&"ch2/library/first_betrayal", true)
 		flags.set_value(&"ch2/library/rewound", true)
 		h.check("回溯后盒子未开时锁定猫事件", cat.is_active(flags), false)

@@ -29,6 +29,7 @@ static func prepare(def: MapDef, flags: WorldState) -> void:
 			actor.collisions.clear()
 			continue
 		# 倒塌物件的矩形由编辑器指定，不能用旧坐标覆盖用户落点。
+		actor.sprite_variants["fallen"] = preload("res://scenes/library_shelf_fall.gd").FALLEN_PATH
 		actor.sprite_variant = "fallen" if fallen else "hidden"
 		actor.draw_layer = "map_top_under_player"
 		actor.has_local_collision = fallen

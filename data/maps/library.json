@@ -22,9 +22,9 @@
       "line": "书柜。",
       "reach_local": [
         0,
-        0,
-        35.4709201388889,
-        79.7082429501085
+        66.0715866088867,
+        35.4709205627441,
+        35
       ],
       "rect": [
         114.013671875,
@@ -50,9 +50,9 @@
       "line": "书柜。",
       "reach_local": [
         0,
-        0,
-        35.4709201388889,
-        78.9983731019523
+        53.5645370483398,
+        35.4709205627441,
+        45
       ],
       "rect": [
         317.515407986111,
@@ -78,9 +78,9 @@
       "line": "书柜。",
       "reach_local": [
         0,
-        0,
-        35.8763020833333,
-        78.9983731019523
+        44.9040069580078,
+        35.8763008117676,
+        34.0943603515625
       ],
       "rect": [
         114.013671875,
@@ -106,9 +106,9 @@
       "line": "书柜。",
       "reach_local": [
         0,
-        0,
-        35.7749565972222,
-        78.1870932754881
+        43.0927276611328,
+        35.7749557495117,
+        35.0943603515625
       ],
       "rect": [
         317.515411376953,
@@ -140,11 +140,6 @@
               {
                 "op": "==",
                 "value": true,
-                "var": "ch2/library/blood_seen"
-              },
-              {
-                "op": "==",
-                "value": true,
                 "var": "ch2/library/shelf_seen"
               }
             ]
@@ -159,17 +154,12 @@
               {
                 "op": "==",
                 "value": true,
-                "var": "ch2/library/blood_second_seen"
-              },
-              {
-                "op": "==",
-                "value": true,
-                "var": "ch2/library/fairy_tale_second"
-              },
-              {
-                "op": "==",
-                "value": true,
                 "var": "ch2/library/box_opened"
+              },
+              {
+                "op": "!=",
+                "value": true,
+                "var": "ch2/library/second_cat_mediation"
               }
             ]
           }
@@ -602,6 +592,65 @@
       296
     ]
   },
+  "triggers": [
+    {
+      "condition": {
+        "all": [
+          {
+            "op": "==",
+            "value": true,
+            "var": "ch2/library/shelf_seen"
+          },
+          {
+            "op": "!=",
+            "value": true,
+            "var": "ch2/library/rewound"
+          }
+        ]
+      },
+      "event": "ch2_library_cat",
+      "id": "first_cat_after_book",
+      "mode": "enter",
+      "once": true,
+      "rect": [
+        174,
+        141,
+        120,
+        95
+      ]
+    },
+    {
+      "condition": {
+        "all": [
+          {
+            "op": "==",
+            "value": true,
+            "var": "ch2/library/rewound"
+          },
+          {
+            "op": "==",
+            "value": true,
+            "var": "ch2/library/box_opened"
+          },
+          {
+            "op": "!=",
+            "value": true,
+            "var": "ch2/library/second_cat_mediation"
+          }
+        ]
+      },
+      "event": "ch2_library_cat",
+      "id": "cat_after_box",
+      "mode": "enter_map",
+      "once": true,
+      "rect": [
+        0,
+        0,
+        467,
+        374
+      ]
+    }
+  ],
   "walls": [
     [
       0,

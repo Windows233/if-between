@@ -60,7 +60,7 @@ static func pose(node: Sprite2D, rect: Rect2, angle: float, target := Rect2()) -
 static func positions(def: MapDef) -> Dictionary:
 	var target := target_rect(def)
 	var hero := _free_near(def, def.spawn_point(&"from_school_gate"))
-	var c := _free_near(def, Vector2(target.end.x - 8.0, target.position.y - 60.0))
+	var c := _free_near(def, Vector2(target.get_center().x, target.position.y - 10.0))
 	return {"player": hero, "c": c}
 
 static func _free_near(def: MapDef, preferred: Vector2) -> Vector2:

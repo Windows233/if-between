@@ -112,14 +112,6 @@ func try_exit() -> bool:
 	if not _at_escape_exit():
 		return false
 	if phase == "gate":
-		if main.flags.get_value(&"ch2/personal/stealth_available") != true:
-			if _label != null:
-				_label.text = "先想办法甩开追踪，再找机会进教学楼。"
-			return false
-		if main.flags.get_value(&"ch2/personal/stealth_started") != true:
-			if _label != null:
-				_label.text = "C 仍能看见你！按 F 主动隐蔽，再按 E 进教室"
-			return false
 		if not ItemTable.has(main.flags, &"key"):
 			_label.text = "教学楼门锁着。需要先取得教室钥匙。"
 			return false
@@ -217,7 +209,7 @@ func _refresh_stealth() -> void:
 	var stealth: bool = main.flags.get_value(&"ch2/personal/stealth_started") == true
 	main.player.modulate.a = _base_alpha * (0.45 if stealth else 1.0)
 	if _label != null:
-		var route := "向下逃到图书馆门口，靠近按 E" if phase == "library" else "绕过喷泉，向左上教学楼门逃跑，靠近按 E"
+		var route := "向下逃到图书馆门口，靠近按 E / 空格" if phase == "library" else "绕过喷泉，向左上教学楼门逃跑，靠近按 E / 空格"
 		var controls := "\nWASD 移动 · ESC 暂停"
 		if phase == "gate" and main.flags.get_value(&"ch2/personal/stealth_available") == true:
 			controls = "\nWASD 移动 · F 主动隐蔽 · ESC 暂停"

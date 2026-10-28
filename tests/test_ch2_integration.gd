@@ -15,6 +15,7 @@ static func run(harness: TestHarness) -> void:
 	_test_events_and_maps(harness)
 	_test_assets(harness)
 	await _test_bugfixes(harness)
+	await preload("res://tests/test_library_flow_revision.gd").run(harness)
 	await _test_fairy_tale_and_shelf_animation(harness)
 	await _test_save_and_caption(harness)
 
@@ -202,28 +203,23 @@ static func _test_fairy_tale_and_shelf_animation(h: TestHarness) -> void:
 		if node != null:
 			for step: StageStep in node.stage:
 				has_book_image = has_book_image or step.kind in [&"image", &"image_hide"]
-		h.check("童话书 %s 以对白和翻页音效呈现、不叠书页大图" % node_id,
-			has_book_image, false)
+		h.check("童话书 %s 展示对应童话书页" % node_id,
+			has_book_image, true)
 	var cat_event := DataLoader.load_event(&"ch2_library_cat")
 	var approach := cat_event.node(&"approach")
 	var second_scene := cat_event.node(&"second_scene")
 	var c_faces_rug := false
-	var c_restored := false
+	var c_waits_at_entry := true
 	if approach != null:
 		for step: StageStep in approach.stage:
-			if step.kind == &"npc_pose" and step.text("id") == "c" \
-					and step.has("flip") and not step.flag("flip"):
+			if step.kind == &"npc_pose" and step.text("id") == "c" and not step.flag("flip"):
 				c_faces_rug = true
 	if second_scene != null:
 		for step: StageStep in second_scene.stage:
-			if step.kind != &"npc" or step.text("id") != "c":
-				continue
-			var actor_at: Array = step.data.get("at", [])
-			c_restored = actor_at.size() == 2 \
-				and is_equal_approx(float(actor_at[0]), 274.0) \
-				and is_equal_approx(float(actor_at[1]), 210.0)
-	h.check("地毯场景中的C面向地毯", c_faces_rug, true)
-	h.check("回溯地毯场景会恢复C的原位置", c_restored, true)
+			if step.kind in [&"npc", &"npc_move"] and step.text("id") == "c":
+				c_waits_at_entry = false
+	h.check("地毯场景中的C面向左", c_faces_rug, true)
+	h.check("二次猫对话期间C留在入口", c_waits_at_entry, true)
 
 	var main := h.new_main()
 	main.enter_map(&"library", &"from_school_gate", true)

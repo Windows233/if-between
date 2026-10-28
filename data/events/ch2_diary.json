@@ -709,13 +709,14 @@
           ],
           "height": 45,
           "z": 12,
-          "pose": "side"
+          "pose": "side",
+          "library_role": "entry_c"
         },
         {
           "do": "npc_pose",
           "id": "c",
           "pose": "side",
-          "flip": true
+          "flip": false
         }
       ],
       "next": "library_state"

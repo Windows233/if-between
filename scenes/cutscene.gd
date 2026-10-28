@@ -421,6 +421,12 @@ func _apply(step: StageStep) -> void:
 			main.capture_personal_anchor()
 		&"personal_anchor_restore":
 			main.restore_personal_anchor()
+			if main.current_map != null and main.current_map.id == &"library":
+				var c := add_actor("c", "res://art/npc/c",
+					preload("res://scenes/library_staging.gd").point(main.current_map, "entry_c"),
+					Player.DISPLAY_HEIGHT, 12, "side")
+				if c is AnimatedSprite2D:
+					c.flip_h = false
 		&"map_actor_variant":
 			main.set_actor_sprite_variant(
 				StringName(step.text("actor")), StringName(step.text("variant")))
@@ -428,6 +434,8 @@ func _apply(step: StageStep) -> void:
 			var actor_id := StringName(step.text("actor"))
 			var final_variant := StringName(step.text("final_variant"))
 			if instant:
+				if actor_id == &"escape_shelf_barrier":
+					main.flags.set_value(&"ch2/library/shelf_fallen", true)
 				main.set_actor_sprite_variant(actor_id, final_variant)
 				main.refresh_scene()
 			else:
@@ -912,6 +920,8 @@ func _npc(step: StageStep) -> void:
 	# `talk` 是「这人身上挂着哪段对话」—— 演出演完、控制权交回玩家之后，
 	# 玩家走到他跟前按交互就能起那一段。
 	var at := step.point("at")
+	if step.has("library_role") and main.current_map.id == &"library":
+		at = preload("res://scenes/library_staging.gd").point(main.current_map, step.text("library_role"))
 	if step.flag("library_escape") and main.current_map != null and main.current_map.id == &"library":
 		at = preload("res://scenes/library_shelf_fall.gd").positions(main.current_map)["c"]
 	var sprite := add_actor_with_talk(step.text("id"), step.text("sprite"),
@@ -972,6 +982,23 @@ func _npc_move(step: StageStep) -> void:
 		return
 	var target := step.point("to")
 	var time := _time(step.number("time", 1.0))
+	if step.has("library_role") and main.current_map.id == &"library":
+		target = preload("res://scenes/library_staging.gd").point(main.current_map, step.text("library_role"))
+		var route := preload("res://scenes/library_staging.gd").route(main.current_map, actor.position, target)
+		var generation := _generation
+		_footsteps_for(time)
+		var length := 0.0
+		var previous := actor.position
+		for p: Vector2 in route:
+			length += previous.distance_to(p)
+			previous = p
+		for p: Vector2 in route:
+			if generation != _generation or not is_instance_valid(actor):
+				return
+			_walk_actor(actor, p)
+			await _move_to(actor, p, time * actor.position.distance_to(p) / maxf(length, 0.001))
+		_stop_actor(actor)
+		return
 	_walk_actor(actor, target)
 	# **脚步和走路一起跑。** 这一句不 await —— 让它自己在后台按步频踩，
 	# 下面照旧等补间跑完。要是 await 它，人就得先踩完脚步才开始走。
@@ -1196,6 +1223,8 @@ func _place_player(step: StageStep) -> void:
 	var target := step.point("at")
 	if step.flag("library_escape") and main.current_map != null and main.current_map.id == &"library":
 		target = preload("res://scenes/library_shelf_fall.gd").positions(main.current_map)["player"]
+		if step.number("time", 0.0) > 0:
+			route = preload("res://scenes/library_staging.gd").route(main.current_map, main.player.global_position, target)
 	if not route.is_empty():
 		target = route[route.size() - 1]
 	else:
@@ -1203,6 +1232,13 @@ func _place_player(step: StageStep) -> void:
 
 	var walk := _time(step.number("time", 0.0))
 	var walking := not instant and (walk > 0.0 or step.has("path"))
+	if step.flag("c_pursuit"):
+		var pursuit := StageStep.from_dictionary({"do":"npc_move", "id":"c",
+			"to":[0,0], "library_role":"barrier_c", "time":walk})
+		if instant:
+			await _npc_move(pursuit)
+		else:
+			_npc_move(pursuit)
 
 	# **即时模式下不走、直接落位。** 走路是 `await` 出来的，一 await 就把
 	# 控制权让出去 —— 而测试依赖「`interact()` 之后整段同步跑完」，
