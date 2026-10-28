@@ -11,8 +11,8 @@ class_name Ch2ChasePursuer
 extends CharacterBody2D
 
 ## 追兵速度（统一显示尺度，和 `Player.SPEED` 同一量纲；实际按节点 scale 换算）。
-## 主角 96；校门地图上主角 48/秒、猫 56/秒。标定见 `tests/probe_chase_pacing.gd`。
-const SPEED := 112.0
+## 主角 96；校门地图上主角 48/秒、猫 60/秒。标定见 `tests/probe_chase_pacing.gd`。
+const SPEED := 120.0
 ## 从地图边缘「浮现」的时间：这段时间里只淡入、不移动，给主角拉开起跑距离。
 const EMERGE_TIME := 1.0
 ## 被闪开（QTE 成功冲刺结束）后扑空愣住的时间，让玩家看清自己甩开了它，也是拉开节奏的主要来源。
