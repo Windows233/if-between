@@ -1,5 +1,5 @@
-## 同一个书架绕右下脚连续倾倒；最终变换也用于重建/读档，避免换图下沉。
-## 复用原画第一格，不再播放五张轮廓和画布不同的姿势。
+## 右下角独立书架向左倾倒；最终变换也用于重建/读档，避免换图下沉。
+## 复用实际物件贴图；无书架底图不再需要补地砖遮掩。
 extends RefCounted
 
 static var upright: Texture2D
@@ -26,6 +26,8 @@ static func pose(node: Sprite2D, rect: Rect2, angle: float) -> void:
 ## 原书架也烘焙在背景里；以同图的空地砖补回被移走的区域，前景墙仍正常遮挡。
 static func hide_source(view: Node2D) -> void:
 	view.set_actor_alpha(&"shelf_se", 0.0)
+	if view.map_def.background == "res://art/map/library_no_shelves.png":
+		return
 	if view._built.has_node("ShelfFloor"):
 		return
 	var source := source_rect(view.map_def)
@@ -46,6 +48,8 @@ static func hide_source(view: Node2D) -> void:
 
 static func play(view: Node2D, node: Sprite2D, actor: MapDef.Actor,
 		token: int, final_variant: StringName) -> void:
+	if source_rect(view.map_def).size == Vector2.ZERO:
+		return
 	node.z_index = view.ABOVE_OVERLAY_Z
 	hide_source(view)
 	pose(node, source_rect(view.map_def), 0.0)

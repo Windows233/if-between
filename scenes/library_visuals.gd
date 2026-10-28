@@ -23,6 +23,11 @@ static func prepare(def: MapDef, flags: WorldState) -> void:
 				actor.collisions.assign(actor.get_meta("standing_collision"))
 		if actor.id != &"escape_shelf_barrier":
 			continue
+		if source.size.x <= 0.0 or source.size.y <= 0.0:
+			actor.sprite_variant = "hidden"
+			actor.has_local_collision = false
+			actor.collisions.clear()
+			continue
 		# 右下角原书架向左倾倒后的轴对齐包围框；随编辑器原书架位置变化。
 		if fallen:
 			actor.rect = Rect2(source.position.x - source.size.y,

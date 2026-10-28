@@ -1,0 +1,104 @@
+{
+  "date": "2026-10-28",
+  "background": "art/map/library_no_shelves.png",
+  "background_size": [
+    5608,
+    4488
+  ],
+  "generated_source": "exec-de7ff001-e2f8-435c-be0f-51a0f6489644.png",
+  "processing": "imagegen清除全部书架；原生最近邻整数4倍对齐原工程画布，独立书架保留原抠图字节",
+  "preserved_map_actors": 19,
+  "manual_editing": "现有10书架作为独立物件保留，可移动/删除；shelf_se继续绑定右下向左倒架",
+  "cutouts": [
+    {
+      "id": "shelf_a",
+      "path": "art/props/library_bookshelves/library_shelf_a_cover.png",
+      "size": [
+        350,
+        786
+      ],
+      "sha256": "9c1ad50a3ab687b0436643280bd0334e31a2ec085ffc1c5ee29cb08f3bec3465"
+    },
+    {
+      "id": "shelf_b",
+      "path": "art/props/library_bookshelves/library_shelf_b_cover.png",
+      "size": [
+        350,
+        779
+      ],
+      "sha256": "e490127d7abde0ad183c55e80469ff5e5dd6081eb01b82df62a0dff3fcfa154e"
+    },
+    {
+      "id": "shelf_c",
+      "path": "art/props/library_bookshelves/library_shelf_c_cover.png",
+      "size": [
+        354,
+        779
+      ],
+      "sha256": "e7315ce4c6dd9d64c8e3d9d24f6db697785d484cb7720ef491a765507f2c53cd"
+    },
+    {
+      "id": "shelf_d",
+      "path": "art/props/library_bookshelves/library_shelf_d_cover.png",
+      "size": [
+        353,
+        771
+      ],
+      "sha256": "7dc11982c53ac18d425802150656060adbac370b58f6bdef9511ccd6f4ec6417"
+    },
+    {
+      "id": "shelf_nw",
+      "path": "art/props/library_bookshelves/library_shelf_nw_cover.png",
+      "size": [
+        953,
+        537
+      ],
+      "sha256": "fc3564464023ff6f7d05ebb03134089f205a5f1f1d2101dd5b98487299bcca4e"
+    },
+    {
+      "id": "shelf_ne",
+      "path": "art/props/library_bookshelves/library_shelf_ne_cover.png",
+      "size": [
+        1227,
+        539
+      ],
+      "sha256": "4b578e813a5016011e00f18ff2d69be217e8841515e11c3d39eaa054e5e78b60"
+    },
+    {
+      "id": "shelf_w",
+      "path": "art/props/library_bookshelves/library_shelf_w_cover.png",
+      "size": [
+        262,
+        1569
+      ],
+      "sha256": "53da0df86a138e84a37a3c445aa52e0660aa1a1ff3c3a53d35282b17845b1b75"
+    },
+    {
+      "id": "shelf_e",
+      "path": "art/props/library_bookshelves/library_shelf_e_cover.png",
+      "size": [
+        267,
+        1828
+      ],
+      "sha256": "48a4d4a8768a81207328c082552187fcbc782fe8dc40cf634e290cea5b03f104"
+    },
+    {
+      "id": "shelf_sw",
+      "path": "art/props/library_bookshelves/library_shelf_sw_cover.png",
+      "size": [
+        803,
+        402
+      ],
+      "sha256": "6f89bca98d94e0ae20206d74c3b3267656460620e9a69a68932862ffbaf485f2"
+    },
+    {
+      "id": "shelf_se",
+      "path": "art/props/library_bookshelves/library_shelf_se_cover.png",
+      "size": [
+        801,
+        402
+      ],
+      "sha256": "7c8ed177c6f5efce377d42d628c12f70b670c2fa72dd01e1249b066fb1269e45"
+    }
+  ]
+}

@@ -562,7 +562,7 @@
       }
     }
   ],
-  "background": "res://art/map/library_no_cat.png",
+  "background": "res://art/map/library_no_shelves.png",
   "id": "library",
   "indoor": true,
   "music": "res://audio/bgm/reclamation.mp3",
