@@ -12,6 +12,50 @@ static func run(h: TestHarness) -> void:
 	test_opening_full_run(h)
 	test_conditional_map_elements(h)
 	test_decline_reaches_end1(h)
+	test_accept_sleep_and_rewind(h)
+
+
+static func test_accept_sleep_and_rewind(h: TestHarness) -> void:
+	var main := h.new_main()
+	h.start_opening(main)
+	h.pick(main, &"accept")
+	var bedroom_portal: MapDef.Portal
+	for portal: MapDef.Portal in main.current_map.portals:
+		if portal.event_id == &"ch1_sleep":
+			bedroom_portal = portal
+	h.check("接单后卧室入口存在", bedroom_portal != null, true)
+	if bedroom_portal == null:
+		main.queue_free()
+		return
+	main.player.position = bedroom_portal.rect.get_center()
+	main._take_portal()
+	h.check("实际门口进入夜晚卧室", main.current_map.id, &"bedroom_night")
+	var reachable := WalkGrid.reachable(main.current_map, main.player.position)
+	var bed: MapDef.Actor
+	for point: Vector2 in reachable:
+		var candidate: MapDef.Actor = main.current_map.actor_near(Vector2(point), 1.0, main.flags)
+		if candidate != null and candidate.id == &"bed":
+			bed = candidate
+			main.player.position = Vector2(point)
+			break
+	h.check("夜晚卧室有可走到且不被家具抢占的床交互点", bed != null, true)
+	if bed == null:
+		main.queue_free()
+		return
+	main.begin_interaction(bed)
+	h.check("床提供睡觉选项", h.pick(main, &"sleep"), true)
+	h.check("睡觉推进到回溯观察选项", main.choice_menu.is_open(), true)
+	h.check("梦醒回到委托屋", main.current_map.id, &"desk_shop")
+	h.check("回溯可以观察老人", h.pick(main, &"look"), true)
+	h.check("睡觉流程收尾", main.story.is_active(), false)
+	h.check("回溯后记录已睡觉", main.flags.get_value(&"gate/slept_once"), true)
+	h.check("回溯后解除夜晚出门限制", main.flags.get_value(&"gate/late"), false)
+	for portal: MapDef.Portal in main.current_map.portals:
+		if portal.label == "门":
+			h.check("回溯后大门可用", main._portal_blocked(portal), false)
+	main.update_player_control()
+	h.check("回溯后恢复走动", main.player.is_physics_processing(), true)
+	main.queue_free()
 
 
 static func test_story_event_data(h: TestHarness) -> void:
