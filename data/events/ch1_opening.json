@@ -433,6 +433,14 @@
           "time": 2.6
         },
         {
+          "do": "image",
+          "path": "res://art/cg/梦境破碎.png",
+          "fade": 0.3,
+          "fill": true,
+          "hold": 2.0,
+          "hide": false
+        },
+        {
           "do": "play_sound",
           "path": "res://audio/sfx/glass_break.wav"
         },
@@ -444,7 +452,7 @@
         {
           "do": "say",
           "speaker": "我",
-          "text": "这是……！！",
+          "text": "（这是……！！）",
           "side": "none"
         },
         {

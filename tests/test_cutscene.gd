@@ -324,6 +324,20 @@ static func test_opening_data(h: TestHarness) -> void:
 	h.check("旧那套切屏飞散不用了", decline_kinds.has(&"shatter"), false)
 	h.check("猫叫接碎屏", decline_kinds.has(&"play_sound")
 		and decline_kinds.find(&"play_sound") < decline_kinds.find(&"glass"), true)
+	var dream_at := -1
+	for i: int in declined.stage.size():
+		if declined.stage[i].kind == &"image" \
+				and declined.stage[i].text("path") == "res://art/cg/梦境破碎.png":
+			dream_at = i
+	var glass_at := decline_kinds.find(&"glass")
+	h.check("end1先展示梦境破碎CG再碎屏", dream_at >= 0 and dream_at < glass_at, true)
+	if dream_at >= 0:
+		h.check("梦境CG保留给碎屏和OS作底图", declined.stage[dream_at].flag("hide", true), false)
+	if glass_at >= 0 and glass_at + 1 < declined.stage.size():
+		var os: StageStep = declined.stage[glass_at + 1]
+		h.check("碎屏后用下方对话框显示OS", os.kind, &"say")
+		h.check("主角OS不带半身立绘", os.text("side"), "none")
+		h.check("内心OS使用括号", os.text("text"), "（这是……！！）")
 	h.check("碎屏之后是黑屏上的结局文字",
 		decline_kinds[decline_kinds.size() - 1], &"caption")
 	var death: StageStep = declined.stage[declined.stage.size() - 1]
