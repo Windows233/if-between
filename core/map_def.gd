@@ -1,4 +1,4 @@
-## 场景定义：描述一个场景（室内房间 / 室外地点）的静态布局。
+﻿## 场景定义：描述一个场景（室内房间 / 室外地点）的静态布局。
 ##
 ## 只认数据，不认节点。读 JSON 是外面的事，这里负责把 Dictionary
 ## 变成「可校验、可查询」的对象。core 层不许碰 FileAccess 和 SceneTree。
@@ -490,8 +490,13 @@ func portal_at(point: Vector2, flags: WorldState = null) -> Portal:
 ## 不然站在书架前面朝门口按交互，会跟背后那本书说起话来。
 func actor_near(point: Vector2, max_distance: float, flags: WorldState = null,
 		facing: Vector2 = Vector2.ZERO) -> Actor:
+	var aimed := facing != Vector2.ZERO
 	var best: Actor = null
 	var best_distance := max_distance
+	var best_rank := INF
+	var best_area := INF
+	var best_contained := false
+	var best_hollow := false
 	for actor: Actor in actors:
 		if not actor.is_active(flags):
 			continue
@@ -501,13 +506,90 @@ func actor_near(point: Vector2, max_distance: float, flags: WorldState = null,
 		# 被脚下的街边楼房抢走，A 永远说不上话）。
 		if actor.decor:
 			continue
-		if facing != Vector2.ZERO and not faces_target(point, actor.reach, facing):
+		if not aimed:
+			var distance := rect_distance(actor.reach, point)
+			if distance < best_distance:
+				best_distance = distance
+				best = actor
 			continue
-		var distance := rect_distance(actor.reach, point)
-		if distance < best_distance:
-			best_distance = distance
+		if not faces_target(point, actor.reach, facing):
+			continue
+		# 两道门槛都要过：旧的「最近点距离」保证新规则不会让以前够不着的变得够得着。
+		if rect_distance(actor.reach, point) >= max_distance:
+			continue
+		var aim := aim_score(point, actor.reach, facing)
+		if aim.x >= max_distance:
+			continue
+		var area := actor.reach.get_area()
+		# 空壳物件（只有一句空白台词、无事件无效果，如校门喷泉）只在别无选择时才选，
+		# 免得它压在有剧情的物件上（喷泉框整个落在雕塑框内）把剧情抢掉。
+		var hollow := _is_hollow(actor)
+		# 同分：已包住玩家（aim.x == 0）的框先于刚好接在它末端的框，再取面积小的。
+		var contained := aim.x <= 0.0
+		var better := false
+		if best == null or hollow != best_hollow:
+			better = best == null or best_hollow
+		elif aim.y < best_rank - 0.001:
+			better = true
+		elif absf(aim.y - best_rank) <= 0.001:
+			better = (contained and not best_contained) \
+				or (contained == best_contained and area < best_area)
+		if better:
+			best_hollow = hollow
+			best_rank = aim.y
+			best_area = area
+			best_contained = contained
 			best = actor
 	return best
+
+
+## 物件按交互后什么也不会发生：没有事件、没有效果、台词全是空白。
+static func _is_hollow(actor: Actor) -> bool:
+	for inter: Interaction in actor.interactions:
+		if inter.event_id != &"" or not inter.effects.is_empty():
+			return false
+		for line: DialogueLine in inter.dialogue.lines:
+			if line.text.strip_edges() != "":
+				return false
+	return true
+
+
+## 瞄准线的半宽：玩家正前方这一条带子里的东西都算「正对着」。
+## 比脚底半宽（8）略窄，免得两件并排的小物件同时算正对。
+const AIM_HALF_WIDTH := 6.0
+## 偏离瞄准带的横向距离按几倍计入。越大越只认正前方。
+const AIM_LATERAL_WEIGHT := 2.0
+
+
+## 按朝向给一个交互框打分，返回 `Vector2(够不够得着, 排序分)`。
+##
+## 2026-10-29 用户反馈：按空格时总被旁边判定框大的物件抢走，小物件很难选中。
+## 原因是旧规则只比「玩家到框最近点」的距离：框越大，最近点越容易贴着玩家，
+## 哪怕它整体在身侧；玩家站进大框里距离直接是 0，正前方的小物件永远输。
+##
+## 现在把框投影到朝向坐标系：
+## - `along`：沿朝向还要走多远才到框（已和玩家齐平或包住玩家记 0）；
+## - `lateral`：框偏出瞄准带（半宽 `AIM_HALF_WIDTH`）多少，乘 `AIM_LATERAL_WEIGHT`。
+## 「够不够得着」= along + 横向罚分，正前方的物件与旧规则同距，偏到身侧的要更近才算。
+## 「排序分」在框沿朝向已包住玩家时改用**框在前方的末端**：
+## 站在大框里时，前方先出现、且在大框结束前的小物件优先；大框整个挡在前面时仍选大框。
+## 同分时已包住玩家的框优先（另一件刚好接在它末端，说明它更近），再取面积小的。
+static func aim_score(point: Vector2, rect: Rect2, facing: Vector2) -> Vector2:
+	var f := facing.normalized()
+	var n := Vector2(-f.y, f.x)
+	var offset := rect.get_center() - point
+	var half := rect.size * 0.5
+	var along_center := offset.dot(f)
+	var along_radius := absf(half.x * f.x) + absf(half.y * f.y)
+	var lateral_center := offset.dot(n)
+	var lateral_radius := absf(half.x * f.y) + absf(half.y * f.x)
+	var along_start := along_center - along_radius
+	var along_end := along_center + along_radius
+	var lateral_gap := maxf(absf(lateral_center) - lateral_radius - AIM_HALF_WIDTH, 0.0)
+	var penalty := lateral_gap * AIM_LATERAL_WEIGHT
+	var reach := maxf(along_start, 0.0) + penalty
+	var rank := (along_start if along_start > 0.0 else maxf(along_end, 0.0)) + penalty
+	return Vector2(reach, rank)
 
 
 ## 目标在不在朝向这一侧。

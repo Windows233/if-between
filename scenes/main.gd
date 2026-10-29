@@ -1,4 +1,4 @@
-## 游戏入口：组装各个部件，管场景切换、相机、交互、输入。
+﻿## 游戏入口：组装各个部件，管场景切换、相机、交互、输入。
 ##
 ## 场景切换用的是「重建可视、保留角色」：MapView 重来一遍，Player 只挪位置。
 ## 这样角色身上挂的状态（速度、以后的存档标记）不用搬来搬去。
@@ -1473,20 +1473,31 @@ func _portal_blocked(portal: MapDef.Portal) -> bool:
 ##
 ## 这一条是补「自由活动阶段碰到老人，发现那只是张贴图」那个缺口的
 ##（2026-09-24 策划报的）—— 演出放出来的临时角色，也是这个场景里的人。
+## 打分与地图物件同一把尺子（`MapDef.aim_score`）：正前方优先，身侧的要更近才算。
 func _talk_to_transient(max_distance: float = INTERACT_RANGE) -> bool:
 	if cutscene == null or player == null:
 		return false
 	var best_event := StringName(&"")
-	var best_distance := max_distance
+	var best_rank := INF
 	for item: Array in cutscene.talkable_list():
 		var at: Vector2 = item[1]
 		var feet := Rect2(at.x - TALK_FOOT_HALF, at.y - TALK_FOOT_HEIGHT,
 			TALK_FOOT_HALF * 2.0, TALK_FOOT_HEIGHT)
 		if not MapDef.faces_target(player.global_position, feet, player.facing):
 			continue
-		var distance := MapDef.rect_distance(feet, player.global_position)
-		if distance < best_distance:
-			best_distance = distance
+		var rank: float
+		if player.facing == Vector2.ZERO:
+			rank = MapDef.rect_distance(feet, player.global_position)
+			if rank >= max_distance:
+				continue
+		else:
+			var aim := MapDef.aim_score(player.global_position, feet, player.facing)
+			if aim.x >= max_distance \
+					or MapDef.rect_distance(feet, player.global_position) >= max_distance:
+				continue
+			rank = aim.y
+		if rank < best_rank:
+			best_rank = rank
 			best_event = item[2]
 	if best_event == &"":
 		return false
