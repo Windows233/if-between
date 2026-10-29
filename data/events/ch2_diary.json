@@ -43,10 +43,6 @@
           "do": "say",
           "speaker": "日记（3/3）",
           "text": "猫一直在哭"
-        },
-        {
-          "do": "image_hide",
-          "fade": 0.4
         }
       ],
       "next": "diary_reward"
@@ -212,11 +208,24 @@
           "label": "前往图书馆",
           "next": "chase_prepare"
         }
+      ],
+      "stage": [
+        {
+          "do": "image",
+          "path": "res://art/props/ch2_diary_written.png",
+          "fade": 0,
+          "hide": false
+        }
       ]
     },
     {
       "id": "route_wrong",
-      "stage": [],
+      "stage": [
+        {
+          "do": "image_hide",
+          "fade": 0
+        }
+      ],
       "next": "route_first_error",
       "next_when": {
         "if": {
@@ -346,6 +355,10 @@
     {
       "id": "chase_prepare",
       "stage": [
+        {
+          "do": "image_hide",
+          "fade": 0
+        },
         {
           "do": "ch2_chase_validate"
         }
@@ -575,6 +588,11 @@
         {
           "do": "ch2_checkpoint_restore",
           "checkpoint": "route"
+        },
+        {
+          "do": "fade",
+          "to": "clear",
+          "time": 0.25
         }
       ],
       "next": "route_choice"
@@ -585,6 +603,11 @@
         {
           "do": "ch2_checkpoint_restore",
           "checkpoint": "chase"
+        },
+        {
+          "do": "fade",
+          "to": "clear",
+          "time": 0.25
         },
         {
           "do": "ch2_chase_start"
@@ -799,6 +822,11 @@
         {
           "do": "ch2_checkpoint_restore",
           "checkpoint": "chase"
+        },
+        {
+          "do": "fade",
+          "to": "clear",
+          "time": 0.25
         },
         {
           "do": "ch2_chase_start"

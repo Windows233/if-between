@@ -62,8 +62,8 @@ static func run(h: TestHarness) -> void:
 	for step: StageStep in cat_scene.stage:
 		for line: Dictionary in step.data.get("lines",[]):
 			if line.get("speaker","") == "猫":
-				portraits_ok = portraits_ok and line.get("portrait","") == "res://art/props/library_cat_cover.png" and line.get("side","") == "right"
-	h.check("回溯后的猫台词复用现有立绘",portraits_ok,true)
+				portraits_ok = portraits_ok and line.get("portrait","") == "res://art/portrait/library_cat_dialogue.png" and line.get("side","") == "right"
+	h.check("回溯后的猫台词使用清晰新版立绘",portraits_ok,true)
 	h.check("猫对话不会残留宝箱近景", main.object_preview.content, null)
 	main.cutscene.instant = true
 	_drain(main, h)
