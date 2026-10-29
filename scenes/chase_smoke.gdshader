@@ -2,8 +2,8 @@
 shader_type canvas_item;
 uniform float smoke_time = 0.0;
 uniform float vertical_facing = 0.0;
-// 横向素材的紫雾统一成与纵向动作接近的灰黑色，暖色眼睛和耳部不参与调色。
-uniform float horizontal_smoke_gray : hint_range(0.0, 1.0) = 1.0;
+// 横向保留少量紫雾，与上下动作统一；暖色眼睛和耳部不参与调色。
+uniform float horizontal_smoke_gray : hint_range(0.0, 1.0) = 0.65;
 varying vec4 sprite_tint;
 void vertex() {
 	sprite_tint = COLOR;

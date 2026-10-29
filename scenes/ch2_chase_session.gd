@@ -113,6 +113,8 @@ func begin() -> bool:
 
 
 func run_qte(key: StringName) -> bool:
+	if active and not _rescue_pending and _door_area.has_point(main.player.global_position):
+		_reach_door()
 	if _arrived:
 		main.flags.set_value(&"ch2/chase_q1" if key == &"q" else &"ch2/chase_q2", true)
 		return true
@@ -255,7 +257,7 @@ func wait_for_arrival() -> bool:
 		return false
 	_awaiting_door = true
 	if not _arrived and _door_area.has_point(main.player.global_position):
-		_arrived = true
+		_reach_door()
 	elif not _arrived:
 		await door_reached
 	if _cancelled:
@@ -304,7 +306,7 @@ func can_move_player() -> bool:
 
 func awaiting_door_interaction() -> bool:
 	return active and not _cancelled and not _rescue_pending \
-		and (not qte_pending or _waiting_for_trigger) \
+		and (not qte_pending or _waiting_for_trigger or _arrived) \
 		and _door_area.has_point(main.player.global_position)
 
 
@@ -313,6 +315,7 @@ func confirm_door_interaction() -> bool:
 		return false
 	_arrived = true
 	_door_confirmed = true
+	main.player.cancel_chase_burst()
 	main.flags.set_value(&"ch2/chase_arrived", true)
 	if _waiting_for_trigger:
 		_waiting_for_trigger = false
@@ -321,6 +324,21 @@ func confirm_door_interaction() -> bool:
 		door_reached.emit()
 		door_confirmed.emit()
 	return true
+
+
+## 门区先于追上判定：只等待一次进门确认，不再转入QTE或救援等待。
+func _reach_door() -> void:
+	if _arrived:
+		return
+	_arrived = true
+	main.player.cancel_chase_burst()
+	main.player.chase_input_locked = true
+	if _waiting_for_trigger:
+		_waiting_for_trigger = false
+		trigger_reached.emit()
+	if _awaiting_door:
+		door_reached.emit()
+	main.update_player_control()
 
 
 func cancel() -> void:
@@ -402,14 +420,12 @@ func _process(_delta: float) -> void:
 		if _trail.size() > 4096:
 			_trail.pop_front()
 
-	if _waiting_for_trigger and _mist_caught_player():
+	if not _rescue_pending and _door_area.has_point(position):
+		_reach_door()
+	if _waiting_for_trigger and not _arrived and _mist_caught_player():
 		_waiting_for_trigger = false
 		trigger_reached.emit()
-	if _awaiting_door and _door_area.has_point(position) and not _arrived:
-		_arrived = true
-		door_reached.emit()
-
-	if _awaiting_door and _catch_count >= 2 and _mist_caught_player():
+	if _awaiting_door and not _arrived and _catch_count >= 2 and _mist_caught_player():
 		_rescue_pending = true
 		_awaiting_door = false
 		_rescue_cat()

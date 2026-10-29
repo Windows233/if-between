@@ -10,6 +10,10 @@ static func run(h: TestHarness) -> void:
 	await _test_rescue_story(h,false)
 	await _test_rescue_story(h,true)
 	_test_cancel_and_door_rescue(h)
+	for node: StringName in [&"run_q1",&"run_q2",&"arrive"]:
+		await _test_door_catch(h,node)
+	await _test_burst_into_door(h)
+	await _test_interaction_idle(h)
 
 
 static func _test_burst(h: TestHarness) -> void:
@@ -29,6 +33,126 @@ static func _test_burst(h: TestHarness) -> void:
 			h.check_float("%dFPS冲刺使用指定距离%.0f" % [rate,distance],player.position.x,distance*0.5,0.01)
 			h.check("冲刺结束恢复输入",player.chase_input_locked,false)
 	player.queue_free()
+
+
+static func _test_door_catch(h: TestHarness, node: StringName) -> void:
+	var main := h.new_main()
+	main.enter_map(&"school_gate",&"from_library")
+	await h.root.get_tree().physics_frame
+	await h.root.get_tree().physics_frame
+	main.flags.set_value(&"ch2/diary_read",true)
+	main.flags.set_value(&"ch2/teamed_c",true)
+	ItemTable.add(main.flags,&"charm")
+	main.chase_session.begin()
+	main.chase_session._catch_count = 2 if node == &"arrive" else (1 if node == &"run_q2" else 0)
+	main.start_story(&"ch2_diary",node)
+	var foot := Vector2(353,120)
+	h.check(str(node)+"门区脚点合法",WalkGrid.is_free(main.current_map,foot),true)
+	main.player.position = foot
+	main.chase_session._mist.global_position = foot+Vector2.DOWN*8
+	h.check(str(node)+"门口猫确实追上主角",main.chase_session._mist_caught_player(),true)
+	# 同一帧到门区与猫追上，不能从等待进门切换到另一个永远等不到的信号。
+	main.chase_session._process(0)
+	h.check(str(node)+"门口接触优先进门",main.chase_session._rescue_pending,false)
+	h.check(str(node)+"门口接触仍能确认进门",main.chase_session.awaiting_door_interaction(),true)
+	var input := InputEventKey.new()
+	input.pressed = true
+	input.physical_keycode = KEY_SPACE
+	main._unhandled_input(input)
+	var deadline := Time.get_ticks_msec()+3500
+	while Time.get_ticks_msec() < deadline:
+		await h.root.get_tree().process_frame
+		if main.dialogue.is_open():
+			main.dialogue.advance()
+			main.dialogue.advance()
+		if main.current_map.id == &"library" and not main.story.is_active():
+			break
+	h.check(str(node)+"被追上同时按进门进入图书馆",main.current_map.id,&"library")
+	h.check(str(node)+"门口冲突后剧情不挂起",main.story.is_active(),false)
+	h.check(str(node)+"门口冲突后时速恢复",Engine.time_scale,1.0)
+	main.story.cancel()
+	main.chase_session.cancel()
+	main.queue_free()
+	await h.root.get_tree().process_frame
+
+
+static func _test_interaction_idle(h: TestHarness) -> void:
+	var main := h.new_main()
+	main.enter_map(&"school_yard",&"from_gate")
+	await h.root.get_tree().physics_frame
+	await h.root.get_tree().physics_frame
+	var actor: MapDef.Actor
+	for candidate: MapDef.Actor in main.current_map.actors:
+		if candidate.id == &"sandbox":
+			actor = candidate
+	h.check("步行互动测试有沙坑物件",actor != null,true)
+	if actor == null:
+		main.queue_free()
+		return
+	var start: Vector2 = main.player.position
+	main.player.facing = Vector2.RIGHT
+	main.player.velocity = Vector2.RIGHT*main.player.movement_speed()
+	main.player.walk_path.append(start+Vector2.RIGHT*20)
+	main.player.play_animation(true)
+	main.begin_interaction(actor)
+	main.update_player_control()
+	await h.root.get_tree().physics_frame
+	var sprite: AnimatedSprite2D = main.player.get_node("Body")
+	h.check("移动中互动已打开对白",main.dialogue.is_open(),true)
+	h.check("对白期间切为站立姿态",sprite.animation,&"idle_side")
+	h.check("对白期间保持朝向",main.player.facing,Vector2.RIGHT)
+	h.check("对白期间清零移动速度",main.player.velocity,Vector2.ZERO)
+	h.check("对白期间停止步行路径",main.player.walk_path.is_empty(),true)
+	h.check("对白期间原地停下",main.player.position,start)
+	main.story.cancel()
+	main.update_player_control()
+	await h.root.get_tree().physics_frame
+	h.check("对白结束不沿旧路径继续走",main.player.position,start)
+	main.queue_free()
+	await h.root.get_tree().process_frame
+
+
+static func _test_burst_into_door(h: TestHarness) -> void:
+	var main := h.new_main()
+	main.enter_map(&"school_gate",&"from_library")
+	await h.root.get_tree().physics_frame
+	await h.root.get_tree().physics_frame
+	main.flags.set_value(&"ch2/diary_read",true)
+	main.flags.set_value(&"ch2/teamed_c",true)
+	ItemTable.add(main.flags,&"charm")
+	main.chase_session.begin()
+	main.chase_session._mist.global_position = main.player.position+Vector2.DOWN*8
+	main.start_story(&"ch2_diary",&"run_q1")
+	var entered := false
+	var deadline := Time.get_ticks_msec()+5000
+	while Time.get_ticks_msec() < deadline:
+		await h.root.get_tree().process_frame
+		var overlay: ChaseOverlay = main.chase_overlay
+		if overlay._phase == ChaseOverlay.Phase.ACTIVE:
+			var input := InputEventKey.new()
+			input.pressed = true
+			input.physical_keycode = KEY_W if overlay._direction_mode else KEY_Q
+			main._unhandled_input(input)
+		if main.chase_session._arrived and main.chase_session.active:
+			entered = true
+			var confirm := InputEventKey.new()
+			confirm.pressed = true
+			confirm.physical_keycode = KEY_E
+			main._unhandled_input(confirm)
+		if main.dialogue.is_open():
+			main.dialogue.advance()
+			main.dialogue.advance()
+		if main.current_map.id == &"library" and not main.story.is_active():
+			break
+	h.check("QTE冲刺抵达门区",entered,true)
+	h.check("冲刺进门可用E确认",main.current_map.id,&"library")
+	h.check("抵达门区后不挂起冲刺",main.player.is_chase_bursting(),false)
+	h.check("冲刺进门后剧情正常结束",main.story.is_active(),false)
+	h.check("冲刺进门后不遗留慢动作",Engine.time_scale,1.0)
+	main.story.cancel()
+	main.chase_session.cancel()
+	main.queue_free()
+	await h.root.get_tree().process_frame
 
 
 static func _test_cancel_and_door_rescue(h: TestHarness) -> void:

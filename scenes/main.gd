@@ -1061,6 +1061,12 @@ func update_player_control() -> void:
 	var movable := on_room and not busy and not fading \
 		and (not cutscene_locked or chase_movement) and not player.pinned
 	player.set_physics_process(movable)
+	if dialogue.is_open() or choice_menu.is_open():
+		# 关闭物理不会停止AnimatedSprite2D；对话开始后明确切回站立并清掉旧步行。
+		player.velocity = Vector2.ZERO
+		player.walk_path.clear()
+		walk_and_use = false
+		player.play_animation(false)
 
 	# 右下角那个背包图标：有界面开着、在演过场、或者黑幕压着时就收起来。
 	#
