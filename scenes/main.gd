@@ -1511,7 +1511,8 @@ func begin_interaction(actor: MapDef.Actor) -> void:
 		return
 	if object_preview != null:
 		if actor.id in [&"window", &"classroom_window"] \
-				or (current_map.id == &"library" and actor.id == &"shelf_a"):
+				or (current_map.id == &"library" and actor.id == &"shelf_a") \
+				or (current_map.id == &"gatehouse" and actor.id == &"desk"):
 			object_preview.clear()
 		else:
 			object_preview.show_actor(actor, current_map)
