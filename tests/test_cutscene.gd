@@ -1932,7 +1932,7 @@ static func test_transient_talks(h: TestHarness) -> void:
 		h.check("A 那句「又有什么事情吗」",
 			(start.stage[0].data["lines"] as Array)[0]["text"], "又有什么事情吗")
 		h.check("两个选项", start.choices.size(), 2)
-		h.check("① 邀请李淳罡", start.choices[0].label, "邀请李淳罡")
+		h.check("① 邀请陈遇", start.choices[0].label, "邀请陈遇")
 		h.check("② 离开", start.choices[1].label, "离开")
 		h.check("两条路都演完就收（不带 next）",
 			a_talk.node(&"invited").next_id, &"")
@@ -1952,7 +1952,7 @@ static func test_transient_talks(h: TestHarness) -> void:
 					if not (raw is Dictionary):
 						continue
 					var line: Dictionary = raw
-					if str(line.get("speaker", "")) != "李淳罡":
+					if str(line.get("speaker", "")) != "陈遇":
 						continue
 					a_lines += 1
 					if str(line.get("portrait", "")) == "":

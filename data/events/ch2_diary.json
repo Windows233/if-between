@@ -106,13 +106,13 @@
             },
             {
               "speaker": "我",
-              "text": "怎么会突然过来，也不知道白凝冰又去哪里了",
+              "text": "怎么会突然过来，也不知道裴予安又去哪里了",
               "side": "left",
               "portrait": "protagonist/quiet"
             },
             {
               "speaker": "我",
-              "text": "先跑吧，白凝冰如果是白塔的人，手上会有自保手段的",
+              "text": "先跑吧，裴予安如果是白塔的人，手上会有自保手段的",
               "side": "left",
               "portrait": "protagonist/quiet"
             },
@@ -378,7 +378,7 @@
       "stage": [
         {
           "do": "hint",
-          "text": "请回操场与白凝冰确认组队状态和决策币"
+          "text": "请回操场与裴予安确认组队状态和决策币"
         }
       ]
     },
@@ -636,7 +636,7 @@
           "lines": [
             {
               "text": "小心！",
-              "speaker": "白凝冰",
+              "speaker": "裴予安",
               "portrait": "c/neutral",
               "side": "right"
             }
@@ -651,7 +651,7 @@
           "lines": [
             {
               "text": "你没受伤吧",
-              "speaker": "白凝冰",
+              "speaker": "裴予安",
               "portrait": "c/neutral",
               "side": "right"
             }

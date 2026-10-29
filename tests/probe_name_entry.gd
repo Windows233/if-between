@@ -42,7 +42,7 @@ func _process(_delta: float) -> bool:
 			_main.name_entry.submit()
 		4:
 			var line := DialogueLine.new()
-			line.speaker = "白凝冰"
+			line.speaker = "裴予安"
 			line.side = DialogueLine.Side.RIGHT
 			line.portrait = "c/neutral"
 			line.text = PlayerName.apply("算了算了，遇见就是缘分。{name}，和我组队吧")

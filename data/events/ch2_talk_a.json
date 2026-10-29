@@ -9,7 +9,7 @@
           "do": "say",
           "lines": [
             {
-              "speaker": "李淳罡",
+              "speaker": "陈遇",
               "portrait": "a",
               "side": "right",
               "text": "又有什么事情吗"
@@ -24,7 +24,7 @@
             "side": "left"
           },
           "right": {
-            "speaker": "李淳罡",
+            "speaker": "陈遇",
             "portrait": "a",
             "side": "right"
           }
@@ -33,7 +33,7 @@
       "choices": [
         {
           "id": "invite",
-          "label": "邀请李淳罡",
+          "label": "邀请陈遇",
           "next": "invited"
         },
         {
@@ -50,7 +50,7 @@
           "do": "say",
           "lines": [
             {
-              "speaker": "李淳罡",
+              "speaker": "陈遇",
               "portrait": "a",
               "side": "right",
               "text": "我可不去了，你加油吧"

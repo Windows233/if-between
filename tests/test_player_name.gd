@@ -52,7 +52,7 @@ static func test_fill(h: TestHarness) -> void:
 	var expect := {
 		&"ch2_swing": ["林小满，自己经营一家事务所", "算了算了，遇见就是缘分。林小满，和我组队吧"],
 		&"ch2_library_cat": ["这就不行了吗，林小满还是得多练呐", "这下彻底再见咯，林小满",
-			"林小满用力推向身旁的书架，挡住白凝冰的去路。"],
+			"林小满用力推向身旁的书架，挡住裴予安的去路。"],
 		&"ch2_market_b_end": ["林小满是吗，你比我想象中的做得还要好呢"],
 		&"ch2_register": ["xxxx  xxxx  xxxx  林小满"],
 		&"ch1_bed": ["来找林小满帮忙"],
@@ -108,9 +108,9 @@ static func test_data_has_no_old_names(h: TestHarness) -> void:
 						speakers[str((raw_line as Dictionary).get("speaker", ""))] = true
 			for line: DialogueLine in node.dialogue.lines:
 				speakers[line.speaker] = true
-	h.check("李淳罡在说话", speakers.has("李淳罡"), true)
-	h.check("方源在说话", speakers.has("方源"), true)
-	h.check("白凝冰在说话", speakers.has("白凝冰"), true)
+	h.check("陈遇在说话", speakers.has("陈遇"), true)
+	h.check("神秘人在说话", speakers.has("神秘人"), true)
+	h.check("裴予安在说话", speakers.has("裴予安"), true)
 
 
 static func test_save_round_trip(h: TestHarness) -> void:

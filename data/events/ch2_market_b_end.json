@@ -37,7 +37,7 @@
               "portrait": "protagonist/quiet"
             },
             {
-              "speaker": "方源",
+              "speaker": "神秘人",
               "text": "回来了？我就说不会坑你的吧",
               "side": "right",
               "portrait": "mysterious"
@@ -49,25 +49,25 @@
               "portrait": "protagonist/guarded"
             },
             {
-              "speaker": "方源",
+              "speaker": "神秘人",
               "text": "什 么！谁来了",
               "side": "right",
               "portrait": "mysterious"
             },
             {
               "speaker": "我",
-              "text": "白凝冰，也不知道是不是真叫这个名",
+              "text": "裴予安，也不知道是不是真叫这个名",
               "side": "left",
               "portrait": "protagonist/thinking"
             },
             {
-              "speaker": "方源",
+              "speaker": "神秘人",
               "text": "（小声）怎么他会来，看来....",
               "side": "right",
               "portrait": "mysterious"
             },
             {
-              "speaker": "方源",
+              "speaker": "神秘人",
               "text": "算了，你先把东西给我，吊坠就留给你做纪念吧",
               "side": "right",
               "portrait": "mysterious"
@@ -151,7 +151,7 @@
           "do": "say",
           "lines": [
             {
-              "speaker": "方源",
+              "speaker": "神秘人",
               "text": "行，我们还会再见的",
               "side": "right",
               "portrait": "mysterious"
@@ -416,13 +416,13 @@
           "do": "say",
           "lines": [
             {
-              "speaker": "白凝冰",
+              "speaker": "裴予安",
               "text": "{name}是吗，你比我想象中的做得还要好呢",
               "side": "right",
               "portrait": "c/neutral"
             },
             {
-              "speaker": "白凝冰",
+              "speaker": "裴予安",
               "text": "很期待我们的正式见面 ^ ^",
               "side": "right",
               "portrait": "c/neutral"

@@ -44,7 +44,7 @@
           "do": "say",
           "lines": [
             {
-              "speaker": "李淳罡",
+              "speaker": "陈遇",
               "text": "是啊，怎么，你脸上写着[接了个麻烦活]",
               "side": "right",
               "portrait": "a"
@@ -70,7 +70,7 @@
             "side": "left"
           },
           "right": {
-            "speaker": "李淳罡",
+            "speaker": "陈遇",
             "portrait": "a",
             "side": "right"
           }
@@ -79,7 +79,7 @@
       "choices": [
         {
           "id": "invite",
-          "label": "邀请李淳罡",
+          "label": "邀请陈遇",
           "next": "market_invite"
         }
       ]
@@ -102,7 +102,7 @@
           "do": "say",
           "lines": [
             {
-              "speaker": "李淳罡",
+              "speaker": "陈遇",
               "text": "行，我去公园找，我要找到了请我瓶汽水",
               "side": "right",
               "portrait": "a"
@@ -203,7 +203,7 @@
           "out": 0.6,
           "lines": [
             {
-              "text": "你一个人找了三天猫，其间再也没有看见过李淳罡"
+              "text": "你一个人找了三天猫，其间再也没有看见过陈遇"
             },
             {
               "text": "再见面....."
@@ -467,7 +467,7 @@
           "do": "say",
           "lines": [
             {
-              "speaker": "李淳罡",
+              "speaker": "陈遇",
               "portrait": "a",
               "side": "right",
               "text": "……你盯着我干嘛？"
@@ -482,7 +482,7 @@
         },
         {
           "do": "hint",
-          "text": "（拖动下面的选项块，改掉李淳罡的想法，然后按「确定」）"
+          "text": "（拖动下面的选项块，改掉陈遇的想法，然后按「确定」）"
         }
       ],
       "set": {
@@ -572,7 +572,7 @@
           "do": "say",
           "lines": [
             {
-              "speaker": "李淳罡",
+              "speaker": "陈遇",
               "portrait": "a",
               "side": "right",
               "text": "你怎么了？"
@@ -602,7 +602,7 @@
           "do": "say",
           "lines": [
             {
-              "speaker": "李淳罡",
+              "speaker": "陈遇",
               "portrait": "a",
               "side": "right",
               "text": "行，我去公园找，我要找到了请我瓶汽水"
@@ -689,7 +689,7 @@
           "do": "say",
           "lines": [
             {
-              "speaker": "李淳罡",
+              "speaker": "陈遇",
               "portrait": "a",
               "side": "right",
               "text": "你信这世上有鬼吗"
@@ -711,7 +711,7 @@
           "do": "say",
           "lines": [
             {
-              "speaker": "李淳罡",
+              "speaker": "陈遇",
               "portrait": "a",
               "side": "right",
               "text": "我今天下午在公园看到一个巨大的黑影！！一看到我就朝我过来，我直接跑掉了"
@@ -722,7 +722,7 @@
           "do": "say",
           "lines": [
             {
-              "speaker": "李淳罡",
+              "speaker": "陈遇",
               "portrait": "a",
               "side": "right",
               "text": "幸好— 跑出公园就它不追了"
@@ -744,7 +744,7 @@
           "do": "say",
           "lines": [
             {
-              "speaker": "李淳罡",
+              "speaker": "陈遇",
               "portrait": "a",
               "side": "right",
               "text": "不道啊，突然就觉得应该转头就跑。你别说，还挺像一只猫的"

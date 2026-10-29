@@ -106,7 +106,7 @@ static func test_duel_qte_input_and_cleanup(h: TestHarness) -> void:
 	overlay._set_freeze_reason(ChaseOverlay.FREEZE_FOCUS, false)
 	h.check("C对抗进入真实慢动作", Engine.time_scale, 0.2)
 	h.check("C对抗拉近镜头", main.camera.zoom.is_equal_approx(base_zoom * 1.3), true)
-	h.check("C对抗不是黑雾提示", overlay._caption.text, "白凝冰正在逼近")
+	h.check("C对抗不是黑雾提示", overlay._caption.text, "裴予安正在逼近")
 	h.check("C对抗按键面板居中", absf(overlay._panel_rect.get_center().x - 160.0) < 1, true)
 	overlay._warning_until_usec = Time.get_ticks_usec() - 1
 	overlay._process(0)
@@ -416,7 +416,7 @@ static func test_market_ending_contract(h: TestHarness) -> void:
 				image_hide_index = index
 			if step.kind == &"say":
 				var lines: Array = step.data.get("lines", [])
-				if lines.size() == 2 and str(lines[0].get("speaker", "")) == "白凝冰":
+				if lines.size() == 2 and str(lines[0].get("speaker", "")) == "裴予安":
 					c_lines_index = index
 	h.check("End7尾声CG出现在C黑屏对白之后并承托最终标题",
 		c_lines_index >= 0 and c_lines_index < epilogue_index \
