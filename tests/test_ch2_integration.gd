@@ -15,6 +15,7 @@ static func run(harness: TestHarness) -> void:
 	_test_events_and_maps(harness)
 	_test_assets(harness)
 	await _test_bugfixes(harness)
+	await preload("res://tests/test_cutscene_actor_lifetime.gd").run(harness)
 	await preload("res://tests/test_chase_motion.gd").run(harness)
 	await preload("res://tests/test_library_flow_revision.gd").run(harness)
 	await _test_fairy_tale_and_shelf_animation(harness)

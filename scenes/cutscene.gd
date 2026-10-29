@@ -980,12 +980,12 @@ func _npc_move(step: StageStep) -> void:
 	var actor := _actor(step.text("id"))
 	if actor == null:
 		return
+	var generation := _generation
 	var target := step.point("to")
 	var time := _time(step.number("time", 1.0))
 	if step.has("library_role") and main.current_map.id == &"library":
 		target = preload("res://scenes/library_staging.gd").point(main.current_map, step.text("library_role"))
 		var route := preload("res://scenes/library_staging.gd").route(main.current_map, actor.position, target)
-		var generation := _generation
 		_footsteps_for(time)
 		var length := 0.0
 		var previous := actor.position
@@ -993,11 +993,13 @@ func _npc_move(step: StageStep) -> void:
 			length += previous.distance_to(p)
 			previous = p
 		for p: Vector2 in route:
-			if generation != _generation or not is_instance_valid(actor):
+			if generation != _generation or not is_instance_valid(actor) or actor.is_queued_for_deletion():
 				return
 			_walk_actor(actor, p)
 			await _move_to(actor, p, time * actor.position.distance_to(p) / maxf(length, 0.001))
-		_stop_actor(actor)
+		# 最后一段补间期间也可能回溯、取消或替换同名角色；类型检查发生在调用前。
+		if generation == _generation and is_instance_valid(actor) and not actor.is_queued_for_deletion():
+			_stop_actor(actor)
 		return
 	_walk_actor(actor, target)
 	# **脚步和走路一起跑。** 这一句不 await —— 让它自己在后台按步频踩，
@@ -1013,7 +1015,8 @@ func _npc_move(step: StageStep) -> void:
 		await _move_and_fade(actor, target, time)
 	else:
 		await _move_to(actor, target, time)
-	_stop_actor(actor)
+	if generation == _generation and is_instance_valid(actor) and not actor.is_queued_for_deletion():
+		_stop_actor(actor)
 
 
 ## 演出里临时角色走路的步频（秒）。
@@ -1216,6 +1219,7 @@ func _focus(step: StageStep) -> void:
 ## `pin: true` 让角色**被按住**：不参与物理，也不被挤出去。躺床上那一幕
 ## 要靠它 —— 那个点落在床的碰撞箱里，物理每帧会把人推出来，画面上是在抖。
 func _place_player(step: StageStep) -> void:
+	var generation := _generation
 	if main.player == null:
 		return
 
@@ -1232,13 +1236,12 @@ func _place_player(step: StageStep) -> void:
 
 	var walk := _time(step.number("time", 0.0))
 	var walking := not instant and (walk > 0.0 or step.has("path"))
+	var pursuit_finished: Array[bool] = [true]
 	if step.flag("c_pursuit"):
 		var pursuit := StageStep.from_dictionary({"do":"npc_move", "id":"c",
 			"to":[0,0], "library_role":"barrier_c", "time":walk})
-		if instant:
-			await _npc_move(pursuit)
-		else:
-			_npc_move(pursuit)
+		pursuit_finished[0] = false
+		_move_pursuit(pursuit, pursuit_finished)
 
 	# **即时模式下不走、直接落位。** 走路是 `await` 出来的，一 await 就把
 	# 控制权让出去 —— 而测试依赖「`interact()` 之后整段同步跑完」，
@@ -1251,6 +1254,13 @@ func _place_player(step: StageStep) -> void:
 	else:
 		main.player.global_position = target
 
+	# 两条路线段数不同，补间结束帧也不同；两人都到位才允许后续倒架重建C。
+	while not pursuit_finished[0] and generation == _generation:
+		if not is_instance_valid(main) or not main.is_inside_tree():
+			return
+		await main.get_tree().process_frame
+	if generation != _generation or not is_instance_valid(main):
+		return
 	main.player.velocity = Vector2.ZERO
 	# 朝向：不写 `facing` 就不动它 —— 走完那段留着的朝向本来就是对的
 	# （往上走完该露背面），硬写成默认的「朝下」会把最后一步拧回去。
@@ -1269,6 +1279,11 @@ func _place_player(step: StageStep) -> void:
 	main.update_camera()
 
 
+func _move_pursuit(step: StageStep, finished: Array[bool]) -> void:
+	await _npc_move(step)
+	finished[0] = true
+
+
 ## 让主角沿路径点走。**每一段都拆成「先横后竖」**，画面上只有四个方向。
 ##
 ## 直接补间到目标点是**斜着飘过去**的，小人看着像在水上漂（2026-09-24 策划报的）。
@@ -1282,6 +1297,7 @@ func _place_player(step: StageStep) -> void:
 ## 每一件挡人的家具都要算进去，手算差两像素就贴着墙走不过去。
 func _walk_player(route: Array[Vector2], total_time: float) -> void:
 	var player: Player = main.player
+	var generation := _generation
 	# 从**人在哪**起步，不从第一个路径点起步 —— 两者差几像素的时候，
 	# 按路径点算出来的位移会让人最后停偏。
 	var full: Array[Vector2] = [player.global_position]
@@ -1299,6 +1315,8 @@ func _walk_player(route: Array[Vector2], total_time: float) -> void:
 	_footsteps_for(span)
 
 	for leg: Vector2 in legs:
+		if generation != _generation or not is_instance_valid(player):
+			return
 		player.facing = _facing(_facing_name(leg))
 		player.play_animation(true)
 		# **按位移量补间，不是按目标坐标。** 补间改的是 `position`，
@@ -1306,7 +1324,8 @@ func _walk_player(route: Array[Vector2], total_time: float) -> void:
 		# 角色挂在哪个父节点底下、那个节点有没有偏移。
 		await _move_to(player, player.position + leg,
 			maxf(0.02, span * leg.length() / total))
-	player.play_animation(false)
+	if generation == _generation and is_instance_valid(player):
+		player.play_animation(false)
 
 
 ## 把路径点拆成一串**只含正方向**的小段。
