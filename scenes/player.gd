@@ -18,6 +18,7 @@ var chase_input_locked := false
 var _chase_burst_velocity := Vector2.ZERO
 var _chase_burst_remaining := 0.0
 var _chase_burst_distance := 0.0
+var _chase_burst_total := 0.0
 var _chase_burst_time_left := 0.0
 var _chase_burst_elapsed := 0.0
 
@@ -115,32 +116,22 @@ func _init() -> void:
 
 func _physics_process(_delta: float) -> void:
 	if _chase_burst_time_left > 0.0:
-		if _chase_burst_remaining > 0.0:
-			_chase_burst_elapsed = minf(CHASE_BURST_DURATION, _chase_burst_elapsed + _delta)
-			var progress: float = _chase_burst_elapsed / CHASE_BURST_DURATION
-			var burst_distance: float = CHASE_BURST_DISTANCE * scale.x
-			var burst_speed: float = burst_distance / CHASE_BURST_DURATION \
-				* 6.0 * progress * (1.0 - progress)
-			_chase_burst_velocity = facing * burst_speed
-			velocity = _chase_burst_velocity
-			var motion: Vector2 = _chase_burst_velocity * _delta
-			var collision := move_and_collide(motion)
-			if collision != null:
-				_chase_burst_remaining = 0.0
-				_chase_burst_time_left = 0.0
-				_chase_burst_elapsed = 0.0
-			else:
-				_chase_burst_distance += motion.length()
-				_chase_burst_remaining = burst_distance - _chase_burst_distance
-				_chase_burst_time_left = CHASE_BURST_DURATION - _chase_burst_elapsed
+		# 用累计位移曲线的差值，距离和结束时间不随帧率漂移，也不忽略救援指定的短距离。
+		_chase_burst_elapsed = minf(CHASE_BURST_DURATION, _chase_burst_elapsed + _delta)
+		var progress: float = _chase_burst_elapsed / CHASE_BURST_DURATION
+		var wanted := _chase_burst_total * progress * progress * (3.0 - 2.0 * progress)
+		var step := maxf(0.0, wanted - _chase_burst_distance)
+		var motion := facing * step
+		_chase_burst_velocity = motion / maxf(_delta, 0.000001)
+		velocity = _chase_burst_velocity
+		var collision := move_and_collide(motion)
+		_chase_burst_distance = wanted
+		_chase_burst_remaining = maxf(0.0, _chase_burst_total - wanted)
+		_chase_burst_time_left = CHASE_BURST_DURATION - _chase_burst_elapsed
+		if collision != null:
+			_chase_burst_time_left = 0.0
 		if _chase_burst_time_left <= 0.0:
-			_chase_burst_remaining = 0.0
-			_chase_burst_distance = 0.0
-			_chase_burst_velocity = Vector2.ZERO
-			velocity = Vector2.ZERO
-			_chase_burst_elapsed = 0.0
-			chase_input_locked = false
-			play_animation(false)
+			cancel_chase_burst()
 		return
 	if chase_input_locked:
 		velocity = Vector2.ZERO
@@ -160,11 +151,12 @@ func _physics_process(_delta: float) -> void:
 
 
 func start_chase_burst(direction: Vector2, distance: float = CHASE_BURST_DISTANCE) -> bool:
-	if direction == Vector2.ZERO:
+	if direction.is_zero_approx() or distance <= 0.0:
 		return false
 	var normalized := direction.normalized()
 	facing = normalized
-	_chase_burst_remaining = distance * scale.x
+	_chase_burst_total = distance * scale.x
+	_chase_burst_remaining = _chase_burst_total
 	_chase_burst_distance = 0.0
 	_chase_burst_time_left = CHASE_BURST_DURATION
 	_chase_burst_elapsed = 0.0
@@ -183,6 +175,18 @@ func is_chase_bursting() -> bool:
 	return _chase_burst_time_left > 0.0
 
 
+func cancel_chase_burst() -> void:
+	_chase_burst_time_left = 0.0
+	_chase_burst_remaining = 0.0
+	_chase_burst_distance = 0.0
+	_chase_burst_total = 0.0
+	_chase_burst_elapsed = 0.0
+	_chase_burst_velocity = Vector2.ZERO
+	velocity = Vector2.ZERO
+	chase_input_locked = false
+	play_animation(false)
+
+
 ## Returns the longest collision-free burst length in unscaled player units.
 func burst_clearance(direction: Vector2, limit: float) -> float:
 	if direction.is_zero_approx() or limit <= 0.0:
@@ -191,7 +195,7 @@ func burst_clearance(direction: Vector2, limit: float) -> float:
 	var distance := 0.0
 	while distance < limit:
 		var step := minf(6.0, limit - distance)
-		if test_move(global_transform, unit * step * scale.x):
+		if test_move(global_transform, unit * (distance + step) * scale.x):
 			break
 		distance += step
 	return distance

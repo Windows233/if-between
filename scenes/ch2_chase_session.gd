@@ -295,7 +295,10 @@ func _finish_rescue_route() -> void:
 
 
 func can_move_player() -> bool:
-	return active and not _cancelled and not _arrived \
+	# 救援已收起追逐，但推开主角的受控冲刺仍需物理更新；输入由Player锁住。
+	var rescue_burst: bool = _rescue_pending and main != null and main.player != null \
+		and main.player.is_chase_bursting()
+	return (rescue_burst or (active and not _arrived)) and not _cancelled \
 		and (overlay == null or not overlay.is_frozen())
 
 
@@ -335,7 +338,7 @@ func cancel() -> void:
 	active = false
 	_qte_started = false
 	if main != null and main.player != null:
-		main.player.chase_input_locked = false
+		main.player.cancel_chase_burst()
 		main.walk_and_use = false
 		main.player.walk_path.clear()
 	_restore_world()
