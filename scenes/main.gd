@@ -1648,6 +1648,12 @@ func _travel_through_portal(point: Vector2) -> void:
 	# **挂了事件的地点先演那一段**（进去之后的事由它自己 `goto`），
 	# 和 `_take_portal` 一个规矩。2026-09-25 补上：集市那一段原来是挂在
 	# 卧室门上的，现在由大地图这个地点自己接，两条路少一条就漏一半。
+	# 被拦着的门：点过去/走过去也要拦，和按键进门（`_take_portal`）同一个判据。
+	if portal != null and _portal_blocked(portal):
+		if portal.blocked_text != "" and toast != null:
+			toast.show_text(portal.blocked_text)
+		return
+
 	if portal != null and portal.event_id != &"":
 		start_story(portal.event_id, &"")
 		return

@@ -15,6 +15,8 @@ static func run(h: TestHarness) -> void:
 	await test_approach_actor_completes(h)
 	await test_chase_burst_animation_and_collision(h)
 	test_window_marker_and_delivery_timing(h)
+	for used_stealth: bool in [false, true]:
+		await test_classroom_hiding_without_stealth(h, used_stealth)
 	test_library_art_restoration(h)
 	await test_cancelled_dodge_qte_can_restart(h)
 	await test_duel_qte_input_and_cleanup(h)
@@ -132,6 +134,59 @@ static func test_duel_qte_input_and_cleanup(h: TestHarness) -> void:
 	h.check("后续黑雾QTE仍可启动", overlay.start_qte(&"e"), true)
 	h.check("黑雾追逐没有沿用C提示", overlay._caption.text, "黑雾逼近")
 	overlay.cancel_qte()
+	main.queue_free()
+
+
+## 逃回教室时没按 F 隐蔽（stealth_started 为假）也必须能抛币推进；
+## 抛币前后门不能出去，按键进门和点击/走过去两条路都要拦。
+static func test_classroom_hiding_without_stealth(h: TestHarness, used_stealth := false) -> void:
+	var main := h.new_main()
+	main.cutscene.instant = true
+	ItemTable.add(main.flags, &"charm")
+	main.flags.set_value(&"ch2/personal/stealth_started", used_stealth)
+	main.enter_map(&"school_gate", &"near_classroom", true)
+	main.start_story(&"ch2_library_cat", &"stealth_escape")
+	for _frame: int in 600:
+		if not main.story.is_active():
+			break
+		if main.dialogue.is_open():
+			main.dialogue.advance()
+			main.dialogue.advance()
+		main.cutscene.consume_click()
+		await h.root.get_tree().process_frame
+	h.check("未隐蔽逃回教室后剧情交还控制", main.story.is_active(), false)
+	h.check("躲进教室状态已记录", main.flags.get_value(&"ch2/classroom_hiding"), true)
+	h.check("窗边目标在抛币前保留", main.flags.get_value(&"ch2/window_marker_active"), true)
+	var gate_at: Vector2 = main.current_map.spawn_point(&"from_gate")
+	main.player.global_position = gate_at
+	main.interact()
+	h.check("抛币前按键不能从后门离开", main.current_map.id, &"classroom")
+	h.check("后门提示外面危险", main.toast.current_text(), "外面太危险了，现在不能离开教室。")
+	main._travel_through_portal(gate_at)
+	h.check("抛币前点击后门也不能离开", main.fade.is_busy() or main.current_map.id != &"classroom", false)
+	main.toast.hide_now()
+	await h.root.get_tree().process_frame
+	var window := _actor(main.current_map, &"window")
+	h.check("教室有窗户交互对象", window != null, true)
+	if window != null:
+		main.player.global_position = window.reach.get_center()
+		main.player.facing = Vector2.LEFT
+		main.interact()
+		h.check("未隐蔽也能与窗户互动", main.has_seen(&"ch2_classroom_window"), true)
+		for _frame: int in 600:
+			if not main.story.is_active():
+				break
+			if main.dialogue.is_open():
+				main.dialogue.advance()
+				main.dialogue.advance()
+			main.cutscene.consume_click()
+			await h.root.get_tree().process_frame
+		h.check("抛币后决策币已扣除", ItemTable.has(main.flags, &"charm"), false)
+		h.check("抛币完成标记已记录", main.flags.get_value(&"ch2/library/charm_thrown"), true)
+		h.check("抛币后目标提示清除", main.flags.get_value(&"ch2/window_marker_active"), false)
+		h.check("抛币不改写实际隐蔽历史", main.flags.get_value(&"ch2/personal/stealth_started"), used_stealth)
+		h.check("抛币后解除教室封锁", main.flags.get_value(&"ch2/classroom_hiding"), false)
+		h.check("抛币后进入离界夜市", main.current_map.id, &"market_night")
 	main.queue_free()
 
 
@@ -498,7 +553,7 @@ static func test_map_bindings(h: TestHarness) -> void:
 				and marker_view._actor_markers.is_empty(), true)
 		marker_view.clear()
 		var back_gate := _portal(classroom, &"back_gate")
-		h.check("隐蔽路线后门受阻", back_gate != null and back_gate.blocked_by == "ch2/personal/stealth_started", true)
+		h.check("躲进教室后后门受阻", back_gate != null and back_gate.blocked_by == "ch2/classroom_hiding", true)
 	if market != null:
 		var market_flags := WorldState.new()
 		var b_anchor := _actor(market, &"b_end_anchor")

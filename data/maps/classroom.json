@@ -197,8 +197,8 @@
   "player_scale": 1,
   "portals": [
     {
-      "blocked_by": "ch2/personal/stealth_started",
-      "blocked_text": "现在还不能从后门离开，先把定位决策币丢到窗外。",
+      "blocked_by": "ch2/classroom_hiding",
+      "blocked_text": "外面太危险了，现在不能离开教室。",
       "id": "back_gate",
       "label": "学校大门",
       "rect": [
