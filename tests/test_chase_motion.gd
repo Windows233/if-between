@@ -5,6 +5,7 @@ extends RefCounted
 
 static func run(h: TestHarness) -> void:
 	h.section("追逐冲刺与C救场衔接")
+	await _test_departure_and_retries(h)
 	_test_burst(h)
 	await _test_clearance(h)
 	await _test_rescue_story(h,false)
@@ -68,6 +69,8 @@ static func _test_door_catch(h: TestHarness, node: StringName) -> void:
 		if main.current_map.id == &"library" and not main.story.is_active():
 			break
 	h.check(str(node)+"被追上同时按进门进入图书馆",main.current_map.id,&"library")
+	h.check(str(node)+"直接入馆有C", main.cutscene.actor_ids().has("c"), true)
+	h.check(str(node)+"直接入馆C使用正式站位",main.cutscene._actor("c").position,preload("res://scenes/library_staging.gd").point(main.current_map,"entry_c"))
 	h.check(str(node)+"门口冲突后剧情不挂起",main.story.is_active(),false)
 	h.check(str(node)+"门口冲突后时速恢复",Engine.time_scale,1.0)
 	main.story.cancel()
@@ -205,6 +208,7 @@ static func _test_rescue_story(h: TestHarness, third_catch: bool) -> void:
 	main.flags.set_value(&"ch2/diary_read",true)
 	main.flags.set_value(&"ch2/teamed_c",true)
 	ItemTable.add(main.flags,&"charm")
+	main.flags.set_value(&"ch2/chase_failures",2)
 	h.check("救场回归启动真实追逐",main.chase_session.begin(),true)
 	# 只加快猫接近；QTE输入、冲刺、剧情分流和救援均走正式流程。
 	main.start_story(&"ch2_diary",&"run_q1")
@@ -261,5 +265,56 @@ static func _test_rescue_story(h: TestHarness, third_catch: bool) -> void:
 	h.check("救场入馆写入首次进入标记",main.flags.get_value(&"ch2/first_library_entry"),true)
 	h.check("救场结束没有遗留冲刺锁",main.player.is_chase_bursting() or main.player.chase_input_locked,false)
 	main.story.cancel()
+	main.queue_free()
+	await h.root.get_tree().process_frame
+
+
+## 跨End5重试走真实错键输入；第三次失败救场，累计数不被检查点覆盖。
+static func _test_departure_and_retries(h: TestHarness) -> void:
+	var main := h.new_main()
+	main.cutscene.instant = true
+	main.flags.set_value(&"ch2/rescued_c", true)
+	main.flags.set_value(&"ch2/teamed_c", true)
+	main.flags.set_value(&"ch2/yard_entry_seen", true)
+	main.enter_map(&"school_yard", &"from_gate")
+	main.start_story(&"ch2_c_wait")
+	main._on_choice_chosen(&"ready")
+	h.check("与C准备后主角直接进入教室", main.current_map.id, &"classroom")
+	h.check("教学楼内不显示C模型", main.cutscene.actor_ids().has("c"), false)
+	main.enter_map(&"school_yard", &"from_gate")
+	h.check("离场后操场不重新生成C", main.cutscene.actor_ids().has("c"), false)
+	main.enter_map(&"school_gate", &"near_classroom")
+	h.check("教学楼外不重新生成C", main.cutscene.actor_ids().has("c"), false)
+	main.flags.set_value(&"ch2/diary_read", true)
+	ItemTable.add(main.flags, &"charm")
+	main.capture_ch2_checkpoint("chase")
+	main.chase_session.begin()
+	main.start_story(&"ch2_diary", &"run_q1")
+	for attempt: int in range(1,4):
+		var deadline := Time.get_ticks_msec() + 10000
+		while Time.get_ticks_msec() < deadline:
+			await h.root.get_tree().process_frame
+			var session: Ch2ChaseSession = main.chase_session
+			if is_instance_valid(session._mist) and session._waiting_for_trigger:
+				session._mist.global_position = main.player.global_position + Vector2.RIGHT * 10
+			if main.chase_overlay._phase == ChaseOverlay.Phase.ACTIVE:
+				var key := InputEventKey.new()
+				key.pressed = true
+				key.physical_keycode = KEY_X
+				main._unhandled_input(key)
+			if attempt < 3 and main.choice_menu.is_open():
+				break
+			if main.current_map.id == &"library" and not main.story.is_active():
+				break
+		h.check("失败累计第%d次" % attempt, main.flags.get_value(&"ch2/chase_failures"), attempt)
+		if attempt < 3:
+			h.check("前两次失败进入End5重试页", main.story.runtime.current_node().id, &"end5_chase_outcome")
+			h.check("前两次不触发C救场", main.flags.get_value(&"ch2/chase_rescued"), false)
+			main._on_choice_chosen(&"retry_chase")
+			h.check("重试保留累计失败数", main.flags.get_value(&"ch2/chase_failures"), attempt)
+		else:
+			h.check("第三次失败C救场进入图书馆", main.current_map.id, &"library")
+			h.check("救场后图书馆有C", main.cutscene.actor_ids().has("c"), true)
+			h.check("救场后可推进图书馆后续剧情", main.flags.get_value(&"ch2/first_library_entry"), true)
 	main.queue_free()
 	await h.root.get_tree().process_frame

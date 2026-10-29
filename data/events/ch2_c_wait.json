@@ -33,15 +33,7 @@
     {
       "id": "ready_check",
       "stage": [],
-      "next": "depart",
-      "next_when": {
-        "if": {
-          "var": "ch2/c_at_school_gate",
-          "op": "==",
-          "value": true
-        },
-        "next": "departed"
-      }
+      "next": "depart"
     },
     {
       "id": "later",
@@ -69,8 +61,8 @@
         },
         {
           "do": "goto",
-          "map": "school_gate",
-          "spawn": "near_yard"
+          "map": "classroom",
+          "spawn": "from_gate"
         },
         {
           "do": "fade",
@@ -79,7 +71,8 @@
         }
       ],
       "set": {
-        "ch2/c_at_school_gate": true
+        "ch2/c_at_school_gate": true,
+        "ch2/c_left_for_classroom": true
       },
       "next": "departed"
     },
