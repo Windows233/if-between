@@ -1166,7 +1166,8 @@
     {
       "id": "window_prompt",
       "set": {
-        "ch2/window_marker_active": true
+        "ch2/window_marker_active": true,
+        "ch2/classroom_hiding": true
       },
       "stage": [
         {

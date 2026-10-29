@@ -4,22 +4,12 @@
   "nodes": [
     {
       "id": "check",
-      "set": {
-        "ch2/window_marker_active": false
-      },
-      "stage": [
-        {
-          "do": "map_actor_marker",
-          "actor": "",
-          "text": ""
-        }
-      ],
       "next": "blocked",
       "next_when": {
         "if": {
           "all": [
             {
-              "var": "ch2/personal/stealth_started",
+              "var": "ch2/classroom_hiding",
               "op": "==",
               "value": true
             },
@@ -46,6 +36,11 @@
       "id": "throw",
       "stage": [
         {
+          "do": "map_actor_marker",
+          "actor": "",
+          "text": ""
+        },
+        {
           "do": "play_sound",
           "path": "res://audio/sfx/coin_throw.wav"
         },
@@ -61,13 +56,17 @@
           ]
         }
       ],
-      "next": "throw_commit"
+      "next": "throw_commit",
+      "set": {
+        "ch2/window_marker_active": false
+      }
     },
     {
       "id": "throw_commit",
       "set": {
         "item/charm": 0,
-        "ch2/library/charm_thrown": true
+        "ch2/library/charm_thrown": true,
+        "ch2/classroom_hiding": false
       },
       "stage": [
         {
