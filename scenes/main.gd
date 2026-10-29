@@ -1508,6 +1508,9 @@ func begin_interaction(actor: MapDef.Actor) -> void:
 		if classroom_events.has(actor.id):
 			start_story(classroom_events[actor.id])
 			return
+		if actor.label == "窗户":
+			start_story(&"ch2_classroom_window")
+			return
 	if actor.interactions.is_empty():
 		return
 

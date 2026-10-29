@@ -419,8 +419,12 @@ static func _test_events_and_maps(harness: TestHarness) -> void:
 		not throw_has_center_image and throw_has_coin_sound, true)
 	var window_main := harness.new_main()
 	window_main.enter_map(&"classroom", &"from_gate", true)
-	var window_actor := MapDef.Actor.new()
-	window_actor.id = &"window"
+	var window_actor: MapDef.Actor = null
+	for candidate: MapDef.Actor in window_main.current_map.actors:
+		if candidate.label == "窗户":
+			window_actor = candidate
+			break
+	harness.check("教室地图加载真实窗户物件", window_actor != null, true)
 	window_main.begin_interaction(window_actor)
 	harness.check("当前窗户物件ID触发抛币剧情",
 		window_main.story.event_id, &"ch2_classroom_window")
