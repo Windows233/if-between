@@ -6,6 +6,7 @@ extends RefCounted
 static func run(h: TestHarness) -> void:
 	test_events_and_endings(h)
 	await test_market_ending_contract(h)
+	await test_market_b_walkup(h)
 	test_map_bindings(h)
 	test_anchor_personal_flags(h)
 	test_checkpoint_keeps_persistent_state(h)
@@ -261,6 +262,63 @@ static func test_window_marker_and_delivery_timing(h: TestHarness) -> void:
 			and delivery.effects.get(&"ch2/cat_delivered") == true, true)
 
 
+## 真实离校事件返回夜市，先走近同尺寸的 B，再按交互开启对话。
+static func test_market_b_walkup(h: TestHarness) -> void:
+	var main := h.new_main()
+	main.cutscene.instant = true
+	main.start_story(&"ch2_classroom_window",&"safe_departure")
+	h.check("离校后返回夜市",main.current_map.id,&"market_night")
+	var b := _actor(main.current_map,&"b_end_anchor")
+	h.check("返市神秘人已出现",b != null and b.is_active(main.flags),true)
+	if b == null:
+		main.queue_free()
+		return
+	var node: Sprite2D = main.map_view._actor_variant_nodes.get(b.id)
+	var body: AnimatedSprite2D = main.player.get_node("Body")
+	var hero_height: float = body.sprite_frames.get_frame_texture(body.animation,body.frame).get_height()*body.scale.y*main.player.scale.y
+	h.check("神秘人实际渲染高度等于主角",node != null and is_equal_approx(node.texture.get_height()*node.scale.y,hero_height),true)
+	var foot := Vector2(b.rect.get_center().x,b.rect.end.y)
+	var configured: Array = b.raw.get("spawn_at",[])
+	h.check("神秘人显示框与配置脚点一致",configured.size()==2 and foot.is_equal_approx(Vector2(configured[0],configured[1])),true)
+	var start: Vector2 = main.player.position
+	h.check("集市入口需走近后才能与神秘人交谈",main.current_map.actor_near(start,main.INTERACT_RANGE,main.flags,(foot-start).normalized()) != b,true)
+	var landing := Vector2.INF
+	var nearest := INF
+	for point: Vector2 in WalkGrid.reachable(main.current_map,start):
+		if not WalkGrid.has_landing_room(main.current_map,point) or WalkGrid.foot_rect(point,main.current_map.player_scale).intersects(b.rect):
+			continue
+		if main.current_map.portal_at(point,main.flags) != null:
+			continue
+		# 走进近身区，给步行停止容差留余量，避免停在交互距离的最外边缘。
+		if MapDef.rect_distance(b.reach,point) > main.INTERACT_RANGE*0.5:
+			continue
+		if main.current_map.actor_near(point,main.INTERACT_RANGE,main.flags,(foot-point).normalized()) != b:
+			continue
+		if point.distance_to(start) < nearest:
+			nearest = point.distance_to(start)
+			landing = point
+	h.check("神秘人近身交互区有可达脚点",landing != Vector2.INF,true)
+	if landing == Vector2.INF:
+		main.queue_free()
+		return
+	var route := WalkGrid.path_to(main.current_map,start,landing)
+	main.player.walk_path.assign(route)
+	for frame: int in 180:
+		await h.root.get_tree().physics_frame
+		if main.player.walk_path.is_empty():
+			break
+	h.check("主角真实行走到神秘人附近",main.player.position.distance_to(landing)<3 and main.player.position.distance_to(start)>4,true)
+	h.check("走近前后不自动抢开剧情",main.story.is_active(),false)
+	main.player.facing = (foot-main.player.position).normalized()
+	main.cutscene.instant = false
+	main.interact()
+	h.check("近身交互开启神秘人接应对话",main.story.event_id,&"ch2_market_b_end")
+	h.check("神秘人对话不会放大场景人物贴图",main.object_preview.content,null)
+	main.story.cancel()
+	main.queue_free()
+	await h.root.get_tree().process_frame
+
+
 static func test_market_ending_contract(h: TestHarness) -> void:
 	var event := DataLoader.load_event(&"ch2_market_b_end", DataLoader.load_endings().ids())
 	h.check("夜市收尾事件可载入供合约测试", event != null, true)
@@ -448,7 +506,7 @@ static func test_map_bindings(h: TestHarness) -> void:
 		market_flags.set_value(&"ch2/left_veil_realm", true)
 		h.check("夜市 B 离界后显示", b_anchor != null and b_anchor.is_active(market_flags), true)
 		h.check("夜市 B 可见贴图", b_anchor != null and b_anchor.sprite == "res://art/npc/b/down1.png", true)
-		h.check("夜市 B 使用下半身显示框", b_anchor != null and b_anchor.rect.size.y == 45.0, true)
+		h.check("夜市 B 与主角使用同一显示高度", b_anchor != null and is_equal_approx(b_anchor.rect.size.y,Player.DISPLAY_HEIGHT*market.player_scale), true)
 		h.check("夜市 B 逻辑脚点在可站位置", b_anchor != null and WalkGrid.is_free(market, Vector2(b_anchor.rect.position.x + b_anchor.rect.size.x * 0.5, b_anchor.rect.end.y)), true)
 		market_flags.set_value(&"ch2/cat_delivered", true)
 		h.check("完成交接后地图隐藏 B 演员", b_anchor != null and b_anchor.is_active(market_flags), false)

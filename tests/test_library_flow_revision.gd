@@ -53,6 +53,17 @@ static func run(h: TestHarness) -> void:
 	h.check("开箱后自动进入猫对话", main.map_triggers.update(main.player.global_position), true)
 	h.check("二次猫对话C仍留在门口", main.cutscene._actor("c").position, c_entry)
 	h.check("猫在对话框右侧有立绘", main.dialogue.slot_portrait(DialogueLine.Side.RIGHT) != null, true)
+	var panel := Rect2(Vector2(0,main.dialogue.hold_top()),Vector2(main.get_viewport_rect().size.x,main.get_viewport_rect().size.y-main.dialogue.hold_top()))
+	for slot: DialoguePortrait in main.dialogue._slots:
+		if slot.side == DialogueLine.Side.RIGHT:
+			h.check("猫立绘完整放在对话框内",panel.encloses(Rect2(slot.sprite.position,slot.sprite.size)),true)
+	var cat_scene := DataLoader.load_event(&"ch2_library_cat").node(&"second_scene")
+	var portraits_ok := true
+	for step: StageStep in cat_scene.stage:
+		for line: Dictionary in step.data.get("lines",[]):
+			if line.get("speaker","") == "猫":
+				portraits_ok = portraits_ok and line.get("portrait","") == "res://art/props/library_cat_cover.png" and line.get("side","") == "right"
+	h.check("回溯后的猫台词复用现有立绘",portraits_ok,true)
 	h.check("猫对话不会残留宝箱近景", main.object_preview.content, null)
 	main.cutscene.instant = true
 	_drain(main, h)

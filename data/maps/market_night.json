@@ -122,22 +122,22 @@
       "npc_height": 45,
       "npc_pose": "down",
       "person": true,
-      "reach": [
-        286,
-        246,
-        64,
-        30
+      "reach_local": [
+        0,
+        10.5,
+        13.75,
+        16
       ],
       "rect": [
-        302,
-        217,
-        32,
-        45
+        281.125,
+        224.5,
+        13.75,
+        22.5
       ],
       "solid": false,
       "spawn_at": [
-        318,
-        262
+        288,
+        247
       ],
       "sprite": "res://art/npc/b/down1.png"
     }
