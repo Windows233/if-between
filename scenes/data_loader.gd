@@ -1,4 +1,4 @@
-## 读数据文件：地图、剧情事件、结局表、物品表。
+﻿## 读数据文件：地图、剧情事件、结局表、物品表。
 ##
 ## **全项目的 I/O 只在这里。** 理由：
 ##   - core 层不许碰文件系统，所以读文件的活必须留在外面
@@ -85,4 +85,25 @@ static func _read_json_object(path: String, tag: String) -> Variant:
 	if not (data is Dictionary):
 		push_error("[%s] 不是合法的 JSON 对象：%s" % [tag, path])
 		return null
-	return data
+	return fill_player_name(data)
+
+
+## 把剧情/地图数据里所有字符串中的 `{name}` 换成当前昵称（`PlayerName`）。
+##
+## 放在读文件这一处做：剧情和地图每次进场都从磁盘重读，名字换了也能跟上；
+## 对话框、字幕、IF 面板、记录各自就不必再认占位符。
+## 字典的键不动，只换值。
+static func fill_player_name(value: Variant) -> Variant:
+	if value is String:
+		return PlayerName.apply(value)
+	if value is Array:
+		var list: Array = value
+		for i: int in list.size():
+			list[i] = fill_player_name(list[i])
+		return list
+	if value is Dictionary:
+		var dict: Dictionary = value
+		for key: Variant in dict.keys():
+			dict[key] = fill_player_name(dict[key])
+		return dict
+	return value

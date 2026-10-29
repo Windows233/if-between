@@ -12,7 +12,7 @@ func run() -> void:
 		await process_frame
 		await RenderingServer.frame_post_draw
 		root.get_texture().get_image().save_png("res://docs/screenshots/cat_dialogue_revision.png")
-		main.dialogue.play(Dialogue.from_array([{"text":"C绕过来了，快逃回教学楼！\n到门口按E或空格。"}]))
+		main.dialogue.play(Dialogue.from_array([{"text":"白凝冰追来了，快逃回教学楼！\n到门口按E或空格。"}]))
 		main.dialogue.advance()
 		await process_frame
 		await RenderingServer.frame_post_draw

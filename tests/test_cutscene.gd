@@ -1,4 +1,4 @@
-## 演出指令与过场：解析、校验、以及开场整段跑下来的痕迹。
+﻿## 演出指令与过场：解析、校验、以及开场整段跑下来的痕迹。
 ##
 ## 由 `tests/run_tests.gd` 统一调用。断言与公共工具在 `TestHarness`。
 ##
@@ -1667,7 +1667,8 @@ static func test_ch2_scene_data(h: TestHarness) -> void:
 	# 那时候还叫 `result`，改名之后漏改，静默变成空块 —— 不报错，画面上只是少一块。
 	var peek_panel: StageStep = peek.stage[kinds_peek.find(&"if_panel")]
 	h.check("if 后面摆着「猫不见了」", peek_panel.text("if_block"), "猫不见了")
-	h.check("then 里是「来找主角帮忙」", peek_panel.text("then"), "来找主角帮忙")
+	h.check("then 里是「来找<昵称>帮忙」", peek_panel.text("then"),
+		"来找%s帮忙" % PlayerName.current)
 	h.check("而且这一框是纯展示（拖不动）",
 		peek_panel.data.get("disabled", false), true)
 
@@ -1931,7 +1932,7 @@ static func test_transient_talks(h: TestHarness) -> void:
 		h.check("A 那句「又有什么事情吗」",
 			(start.stage[0].data["lines"] as Array)[0]["text"], "又有什么事情吗")
 		h.check("两个选项", start.choices.size(), 2)
-		h.check("① 邀请A", start.choices[0].label, "邀请A")
+		h.check("① 邀请李淳罡", start.choices[0].label, "邀请李淳罡")
 		h.check("② 离开", start.choices[1].label, "离开")
 		h.check("两条路都演完就收（不带 next）",
 			a_talk.node(&"invited").next_id, &"")
@@ -1951,7 +1952,7 @@ static func test_transient_talks(h: TestHarness) -> void:
 					if not (raw is Dictionary):
 						continue
 					var line: Dictionary = raw
-					if str(line.get("speaker", "")) != "A":
+					if str(line.get("speaker", "")) != "李淳罡":
 						continue
 					a_lines += 1
 					if str(line.get("portrait", "")) == "":

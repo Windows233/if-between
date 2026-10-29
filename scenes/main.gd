@@ -74,6 +74,8 @@ var gallery_panel: EndingGalleryPanel
 var save_menu: SaveMenu
 ## 标题界面：新游戏 / 继续 / 图鉴 / 设置
 var title_screen: TitleScreen
+## 开新游戏时起昵称的面板。
+var name_entry: NameEntryPanel
 ## 游戏中的暂停菜单（ESC）：继续 / 设置 / 保存 / 加载 / 回主菜单 / 退出
 var pause_menu: PauseMenu
 ## 设置面板。设置本身在 `settings`。
@@ -355,6 +357,13 @@ func boot() -> void:
 	title_screen.setup()
 	title_screen.chosen.connect(menu_flow.on_title_chosen)
 
+	name_entry = NameEntryPanel.new()
+	name_entry.name = "NameEntry"
+	add_child(name_entry)
+	name_entry.setup()
+	name_entry.confirmed.connect(menu_flow.on_name_confirmed)
+	name_entry.cancelled.connect(menu_flow.on_name_cancelled)
+
 	pause_menu = PauseMenu.new()
 	pause_menu.name = "PauseMenu"
 	add_child(pause_menu)
@@ -415,7 +424,7 @@ func boot() -> void:
 
 	ui_host.setup(
 		dialogue, choice_menu, gallery_panel, save_menu, settings_panel, title_screen,
-		inventory, pause_menu
+		inventory, pause_menu, name_entry
 	)
 
 	# 某一行台词要震屏时，对话框只报一声，摇镜头的事在这儿做
@@ -473,7 +482,7 @@ func _set_process_modes() -> void:
 	#
 	# 面板要能接键、要能重画；`fade` 要能淡（读档换场景时它在动）；
 	# 音乐不停 —— 暂停菜单上飘着曲子是常态，停了反而像出错了。
-	for node: Node in [title_screen, save_menu, settings_panel, pause_menu,
+	for node: Node in [title_screen, name_entry, save_menu, settings_panel, pause_menu,
 			gallery_panel, inventory, toast, fade, location_hud, sfx, bgm]:
 		if node != null:
 			node.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -1182,6 +1191,15 @@ func _unhandled_input(event: InputEvent) -> void:
 	# 快捷键，而暂停菜单上本来就有「保存」和「加载」两行。
 	# 两边同时生效就是从背后又叠出一个面板，叠完谁也收不掉 ——
 	# 按 F5 开出存档菜单、关掉，人还在暂停菜单里，看着像按了没反应。
+	# 起名面板开着时，打字由输入框自己吃；漏到这里的键（F5、B 之类的快捷键）
+	# 一律交给面板，不许从它背后再开存档菜单或背包。
+	if name_entry != null and name_entry.is_open():
+		if event is InputEventKey:
+			var name_key := event as InputEventKey
+			if name_key.pressed and not name_key.echo:
+				ui_host.handle_key(InputUtil.keycode_of(name_key))
+		return
+
 	if pause_menu != null and pause_menu.is_open():
 		if event is InputEventKey:
 			var paused_key := event as InputEventKey
@@ -1995,7 +2013,10 @@ func quit_game() -> void:
 ## 新开一局：清空世界状态，回到起始场景。
 ##
 ## **图鉴不动** —— 那是跨存档的全局记录，开新局不该把「你见过几个结局」清掉。
-func new_game(start_map: StringName = &"", start_spawn: StringName = &"") -> void:
+##
+## `player_name` 是开局时玩家起的昵称（见 `NameEntryPanel`）；留空则用 `PlayerName.DEFAULT`。
+func new_game(start_map: StringName = &"", start_spawn: StringName = &"",
+		player_name: String = "") -> void:
 	if escape_session != null and escape_session.active:
 		story.cancel()
 	if chase_session != null:
@@ -2003,7 +2024,7 @@ func new_game(start_map: StringName = &"", start_spawn: StringName = &"") -> voi
 	map_triggers.reset()
 	personal_anchor = PERSONAL_ANCHOR_SCRIPT.new()
 	ch2_checkpoints.clear()
-	menu_flow.new_game(start_map, start_spawn)
+	menu_flow.new_game(start_map, start_spawn, player_name)
 
 
 # ---------------------------------------------------------------- 存档
@@ -2229,6 +2250,8 @@ func load_game(slot: int = -1) -> bool:
 	var data := save_mgr.load_state(slot)
 	if data == null:
 		return false
+	# 昵称要在进地图、接剧情之前同步：两者都会从磁盘重读并替换 `{name}`。
+	PlayerName.sync_from(flags)
 	_sync_personal_anchor_from_flags()
 	_sync_ch2_checkpoints_from_flags()
 

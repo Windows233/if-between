@@ -7,13 +7,13 @@
       "talk": [
         { "speaker": "我", "text": "还在修这台留声机啊？", "side": "right",
           "portrait": "protagonist/smile" },
-        { "speaker": "A", "text": "是啊，怎么，你脸上写着[接了个麻烦活]。", "side": "left",
+        { "speaker": "李淳罡", "text": "是啊，怎么，你脸上写着[接了个麻烦活]。", "side": "left",
           "portrait": "a" },
         { "speaker": "我", "text": "哎，找猫。唯一信息只有一张模糊的照片。", "side": "right",
           "portrait": "protagonist/tired" }
       ],
       "choices": [
-        { "id": "invite", "label": "邀请A一起找猫", "set": { "a_invited": true }, "next": "invited" },
+        { "id": "invite", "label": "邀请李淳罡一起找猫", "set": { "a_invited": true }, "next": "invited" },
         { "id": "later", "label": "现在可不是闲聊的时候", "set": { "a_invited": false },
           "next": "gone",
           "if": { "var": "loop", "op": ">=", "value": 1 } }
@@ -24,11 +24,11 @@
       "talk": [
         { "speaker": "我", "text": "要不你和我一起来找猫吧，反正你也没事。", "side": "right",
           "portrait": "protagonist/smile" },
-        { "speaker": "A", "text": "行，我去那边找，我要找到了请我瓶汽水。", "side": "left",
+        { "speaker": "李淳罡", "text": "行，我去那边找，我要找到了请我瓶汽水。", "side": "left",
           "portrait": "a" },
         { "speaker": "我", "text": "傍晚在这碰头啊。", "side": "right",
           "portrait": "protagonist/smile" },
-        { "text": "（A 离开。）" }
+        { "text": "（李淳罡离开。）" }
       ],
       "next": "evening"
     },
@@ -36,7 +36,7 @@
       "id": "evening",
       "talk": [
         { "text": "—— 晚上" },
-        { "text": "（你等了很久，没有等到 A。）" },
+        { "text": "（你等了很久，没有等到李淳罡。）" },
         { "speaker": "我", "text": "这是怎么了……", "side": "right",
           "portrait": "protagonist/puzzled" }
       ],
@@ -50,8 +50,8 @@
     {
       "id": "warned",
       "talk": [
-        { "text": "（A 回来了，脸色发白。）" },
-        { "speaker": "A", "text": "下午在我后面……有东西盯了我一路。还好我跑得快。",
+        { "text": "（李淳罡回来了，脸色发白。）" },
+        { "speaker": "李淳罡", "text": "下午在我后面……有东西盯了我一路。还好我跑得快。",
           "side": "left", "portrait": "a" },
         { "speaker": "我", "text": "……那就别再一个人往那边去了。", "side": "right",
           "portrait": "protagonist/quiet" },
@@ -62,8 +62,8 @@
     {
       "id": "gone",
       "talk": [
-        { "text": "你一个人找了三天猫，其间再也没有看见过 A。" },
-        { "text": "再见面的时候，却发现 A 遇难了。" },
+        { "text": "你一个人找了三天猫，其间再也没有看见过李淳罡。" },
+        { "text": "再见面的时候，却发现李淳罡遇难了。" },
         { "speaker": "路人", "text": "好恐怖，听说有动物撕咬的痕迹。", "side": "left",
           "portrait": "passerby" },
         { "speaker": "我", "text": "！！怎么会.....", "side": "right",

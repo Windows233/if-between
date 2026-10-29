@@ -88,13 +88,13 @@
           "do": "say",
           "lines": [
             {
-              "speaker": "C",
+              "speaker": "白凝冰",
               "text": "竟然选择跳窗逃跑吗，年轻人就是有活力",
               "side": "right",
               "portrait": "c/neutral"
             },
             {
-              "speaker": "C",
+              "speaker": "白凝冰",
               "text": "不过，这下可就没地方藏了，哎",
               "side": "right",
               "portrait": "c/neutral"

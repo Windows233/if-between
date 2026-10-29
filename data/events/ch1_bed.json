@@ -276,7 +276,7 @@
         {
           "do": "if_panel",
           "if_block": "猫不见了",
-          "then": "来找主角帮忙",
+          "then": "来找{name}帮忙",
           "blocks": [
             "",
             "",

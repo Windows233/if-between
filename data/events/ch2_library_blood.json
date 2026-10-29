@@ -33,7 +33,7 @@
           "do": "say",
           "lines": [
             {
-              "speaker": "C",
+              "speaker": "白凝冰",
               "text": "......",
               "side": "right",
               "portrait": "c/neutral"
@@ -45,7 +45,7 @@
               "portrait": "protagonist/quiet"
             },
             {
-              "speaker": "C",
+              "speaker": "白凝冰",
               "text": "看来有人在这里出事，我们得小心一点了",
               "side": "right",
               "portrait": "c/neutral"

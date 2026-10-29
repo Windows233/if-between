@@ -61,7 +61,7 @@
           "lines": [
             {
               "speaker": "我",
-              "text": "中央地毯上的猫抬起头，C停在它身边。",
+              "text": "中央地毯上的猫抬起头，白凝冰停在它身边。",
               "side": "left",
               "portrait": "protagonist/thinking"
             }
@@ -71,7 +71,7 @@
           "do": "say",
           "lines": [
             {
-              "speaker": "C",
+              "speaker": "白凝冰",
               "text": "呢喃。不愧是“夜幕之泪”啊",
               "side": "right",
               "portrait": "c/neutral"
@@ -83,7 +83,7 @@
               "portrait": "protagonist/puzzled"
             },
             {
-              "speaker": "C",
+              "speaker": "白凝冰",
               "text": "你来试试吧，我不用武力的话这猫看起来不会乖呢 ^ ^",
               "side": "right",
               "portrait": "c/neutral"
@@ -319,13 +319,13 @@
           "do": "say",
           "lines": [
             {
-              "speaker": "C",
+              "speaker": "白凝冰",
               "text": "真漂亮啊，好久没见到纯度这么高的结晶了",
               "side": "right",
               "portrait": "c/neutral"
             },
             {
-              "speaker": "C",
+              "speaker": "白凝冰",
               "text": "你是来找猫的对吧，这个能给我吗",
               "side": "right",
               "portrait": "c/neutral"
@@ -337,7 +337,7 @@
               "portrait": "protagonist/guarded"
             },
             {
-              "speaker": "C",
+              "speaker": "白凝冰",
               "text": "真的不行吗 ^ ^",
               "side": "right",
               "portrait": "c/neutral"
@@ -349,7 +349,7 @@
               "portrait": "protagonist/guarded"
             },
             {
-              "speaker": "C",
+              "speaker": "白凝冰",
               "text": "好吧，真是可惜啊",
               "side": "right",
               "portrait": "c/neutral"
@@ -373,25 +373,25 @@
           "do": "say",
           "lines": [
             {
-              "speaker": "C",
+              "speaker": "白凝冰",
               "text": "可是，可",
               "side": "right",
               "portrait": "c/neutral"
             },
             {
-              "speaker": "C",
+              "speaker": "白凝冰",
               "text": "我已经给过你机会了，是你自己没有把握",
               "side": "right",
               "portrait": "c/neutral"
             },
             {
-              "speaker": "C",
+              "speaker": "白凝冰",
               "text": "不过还是得谢谢你，这种纯度的确实少见",
               "side": "right",
               "portrait": "c/neutral"
             },
             {
-              "speaker": "C",
+              "speaker": "白凝冰",
               "text": "你要怪就怪你的能力吧，让你拿着夜幕之泪去当敲门砖，倒不如就在这拜拜啦 ^ ^",
               "side": "right",
               "portrait": "c/neutral"
@@ -520,8 +520,8 @@
               "portrait": "protagonist/thinking"
             },
             {
-              "speaker": "C",
-              "text": "这就不行了吗，你还是得多练呐",
+              "speaker": "白凝冰",
+              "text": "这就不行了吗，{name}还是得多练呐",
               "side": "right",
               "portrait": "c/neutral"
             },
@@ -532,7 +532,7 @@
               "portrait": "protagonist/guarded"
             },
             {
-              "speaker": "C",
+              "speaker": "白凝冰",
               "text": "？ 好吧",
               "side": "right",
               "portrait": "c/neutral"
@@ -666,7 +666,7 @@
             },
             {
               "speaker": "猫",
-              "text": "蚀界产生的结晶内含有巨大的能量，这个C是告诉过你了喵",
+              "text": "蚀界产生的结晶内含有巨大的能量，这个白凝冰是告诉过你了喵",
               "side": "right",
               "portrait": "res://art/portrait/library_cat_dialogue.png"
             },
@@ -702,7 +702,7 @@
             },
             {
               "speaker": "我",
-              "text": "那其实我投靠C的话，这一切都解决了......",
+              "text": "那其实我投靠白凝冰的话，这一切都解决了......",
               "side": "left",
               "portrait": "protagonist/thinking"
             },
@@ -832,13 +832,13 @@
           "do": "say",
           "lines": [
             {
-              "speaker": "C",
+              "speaker": "白凝冰",
               "text": "真漂亮啊，好久没见到纯度这么高的结晶了",
               "side": "right",
               "portrait": "c/neutral"
             },
             {
-              "speaker": "C",
+              "speaker": "白凝冰",
               "text": "你是来找猫的对吧，现在猫你找到了，这个就给我吧",
               "side": "right",
               "portrait": "c/neutral"
@@ -850,13 +850,13 @@
               "portrait": "protagonist/guarded"
             },
             {
-              "speaker": "C",
+              "speaker": "白凝冰",
               "text": "是吗，那真是可惜啊~",
               "side": "right",
               "portrait": "c/neutral"
             },
             {
-              "speaker": "C",
+              "speaker": "白凝冰",
               "text": "那真是抱歉，呵",
               "side": "right",
               "portrait": "c/neutral"
@@ -897,20 +897,20 @@
           "do": "say",
           "lines": [
             {
-              "speaker": "C",
+              "speaker": "白凝冰",
               "text": "还不错嘛，有点警惕心",
               "side": "right",
               "portrait": "c/neutral"
             },
             {
-              "speaker": "C",
+              "speaker": "白凝冰",
               "text": "不过，你还是太年轻了啊",
               "side": "right",
               "portrait": "c/neutral"
             },
             {
-              "speaker": "C",
-              "text": "这下彻底再见咯",
+              "speaker": "白凝冰",
+              "text": "这下彻底再见咯，{name}",
               "side": "right",
               "portrait": "c/neutral"
             },
@@ -957,19 +957,19 @@
           "do": "say",
           "lines": [
             {
-              "speaker": "C",
+              "speaker": "白凝冰",
               "text": "竟然能躲过吗~",
               "side": "right",
               "portrait": "c/neutral"
             },
             {
-              "speaker": "C",
+              "speaker": "白凝冰",
               "text": "不错不错，我真的对你越来越感兴趣了",
               "side": "right",
               "portrait": "c/neutral"
             },
             {
-              "speaker": "C",
+              "speaker": "白凝冰",
               "text": "让我看看你还能带给我什么惊喜吧",
               "side": "right",
               "portrait": "c/neutral"
@@ -1011,7 +1011,7 @@
               "portrait": "protagonist/guarded"
             },
             {
-              "text": "主角用力推向身旁的书架，挡住 C 的去路。"
+              "text": "{name}用力推向身旁的书架，挡住白凝冰的去路。"
             }
           ]
         },
@@ -1083,7 +1083,7 @@
               "portrait": "protagonist/guarded"
             },
             {
-              "speaker": "C",
+              "speaker": "白凝冰",
               "text": "（声音远远传来）还打算跑吗，累的话我们就结束这场游戏咯",
               "side": "right",
               "portrait": "c/neutral"
@@ -1223,7 +1223,7 @@
         },
         {
           "do": "say",
-          "text": "C绕过来了，快逃回教学楼！\n到门口按E或空格。"
+          "text": "白凝冰追来了，快逃回教学楼！\n到门口按E或空格。"
         },
         {
           "do": "ch2_checkpoint_save",
@@ -1276,7 +1276,7 @@
           "do": "say",
           "lines": [
             {
-              "speaker": "C",
+              "speaker": "白凝冰",
               "text": "我倒要看看你还能躲到哪里去呢",
               "side": "right",
               "portrait": "c/neutral"
@@ -1356,7 +1356,7 @@
         },
         {
           "do": "say",
-          "text": "脚步声追到了身后。C 扣住了你的肩膀。"
+          "text": "脚步声追到了身后。白凝冰扣住了你的肩膀。"
         }
       ],
       "choices": [
@@ -1518,13 +1518,13 @@
           "do": "say",
           "lines": [
             {
-              "speaker": "C",
+              "speaker": "白凝冰",
               "text": "咳咳咳，可恶",
               "side": "right",
               "portrait": "c/neutral"
             },
             {
-              "speaker": "C",
+              "speaker": "白凝冰",
               "text": "看来这场游戏要尽早结束了",
               "side": "right",
               "portrait": "c/neutral"

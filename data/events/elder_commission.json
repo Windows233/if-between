@@ -24,7 +24,7 @@
       "id": "observe",
       "talk": [
         { "text": "（你盯着老人看了一会儿。他脑子里那句话浮出来了：）" },
-        { "text": "IF 猫不见了 THEN 来找主角帮忙" },
+        { "text": "IF 猫不见了 THEN 来找{name}帮忙" },
         { "speaker": "我", "text": "……这句话，我是不是能动它。", "side": "right",
           "portrait": "protagonist/thinking" },
         { "text": "（改写别人条件的能力还没做进来。这一轮只能看，不能改。）" }

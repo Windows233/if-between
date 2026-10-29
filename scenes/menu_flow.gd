@@ -1,4 +1,4 @@
-## 标题、存档菜单、设置面板这套流程：谁在哪儿开、选完了干什么。
+﻿## 标题、存档菜单、设置面板这套流程：谁在哪儿开、选完了干什么。
 ##
 ## 从 `main.gd` 抽出来的理由跟 `UiHost` 是同一条，但切的是另一刀：
 ## `UiHost` 管「**现在**谁开着、按键先给谁」；这里管「**开菜单**这件事
@@ -15,6 +15,9 @@ var main: Node2D = null
 
 const CHAPTER_TWO_START_MAP: StringName = &"dead_alley"
 const CHAPTER_TWO_START_SPAWN: StringName = &"from_overworld"
+
+## 标题上选的是哪个开局入口，等起名面板确认后再开。
+var _pending_start: StringName = &""
 
 
 func setup(p_main: Node2D) -> void:
@@ -104,10 +107,14 @@ func on_title_chosen(id: StringName) -> void:
 	if main == null:
 		return
 	match id:
-		TitleScreen.ID_NEW:
-			new_game()
-		TitleScreen.ID_CHAPTER_TWO:
-			main.new_game(CHAPTER_TWO_START_MAP, CHAPTER_TWO_START_SPAWN)
+		TitleScreen.ID_NEW, TitleScreen.ID_CHAPTER_TWO:
+			# 先起昵称，确认后才开局（见 `on_name_confirmed`）。
+			# 标题此时不收（`TitleScreen.STAY_OPEN`），取消就回到标题。
+			_pending_start = id
+			if main.name_entry != null:
+				main.name_entry.open()
+			else:
+				on_name_confirmed("")
 		TitleScreen.ID_CONTINUE:
 			# **开加载界面，不自动读最近那个档。**
 			#
@@ -121,6 +128,25 @@ func on_title_chosen(id: StringName) -> void:
 			open_settings()
 		TitleScreen.ID_QUIT:
 			main.quit_game()
+
+
+## 起名面板确认：收起标题，按标题上选的入口开局。
+func on_name_confirmed(player_name: String) -> void:
+	if main == null:
+		return
+	var start := _pending_start
+	_pending_start = &""
+	if main.title_screen != null:
+		main.title_screen.close()
+	if start == TitleScreen.ID_CHAPTER_TWO:
+		main.new_game(CHAPTER_TWO_START_MAP, CHAPTER_TWO_START_SPAWN, player_name)
+	else:
+		main.new_game(&"", &"", player_name)
+
+
+## 起名面板取消：标题一直开着，什么都不用做。
+func on_name_cancelled() -> void:
+	_pending_start = &""
 
 
 ## 暂停菜单上选了一项。
@@ -162,7 +188,7 @@ func on_settings_changed() -> void:
 ##
 ## **图鉴不动** —— 那是跨存档的全局记录，开新局不该把「你见过几个结局」清掉。
 func new_game(start_map_override: StringName = &"",
-		start_spawn_override: StringName = &"") -> void:
+		start_spawn_override: StringName = &"", player_name: String = "") -> void:
 	if main == null:
 		return
 	var direct_start: bool = start_map_override != &""
@@ -189,6 +215,11 @@ func new_game(start_map_override: StringName = &"",
 		else:
 			main.stage_curtain.snap_up()
 	main.flags.clear()
+	# 昵称必须在进地图、演开场之前写好：地图和剧情读进来时就替换 `{name}`。
+	if player_name != "":
+		PlayerName.assign(main.flags, player_name)
+	else:
+		PlayerName.sync_from(main.flags)
 	# 开发者跳章入口提供明确地图；否则沿用原有新游戏与调试地图流程。
 	# 类型写死的原因同上：`main` 静态是 `Node2D`，`:=` 推不出来。
 	var start_map: StringName = start_map_override
