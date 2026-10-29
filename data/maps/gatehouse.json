@@ -50,6 +50,7 @@
   ],
   "background": "res://art/map/gatehouse.png",
   "id": "gatehouse",
+  "music": "res://audio/bgm/scene_gatehouse.wav",
   "name": "门卫室",
   "overlay": "res://art/map/gatehouse_wall.png",
   "portals": [

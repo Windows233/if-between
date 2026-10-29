@@ -172,6 +172,8 @@
     ]
   ],
   "id": "school_yard",
+  "indoor": false,
+  "music": "res://audio/bgm/reclamation.mp3",
   "player_scale": 0.5,
   "portals": [
     {

@@ -17,6 +17,73 @@ static func run(h: TestHarness) -> void:
 	test_footsteps_and_doors(h)
 	test_all_ending_music(h)
 	test_failure_cg_music_and_retry(h)
+	test_school_audio_and_transition(h)
+	test_qte_feedback(h)
+
+
+static func test_school_audio_and_transition(h: TestHarness) -> void:
+	var main := h.new_main()
+	main.enter_map(&"gatehouse", &"start")
+	h.check("门卫室使用新交付音乐", main.current_music(), "res://audio/bgm/scene_gatehouse.wav")
+	h.check("门卫室音乐实际播放", main.bgm.playing, true)
+	main.enter_map(&"school_gate", &"near_yard")
+	var gate_music: String = main.current_music()
+	var gate_stream: AudioStream = main.bgm.stream
+	var portal: MapDef.Portal
+	for item: MapDef.Portal in main.current_map.portals:
+		if item.id == &"to_yard":
+			portal = item
+	h.check("校门有操场入口", portal != null, true)
+	if portal != null:
+		main.player.global_position = portal.rect.get_center()
+		main.player.velocity = Vector2.DOWN
+		main._check_yard_transition()
+		h.check("返回校门向下走不会立刻回操场", main.current_map.id, &"school_gate")
+		var transition: CanvasLayer = main.fade
+		main.fade = null
+		main.last_sound = ""
+		main.player.velocity = Vector2.UP
+		main._check_yard_transition()
+		h.check("向上走入入口无需按键自动进入操场", main.current_map.id, &"school_yard")
+		h.check("操场沿用校门音乐", main.current_music(), gate_music)
+		h.check("同曲保持同一播放资源", main.bgm.stream, gate_stream)
+		h.check("进入操场没有开门音效", main.last_sound, "")
+		main.fade = transition
+	h.check("操场属于户外", DataLoader.load_map(&"school_yard").indoor, false)
+	main.queue_free()
+
+
+static func test_qte_feedback(h: TestHarness) -> void:
+	var main := h.new_main()
+	var overlay: ChaseOverlay = main.chase_overlay
+	# 在真实覆盖层输入入口验音效；不让窗口焦点影响确定性判定。
+	overlay._freeze_reasons = 0
+	overlay.start_qte(&"q", false, true)
+	h.check("QTE预警播放提示音", main.last_sound, "res://audio/sfx/qte提示音.wav")
+	overlay._warning_until_usec = 0
+	overlay._process(0.0)
+	var key := InputEventKey.new()
+	key.pressed = true
+	key.physical_keycode = KEY_Q
+	overlay.handle_input(key)
+	h.check("正确按键播放成功音", main.last_sound, "res://audio/sfx/qte成功.wav")
+	overlay.start_direction_qte()
+	overlay._warning_until_usec = 0
+	overlay._process(0.0)
+	key.physical_keycode = KEY_Q
+	overlay.handle_input(key)
+	h.check("方向QTE按错播放失误音", main.last_sound, "res://audio/sfx/qte失误.wav")
+	overlay.start_qte(&"e")
+	overlay._phase = ChaseOverlay.Phase.ACTIVE
+	overlay._active_until_usec = 0
+	overlay._process(0.0)
+	h.check("超时播放失误音", main.last_sound, "res://audio/sfx/qte失误.wav")
+	overlay.start_qte(&"q")
+	main.last_sound = ""
+	overlay.cancel_qte()
+	h.check("切图取消QTE不误播失败音", main.last_sound, "")
+	h.check("QTE声音实际交给音效播放器", main.sfx.stream is AudioStream, true)
+	main.queue_free()
 
 
 ## 在图片真正显示的信号边界检查播放器，而非只检查终点是否写着音乐路径。

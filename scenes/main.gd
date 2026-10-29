@@ -300,6 +300,7 @@ func boot() -> void:
 	chase_overlay = CHASE_OVERLAY_SCRIPT.new()
 	chase_overlay.name = "ChaseOverlay"
 	add_child(chase_overlay)
+	chase_overlay.feedback.connect(_on_qte_feedback)
 	chase_session = CHASE_SESSION_SCRIPT.new()
 	chase_session.name = "Ch2ChaseSession"
 	add_child(chase_session)
@@ -770,7 +771,20 @@ func _process(_delta: float) -> void:
 	_check_walk_arrival()
 	_update_footsteps()
 	_update_map_triggers()
+	_check_yard_transition()
 	_start_pending_ch2_entry_event()
+
+
+## 校门上方是连续的室外通路。只在朝上走入入口时自动切换，
+## 从操场返回 near_yard 出生点不会立刻被传送回去；剧情/追逐期间不触发。
+func _check_yard_transition() -> void:
+	if current_map == null or current_map.id != &"school_gate" or player == null:
+		return
+	if _map_trigger_busy() or get_tree().paused or player.velocity.y >= 0.0:
+		return
+	var portal := current_map.portal_at(player.global_position, flags)
+	if portal != null and portal.id == &"to_yard" and not _portal_blocked(portal):
+		_take_portal()
 
 
 func _start_pending_ch2_entry_event() -> void:
@@ -998,6 +1012,16 @@ func _on_rescue_feedback(kind: StringName) -> void:
 			path = "res://audio/sfx/rescue_complete.wav"
 	if path != "":
 		play_sound(path)
+
+
+func _on_qte_feedback(kind: StringName) -> void:
+	match kind:
+		&"prompt":
+			play_sound("res://audio/sfx/qte提示音.wav")
+		&"success":
+			play_sound("res://audio/sfx/qte成功.wav")
+		&"mistake":
+			play_sound("res://audio/sfx/qte失误.wav")
 
 
 ## 大地图上的鼠标悬停：提亮脚下那块地点，并弹出它的详细介绍。

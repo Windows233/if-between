@@ -3,6 +3,7 @@ extends CanvasLayer
 
 signal qte_finished(key: StringName, success: bool)
 signal wrong_key_pressed(key: StringName)
+signal feedback(kind: StringName)
 
 enum Phase { IDLE, WARNING, ACTIVE }
 
@@ -87,6 +88,7 @@ func start_qte(key: StringName, duel := false, strict_input := false) -> bool:
 	_root.show()
 	_root.queue_redraw()
 	set_process(true)
+	feedback.emit(&"prompt")
 	return true
 
 
@@ -110,6 +112,7 @@ func start_direction_qte() -> bool:
 	_root.show()
 	_root.queue_redraw()
 	set_process(true)
+	feedback.emit(&"prompt")
 	return true
 
 
@@ -147,6 +150,7 @@ func handle_input(event: InputEvent) -> bool:
 		_wrong_flash_until_usec = now_usec + WRONG_FLASH_USEC
 		_caption.text = "错键"
 		wrong_key_pressed.emit(actual_key)
+		feedback.emit(&"mistake")
 		_root.queue_redraw()
 	return true
 
@@ -329,6 +333,7 @@ func _finish(success: bool) -> void:
 	var finished_key: StringName = _expected_key
 	_reset_qte()
 	_root.hide()
+	feedback.emit(&"success" if success else &"mistake")
 	qte_finished.emit(finished_key, success)
 
 
