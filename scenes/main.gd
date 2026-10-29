@@ -548,7 +548,8 @@ func enter_map(map_id: StringName, spawn_name: StringName,
 				_pending_ch2_entry_event = &"ch2_yard_entry"
 		elif current_map.id == &"school_gate" \
 				and spawn_name in [&"near_yard", &"near_classroom"] \
-				and flags.get_value(&"ch2/c_at_school_gate") == true:
+				and flags.get_value(&"ch2/c_at_school_gate") == true \
+				and flags.get_value(&"ch2/c_left_for_classroom") != true:
 			cutscene.place_c_at_school_gate_wait_spawn()
 		elif current_map.id == &"school_gate" and spawn_name == &"from_alley" \
 				and flags.get_value(&"ch2/gate_entry_seen") != true and not story.is_active():
@@ -2126,6 +2127,7 @@ func _is_ch2_persistent_flag(key: StringName) -> bool:
 		or name.begins_with("ch2/personal/") \
 		or name.begins_with("ending/") \
 		or name in [
+			"ch2/chase_failures",
 			"ch2/personal_anchor_snapshot",
 			"ch2/personal_anchor_captured",
 		]

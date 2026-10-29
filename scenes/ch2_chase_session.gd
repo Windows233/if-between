@@ -99,6 +99,7 @@ func begin() -> bool:
 	_rescue_distance = 0.0
 	_mist_anim_phase = 0.0
 	_mist_stride = 0.0
+	main.flags.set_value(&"ch2/chase_failed", false)
 	main.flags.set_value(&"ch2/chase_q1", false)
 	main.flags.set_value(&"ch2/chase_q2", false)
 	main.flags.set_value(&"ch2/chase_arrived", false)
@@ -146,9 +147,8 @@ func run_qte(key: StringName) -> bool:
 
 	if overlay == null:
 		qte_pending = false
-		_rescue_pending = true
-		_rescue_cat()
-		return true
+		_fail_or_rescue()
+		return _rescue_pending
 
 	_qte_started = true
 	main.player.chase_input_locked = true
@@ -160,9 +160,8 @@ func run_qte(key: StringName) -> bool:
 		qte_pending = false
 		_qte_started = false
 		main.player.chase_input_locked = false
-		_rescue_pending = true
-		_rescue_cat()
-		return true
+		_fail_or_rescue()
+		return _rescue_pending
 	main.update_player_control()
 
 	var result: Array = await qte_resolved
@@ -200,9 +199,8 @@ func run_qte(key: StringName) -> bool:
 		main.update_camera()
 	_catch_count += 1
 	if not success:
-		_rescue_pending = true
-		_rescue_cat()
-		return true
+		_fail_or_rescue()
+		return _rescue_pending
 	return true
 
 
@@ -266,7 +264,7 @@ func wait_for_arrival() -> bool:
 	if _rescue_pending:
 		_finish_rescue_route()
 		return false
-	if not _arrived:
+	if main.flags.get_value(&"ch2/chase_failed") == true or not _arrived:
 		_awaiting_door = false
 		return false
 	if not _door_confirmed:
@@ -426,9 +424,8 @@ func _process(_delta: float) -> void:
 		_waiting_for_trigger = false
 		trigger_reached.emit()
 	if _awaiting_door and not _arrived and _catch_count >= 2 and _mist_caught_player():
-		_rescue_pending = true
+		_fail_or_rescue()
 		_awaiting_door = false
-		_rescue_cat()
 		door_reached.emit()
 
 	if main.camera != null:
@@ -644,6 +641,20 @@ func _mist_gap() -> float:
 func _mist_caught_player() -> bool:
 	return is_instance_valid(_mist) and main != null and main.player != null \
 		and _mist.is_touching(main.player)
+
+
+## 一轮追逐只登记一次失败；累计跨End5重试保留，第三次由C救场。
+func _fail_or_rescue() -> void:
+	if _rescue_pending or main.flags.get_value(&"ch2/chase_failed") == true:
+		return
+	var failures := int(main.flags.get_value(&"ch2/chase_failures", 0)) + 1
+	main.flags.set_value(&"ch2/chase_failures", failures)
+	if failures >= 3:
+		_rescue_pending = true
+		_rescue_cat()
+	else:
+		main.flags.set_value(&"ch2/chase_failed", true)
+		_finish_run(true)
 
 
 func _rescue_cat() -> void:

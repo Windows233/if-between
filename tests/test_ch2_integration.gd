@@ -111,12 +111,12 @@ static func _test_bugfixes(h: TestHarness) -> void:
 	var chase_event := DataLoader.load_event(&"ch2_diary", DataLoader.load_endings().ids())
 	var q1 := _node(chase_event, &"run_q1")
 	var q2 := _node(chase_event, &"run_q2")
-	var arrival := _node(chase_event, &"arrive")
+	var arrival := _node(chase_event, &"arrival_result")
 	var direct := _node(chase_event, &"library_direct")
 	h.check("追逐首个接近点使用实际距离而非路线坐标", q1.stage[0].data.has("trigger_x"), false)
 	h.check("第二次追逐可在门口交互前结束QTE", q2.next_id, &"arrive")
-	h.check("第三次追上分流到C救援", arrival.next_when.get("next"), &"c_door_cover")
-	h.check("未三次追上直接入馆", arrival.next_id, &"library_direct")
+	h.check("累计第三次失败分流到C救援", arrival.next_when.get("next"), &"c_door_cover")
+	h.check("未触发救场时直接入馆", arrival.next_id, &"library_direct")
 	var direct_has_c := false
 	var direct_has_os := false
 	for step: StageStep in direct.stage:
@@ -510,19 +510,19 @@ static func _test_events_and_maps(harness: TestHarness) -> void:
 		ready_check.resolved_next(wait_flags), &"depart")
 	var arrived_flags := WorldState.new()
 	arrived_flags.set_value(&"ch2/c_at_school_gate", true)
-	harness.check("校门再次准备进入后续节点",
-		ready_check.resolved_next(arrived_flags), &"departed")
+	harness.check("旧校门状态再次准备也直接出发入楼",
+		ready_check.resolved_next(arrived_flags), &"depart")
 	var depart := _node(c_wait, &"depart")
-	harness.check("首次准备记录C已到校门", depart.effects.get(&"ch2/c_at_school_gate"), true)
+	harness.check("准备出发保留同行约定兼容标记", depart.effects.get(&"ch2/c_at_school_gate"), true)
 	harness.check("取消走廊连接的旧出发台词不再执行", depart.stage[0].kind, &"fade")
 	var depart_goto: StageStep = null
 	for step: StageStep in depart.stage:
 		if step.kind == &"goto":
 			depart_goto = step
-	harness.check("C出发直达校门地图", depart_goto != null, true)
+	harness.check("C同行出发有直接转场", depart_goto != null, true)
 	if depart_goto != null:
-		harness.check("C出发不经过走廊", depart_goto.text("map"), "school_gate")
-		harness.check("C出发落到校门操场侧", depart_goto.text("spawn"), "near_yard")
+		harness.check("同行后主角直接进入教学楼教室", depart_goto.text("map"), "classroom")
+		harness.check("同行后主角落在教室入口", depart_goto.text("spawn"), "from_gate")
 	var arrived_node := _node(c_wait, &"departed")
 	var arrived_gotos := 0
 	for step: StageStep in arrived_node.stage:
@@ -542,8 +542,13 @@ static func _test_events_and_maps(harness: TestHarness) -> void:
 	var diary_event := StoryEvent.from_dictionary(_json("res://data/events/ch2_diary.json"))
 	harness.check("QTE失败仍沿追逐流程进入后续判定",
 		_node(diary_event, &"run_q1").next_id, &"run_q2")
-	harness.check("追逐失败不再直接进入死亡CG节点",
-		_node(diary_event, &"arrive").next_id, &"library_direct")
+	harness.check("抵达结果统一检查失败与救场状态",
+		_node(diary_event, &"arrive").next_id, &"arrival_result")
+	var failed_chase := WorldState.new()
+	failed_chase.set_value(&"ch2/chase_failed", true)
+	for phase: StringName in [&"run_q1", &"run_q2", &"arrive"]:
+		harness.check(str(phase)+"前两次失败进入End5",
+			_node(diary_event, phase).resolved_next(failed_chase), &"chase_caught")
 	var meet := StoryEvent.from_dictionary(_json("res://data/events/meet_b.json"))
 	var alley_entries := 0
 	var new_caption := false

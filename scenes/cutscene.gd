@@ -160,7 +160,8 @@ func restore_library_c() -> void:
 
 func restore_school_yard_c() -> void:
 	if main == null or main.current_map == null \
-			or main.current_map.id != &"school_yard":
+			or main.current_map.id != &"school_yard" \
+			or main.flags.get_value(&"ch2/c_left_for_classroom") == true:
 		return
 	if _actors.has("c") and is_instance_valid(_actors["c"]):
 		return
