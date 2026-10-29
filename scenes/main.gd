@@ -1520,10 +1520,13 @@ const TALK_FOOT_HEIGHT := 16.0
 func begin_interaction(actor: MapDef.Actor) -> void:
 	if actor == null:
 		return
+	# 普通家具仅出对白；线索物件由剧情 image 指令展示正式内容图。
 	if object_preview != null:
 		if actor.id in [&"window", &"classroom_window"] \
-				or (current_map.id == &"library" and actor.id == &"shelf_a") \
-				or (current_map.id == &"gatehouse" and actor.id == &"desk"):
+				or (current_map.id == &"library" and actor.id in [&"shelf_a", &"shelf_b", &"shelf_c", &"shelf_d", &"box"]) \
+				or (current_map.id in [&"gatehouse", &"desk_shop"] and actor.id == &"desk") \
+				or (current_map.id == &"school_gate" and actor.id == &"sg_fountain") \
+				or (current_map.id == &"classroom" and actor.id in [&"diary_desk", &"blackboard"]):
 			object_preview.clear()
 		else:
 			object_preview.show_actor(actor, current_map)
