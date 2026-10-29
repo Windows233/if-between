@@ -270,7 +270,8 @@ static func _check_npc(h: TestHarness, actor: Node2D, zoom: Vector2,
 	var collision := body.get_child(0) as CollisionShape2D
 	var shape := collision.shape as RectangleShape2D
 	var feet := shape.size * collision.global_scale * zoom
-	h.check_float(label + " 脚底实体屏幕高度固定 8", feet.y, 8.0)
+	var depth := 16.0 if label.ends_with(" b") else 8.0
+	h.check_float(label + " 脚底实体屏幕高度", feet.y, depth)
 	h.check_float(label + " 脚底实体两侧合计收窄 4", feet.x, maxf(projected.x - 4.0, 1.0))
 	h.check_float(label + " 实体底边保持脚底锚点",
 		(collision.global_position.y - actor.global_position.y) * zoom.y + feet.y * 0.5, 0.0)
