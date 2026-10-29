@@ -1296,7 +1296,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 	if event is InputEventKey:
 		var key := event as InputEventKey
-		if key.pressed and not key.echo and key.physical_keycode == KEY_SPACE:
+		if key.pressed and not key.echo \
+				and key.physical_keycode in [KEY_SPACE, KEY_E]:
 			interact()
 			return
 
@@ -1502,14 +1503,9 @@ func begin_interaction(actor: MapDef.Actor) -> void:
 		var classroom_events := {
 			&"blackboard": &"ch2_blackboard",
 			&"diary_desk": &"ch2_diary",
-			&"window": &"ch2_classroom_window",
-			&"classroom_window": &"ch2_classroom_window",
 		}
 		if classroom_events.has(actor.id):
 			start_story(classroom_events[actor.id])
-			return
-		if actor.label == "窗户":
-			start_story(&"ch2_classroom_window")
 			return
 	if actor.interactions.is_empty():
 		return

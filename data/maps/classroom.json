@@ -172,6 +172,13 @@
       "sprite": "res://art/props/ch2_blackboard_2.png"
     },
     {
+      "actions": [
+        {
+          "event": "ch2_classroom_window",
+          "id": "throw_coin",
+          "label": "把决策币抛出窗外"
+        }
+      ],
       "id": "window",
       "label": "窗户",
       "reach_local": [

@@ -425,8 +425,11 @@ static func _test_events_and_maps(harness: TestHarness) -> void:
 			window_actor = candidate
 			break
 	harness.check("教室地图加载真实窗户物件", window_actor != null, true)
+	harness.check("真实窗户绑定抛币剧情动作",
+		window_actor != null and window_actor.interactions.size() == 1 \
+		and window_actor.interactions[0].event_id == &"ch2_classroom_window", true)
 	window_main.begin_interaction(window_actor)
-	harness.check("当前窗户物件ID触发抛币剧情",
+	harness.check("真实窗户动作启动抛币剧情",
 		window_main.story.event_id, &"ch2_classroom_window")
 	window_main.story.cancel()
 	window_main.flags.set_value(&"ch2/window_marker_active", true)
