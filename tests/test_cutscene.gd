@@ -50,6 +50,41 @@ static func run(h: TestHarness) -> void:
 	test_ending_goes_back_to_title(h)
 	test_free_roam_after_ending(h)
 	test_loading_mid_ending_stays(h)
+	test_all_ending_cards(h)
+
+
+static func test_all_ending_cards(h: TestHarness) -> void:
+	var cases := [
+		[&"ch1_opening", [&"declined"]],
+		[&"ch2_meet_a", [&"end2_cg"]],
+		[&"meet_b", [&"distrust"]],
+		[&"ch2_swing", [&"failed"]],
+		[&"ch2_diary", [&"chase_caught", &"end5_chase_outcome"]],
+		[&"ch2_diary", [&"end5_route_cg", &"end5_route_outcome"]],
+		[&"ch2_library_cat", [&"dodge_end6"]],
+		[&"ch2_library_cat", [&"escape_end6"]],
+		[&"ch2_market_b_end", [&"ending_question"]],
+	]
+	for item: Array in cases:
+		var main := h.new_main()
+		main.cutscene.instant = true
+		main.enter_map(&"school_gate", &"near_yard")
+		var event := DataLoader.load_event(item[0])
+		for node_id: StringName in item[1]:
+			main.cutscene.run(event.node(node_id).stage)
+		var label := "%s/%s" % [item[0], item[1][-1]]
+		h.check(label + "结局字幕为两行", main.stage_overlay.caption_lines(), 2)
+		h.check(label + "字幕下为黑屏", main.stage_curtain.is_down(), true)
+		h.check(label + "字幕不叠CG", main.stage_overlay.has_image(), false)
+		h.check(label + "没有结局对话框", main.dialogue.is_open(), false)
+		main.queue_free()
+	var retry := h.new_main()
+	retry.enter_map(&"school_gate", &"near_yard")
+	retry.capture_ch2_checkpoint("chase")
+	retry.stage_overlay.show_caption([{"text": "end 5"}], 0.0)
+	retry.restore_ch2_checkpoint("chase")
+	h.check("同图重试清理结局字幕", retry.stage_overlay.caption_lines(), 0)
+	retry.queue_free()
 
 
 ## 2026-09-23 加的四条指令：黑屏正中的字、左上角的状态、一条提示、一段音效。

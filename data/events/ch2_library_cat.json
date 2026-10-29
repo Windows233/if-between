@@ -881,7 +881,10 @@
     {
       "id": "dodge_failed",
       "stage": [
-        { "do": "music", "path": "res://audio/bgm/ending_06_sin.wav" },
+        {
+          "do": "music",
+          "path": "res://audio/bgm/ending_06_sin.wav"
+        },
         {
           "do": "image",
           "path": "res://art/cg/ch2_end6_guilt.png",
@@ -1372,10 +1375,33 @@
     {
       "id": "escape_end6",
       "stage": [
-        { "do": "music", "path": "res://audio/bgm/ending_06_sin.wav" },
+        {
+          "do": "music",
+          "path": "res://audio/bgm/ending_06_sin.wav"
+        },
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.6
+        },
         {
           "do": "image_hide",
           "fade": 0.2
+        },
+        {
+          "do": "caption",
+          "fade": 0.9,
+          "wait_click": true,
+          "lines": [
+            {
+              "text": "end 6 罪过",
+              "size": 16
+            },
+            {
+              "text": "你已经知道会发生什么，却还是没能躲开。",
+              "size": 14
+            }
+          ]
         }
       ],
       "ending": "end6_sin"
@@ -1441,17 +1467,43 @@
           "do": "image_hide",
           "fade": 0.15
         },
-        { "do": "music", "path": "res://audio/bgm/reclamation.mp3" }
+        {
+          "do": "music",
+          "path": "res://audio/bgm/reclamation.mp3"
+        }
       ],
       "next": "second_attack"
     },
     {
       "id": "dodge_end6",
       "stage": [
-        { "do": "music", "path": "res://audio/bgm/ending_06_sin.wav" },
+        {
+          "do": "music",
+          "path": "res://audio/bgm/ending_06_sin.wav"
+        },
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.6
+        },
         {
           "do": "image_hide",
           "fade": 0.15
+        },
+        {
+          "do": "caption",
+          "fade": 0.9,
+          "wait_click": true,
+          "lines": [
+            {
+              "text": "end 6 罪过",
+              "size": 16
+            },
+            {
+              "text": "你已经知道会发生什么，却还是没能躲开。",
+              "size": 14
+            }
+          ]
         }
       ],
       "ending": "end6_sin"

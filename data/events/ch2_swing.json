@@ -54,7 +54,10 @@
     {
       "id": "failed",
       "stage": [
-        { "do": "music", "path": "res://audio/bgm/ending_04_arrogant.wav" },
+        {
+          "do": "music",
+          "path": "res://audio/bgm/ending_04_arrogant.wav"
+        },
         {
           "do": "image",
           "path": "res://art/cg/ch2_rescue_injury.png",
@@ -88,12 +91,21 @@
             {
               "speaker": "？？？",
               "text": "这种程度就不行了吗？呵，是我走眼了__"
+            }
+          ]
+        },
+        {
+          "do": "caption",
+          "fade": 0.9,
+          "wait_click": true,
+          "lines": [
+            {
+              "text": "end 4 自以为是的到来",
+              "size": 16
             },
             {
-              "text": "end 4 自以为是的到来"
-            },
-            {
-              "text": "你是主角没错，但主角可以换人啊"
+              "text": "你是主角没错，但主角可以换人啊",
+              "size": 14
             }
           ]
         }
@@ -138,7 +150,10 @@
           "do": "ch2_checkpoint_clear",
           "checkpoint": "rescue"
         },
-        { "do": "music", "path": "res://audio/bgm/ending_04_arrogant.wav" }
+        {
+          "do": "music",
+          "path": "res://audio/bgm/ending_04_arrogant.wav"
+        }
       ]
     },
     {

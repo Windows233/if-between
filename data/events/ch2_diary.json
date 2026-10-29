@@ -438,7 +438,10 @@
         "ch2/end5_retry_kind": "chase"
       },
       "stage": [
-        { "do": "music", "path": "res://audio/bgm/ending_05_iron.wav" },
+        {
+          "do": "music",
+          "path": "res://audio/bgm/ending_05_iron.wav"
+        },
         {
           "do": "image",
           "path": "res://art/cg/ch2_chase_failure.png",
@@ -462,7 +465,10 @@
     {
       "id": "end5_route_cg",
       "stage": [
-        { "do": "music", "path": "res://audio/bgm/ending_05_iron.wav" },
+        {
+          "do": "music",
+          "path": "res://audio/bgm/ending_05_iron.wav"
+        },
         {
           "do": "image",
           "path": "res://art/cg/ch2_chase_failure.png",
@@ -485,7 +491,23 @@
     },
     {
       "id": "end5_route_outcome",
-      "stage": [],
+      "stage": [
+        {
+          "do": "caption",
+          "fade": 0.9,
+          "wait_click": true,
+          "lines": [
+            {
+              "text": "end 5 不可违的铁律",
+              "size": 16
+            },
+            {
+              "text": "死亡可是人生的必修课，你只是超前学习了而已",
+              "size": 14
+            }
+          ]
+        }
+      ],
       "choices": [
         {
           "id": "retry_route",
@@ -497,21 +519,27 @@
           "label": "返回标题",
           "next": "end5_ending"
         }
-      ],
-      "talk": [
-        {
-          "speaker": "旁白",
-          "text": "end 5 不可违的铁律"
-        },
-        {
-          "speaker": "旁白",
-          "text": "死亡可是人生的必修课，你只是超前学习了而已"
-        }
       ]
     },
     {
       "id": "end5_chase_outcome",
-      "stage": [],
+      "stage": [
+        {
+          "do": "caption",
+          "fade": 0.9,
+          "wait_click": true,
+          "lines": [
+            {
+              "text": "end 5 不可违的铁律",
+              "size": 16
+            },
+            {
+              "text": "死亡可是人生的必修课，你只是超前学习了而已",
+              "size": 14
+            }
+          ]
+        }
+      ],
       "choices": [
         {
           "id": "retry_chase",
@@ -522,16 +550,6 @@
           "id": "return_title",
           "label": "返回标题",
           "next": "end5_ending"
-        }
-      ],
-      "talk": [
-        {
-          "speaker": "旁白",
-          "text": "end 5 不可违的铁律"
-        },
-        {
-          "speaker": "旁白",
-          "text": "死亡可是人生的必修课，你只是超前学习了而已"
         }
       ]
     },
@@ -562,7 +580,10 @@
       "id": "end5_ending",
       "ending": "end4_iron",
       "stage": [
-        { "do": "music", "path": "res://audio/bgm/ending_05_iron.wav" }
+        {
+          "do": "music",
+          "path": "res://audio/bgm/ending_05_iron.wav"
+        }
       ]
     },
     {

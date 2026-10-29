@@ -421,7 +421,7 @@ static func test_market_ending_contract(h: TestHarness) -> void:
 	h.check("End7尾声CG出现在C黑屏对白之后并承托最终标题",
 		c_lines_index >= 0 and c_lines_index < epilogue_index \
 		and epilogue_index < final_caption_index, true)
-	h.check("End7最终字幕结束后收起尾声CG", image_hide_index > final_caption_index, true)
+	h.check("End7最终字幕前收起尾声CG", image_hide_index > epilogue_index and image_hide_index < final_caption_index, true)
 	var reward_check := event.node(&"silver_reward_check")
 	var reward := event.node(&"silver_reward")
 	h.check("银币奖励节点存在", reward != null, true)

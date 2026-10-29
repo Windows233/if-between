@@ -170,11 +170,17 @@
         },
         {
           "do": "place_player",
-          "at": [223, 125]
+          "at": [
+            223,
+            125
+          ]
         },
         {
           "do": "focus",
-          "at": [223, 170],
+          "at": [
+            223,
+            170
+          ],
           "time": 0
         },
         {
@@ -391,7 +397,10 @@
     {
       "id": "ending_question",
       "stage": [
-        { "do": "music", "path": "res://audio/bgm/ending_07_tomorrow.wav" },
+        {
+          "do": "music",
+          "path": "res://audio/bgm/ending_07_tomorrow.wav"
+        },
         {
           "do": "caption",
           "fade": 0.7,
@@ -425,8 +434,17 @@
           "path": "res://art/cg/ch2_epilogue.png",
           "fade": 0.45,
           "fill": true,
-          "wait_click": false,
+          "wait_click": true,
           "hide": false
+        },
+        {
+          "do": "fade",
+          "to": "black",
+          "time": 0.6
+        },
+        {
+          "do": "image_hide",
+          "fade": 0.45
         },
         {
           "do": "caption",
@@ -442,10 +460,6 @@
               "size": 14
             }
           ]
-        },
-        {
-          "do": "image_hide",
-          "fade": 0.45
         }
       ],
       "ending": "end7_rewritten"
