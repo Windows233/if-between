@@ -1,4 +1,4 @@
-## 第二次背刺后的可控逃离。两段地图共用追踪、主动隐蔽和进门判定。
+## 第二次背刺后的可控逃离。两段地图共用追踪、自动隐蔽和进门判定。
 ## 追兵沿可走路径和玩家实际足迹移动；暂停、失焦和界面打开时停止计时。
 ## 缺少推倒/翻越动作时复用现有 C 行走帧和横放书架，不冒充最终美术。
 class_name Ch2EscapeSession
@@ -18,6 +18,9 @@ var _base_alpha := 1.0
 var _hud: CanvasLayer
 var _label: Label
 var _focused := true
+var _auto_stealth_pending := false
+var _stealth_dialogue_open := false
+var _chaser_was_playing := false
 
 
 func setup(host: Variant) -> void:
@@ -27,7 +30,7 @@ func setup(host: Variant) -> void:
 
 
 func can_move_player() -> bool:
-	return active and _focused
+	return active and _focused and not _stealth_dialogue_open
 
 
 func run(part: String) -> bool:
@@ -48,6 +51,9 @@ func begin(part: String) -> bool:
 		# 对话节点写入倒架标记后不会自动重建地图；开跑前落实贴图和物理障碍。
 		main.refresh_scene()
 	phase = part
+	_auto_stealth_pending = part == "gate" \
+		and main.flags.get_value(&"ch2/personal/stealth_available") == true \
+		and main.flags.get_value(&"ch2/personal/stealth_started") != true
 	_base_alpha = main.player.modulate.a
 	main.player.walk_path.clear()
 	main.walk_and_use = false
@@ -85,7 +91,7 @@ func begin(part: String) -> bool:
 
 
 func handle_input(event: InputEvent) -> void:
-	if not active or not _focused or not (event is InputEventKey):
+	if not active or not _focused or _stealth_dialogue_open or not (event is InputEventKey):
 		return
 	var key := event as InputEventKey
 	if not key.pressed or key.echo:
@@ -107,7 +113,7 @@ func activate_stealth() -> bool:
 
 
 func try_exit() -> bool:
-	if not active:
+	if not active or _stealth_dialogue_open:
 		return false
 	if not _at_escape_exit():
 		return false
@@ -145,7 +151,7 @@ func _notification(what: int) -> void:
 
 
 func _process(delta: float) -> void:
-	if not active or not _focused or not is_instance_valid(_chaser):
+	if not active or not _focused or _stealth_dialogue_open or not is_instance_valid(_chaser):
 		return
 	if main.ui_host.is_busy() or main.fade.is_busy():
 		return
@@ -154,6 +160,9 @@ func _process(delta: float) -> void:
 		_trail.append(player_at)
 	if _hold > 0.0:
 		_hold -= delta
+		return
+	if _auto_stealth_pending:
+		_begin_stealth_reaction()
 		return
 	var stealth: bool = main.flags.get_value(&"ch2/personal/stealth_started") == true
 	var budget: float = main.player.movement_speed() * (0.76 if stealth else 1.06) * minf(delta, 0.1)
@@ -175,6 +184,40 @@ func _process(delta: float) -> void:
 	# 还需沿路径追上，不能隔墙或隔书架抓到主角。
 	if _trail.size() <= 3 and _chaser.global_position.distance_to(player_at) < 7.0 * main.current_map.player_scale:
 		_finish(false)
+
+
+## 校门追逐开始后自动触发一次；只暂停追逐世界，让下方对话框正常打字和翻页。
+func _begin_stealth_reaction() -> void:
+	_auto_stealth_pending = false
+	if not activate_stealth():
+		return
+	_stealth_dialogue_open = true
+	if _chaser is AnimatedSprite2D:
+		_chaser_was_playing = _chaser.is_playing()
+		_chaser.pause()
+	if is_instance_valid(_hud):
+		_hud.visible = false
+	if main.camera != null:
+		main.camera.clear_shake()
+	main.dialogue.finished.connect(_end_stealth_reaction, CONNECT_ONE_SHOT)
+	main.dialogue.play(Dialogue.from_array([{
+		"speaker": "我",
+		"text": "（居然夜幕之泪\n还有这种效果。）",
+		"side": "left",
+		"portrait": "protagonist/thinking",
+	}]))
+	main.update_player_control()
+
+
+func _end_stealth_reaction() -> void:
+	_stealth_dialogue_open = false
+	if not active:
+		return
+	if is_instance_valid(_chaser) and _chaser is AnimatedSprite2D and _chaser_was_playing:
+		_chaser.play()
+	if is_instance_valid(_hud):
+		_hud.visible = true
+	main.update_player_control()
 
 
 func _animate_chaser(direction: Vector2) -> void:
@@ -211,8 +254,6 @@ func _refresh_stealth() -> void:
 	if _label != null:
 		var route := "向下逃到图书馆门口，靠近按 E / 空格" if phase == "library" else "绕过喷泉，向左上教学楼门逃跑，靠近按 E / 空格"
 		var controls := "\nWASD 移动 · ESC 暂停"
-		if phase == "gate" and main.flags.get_value(&"ch2/personal/stealth_available") == true:
-			controls = "\nWASD 移动 · F 主动隐蔽 · ESC 暂停"
 		_label.text = route + controls + ("\n隐蔽已开启（决策币仍会暴露方向）" if stealth else "")
 
 
@@ -220,6 +261,12 @@ func _finish(success: bool) -> void:
 	if not active:
 		return
 	active = false
+	_auto_stealth_pending = false
+	if _stealth_dialogue_open:
+		_stealth_dialogue_open = false
+		if main.dialogue.finished.is_connected(_end_stealth_reaction):
+			main.dialogue.finished.disconnect(_end_stealth_reaction)
+		main.dialogue.close()
 	main.player.modulate.a = _base_alpha
 	main.player.walk_path.clear()
 	main.player.velocity = Vector2.ZERO

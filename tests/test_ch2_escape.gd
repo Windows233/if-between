@@ -1,4 +1,4 @@
-## 后段逃跑验证：障碍、可达路径、主动输入、暂停与状态清理。
+## 后段逃跑验证：障碍、可达路径、自动隐蔽、暂停与状态清理。
 extends RefCounted
 
 
@@ -168,6 +168,73 @@ static func run(h: TestHarness) -> void:
 	main.queue_free()
 	await _test_escape_save_retry(h)
 	await _test_escape_gate_unlock(h)
+	await test_auto_stealth_reaction(h)
+
+
+## 从正式校门追逐节点启动，不按 F：内心话期间双方停住，读完继续追逐。
+static func test_auto_stealth_reaction(h: TestHarness) -> void:
+	var main := h.new_main()
+	main.enter_map(&"school_gate", &"from_library", true)
+	main.flags.set_value(&"ch2/personal/stealth_available", true)
+	main.flags.set_value(&"item/key", 1)
+	main.cutscene.instant = false
+	main.start_story(&"ch2_library_cat", &"escape_gate_run")
+	for _frame: int in 60:
+		if main.escape_session.active:
+			break
+		await h.root.get_tree().process_frame
+	var session: Ch2EscapeSession = main.escape_session
+	h.check("正式追逐节点启动校门会话", session.active and session.phase == "gate", true)
+	if not session.active:
+		main.queue_free()
+		return
+	session.set_process(false)
+	session._notification(Node.NOTIFICATION_APPLICATION_FOCUS_IN)
+	session._hold = 0.0
+	var chaser := session._chaser as AnimatedSprite2D
+	chaser.play(&"walk_side")
+	main.player.play_animation(true)
+	session._process(0.016)
+	h.check("追逐中无需F自动触发夜幕之泪", main.flags.get_value(&"ch2/personal/stealth_started"), true)
+	h.check("自动触发后主角获得隐蔽外观", main.player.modulate.a < 0.6, true)
+	h.check("内心话使用下方对话框", main.dialogue.is_open(), true)
+	h.check("内心话文字符合用户要求", main.dialogue._dialogue.lines[0].text,
+		"（居然夜幕之泪\n还有这种效果。）")
+	h.check("内心话说话人为主角", main.dialogue._dialogue.lines[0].speaker, "我")
+	h.check("内心话期间暂停主角控制", main.player.is_physics_processing(), false)
+	h.check("内心话期间停止追兵走路动画", chaser.is_playing(), false)
+	h.check("内心话期间隐藏追逐提示", session._hud.visible, false)
+	var hero_at: Vector2 = main.player.global_position
+	var c_at := chaser.global_position
+	var c_frame := chaser.frame
+	var hold := session._hold
+	session._process(1.0)
+	await h.root.get_tree().create_timer(0.12).timeout
+	h.check("内心话期间主角不移动", main.player.global_position, hero_at)
+	h.check("内心话期间C不移动", chaser.global_position, c_at)
+	h.check("内心话期间C动作帧停住", chaser.frame, c_frame)
+	h.check("内心话不消耗追逐计时", session._hold, hold)
+	h.check("内心话期间不能绕过对话进门", session.try_exit(), false)
+	h.drain_dialogue(main.dialogue)
+	h.check("读完内心话恢复主角控制", main.player.is_physics_processing(), true)
+	h.check("读完内心话追逐仍在运行", session.active and main.story.is_active(), true)
+	h.check("读完内心话恢复追兵动画", chaser.is_playing(), true)
+	h.check("读完内心话恢复路线提示", session._hud.visible, true)
+	session._process(0.1)
+	h.check("读完内心话C继续沿原路线追赶", chaser.global_position.distance_to(c_at) > 0.0, true)
+	session._process(0.1)
+	h.check("同次追逐不重复弹内心话", main.dialogue.is_open(), false)
+	# 返回标题/切图可能在内心话中发生：取消必须断开旧回调、清理暂停态。
+	session._begin_stealth_reaction()
+	h.check("取消专项已打开内心话", main.dialogue.is_open(), true)
+	main.story.cancel()
+	session.cancel()
+	h.check("取消清掉专用内心话框", main.dialogue.is_open(), false)
+	h.check("取消断开恢复追逐回调",
+		main.dialogue.finished.is_connected(session._end_stealth_reaction), false)
+	h.check("取消恢复主角透明度", main.player.modulate.a, 1.0)
+	h.check("取消不残留暂停标记", session._stealth_dialogue_open, false)
+	main.queue_free()
 
 
 static func _test_escape_save_retry(h: TestHarness) -> void:
