@@ -99,7 +99,7 @@
         {
           "event": "ch2_market_b_end",
           "id": "meet_b",
-          "label": "接近 B",
+          "label": "接近方源",
           "once": true
         }
       ],

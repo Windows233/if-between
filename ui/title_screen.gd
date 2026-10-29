@@ -1,4 +1,4 @@
-## 标题界面：游戏跑起来第一眼看到的东西。
+﻿## 标题界面：游戏跑起来第一眼看到的东西。
 ##
 ## 做它的直接理由是**没人知道快捷键** —— F4 图鉴、F5 存档、F9 读档
 ## 只写在开发文档里，玩家一个都看不见。底部那行按键说明就是为这个。
@@ -45,7 +45,10 @@ const ORDER: Array[StringName] = [
 ##
 ## **不收是必须的。** 收掉之后没人再把它开回来：子面板一关，屏幕上一片黑
 ## （2026-09-24 报的，主菜单点设置、按 ESC 就黑屏）。理由同 `PauseMenu.STAY_OPEN`。
-const STAY_OPEN: Array[StringName] = [ID_CONTINUE, ID_GALLERY, ID_SETTINGS]
+##
+## 「新游戏」「进入第二章」也不收：它们先弹起名面板（25 层），确认后由
+## `MenuFlow.on_name_confirmed` 收掉标题再开局，取消就留在标题（2026-10-29）。
+const STAY_OPEN: Array[StringName] = [ID_NEW, ID_CHAPTER_TWO, ID_CONTINUE, ID_GALLERY, ID_SETTINGS]
 
 ## 纵向排布（视口 320x180）。
 ##

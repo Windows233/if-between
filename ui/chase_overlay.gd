@@ -273,7 +273,7 @@ func _layout() -> void:
 
 func _refresh_labels() -> void:
 	if _phase == Phase.WARNING:
-		_caption.text = "C 正在逼近" if _duel else "黑雾逼近"
+		_caption.text = "白凝冰正在逼近" if _duel else "黑雾逼近"
 		_caption.add_theme_color_override("font_color", WARNING_COLOR)
 		_key_label.text = "!"
 		_key_label.add_theme_color_override("font_color", WARNING_COLOR)

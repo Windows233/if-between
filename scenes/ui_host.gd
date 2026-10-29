@@ -1,4 +1,4 @@
-## 界面调度：现在谁开着、按键先给谁、谁开着的时候角色该停下。
+﻿## 界面调度：现在谁开着、按键先给谁、谁开着的时候角色该停下。
 ##
 ## 从 `main.gd` 抽出来的理由，是**加一个界面要改两处**这件事本身：
 ## `_unhandled_input()` 里要加一段「键盘先给它」，
@@ -22,6 +22,8 @@ var settings: SettingsPanel = null
 var title: TitleScreen = null
 var inventory: InventoryPanel = null
 var pause_menu: PauseMenu = null
+## 开新游戏时的起名面板（25 层），盖在标题上面。
+var name_entry: NameEntryPanel = null
 
 
 func setup(
@@ -33,7 +35,9 @@ func setup(
 	p_title: TitleScreen,
 	p_inventory: InventoryPanel = null,
 	p_pause_menu: PauseMenu = null,
+	p_name_entry: NameEntryPanel = null,
 ) -> void:
+	name_entry = p_name_entry
 	dialogue = p_dialogue
 	choice_menu = p_choice_menu
 	gallery = p_gallery
@@ -71,6 +75,8 @@ func is_busy() -> bool:
 ##   关掉之后人回到它手里；它自己压在选项框（13）上面 ——
 ##   剧情等着选的时候按 ESC 会开它，两个同时在场上。
 func _top() -> CanvasLayer:
+	if name_entry != null and name_entry.is_open():
+		return name_entry
 	if gallery != null and gallery.is_open():
 		return gallery
 	if save_menu != null and save_menu.is_open():
@@ -99,6 +105,8 @@ func handle_key(keycode: int) -> bool:
 	if top == null:
 		return false
 
+	if top == name_entry:
+		return name_entry.handle_key(keycode)
 	if top == title:
 		return title.handle_key(keycode)
 	if top == save_menu:
@@ -145,6 +153,8 @@ func try_escape() -> bool:
 ## 暂停菜单也在内 —— 从暂停菜单里选「加载」，读回来的应该是**游戏画面**，
 ## 而不是还停在暂停菜单上（玩家会以为读档没生效）。
 func close_overlays() -> void:
+	if name_entry != null:
+		name_entry.close()
 	if pause_menu != null:
 		pause_menu.close()
 	if gallery != null:

@@ -1,4 +1,4 @@
-## 标题界面、存读档菜单、以及把它们串起来的界面调度器。
+﻿## 标题界面、存读档菜单、以及把它们串起来的界面调度器。
 ##
 ## 这一组存在的理由，是**这些界面以前根本没有**：存档只能按 F5 打在固定槽位，
 ## 玩家看不见有几个槽、不能选、不能删；启动直接落进房间，没有「新游戏」。
@@ -199,7 +199,7 @@ static func test_title_screen(h: TestHarness) -> void:
 	)
 	title.handle_key(KEY_ENTER)
 	h.check("选了新游戏", picked[0], TitleScreen.ID_NEW)
-	h.check("选完就关", title.is_open(), false)
+	h.check("新游戏先不收标题（等起名确认）", title.is_open(), true)
 
 	# 「退出游戏」也只发一个 id —— **测试绝不去执行它**，
 	# `main.quit_game()` 会把跑测试的进程一起关掉。
@@ -239,7 +239,7 @@ static func test_title_screen(h: TestHarness) -> void:
 	chapter_click.position = chapter_rect.get_center()
 	title._on_gui_input(chapter_click)
 	h.check("鼠标按钮发出第二章入口", picked[0], TitleScreen.ID_CHAPTER_TWO)
-	h.check("选择跳章后标题关闭", title.is_open(), false)
+	h.check("选择跳章后标题等起名确认", title.is_open(), true)
 
 	title.open(false)
 	title.set_chapter_two_enabled(true)
@@ -272,13 +272,18 @@ static func test_chapter_two_developer_entry(h: TestHarness) -> void:
 	var chapter_index: int = main.title_screen._ids.find(TitleScreen.ID_CHAPTER_TWO)
 	main.title_screen.select_index(chapter_index)
 	main.title_screen.handle_key(KEY_ENTER)
+	h.check("跳章入口也先起昵称", main.name_entry.is_open(), true)
+	h.check("起名时还没开局", main.current_map.id != MenuFlow.CHAPTER_TWO_START_MAP, true)
+	main.name_entry.set_text("Alice")
+	main.name_entry.submit()
 	h.check("入口落在第二章第一场景",
 		main.current_map.id, MenuFlow.CHAPTER_TWO_START_MAP)
 	var expected_spawn := DataLoader.load_map(MenuFlow.CHAPTER_TWO_START_MAP) \
 		.spawn_point(MenuFlow.CHAPTER_TWO_START_SPAWN)
 	h.check("出生于后巷入口", main.player.global_position, expected_spawn)
 	h.check("面向铁门", main.player.facing, Vector2.UP)
-	h.check("新局状态与物品已清空", main.flags.snapshot().is_empty(), true)
+	h.check("新局状态与物品已清空（只剩昵称）", main.flags.snapshot().keys(), [PlayerName.FLAG])
+	h.check("跳章入口记下昵称", main.flags.get_value(PlayerName.FLAG), "Alice")
 	h.check("没有播放第一章开场", main.story.is_active(), false)
 	h.check("跳章后画面揭开", main.stage_curtain.is_down(), false)
 	h.check("跳章后标题关闭", main.title_screen.is_open(), false)
@@ -425,7 +430,26 @@ static func test_title_in_game(h: TestHarness) -> void:
 	# 选「新游戏」：世界状态清空，回到起始场景，**并且重演开场**
 	main.title_screen.select_index(0)
 	main.title_screen.handle_key(KEY_ENTER)
+	h.check("新游戏先弹起名面板", main.name_entry.is_open(), true)
+	h.check("起名时标题还在底下", main.title_screen.is_open(), true)
+	h.check("起名面板在最上层接键", main.ui_host._top() == main.name_entry, true)
+	# 取消回到标题，旧局状态不动
+	main.ui_host.handle_key(KEY_ESCAPE)
+	h.check("取消起名回到标题", main.title_screen.is_open() and not main.name_entry.is_open(), true)
+	h.check("取消不清旧局", main.flags.get_value(&"test_marker"), true)
+	main.title_screen.handle_key(KEY_ENTER)
+	# 非法输入留在面板上并提示
+	main.name_entry.set_text("abc123")
+	h.check("含数字不收", main.name_entry.submit(), false)
+	h.check("非法时面板还开着", main.name_entry.is_open(), true)
+	h.check("给出原因", main.name_entry.message(), "只能使用中文或英文字母")
+	main.name_entry.set_text("  ")
+	h.check("空名不收", main.name_entry.submit(), false)
+	main.name_entry.set_text("林小满")
+	h.check("中文名收下", main.name_entry.submit(), true)
 	h.check("标题关了", main.title_screen.is_open(), false)
+	h.check("昵称进了世界状态", main.flags.get_value(PlayerName.FLAG), "林小满")
+	h.check("昵称缓存同步", PlayerName.current, "林小满")
 	h.check("上一局的标记清掉了", main.flags.get_value(&"test_marker"), null)
 	h.check("回到起始场景", main.current_map.id, &"desk_shop")
 	h.check("开场重演了", main.story.is_active(), true)
@@ -845,6 +869,8 @@ static func test_new_game_without_opening(h: TestHarness) -> void:
 	main.skip_opening = true
 	main.title_screen.select_index(0)
 	main.title_screen.handle_key(KEY_ENTER)
+	main.name_entry.set_text("Tom Lee")
+	main.name_entry.submit()
 	h.check("从标题开新局，幕揭开了", main.stage_curtain.is_down(), false)
 	h.check("标题也收了", main.title_screen.is_open(), false)
 

@@ -1,4 +1,4 @@
-## 测试入口。无头运行：
+﻿## 测试入口。无头运行：
 ##
 ##   godot --headless --path <项目> --script res://tests/run_tests.gd
 ##
@@ -54,6 +54,7 @@ func _run_all() -> void:
 	TestGallery.run(h)
 	h.section("标题与菜单")
 	TestMenus.run(h)
+	preload("res://tests/test_player_name.gd").run(h)
 	h.section("表现层")
 	TestPresentation.run(h)
 	h.section("音频")

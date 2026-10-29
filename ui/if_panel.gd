@@ -1,4 +1,4 @@
-## IF 条件框：画面正中那个「if "…" then "…"」加一排选项块。
+﻿## IF 条件框：画面正中那个「if "…" then "…"」加一排选项块。
 ##
 ## 版式照策划那份示意：
 ##
@@ -515,7 +515,20 @@ func _place_block(nodes: Dictionary, text: String, at: Vector2, index: int) -> v
 	# **名字摆在方块正中**（理由见 `BLOCK_LABEL_SIZE` 那段）
 	label.position = at
 	label.size = Vector2(SLOT_SIZE, SLOT_SIZE)
+	# 块里的字放不下就逐号缩小（主角昵称最长 8 字，「来找<昵称>帮忙」会到 12 字）。
+	_fit_block_font(label)
 	label.visible = _open and shown != ""
+
+
+## 块里名字的字号：默认 `BLOCK_LABEL_SIZE`，折成两行以上就逐号缩小，最小 4。
+## 行数问 Label 自己（它按实际字体回退折行），不拿字体另算。
+func _fit_block_font(label: Label) -> void:
+	var size := BLOCK_LABEL_SIZE
+	label.add_theme_font_size_override("font_size", size)
+	# 方块中间那块能干净放下的是两行（块的四角有装饰边），超过就缩。
+	while size > 4 and label.text != "" and label.get_line_count() > 2:
+		size -= 1
+		label.add_theme_font_size_override("font_size", size)
 
 
 ## 摆 if / then 那一行：五段横排，整体居中。

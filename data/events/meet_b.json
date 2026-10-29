@@ -15,7 +15,7 @@
               "text": "请问有看到这只猫吗"
             },
             {
-              "speaker": "B",
+              "speaker": "方源",
               "portrait": "mysterious",
               "side": "right",
               "text": "黑猫，左耳缺一角，尾巴尖是白的"
@@ -27,7 +27,7 @@
               "text": "你见过？"
             },
             {
-              "speaker": "B",
+              "speaker": "方源",
               "portrait": "mysterious",
               "side": "right",
               "text": "嗯。猫不是走丢了，是被‘卷进去了’"
@@ -39,19 +39,19 @@
               "text": "说人话...."
             },
             {
-              "speaker": "B",
+              "speaker": "方源",
               "portrait": "mysterious",
               "side": "right",
               "text": "它进到门内了，你翻遍城邦也找不到"
             },
             {
-              "speaker": "B",
+              "speaker": "方源",
               "portrait": "mysterious",
               "side": "right",
               "text": "我可以开门，而你只用帮我带一样东西出来"
             },
             {
-              "speaker": "B",
+              "speaker": "方源",
               "portrait": "mysterious",
               "side": "right",
               "text": "很公平的交易不是吗，我没有理由坑你"
@@ -63,13 +63,13 @@
               "text": "....... 什么东西"
             },
             {
-              "speaker": "B",
+              "speaker": "方源",
               "portrait": "mysterious",
               "side": "right",
               "text": "夜幕之泪，就是一颗像眼泪的黑曜石"
             },
             {
-              "speaker": "B",
+              "speaker": "方源",
               "portrait": "mysterious",
               "side": "right",
               "text": "放心，它和你的猫在同一个地方"
@@ -87,13 +87,13 @@
               "text": "我凭什么信你？"
             },
             {
-              "speaker": "B",
+              "speaker": "方源",
               "portrait": "mysterious",
               "side": "right",
               "text": "你不用信我。你只需要信，那只猫现在快没了"
             },
             {
-              "speaker": "B",
+              "speaker": "方源",
               "portrait": "mysterious",
               "side": "right",
               "text": "你每拖一天，那只猫就少一分。等它彻底没了，委托人也会忘掉自己委托过什么"
@@ -113,7 +113,7 @@
             "side": "left"
           },
           "right": {
-            "speaker": "B",
+            "speaker": "方源",
             "portrait": "mysterious",
             "side": "right"
           }
@@ -237,7 +237,7 @@
           "do": "say",
           "lines": [
             {
-              "speaker": "B",
+              "speaker": "方源",
               "text": "你碰到那个石头，你就会知道了。拿着。",
               "side": "right",
               "portrait": "mysterious"
@@ -270,7 +270,7 @@
           "slide": "in",
           "lines": [
             {
-              "speaker": "B",
+              "speaker": "方源",
               "text": "它既是钥匙，也是路。还有一件事——没有绝对的如果",
               "side": "right",
               "portrait": "mysterious"
@@ -398,7 +398,7 @@
           "do": "say",
           "lines": [
             {
-              "speaker": "B",
+              "speaker": "方源",
               "text": "封的是现实，而这就不是了",
               "side": "right",
               "portrait": "mysterious"

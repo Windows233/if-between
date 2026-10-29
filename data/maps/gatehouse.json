@@ -20,7 +20,7 @@
           "text": "来访者登记"
         },
         {
-          "text": "xxxx  xxxx  xxxx  主角"
+          "text": "xxxx  xxxx  xxxx  {name}"
         },
         {
           "portrait": "protagonist/reading",
