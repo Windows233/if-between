@@ -200,6 +200,51 @@ static func run(h: TestHarness) -> void:
 	h.check("取消期间不写入救援结果",
 		main.flags.has_value(&"ch2/rescue_success"), false)
 	main.queue_free()
+	await _test_yard_c_interaction(h)
+
+
+## 沙坑大交互框覆盖 C 周围，仍应优先选择近身且面向的 C。
+static func _test_yard_c_interaction(h: TestHarness) -> void:
+	for offset: Vector2 in [Vector2(-12,16), Vector2(-18,0), Vector2(18,0)]:
+		var main := h.new_main()
+		main.cutscene.instant = true
+		main.flags.set_value(&"ch2/rescued_c", true)
+		main.enter_map(&"school_yard", &"from_gate", true)
+		var c: Node2D = main.cutscene._actor("c")
+		var point: Vector2 = c.position + offset
+		main.player.position = point
+		main.player.facing = -offset.normalized()
+		h.check("C周围对话脚点可站立：%s" % offset, WalkGrid.has_landing_room(main.current_map,point), true)
+		main.interact()
+		h.check("面向C时沙坑不抢交互：%s" % offset, main.story.event_id, &"ch2_c_wait")
+		h.check("和C交谈不误领沙坑道具：%s" % offset, ItemTable.count_of(main.flags,&"student_id"), 0)
+		main.queue_free()
+		await h.root.get_tree().process_frame
+	var main := h.new_main()
+	main.cutscene.instant = true
+	main.flags.set_value(&"ch2/rescued_c", true)
+	main.enter_map(&"school_yard", &"from_gate", true)
+	var c: Node2D = main.cutscene._actor("c")
+	main.player.position = c.position + Vector2(18,0)
+	main.player.facing = Vector2.DOWN
+	main.interact()
+	h.check("面向沙坑时仍可调查脚边沙坑", main.has_seen(&"ch2_sandbox"), true)
+	h.check("未面向C不强制开启C对话", main.has_seen(&"ch2_c_wait"), false)
+	main.queue_free()
+	await h.root.get_tree().process_frame
+	main = h.new_main()
+	main.cutscene.instant = true
+	main.flags.set_value(&"ch2/rescued_c", true)
+	main.enter_map(&"school_yard", &"from_gate", true)
+	c = main.cutscene._actor("c")
+	main.player.position = c.position + Vector2(-12,32)
+	main.player.facing = Vector2.RIGHT
+	h.check("沙坑正常调查脚点可站立", WalkGrid.has_landing_room(main.current_map,main.player.position), true)
+	main.interact()
+	h.check("离开C近身范围可正常调查沙坑", main.has_seen(&"ch2_sandbox"), true)
+	h.check("远处调查沙坑不误触C", main.has_seen(&"ch2_c_wait"), false)
+	main.queue_free()
+	await h.root.get_tree().process_frame
 
 
 static func _finish_rescue(

@@ -1372,10 +1372,9 @@ func interact() -> void:
 	var actor := current_map.actor_near(player.global_position, INTERACT_RANGE, flags,
 		player.facing)
 	if current_map.id == &"school_yard":
-		var actor_distance := INTERACT_RANGE
-		if actor != null:
-			actor_distance = MapDef.rect_distance(actor.reach, player.global_position)
-		if _talk_to_transient(actor_distance):
+		# C 紧挨沙坑：近身且面向他时优先交谈，保留原有距离和朝向限制。
+		# 物件大框中的距离为0，不能拿它把C的有效互动范围压成0。
+		if _talk_to_transient():
 			return
 	if actor != null:
 		begin_interaction(actor)
