@@ -204,6 +204,13 @@ func add_actor_with_talk(id: String, sprite_path: String, at: Vector2,
 	if sprite == null or main == null:
 		return null
 	sprite.position = at
+	if id == "b":
+		# 神秘人留场可交谈，碰撞覆盖下半身，避免主角走进宽大的衣摆。
+		var foot := sprite.get_node("Body").get_child(0) as CollisionShape2D
+		var box := foot.shape as RectangleShape2D
+		var depth := 16.0 * _map_character_scale() / sprite.scale.y
+		box.size.y = depth
+		foot.position.y = -depth * 0.5
 	if id == "c":
 		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	main.stage_view.add_child(sprite)

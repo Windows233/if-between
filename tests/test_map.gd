@@ -1,4 +1,4 @@
-## 地图与场景：数据解析、连接、大地图、悬停详情、相机、数据加载。
+﻿## 地图与场景：数据解析、连接、大地图、悬停详情、相机、数据加载。
 ##
 ## 由 `tests/run_tests.gd` 统一调用。断言与公共工具在 `TestHarness`。
 class_name TestMap
@@ -22,6 +22,7 @@ static func run(h: TestHarness) -> void:
 	test_data_loader(h)
 	test_scene_transition(h)
 	test_facing_filter(h)
+	test_aim_prefers_facing_target(h)
 	test_door_beats_shelf(h)
 	test_furniture_cover(h)
 	test_lamp_is_not_over(h)
@@ -423,6 +424,82 @@ static func test_facing_filter(h: TestHarness) -> void:
 	h.check("不传方向就不过滤", any != null, true)
 
 	main.queue_free()
+
+
+## 2026-10-29：空格优先正对着的物件，不被旁边判定框大的物件抢走。
+##
+## 全部用相对玩家的几何构造，不依赖正式地图坐标。
+static func test_aim_prefers_facing_target(h: TestHarness) -> void:
+	var p := Vector2(200, 200)
+	var make := func(rects: Dictionary) -> MapDef:
+		var list: Array = []
+		for id: String in rects:
+			var r: Rect2 = rects[id]
+			list.append({"id": id, "rect": [r.position.x, r.position.y, r.size.x, r.size.y],
+				"line": id})
+		return MapDef.from_dictionary({"id": "aim", "size": [400, 400], "actors": list})
+
+	# 1) 正上方 12 处的小物件 vs 斜上方、最近点只有 5 的大柜子
+	var small := Rect2(p.x - 4, p.y - 20, 8, 8)
+	var big_side := Rect2(p.x + 10, p.y - 80, 120, 75)
+	var def1: MapDef = make.call({"small": small, "big": big_side})
+	var hit1 := def1.actor_near(p, 24.0, null, Vector2.UP)
+	h.check("正前方小物件胜过斜侧大物件", hit1.id if hit1 != null else &"", &"small")
+	var only_big: MapDef = make.call({"big": big_side})
+	var hit_big := only_big.actor_near(p, 24.0, null, Vector2.UP)
+	h.check("只有斜侧大物件时仍可在近处互动", hit_big.id if hit_big != null else &"", &"big")
+
+	# 2) 玩家站在大框（地毯/沙坑式）里，面前小物件优先
+	var carpet := Rect2(p.x - 60, p.y - 40, 120, 60)
+	var item := Rect2(p.x - 3, p.y - 16, 6, 6)
+	var def2: MapDef = make.call({"carpet": carpet, "item": item})
+	var hit2 := def2.actor_near(p, 24.0, null, Vector2.UP)
+	h.check("站在大框里时面前小物件优先", hit2.id if hit2 != null else &"", &"item")
+	var def2b: MapDef = make.call({"carpet": carpet})
+	var hit2b := def2b.actor_near(p, 24.0, null, Vector2.UP)
+	h.check("只有脚下大框时仍可互动", hit2b.id if hit2b != null else &"", &"carpet")
+
+	# 3) 大物件不再因框大从更远的斜侧被够到
+	var far_side := Rect2(p.x + 20, p.y - 120, 200, 110)
+	var def3: MapDef = make.call({"far": far_side})
+	h.check("斜侧较远的大框按交互够不到", def3.actor_near(p, 24.0, null, Vector2.UP), null)
+	h.check("同一大框正对时照常可够", def3.actor_near(Vector2(p.x + 60, p.y), 24.0,
+		null, Vector2.UP) != null, true)
+
+	# 4) 正前方被大物件整个挡住时选大物件（它离得更近）
+	var wall_big := Rect2(p.x - 50, p.y - 14, 100, 10)
+	var behind := Rect2(p.x - 3, p.y - 22, 6, 6)
+	var def4: MapDef = make.call({"wall": wall_big, "behind": behind})
+	var hit4 := def4.actor_near(p, 24.0, null, Vector2.UP)
+	h.check("正前方更近的大物件仍优先", hit4.id if hit4 != null else &"", &"wall")
+
+	# 5) 同距并排时取更正对的那件
+	var left := Rect2(p.x - 14, p.y - 18, 8, 8)
+	var center := Rect2(p.x - 2, p.y - 18, 4, 8)
+	var def5: MapDef = make.call({"left": left, "center": center})
+	var hit5 := def5.actor_near(p, 24.0, null, Vector2.UP)
+	h.check("同距并排时正对者优先", hit5.id if hit5 != null else &"", &"center")
+
+	# 6) 横向朝向同样成立
+	var def6: MapDef = make.call({
+		"right_small": Rect2(p.x + 10, p.y - 4, 6, 6),
+		"diag_big": Rect2(p.x + 6, p.y + 10, 100, 100)})
+	var hit6 := def6.actor_near(p, 24.0, null, Vector2.RIGHT)
+	h.check("面朝右时正右方小物件优先", hit6.id if hit6 != null else &"", &"right_small")
+
+	# 7) 空壳物件（空白台词，如校门喷泉）不压过包住它的剧情物件
+	var hollow_def := MapDef.from_dictionary({"id": "aim_h", "size": [400, 400], "actors": [
+		{"id": "fountain", "rect": [p.x - 40, p.y - 50, 80, 49]},
+		{"id": "statue", "rect": [p.x - 45, p.y - 55, 90, 58], "event": "e"}]})
+	var hit7 := hollow_def.actor_near(Vector2(p.x, p.y + 1), 24.0, null, Vector2.UP)
+	h.check("空壳物件不抢有剧情的物件", hit7.id if hit7 != null else &"", &"statue")
+	var lone_hollow := MapDef.from_dictionary({"id": "aim_h2", "size": [400, 400], "actors": [
+		{"id": "fountain", "rect": [p.x - 40, p.y - 50, 80, 49]}]})
+	h.check("只有空壳物件时仍可选", lone_hollow.actor_near(p, 24.0, null, Vector2.UP) != null, true)
+
+	# 不传方向时保持旧规则：取最近的框
+	var hit_any := def1.actor_near(p, 24.0)
+	h.check("不传方向时仍取最近框", hit_any.id if hit_any != null else &"", &"big")
 
 
 ## 站在门口那一块，附近有书架挡着，按交互必须出门而不是跟书架说话。
