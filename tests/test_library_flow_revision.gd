@@ -1,4 +1,4 @@
-## 按实际交互跑完无血迹前置的图书馆前后两轮，并验证逃跑输入。
+﻿## 按实际交互跑完无血迹前置的图书馆前后两轮，并验证逃跑输入。
 ## 使用正式事件和地图触发器，不伪造完成标记来跳过开箱、回溯。
 extends RefCounted
 
@@ -14,9 +14,11 @@ static func run(h: TestHarness) -> void:
 	h.check("首次入馆C位于门口并面朝左", main.cutscene._actor("c").flip_h, false)
 	var shelf := _actor(main.current_map, &"shelf_a")
 	var front := false
+	# 按游戏真实交互规则（actor_near + 朝上）判定，而不是要求脚底落进交互框。
 	for p: Vector2 in WalkGrid.reachable(main.current_map, entry):
-		if shelf.reach.has_point(p) and WalkGrid.has_landing_room(main.current_map, p) \
-				and p.y >= shelf.collision_rects()[0].end.y:
+		if p.y >= shelf.collision_rects()[0].end.y \
+				and WalkGrid.has_landing_room(main.current_map, p) \
+				and main.current_map.actor_near(p, main.INTERACT_RANGE, main.flags, Vector2.UP) == shelf:
 			front = true
 			break
 	h.check("用户书架交互区在前方有可达脚点", front, true)

@@ -1,4 +1,4 @@
-extends RefCounted
+﻿extends RefCounted
 
 
 class CheckpointMain extends Node2D:
@@ -436,7 +436,8 @@ static func _test_events_and_maps(harness: TestHarness) -> void:
 	for actor: Dictionary in yard.get("actors", []):
 		if actor.get("id", "") == "swing":
 			swing_actor = actor
-	harness.check("秋千交互框使用R2尺寸", swing_actor.get("rect", []), [194.0, 38.0, 56.0, 38.0])
+	# 位置由策划在编辑器里调，只校验R2尺寸（坑#10：别钉死坐标）。
+	harness.check("秋千交互框使用R2尺寸", swing_actor.get("rect", []).slice(2, 4), [56.0, 38.0])
 	var found: Array[String] = []
 	var swing_action_event_id := ""
 	for map_data: Dictionary in [gate, yard]:

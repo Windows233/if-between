@@ -4,8 +4,14 @@
       "cover": true,
       "id": "sg_fountain",
       "label": "喷泉",
+      "reach_local": [
+        1,
+        0,
+        88,
+        95
+      ],
       "rect": [
-        164,
+        163,
         57,
         89,
         95
@@ -104,7 +110,7 @@
       "sprite": "res://art/props/school_gate_bottom_wall.png"
     },
     {
-      "cover": true,
+      "cover": false,
       "decor": true,
       "draw_layer": "auto",
       "draw_order": 1,
