@@ -1,4 +1,4 @@
-﻿extends RefCounted
+extends RefCounted
 
 
 class CheckpointMain extends Node2D:
@@ -432,6 +432,13 @@ static func _test_events_and_maps(harness: TestHarness) -> void:
 	harness.check("窗户提示标记适配当前window物件ID",
 		window_main.map_view._actor_markers.has(&"window"), true)
 	window_main.queue_free()
+	# 大地图的异界裂缝不能手动进：第二章只由第一章末尾剧情（meet_b）直接送进死巷。
+	var overworld := DataLoader.load_map(&"overworld")
+	var rift_ok := false
+	for portal: MapDef.Portal in overworld.portals:
+		if portal.id == &"rift":
+			rift_ok = portal.is_locked() and portal.target_map == &""
+	harness.check("大地图异界裂缝未开放，不能手动进入第二章", rift_ok, true)
 	var swing_actor: Dictionary = {}
 	for actor: Dictionary in yard.get("actors", []):
 		if actor.get("id", "") == "swing":
